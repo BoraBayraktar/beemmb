@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 
+import { buildGibDocumentNumberFromSequence, normalizeGibDocumentNumberPrefix } from "@/lib/gib-document-number";
 import { prisma } from "@/lib/prisma";
 import type { AdminBusinessDocumentListQuery, AdminCreateBusinessDocumentInput } from "@/modules/documents/contracts/document.contract";
 
@@ -556,6 +557,50 @@ export class DocumentRepository {
           include: { integrationMessages: { orderBy: { occurredAt: "desc" } } },
         },
       },
+    });
+  }
+
+  async reserveEDocumentNumber(args: { documentType: "E_INVOICE" | "E_DISPATCH"; prefix: string }) {
+    const year = new Date().getFullYear();
+    const prefix = normalizeGibDocumentNumberPrefix(args.prefix);
+
+    return prisma.$transaction(async (tx) => {
+      const existing = await tx.eDocumentNumberSequence.findUnique({
+        where: {
+          documentType_prefix_year: {
+            documentType: args.documentType,
+            prefix,
+            year,
+          },
+        },
+      });
+
+      const nextSequence = (existing?.lastNumber ?? 0) + 1;
+
+      await tx.eDocumentNumberSequence.upsert({
+        where: {
+          documentType_prefix_year: {
+            documentType: args.documentType,
+            prefix,
+            year,
+          },
+        },
+        create: {
+          documentType: args.documentType,
+          prefix,
+          year,
+          lastNumber: nextSequence,
+        },
+        update: {
+          lastNumber: nextSequence,
+        },
+      });
+
+      return buildGibDocumentNumberFromSequence({
+        prefix,
+        year,
+        sequence: nextSequence,
+      });
     });
   }
 

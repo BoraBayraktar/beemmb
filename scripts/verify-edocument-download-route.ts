@@ -2,7 +2,7 @@ import {
   buildXmlArtifactAuditMetadata,
   buildXmlArtifactDownloadHeaders,
   xmlArtifactErrorJson,
-} from "@/app/api/admin/document-xml-artifacts/[artifactId]/route";
+} from "@/lib/xml-artifact-download-response";
 import { sanitizeAttachmentFileName } from "@/lib/attachment-file-name";
 import type { AdminBusinessDocumentXmlArtifactItem } from "@/modules/edocument/contracts/edocument.contract";
 

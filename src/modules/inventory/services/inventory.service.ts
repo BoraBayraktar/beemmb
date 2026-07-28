@@ -6,6 +6,7 @@ import { redisCache } from "@/lib/redis";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { identityAdminService } from "@/modules/identity/services/identity-admin.service";
 import { integrationService } from "@/modules/integration/services/integration.service";
+import type { IntegrationChannel, MarketplaceIntegrationChannel } from "@/modules/integration/contracts/integration.contract";
 import type {
   AdminInventoryListPreferences,
   AdminCreateStockCountInput,
@@ -804,7 +805,7 @@ function mapWarehouse(warehouse: {
 
 function mapInventoryIntegrationMapping(item: {
   id: string;
-  channel: "TRENDYOL" | "N11" | "PAZARAMA" | "HEPSIBURADA" | "EDOCS_MOCK";
+  channel: IntegrationChannel;
   externalProductId: string | null;
   externalSku: string | null;
   externalWarehouseCode: string | null;
@@ -822,8 +823,8 @@ function mapInventoryIntegrationMapping(item: {
     name: string;
   } | null;
 }): AdminInventoryIntegrationMappingItem {
-  if (item.channel === "EDOCS_MOCK") {
-    throw new Error("Unsupported inventory integration channel: EDOCS_MOCK");
+  if (item.channel === "EDOCS_MOCK" || item.channel === "BANK_SANDBOX") {
+    throw new Error(`Unsupported inventory integration channel: ${item.channel}`);
   }
 
   return {
@@ -846,7 +847,7 @@ function mapInventoryIntegrationMapping(item: {
 
 function mapExternalStockEvent(item: {
   id: string;
-  channel: "TRENDYOL" | "N11" | "PAZARAMA" | "HEPSIBURADA" | "EDOCS_MOCK";
+  channel: IntegrationChannel;
   eventKey: string;
   eventType: "SNAPSHOT_ON_HAND" | "SNAPSHOT_AVAILABLE";
   direction: "INBOUND" | "OUTBOUND";
@@ -875,8 +876,8 @@ function mapExternalStockEvent(item: {
     name: string;
   } | null;
 }): AdminExternalStockEventItem {
-  if (item.channel === "EDOCS_MOCK") {
-    throw new Error("Unsupported external stock event channel: EDOCS_MOCK");
+  if (item.channel === "EDOCS_MOCK" || item.channel === "BANK_SANDBOX") {
+    throw new Error(`Unsupported external stock event channel: ${item.channel}`);
   }
 
   const mappingMode = item.mappingId
@@ -2176,9 +2177,11 @@ export class InventoryService {
       deadLetterCount: dashboard.deadLetterCount,
       successCount: dashboard.successCount,
       channelCounts: dashboard.channelCounts,
-      recentJobs: dashboard.recentJobs.map((job) => ({
+      recentJobs: dashboard.recentJobs
+        .filter((job) => job.channel !== "BANK_SANDBOX")
+        .map((job) => ({
         id: job.id,
-        channel: job.channel,
+        channel: job.channel as MarketplaceIntegrationChannel,
         status: job.status,
         entityId: job.entityId,
         createdAt: job.createdAt,

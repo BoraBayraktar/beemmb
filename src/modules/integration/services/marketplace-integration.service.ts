@@ -971,6 +971,10 @@ export class MarketplaceIntegrationService {
       throw new Error("MARKETPLACE_PACKAGE_NOT_READY");
     }
 
+    if (item.channel === "BANK_SANDBOX") {
+      throw new Error("MARKETPLACE_PACKAGE_INVALID_CHANNEL");
+    }
+
     try {
       const created = await marketplaceOrderService.createOrderFromMarketplace({
         channel: item.channel,

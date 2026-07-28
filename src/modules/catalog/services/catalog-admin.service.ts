@@ -377,7 +377,7 @@ function mapAttributeDefinition(item: {
 function mapAttributeValueMarketplaceMapping(item: {
   id: string;
   attributeDefinitionId: string;
-  channel: "TRENDYOL" | "N11" | "PAZARAMA" | "HEPSIBURADA" | "EDOCS_MOCK";
+  channel: import("@/modules/integration/contracts/integration.contract").IntegrationChannel;
   localValue: string;
   externalAttributeValueId: number | null;
   externalAttributeValueName: string | null;
@@ -394,7 +394,7 @@ function mapAttributeValueMarketplaceMapping(item: {
     id: item.id,
     attributeDefinitionId: item.attributeDefinitionId,
     attributeName: item.attributeDefinition.name,
-    channel: item.channel,
+    channel: item.channel as AdminProductAttributeValueMarketplaceMappingItem["channel"],
     localValue: item.localValue,
     externalAttributeValueId: item.externalAttributeValueId,
     externalAttributeValueName: item.externalAttributeValueName,

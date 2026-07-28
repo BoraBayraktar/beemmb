@@ -1,7 +1,7 @@
 import {
   buildEDocumentConfigReadinessHeaders,
   eDocumentConfigReadinessJson,
-} from "@/app/api/admin/edocuments/config-readiness/route";
+} from "@/lib/edocument-admin-route-response";
 
 function assert(condition: boolean, message: string) {
   if (!condition) {

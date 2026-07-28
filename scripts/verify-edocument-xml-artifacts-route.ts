@@ -1,7 +1,7 @@
 import {
   buildDocumentXmlArtifactsHeaders,
   documentXmlArtifactsJson,
-} from "@/app/api/admin/documents/[id]/xml-artifacts/route";
+} from "@/lib/edocument-admin-route-response";
 
 function assert(condition: boolean, message: string) {
   if (!condition) {

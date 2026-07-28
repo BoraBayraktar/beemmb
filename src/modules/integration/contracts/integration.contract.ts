@@ -1,4 +1,5 @@
 export type IntegrationChannel = "TRENDYOL" | "N11" | "PAZARAMA" | "HEPSIBURADA" | "EDOCS_MOCK" | "BANK_SANDBOX";
+export type MarketplaceIntegrationChannel = Exclude<IntegrationChannel, "BANK_SANDBOX">;
 export type IntegrationJobType =
   | "PRODUCT_SYNC"
   | "PRICE_SYNC"

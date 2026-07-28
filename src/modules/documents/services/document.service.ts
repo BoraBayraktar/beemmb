@@ -522,9 +522,14 @@ export class DocumentService {
       throw new DocumentAdminError(`Bu kayıt için zaten bir e-fatura mevcut: ${existingInvoice.documentNumber}`, 409);
     }
 
+    const documentNumber = await this.repository.reserveEDocumentNumber({
+      documentType: "E_INVOICE",
+      prefix: process.env.EDOCUMENT_INVOICE_NUMBER_PREFIX ?? "BEF",
+    });
+
     const created = await this.repository.createBusinessDocumentFromSource({
       sourceDocumentId: sourceDocument.id,
-      numberPrefix: process.env.EDOCUMENT_INVOICE_NUMBER_PREFIX ?? "BEF",
+      documentNumber,
       documentType: "E_INVOICE",
       status: "LINKED",
       note: sourceDocument.note

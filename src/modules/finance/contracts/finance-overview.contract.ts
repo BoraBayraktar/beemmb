@@ -1,3 +1,5 @@
+import type { PermissionKey } from "@/modules/identity/contracts/rbac.contract";
+
 export type AdminFinanceOverviewMetric = {
   label: string;
   value: number;
@@ -11,7 +13,7 @@ export type AdminFinanceOverviewSection = {
   title: string;
   description: string;
   href: string;
-  permissionKey?: string;
+  permissionKey?: PermissionKey;
 };
 
 export type AdminFinanceOverview = {

@@ -1,17 +1,9 @@
 import { ZodError } from "zod";
 
-import { buildNoStoreHeaders, noStoreJson } from "@/lib/no-store-json-response";
+import { adminDocumentDetailJson } from "@/lib/edocument-admin-route-response";
 import { documentService, DocumentAdminError } from "@/modules/documents/services/document.service";
 import { AuthContextError, requirePermission } from "@/modules/identity/services/auth-context.service";
 import { auditLogService } from "@/modules/system/services/audit-log.service";
-
-export function buildAdminDocumentDetailHeaders() {
-  return buildNoStoreHeaders();
-}
-
-export function adminDocumentDetailJson(body: unknown, init?: ResponseInit) {
-  return noStoreJson(body, init);
-}
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   try {

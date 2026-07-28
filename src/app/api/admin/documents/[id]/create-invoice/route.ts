@@ -1,17 +1,9 @@
 import { ZodError } from "zod";
 
-import { buildNoStoreHeaders, noStoreJson } from "@/lib/no-store-json-response";
+import { createInvoiceJson } from "@/lib/edocument-admin-route-response";
 import { documentService, DocumentAdminError } from "@/modules/documents/services/document.service";
 import { AuthContextError, requirePermission } from "@/modules/identity/services/auth-context.service";
 import { auditLogService } from "@/modules/system/services/audit-log.service";
-
-export function buildCreateInvoiceHeaders() {
-  return buildNoStoreHeaders();
-}
-
-export function createInvoiceJson(body: unknown, init?: ResponseInit) {
-  return noStoreJson(body, init);
-}
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   try {

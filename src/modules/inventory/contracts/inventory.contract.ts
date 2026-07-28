@@ -1,3 +1,5 @@
+import type { MarketplaceIntegrationChannel } from "@/modules/integration/contracts/integration.contract";
+
 export type ProductInventoryAvailability = {
   productId: string;
   variantId?: string | null;
@@ -571,7 +573,7 @@ export type AdminInventoryReportsResult = {
 
 export type AdminInventoryIntegrationJobItem = {
   id: string;
-  channel: "TRENDYOL" | "N11" | "PAZARAMA" | "HEPSIBURADA" | "EDOCS_MOCK";
+  channel: MarketplaceIntegrationChannel;
   status: "PENDING" | "PROCESSING" | "SUCCESS" | "FAILED" | "DEAD_LETTER";
   entityId: string;
   createdAt: string;

@@ -1,7 +1,7 @@
 import {
   buildCreateInvoiceHeaders,
   createInvoiceJson,
-} from "@/app/api/admin/documents/[id]/create-invoice/route";
+} from "@/lib/edocument-admin-route-response";
 
 function assert(condition: boolean, message: string) {
   if (!condition) {

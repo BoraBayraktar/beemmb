@@ -8,33 +8,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type { MarketplaceCapabilitySet } from "@/modules/integration/contracts/integration.contract";
+import type {
+  AdminIntegrationJobItem,
+  IntegrationChannel,
+  IntegrationEntityType,
+  IntegrationJobStatus,
+  IntegrationJobType,
+  MarketplaceCapabilitySet,
+} from "@/modules/integration/contracts/integration.contract";
 
-type JobStatus = "PENDING" | "PROCESSING" | "SUCCESS" | "FAILED" | "DEAD_LETTER";
-type Channel = "TRENDYOL" | "N11" | "PAZARAMA" | "HEPSIBURADA" | "EDOCS_MOCK";
-type JobType = "PRODUCT_SYNC" | "PRICE_SYNC" | "STOCK_SYNC" | "ORDER_IMPORT" | "ORDER_STATUS_SYNC" | "DOCUMENT_OUTBOUND" | "DOCUMENT_STATUS_SYNC";
-type EntityType = "PRODUCT" | "MARKETPLACE_ACCOUNT" | "MARKETPLACE_PACKAGE" | "ORDER" | "BUSINESS_DOCUMENT";
+type JobStatus = IntegrationJobStatus;
+type Channel = IntegrationChannel;
+type JobType = IntegrationJobType;
+type EntityType = IntegrationEntityType;
 type DrawerMode = "create" | "process";
 
-type Job = {
-  id: string;
-  idempotencyKey: string;
-  channel: Channel;
-  jobType: JobType;
-  entityType: EntityType;
-  entityId: string;
-  status: JobStatus;
-  attemptCount: number;
-  maxAttempts: number;
-  nextAttemptAt: string;
-  lastAttemptAt: string | null;
-  processedAt: string | null;
-  externalReference: string | null;
-  payload: Record<string, unknown> | null;
-  responsePayload: Record<string, unknown> | null;
-  lastError: string | null;
-  createdAt: string;
-};
+type Job = AdminIntegrationJobItem;
 
 type MarketplaceBatchResult = {
   jobId: string;
@@ -240,6 +229,9 @@ const JOB_TYPE_TRIGGER_PRESETS: Record<JobType, string[]> = {
     "STATUS_REFRESH",
     "MANUAL_DISPATCH",
   ],
+  BANK_STATEMENT_SYNC: [
+    "MANUAL_DISPATCH",
+  ],
 };
 
 function triggerLabel(trigger: string, labels: Labels) {
@@ -291,6 +283,10 @@ function channelLabel(channel: Channel, labels: Labels) {
     return labels.channelHepsiburada;
   }
 
+  if (channel === "BANK_SANDBOX") {
+    return "Banka sandbox";
+  }
+
   return labels.channelEDocsMock;
 }
 
@@ -303,6 +299,7 @@ function jobTypeLabel(jobType: JobType, labels: Labels) {
     ORDER_STATUS_SYNC: labels.jobTypeOrderStatusSync,
     DOCUMENT_OUTBOUND: labels.jobTypeDocumentOutbound,
     DOCUMENT_STATUS_SYNC: labels.jobTypeDocumentStatusSync,
+    BANK_STATEMENT_SYNC: "Banka ekstresi senkronu",
   };
 
   return map[jobType];
@@ -489,6 +486,7 @@ function entityTypeLabel(entityType: EntityType, labels: Labels) {
     MARKETPLACE_PACKAGE: labels.entityMarketplacePackage,
     ORDER: labels.entityOrder,
     BUSINESS_DOCUMENT: labels.entityBusinessDocument,
+    FINANCIAL_ACCOUNT: "Finans hesabı",
   };
 
   return map[entityType];

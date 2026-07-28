@@ -1,8 +1,8 @@
+import { buildDocumentProviderConfigAuditMetadata } from "@/lib/document-provider-config-audit";
 import {
-  buildDocumentProviderConfigAuditMetadata,
   buildDocumentProviderConfigHeaders,
   documentProviderConfigJson,
-} from "@/app/api/admin/documents/providers/route";
+} from "@/lib/edocument-admin-route-response";
 
 function assert(condition: boolean, message: string) {
   if (!condition) {

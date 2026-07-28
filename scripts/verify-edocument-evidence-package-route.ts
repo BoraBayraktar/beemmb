@@ -3,7 +3,7 @@ import {
   buildDocumentEvidencePackageHeaders,
   documentEvidencePackageErrorJson,
   type DocumentEvidencePackage,
-} from "@/app/api/admin/documents/[id]/evidence-package/route";
+} from "@/lib/document-evidence-package-response";
 import { sanitizeAttachmentFileName } from "@/lib/attachment-file-name";
 import { sanitizeHttpHeaderValue } from "@/lib/http-header-value";
 

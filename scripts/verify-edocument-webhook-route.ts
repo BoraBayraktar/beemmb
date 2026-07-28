@@ -2,7 +2,7 @@ import {
   buildDocumentWebhookHeaders,
   documentWebhookJson,
   parseDocumentWebhookPayload,
-} from "@/app/api/integrations/documents/webhook/[providerCode]/route";
+} from "@/lib/document-webhook-route.util";
 import { DocumentAdminError } from "@/modules/documents/services/document.service";
 
 function assert(condition: boolean, message: string) {

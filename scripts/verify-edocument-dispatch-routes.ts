@@ -1,11 +1,9 @@
 import {
   buildDocumentDispatchHeaders,
   documentDispatchJson,
-} from "@/app/api/admin/documents/[id]/dispatch/route";
-import {
   buildDocumentStatusSyncHeaders,
   documentStatusSyncJson,
-} from "@/app/api/admin/documents/[id]/status-sync/route";
+} from "@/lib/edocument-admin-route-response";
 
 function assert(condition: boolean, message: string) {
   if (!condition) {

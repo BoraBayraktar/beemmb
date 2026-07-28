@@ -1,33 +1,10 @@
 import { ZodError } from "zod";
 
-import { buildNoStoreHeaders, noStoreJson } from "@/lib/no-store-json-response";
+import { buildDocumentProviderConfigAuditMetadata } from "@/lib/document-provider-config-audit";
+import { documentProviderConfigJson } from "@/lib/edocument-admin-route-response";
 import { documentService, DocumentAdminError } from "@/modules/documents/services/document.service";
 import { AuthContextError, requirePermission } from "@/modules/identity/services/auth-context.service";
 import { auditLogService } from "@/modules/system/services/audit-log.service";
-
-export function buildDocumentProviderConfigHeaders() {
-  return buildNoStoreHeaders();
-}
-
-export function documentProviderConfigJson(body: unknown, init?: ResponseInit) {
-  return noStoreJson(body, init);
-}
-
-type DocumentProviderConfigAuditItem = Awaited<ReturnType<typeof documentService.upsertProviderConfig>>;
-
-export function buildDocumentProviderConfigAuditMetadata(item: DocumentProviderConfigAuditItem) {
-  return {
-    providerCode: item.providerCode,
-    isDefault: item.isDefault,
-    isActive: item.isActive,
-    supportsStatusSync: item.supportsStatusSync,
-    hasSecretKey: Boolean(item.secretKeyMasked),
-    hasWebhookSecret: Boolean(item.webhookSecretMasked),
-    adapterRegistered: item.adapterRegistered,
-    adapterConfigured: item.adapterConfigured,
-    adapterOperational: item.adapterOperational,
-  };
-}
 
 export async function GET() {
   try {

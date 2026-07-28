@@ -1,11 +1,9 @@
 import {
   adminDocumentDetailJson,
   buildAdminDocumentDetailHeaders,
-} from "@/app/api/admin/documents/[id]/route";
-import {
   adminDocumentsJson,
   buildAdminDocumentsHeaders,
-} from "@/app/api/admin/documents/route";
+} from "@/lib/edocument-admin-route-response";
 
 function assert(condition: boolean, message: string) {
   if (!condition) {

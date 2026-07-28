@@ -11,8 +11,10 @@ export type MarketplaceOrderLineInput = {
   currency: string;
 };
 
+import type { MarketplaceIntegrationChannel } from "@/modules/integration/contracts/integration.contract";
+
 export type CreateMarketplaceOrderInput = {
-  channel: "TRENDYOL" | "N11" | "PAZARAMA" | "HEPSIBURADA" | "EDOCS_MOCK";
+  channel: MarketplaceIntegrationChannel;
   externalOrderNumber: string;
   customerName?: string | null;
   customerEmail?: string | null;

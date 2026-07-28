@@ -1,14 +1,6 @@
-import { buildNoStoreHeaders, noStoreJson } from "@/lib/no-store-json-response";
+import { eDocumentConfigReadinessJson } from "@/lib/edocument-admin-route-response";
 import { eDocumentConfigReadinessService } from "@/modules/edocument/services/edocument-config-readiness.service";
 import { AuthContextError, requirePermission } from "@/modules/identity/services/auth-context.service";
-
-export function buildEDocumentConfigReadinessHeaders() {
-  return buildNoStoreHeaders();
-}
-
-export function eDocumentConfigReadinessJson(body: unknown, init?: ResponseInit) {
-  return noStoreJson(body, init);
-}
 
 export async function GET() {
   try {
