@@ -45,8 +45,8 @@ async function authFetch(path, cookie, options = {}) {
 }
 
 async function main() {
-  const adminCookie = await login("admin@arventatrade.local", "Admin123!");
-  const editorCookie = await login("editor@arventatrade.local", "Editor123!");
+  const adminCookie = await login("admin@beemmb.local", "Admin123!");
+  const editorCookie = await login("editor@beemmb.local", "Editor123!");
 
   const slug = `rbac-test-${Date.now()}`;
 

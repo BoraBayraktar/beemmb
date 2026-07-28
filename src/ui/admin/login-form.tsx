@@ -90,7 +90,7 @@ export function LoginForm({
       <div className={styles.authPanelTop}>
         <div className={styles.authPanelBadge}>
           <Shield className="h-4 w-4" />
-          <span>2BEM Admin</span>
+          <span>BEEMMB Admin</span>
         </div>
         <h1 className={styles.loginTitle}>{labels.title}</h1>
         <p className={styles.loginSubtitle}>{labels.subtitle}</p>

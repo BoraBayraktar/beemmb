@@ -1,6 +1,6 @@
 # Inventory Stock Authority
 
-Bu doküman, 2BEM stok yönetiminde resmi stok otoritesini ve geçiş kurallarını tanımlar.
+Bu doküman, BEEMMB stok yönetiminde resmi stok otoritesini ve geçiş kurallarını tanımlar.
 
 ## Karar
 

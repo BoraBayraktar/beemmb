@@ -47,4 +47,6 @@ export type AdminCreateCollectionRecordInput = {
   collectedAt: string;
   note?: string | null;
   recordedByUserId: string;
+  onlineCollectionProvider?: string | null;
+  onlineCollectionExternalId?: string | null;
 };

@@ -2,17 +2,31 @@ import { z } from "zod";
 
 import type {
   AdminCashTransactionCategory,
+  AdminCashTransactionDetail,
   AdminCashTransactionItem,
   AdminCashTransactionsQuery,
   AdminCashTransactionsResult,
   AdminCreateCashTransactionInput,
 } from "@/modules/finance/contracts/cash-transactions.contract";
+import type { AdminFinanceReportDateRangeQuery } from "@/modules/finance/contracts/finance-report-date-range.contract";
 import { financeRepository } from "@/modules/finance/repositories/finance.repository";
+import { financeAllocationService } from "@/modules/finance/services/allocation.service";
+import { parseFinanceMovementReference } from "@/modules/finance/services/finance-movement-reference.service";
+import { parseFinanceReportDateRangeQuery } from "@/modules/finance/services/finance-report-date-range.util";
+import { financeAccountEntryService } from "@/modules/finance/services/finance-account-entry.service";
 
 const listQuerySchema = z.object({
   search: z.string().trim().optional(),
   direction: z.enum(["all", "IN", "OUT", "TRANSFER"]).default("all"),
   accountId: z.string().trim().optional(),
+  from: z.string().trim().optional(),
+  to: z.string().trim().optional(),
+});
+
+const incomeExpenseReportQuerySchema = z.object({
+  from: z.string().trim().optional(),
+  to: z.string().trim().optional(),
+  financialAccountId: z.string().trim().optional(),
 });
 
 const createCashTransactionSchema = z.object({
@@ -30,7 +44,10 @@ const createCashTransactionSchema = z.object({
   recordedByUserId: z.string().trim().min(1).optional().nullable(),
 });
 
-function mapTransaction(item: Awaited<ReturnType<typeof financeRepository.listCashTransactions>>[number]): AdminCashTransactionItem {
+function mapTransaction(
+  item: Awaited<ReturnType<typeof financeRepository.listCashTransactions>>[number]
+    | NonNullable<Awaited<ReturnType<typeof financeRepository.findCashTransactionById>>>,
+): AdminCashTransactionItem {
   return {
     id: item.id,
     accountId: item.accountId,
@@ -44,7 +61,12 @@ function mapTransaction(item: Awaited<ReturnType<typeof financeRepository.listCa
     transactionAt: item.transactionAt.toISOString(),
     title: item.title,
     note: item.note,
+    counterpartyKind: item.counterpartyKind,
     counterpartyName: item.counterpartyName,
+    customerAccountId: item.customerAccountId,
+    supplierId: item.supplierId,
+    customerAccountSlug: item.customerAccount?.slug ?? null,
+    supplierSlug: item.supplier?.slug ?? null,
     sourceReferenceId: item.sourceReferenceId,
   };
 }
@@ -72,10 +94,22 @@ export class CashTransactionsService {
 
   async listTransactions(query: AdminCashTransactionsQuery = {}): Promise<AdminCashTransactionsResult> {
     const parsed = listQuerySchema.parse(query);
+    const range = parseFinanceReportDateRangeQuery({
+      from: parsed.from,
+      to: parsed.to,
+    });
+    const applyRange = parsed.from !== undefined || parsed.to !== undefined;
+
     const items = await financeRepository.listCashTransactions({
       search: parsed.search,
       direction: parsed.direction === "all" ? undefined : parsed.direction,
       accountId: parsed.accountId,
+      ...(applyRange
+        ? {
+            fromDate: range.fromDate,
+            toDate: range.toDate,
+          }
+        : {}),
     });
     const mapped = items.map(mapTransaction);
     const incoming = mapped
@@ -94,6 +128,46 @@ export class CashTransactionsService {
         transactionCount: mapped.length,
         currency: mapped[0]?.currency ?? "TRY",
       },
+    };
+  }
+
+  async listTransactionsForIncomeExpenseReport(query: AdminFinanceReportDateRangeQuery = {}) {
+    const parsed = incomeExpenseReportQuerySchema.parse(query);
+    const range = parseFinanceReportDateRangeQuery(parsed);
+
+    return financeRepository.listCashTransactionsForIncomeExpenseReport({
+      fromDate: range.fromDate,
+      toDate: range.toDate,
+      accountId: parsed.financialAccountId,
+    });
+  }
+
+  async getTransactionDetail(id: string): Promise<AdminCashTransactionDetail | null> {
+    const item = await financeRepository.findCashTransactionById(id);
+
+    if (!item) {
+      return null;
+    }
+
+    const mapped = mapTransaction(item);
+    const movementReference = parseFinanceMovementReference(item.sourceReferenceId);
+    let allocationSummary = null;
+
+    if (movementReference?.kind === "collection" && movementReference.id) {
+      allocationSummary = await financeAllocationService.getCollectionAllocationSummary(
+        movementReference.id,
+        mapped.amount,
+      );
+    } else if (movementReference?.kind === "payment" && movementReference.id) {
+      allocationSummary = await financeAllocationService.getPaymentAllocationSummary(
+        movementReference.id,
+        mapped.amount,
+      );
+    }
+
+    return {
+      ...mapped,
+      allocationSummary,
     };
   }
 
@@ -134,7 +208,7 @@ export class CashTransactionsService {
       const transferReferenceId = `transfer:${parsed.accountId}:${parsed.targetAccountId}:${transactionAt.toISOString()}`;
       const transferTitle = parsed.title.trim();
 
-      await financeRepository.createCashTransaction({
+      const createdOut = await financeRepository.createCashTransaction({
         accountId: parsed.accountId,
         direction: "OUT",
         sourceType: "TRANSFER",
@@ -164,6 +238,13 @@ export class CashTransactionsService {
         createdByUserId: parsed.recordedByUserId ?? null,
       });
 
+      try {
+        await financeAccountEntryService.syncFromCashTransaction(createdOut.id);
+        await financeAccountEntryService.syncFromCashTransaction(createdTarget.id);
+      } catch (error) {
+        console.error("PF8 defter projeksiyonu (transfer) başarısız oldu.", error);
+      }
+
       return mapTransaction(createdTarget);
     }
 
@@ -181,6 +262,12 @@ export class CashTransactionsService {
       sourceReferenceId: parsed.sourceReferenceId ?? null,
       createdByUserId: parsed.recordedByUserId ?? null,
     });
+
+    try {
+      await financeAccountEntryService.syncFromCashTransaction(created.id);
+    } catch (error) {
+      console.error("PF8 defter projeksiyonu (nakit hareket) başarısız oldu.", error);
+    }
 
     return mapTransaction(created);
   }

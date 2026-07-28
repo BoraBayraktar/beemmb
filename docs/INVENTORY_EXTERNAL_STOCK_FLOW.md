@@ -1,6 +1,6 @@
 # Inventory External Stock Flow
 
-Bu doküman, harici sistemlerden gelen stok eventlerinin 2BEM içinde nasıl işlendiğini tanımlar.
+Bu doküman, harici sistemlerden gelen stok eventlerinin BEEMMB içinde nasıl işlendiğini tanımlar.
 
 ## Akış Özeti
 

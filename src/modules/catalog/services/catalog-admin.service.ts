@@ -184,6 +184,8 @@ const createSupplierSchema = z.object({
   taxNumber: z.string().trim().max(64).optional().nullable(),
   email: z.string().trim().email().max(160).optional().nullable(),
   phone: z.string().trim().max(40).optional().nullable(),
+  defaultPaymentTermDays: z.coerce.number().int().min(0).max(365).optional().nullable(),
+  creditLimit: z.coerce.number().nonnegative().optional().nullable(),
   isActive: z.boolean().default(true),
 });
 
@@ -194,6 +196,8 @@ const updateSupplierSchema = z.object({
   taxNumber: z.string().trim().max(64).optional().nullable(),
   email: z.string().trim().email().max(160).optional().nullable(),
   phone: z.string().trim().max(40).optional().nullable(),
+  defaultPaymentTermDays: z.coerce.number().int().min(0).max(365).optional().nullable(),
+  creditLimit: z.coerce.number().nonnegative().optional().nullable(),
   isActive: z.boolean().optional(),
 });
 
@@ -329,6 +333,8 @@ function mapSupplier(item: {
   taxNumber: string | null;
   email: string | null;
   phone: string | null;
+  defaultPaymentTermDays?: number | null;
+  creditLimit?: { toNumber: () => number } | null;
   isActive: boolean;
   _count: { primaryProducts: number };
 }): AdminSupplierItem {
@@ -339,6 +345,8 @@ function mapSupplier(item: {
     taxNumber: item.taxNumber,
     email: item.email,
     phone: item.phone,
+    defaultPaymentTermDays: item.defaultPaymentTermDays ?? null,
+    creditLimit: item.creditLimit ? item.creditLimit.toNumber() : null,
     isActive: item.isActive,
     productCount: item._count.primaryProducts,
   };
@@ -797,6 +805,10 @@ export class CatalogAdminService {
     return sku.trim().toLocaleUpperCase("tr-TR");
   }
 
+  private normalizeSlug(slug: string) {
+    return slug.trim().toLocaleLowerCase("tr-TR");
+  }
+
   private async assertUniqueSkuPool(args: {
     productId?: string;
     productSku?: string;
@@ -851,6 +863,47 @@ export class CatalogAdminService {
           code: "custom",
           path: ["variants"],
           message: `Mükerrer SKU kullanılamaz: ${variant.sku}`,
+        }]);
+      }
+    }
+  }
+
+  async validateProductImportCandidates(products: AdminCreateProductInput[]) {
+    const candidates = products.flatMap((product) => [
+      { kind: "product" as const, slug: product.slug, sku: product.sku },
+      ...(product.variants ?? []).map((variant) => ({ kind: "variant" as const, slug: variant.slug, sku: variant.sku })),
+    ]);
+
+    await this.assertUniqueSkuPool({
+      productSku: undefined,
+      variants: candidates.map((candidate) => ({
+        slug: candidate.slug,
+        sku: candidate.sku,
+        title: candidate.slug,
+        optionSummary: candidate.slug,
+        attributes: [{ attributeDefinitionId: "import-precheck", value: "import-precheck" }],
+      })),
+    });
+
+    const slugOwners = await this.repository.findSlugOwners(candidates.map((candidate) => candidate.slug));
+    const candidateSlugs = new Set(candidates.map((candidate) => this.normalizeSlug(candidate.slug)));
+
+    for (const product of slugOwners.products) {
+      if (candidateSlugs.has(this.normalizeSlug(product.slug))) {
+        throw new z.ZodError([{
+          code: "custom",
+          path: ["slug"],
+          message: `Mükerrer slug kullanılamaz: ${product.slug}`,
+        }]);
+      }
+    }
+
+    for (const variant of slugOwners.variants) {
+      if (candidateSlugs.has(this.normalizeSlug(variant.slug))) {
+        throw new z.ZodError([{
+          code: "custom",
+          path: ["variants"],
+          message: `Mükerrer varyant slug kullanılamaz: ${variant.slug}`,
         }]);
       }
     }

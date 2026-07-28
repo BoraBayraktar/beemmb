@@ -1,6 +1,6 @@
 # Paraşüt Hizalama Faz 1 Çıktısı
 
-Bu doküman, 2BEM stok yönetiminin Paraşüt stok modülüne hizalanması için Faz 1 analiz ve boşluk matrisi çıktısıdır.
+Bu doküman, BEEMMB stok yönetiminin Paraşüt stok modülüne hizalanması için Faz 1 analiz ve boşluk matrisi çıktısıdır.
 
 ## Amaç
 

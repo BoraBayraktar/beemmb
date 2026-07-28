@@ -27,7 +27,9 @@ type Labels = {
   amount: string;
   openFinanceRoute: string;
   openSource: string;
+  openCounterpartyLedger: string;
   openDetail: string;
+  openFinanceMovementPreview: string;
   noResults: string;
   cancel: string;
 };
@@ -196,6 +198,24 @@ export function FinanceAccountsManager({ locale, result, initialSearch, initialT
                         >
                           {labels.openFinanceRoute}
                         </Link>
+                        {item.counterpartyLedgerHref ? (
+                          <Link
+                            href={item.counterpartyLedgerHref}
+                            className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100"
+                            onClick={() => setOpenActionMenuId(null)}
+                          >
+                            {labels.openCounterpartyLedger}
+                          </Link>
+                        ) : null}
+                        {item.financeMovementPreviewHref ? (
+                          <Link
+                            href={item.financeMovementPreviewHref}
+                            className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100"
+                            onClick={() => setOpenActionMenuId(null)}
+                          >
+                            {labels.openFinanceMovementPreview}
+                          </Link>
+                        ) : null}
                         <Link
                           href={item.sourceHref}
                           className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100"
@@ -241,9 +261,19 @@ export function FinanceAccountsManager({ locale, result, initialSearch, initialT
                 <p className="text-sm text-neutral-700">{labels.amount}: <span className="font-medium text-neutral-950">{formatMoney(selectedItem.totalAmount, selectedItem.currency)}</span></p>
               </div>
               <div className="flex flex-wrap justify-end gap-2">
+                {selectedItem.counterpartyLedgerHref ? (
+                  <Link href={selectedItem.counterpartyLedgerHref} className="inline-flex h-10 items-center rounded-xl border border-neutral-300 px-4 text-sm font-medium text-neutral-700">
+                    {labels.openCounterpartyLedger}
+                  </Link>
+                ) : null}
                 <Link href={selectedItem.detailHref} className="inline-flex h-10 items-center rounded-xl border border-neutral-300 px-4 text-sm font-medium text-neutral-700">
                   {labels.openFinanceRoute}
                 </Link>
+                {selectedItem.financeMovementPreviewHref ? (
+                  <Link href={selectedItem.financeMovementPreviewHref} className="inline-flex h-10 items-center rounded-xl border border-neutral-300 px-4 text-sm font-medium text-neutral-700">
+                    {labels.openFinanceMovementPreview}
+                  </Link>
+                ) : null}
                 <Link href={selectedItem.sourceHref} className="inline-flex h-10 items-center rounded-xl border border-neutral-300 px-4 text-sm font-medium text-neutral-700">
                   {labels.openSource}
                 </Link>

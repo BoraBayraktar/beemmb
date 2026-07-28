@@ -1,4 +1,4 @@
-import { createHmac } from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
 
 import type { AdminBusinessDocumentDetail, DocumentWebhookPayload } from "@/modules/documents/contracts/document.contract";
 import { DocumentRepository } from "@/modules/documents/repositories/document.repository";
@@ -6,18 +6,42 @@ import { DocumentAdminError } from "@/modules/documents/services/document.servic
 import { documentLifecycleService } from "@/modules/documents/services/document-lifecycle.service";
 import { documentProviderCryptoService } from "@/modules/documents/services/document-provider-crypto.service";
 import { documentService } from "@/modules/documents/services/document.service";
+import { buildDocumentDueFields } from "@/modules/finance/services/finance-due-date.util";
 
 function toNumber(value: { toNumber: () => number } | null | undefined) {
   return value ? value.toNumber() : null;
 }
 
+export function buildWebhookEvidencePayload(args: {
+  rawBody: string;
+  signature: string | null;
+  parsed: DocumentWebhookPayload;
+}) {
+  return {
+    rawBodyHash: createHash("sha256").update(args.rawBody).digest("hex"),
+    parsed: args.parsed,
+    signaturePresent: Boolean(args.signature),
+  };
+}
+
 function mapDocument(item: Awaited<ReturnType<DocumentRepository["findBusinessDocumentById"]>> extends infer T ? NonNullable<T> : never): AdminBusinessDocumentDetail {
+  const dueFields = buildDocumentDueFields(
+    item.issueDate.toISOString(),
+    item.dueDate ? item.dueDate.toISOString() : null,
+    new Date(),
+    item.supplier?.defaultPaymentTermDays ?? item.customerAccount?.defaultPaymentTermDays ?? null,
+  );
+
   return {
     id: item.id,
     documentNumber: item.documentNumber,
     documentType: item.documentType,
     status: item.status,
     issueDate: item.issueDate.toISOString(),
+    dueDate: dueFields.dueDate,
+    effectiveDueDate: dueFields.effectiveDueDate,
+    daysUntilDue: dueFields.daysUntilDue,
+    isOverdue: dueFields.isOverdue,
     currency: item.currency,
     totalAmount: toNumber(item.totalAmount),
     externalReference: item.externalReference,
@@ -197,18 +221,23 @@ export class DocumentWebhookService {
       metadata: {
         documentNumber: updated.documentNumber,
         externalReference: updated.externalReference,
+        providerStatus: args.payload.providerStatus ?? null,
+        providerOutcome: args.payload.providerOutcome ?? null,
+        providerErrorCode: args.payload.providerErrorCode ?? null,
+        providerErrorMessage: args.payload.providerErrorMessage ?? null,
       },
       message: {
         direction: "INBOUND",
         channel: provider.channel,
         providerCode: args.providerCode,
         messageType: "DOCUMENT_STATUS_WEBHOOK",
-        payload: {
+        payload: buildWebhookEvidencePayload({
           rawBody: args.rawBody,
+          signature: args.signature,
           parsed: args.payload,
-        },
+        }),
         headers: {
-          "x-arventa-signature": args.signature,
+          "x-arventa-signature-present": Boolean(args.signature),
         },
       },
     });

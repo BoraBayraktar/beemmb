@@ -10,7 +10,7 @@ export default async function AdminCustomerReceivablesPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ search?: string; paymentStatus?: string; page?: string }>;
+  searchParams: Promise<{ search?: string; paymentStatus?: string; page?: string; overdueOnly?: string }>;
 }) {
   const { locale } = await params;
   const resolvedSearchParams = await searchParams;
@@ -32,11 +32,16 @@ export default async function AdminCustomerReceivablesPage({
       ? resolvedSearchParams.paymentStatus
       : "all";
 
+  const overdueOnly =
+    resolvedSearchParams.overdueOnly === "1" || resolvedSearchParams.overdueOnly === "true";
+
   const result = await receivablesService.listOperationalReceivables({
     search: resolvedSearchParams.search,
     paymentStatus,
+    overdueOnly,
     page: resolvedSearchParams.page ? Number(resolvedSearchParams.page) : 1,
     pageSize: 12,
+    locale,
   });
 
   return (
@@ -45,6 +50,7 @@ export default async function AdminCustomerReceivablesPage({
       result={result}
       initialSearch={resolvedSearchParams.search ?? ""}
       initialPaymentStatus={paymentStatus}
+      overdueOnly={overdueOnly}
       labels={{
         title: dictionary.admin.financeReceivablesTitle,
         description: dictionary.admin.financeReceivablesDescription,
@@ -69,6 +75,19 @@ export default async function AdminCustomerReceivablesPage({
         openDetail: dictionary.admin.financeCollectionsOpenDetail,
         notSpecified: dictionary.common.notSpecified,
         cancel: dictionary.admin.cancel,
+        overdueAmountKpi: dictionary.admin.financeDueOverdueAmountKpi,
+        dueWithinDaysKpi: dictionary.admin.financeDueWithinDaysKpi,
+        nearestDueDateKpi: dictionary.admin.financeDueNearestDueDateKpi,
+        overdueFilter: dictionary.admin.financeDueOverdueFilter,
+        allOpenFilter: dictionary.admin.financeDueAllOpenFilter,
+        dueColumn: dictionary.admin.financeDueColumnLabel,
+        dueStatusOverdue: dictionary.admin.financeDueStatusOverdue,
+        dueStatusDueInDays: dictionary.admin.financeDueStatusDueInDays,
+        dueStatusDueLater: dictionary.admin.financeDueStatusDueLater,
+        dueStatusOverdueDays: dictionary.admin.financeDueStatusOverdueDays,
+        dueStatusDueInDaysHint: dictionary.admin.financeDueStatusDueInDaysHint,
+        dueStatusDueLaterHint: dictionary.admin.financeDueStatusDueLaterHint,
+        actions: dictionary.admin.financeTableActions,
       }}
     />
   );

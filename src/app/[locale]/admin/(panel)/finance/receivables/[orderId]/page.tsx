@@ -21,7 +21,7 @@ export default async function AdminReceivableDetailPage({
     notFound();
   }
 
-  const item = await receivablesService.getReceivableByOrderId(orderId);
+  const item = await receivablesService.getReceivableByOrderId(orderId, locale);
   if (!item) {
     notFound();
   }
@@ -43,6 +43,10 @@ export default async function AdminReceivableDetailPage({
         backToList: dictionary.admin.financeDetailBackToList,
         openOrder: dictionary.admin.financeReceivablesOpenOrder,
         notSpecified: dictionary.common.notSpecified,
+        documentsTitle: dictionary.admin.financeReceivableDocumentsTitle,
+        openCollection: dictionary.admin.financeReceivableOpenCollection,
+        financeDocumentMovementPreviewOpen: dictionary.admin.financeDocumentMovementPreviewOpen,
+        counterpartyFinanceHint: item.counterpartyFinanceTerms?.collectionOrPaymentDueHint ?? null,
       }}
     />
   );

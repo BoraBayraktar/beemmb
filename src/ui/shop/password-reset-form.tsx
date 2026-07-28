@@ -106,7 +106,7 @@ export function PasswordResetForm({ locale, token, labels }: PasswordResetFormPr
             <span className={styles.heroEyebrow}>{labels.heroEyebrow}</span>
             <div className={styles.heroBadge}>
               <ShieldCheck className="h-4 w-4" />
-              <span>2BEM</span>
+              <span>BEEMMB</span>
             </div>
             <h1 className={styles.heroTitle}>{labels.heroTitle}</h1>
             <p className={styles.heroBody}>{labels.heroBody}</p>

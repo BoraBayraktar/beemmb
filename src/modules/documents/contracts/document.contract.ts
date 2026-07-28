@@ -73,6 +73,9 @@ export type AdminDocumentProviderConfigItem = {
   supportsStatusSync: boolean;
   isActive: boolean;
   isDefault: boolean;
+  adapterRegistered: boolean;
+  adapterConfigured: boolean;
+  adapterOperational: boolean;
   note: string | null;
   createdAt: string;
   updatedAt: string;
@@ -84,6 +87,10 @@ export type AdminBusinessDocumentListItem = {
   documentType: AdminBusinessDocumentType;
   status: AdminBusinessDocumentStatus;
   issueDate: string;
+  dueDate: string | null;
+  effectiveDueDate: string;
+  daysUntilDue: number;
+  isOverdue: boolean;
   currency: string;
   totalAmount: number | null;
   externalReference: string | null;
@@ -150,6 +157,7 @@ export type AdminCreateBusinessDocumentInput = {
   documentType: AdminBusinessDocumentType;
   status?: AdminBusinessDocumentStatus;
   issueDate: string;
+  dueDate?: string | null;
   currency?: string;
   totalAmount?: number | null;
   externalReference?: string | null;
@@ -227,4 +235,9 @@ export type DocumentWebhookPayload = {
   externalReference?: string | null;
   status?: "NOT_SENT" | "QUEUED" | "SENT" | "FAILED" | null;
   providerCode?: string | null;
+  providerStatus?: string | null;
+  providerOutcome?: "ACCEPTED" | "REJECTED" | "CANCELLED" | "RETURNED" | "UNKNOWN" | null;
+  providerErrorCode?: string | null;
+  providerErrorMessage?: string | null;
+  providerPayload?: Record<string, unknown> | null;
 };

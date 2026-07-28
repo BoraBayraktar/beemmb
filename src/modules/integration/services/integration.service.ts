@@ -10,6 +10,9 @@ import type {
   DispatchIntegrationJobsResult,
   IntegrationDeadLetterItem,
   IntegrationDeadLetterListResult,
+  IntegrationChannel,
+  IntegrationEntityType,
+  IntegrationJobType,
   ProcessIntegrationQueueInput,
   ProcessIntegrationQueueResult,
   RetryDeadLetterInput,
@@ -17,24 +20,46 @@ import type {
 } from "@/modules/integration/contracts/integration.contract";
 import type { ChannelConnector } from "@/modules/integration/connectors/channel.connector";
 import { EDocsMockConnector } from "@/modules/integration/connectors/edocs-mock.connector";
+import { BankSandboxConnector } from "@/modules/integration/connectors/bank-sandbox.connector";
 import { HepsiburadaConnector } from "@/modules/integration/connectors/hepsiburada.connector";
 import { N11Connector } from "@/modules/integration/connectors/n11.connector";
 import { PazaramaConnector } from "@/modules/integration/connectors/pazarama.connector";
 import { TrendyolConnector } from "@/modules/integration/connectors/trendyol.connector";
+import { financeBankIntegrationService } from "@/modules/finance/services/finance-bank-integration.service";
 import { IntegrationRepository } from "@/modules/integration/repositories/integration.repository";
 
+const integrationChannelSchema = z.enum(["TRENDYOL", "N11", "PAZARAMA", "HEPSIBURADA", "EDOCS_MOCK", "BANK_SANDBOX"]);
+const integrationJobTypeSchema = z.enum([
+  "PRODUCT_SYNC",
+  "PRICE_SYNC",
+  "STOCK_SYNC",
+  "ORDER_IMPORT",
+  "ORDER_STATUS_SYNC",
+  "DOCUMENT_OUTBOUND",
+  "DOCUMENT_STATUS_SYNC",
+  "BANK_STATEMENT_SYNC",
+]);
+const integrationEntityTypeSchema = z.enum([
+  "PRODUCT",
+  "MARKETPLACE_ACCOUNT",
+  "MARKETPLACE_PACKAGE",
+  "ORDER",
+  "BUSINESS_DOCUMENT",
+  "FINANCIAL_ACCOUNT",
+]);
+
 const listQuerySchema = z.object({
-  channel: z.enum(["TRENDYOL", "N11", "PAZARAMA", "HEPSIBURADA", "EDOCS_MOCK"]).optional(),
-  jobType: z.enum(["PRODUCT_SYNC", "PRICE_SYNC", "STOCK_SYNC", "ORDER_IMPORT", "ORDER_STATUS_SYNC", "DOCUMENT_OUTBOUND", "DOCUMENT_STATUS_SYNC"]).optional(),
+  channel: integrationChannelSchema.optional(),
+  jobType: integrationJobTypeSchema.optional(),
   status: z.enum(["PENDING", "PROCESSING", "SUCCESS", "FAILED", "DEAD_LETTER"]).optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });
 
 const dispatchSchema = z.object({
-  channel: z.enum(["TRENDYOL", "N11", "PAZARAMA", "HEPSIBURADA", "EDOCS_MOCK"]),
-  jobType: z.enum(["PRODUCT_SYNC", "PRICE_SYNC", "STOCK_SYNC", "ORDER_IMPORT", "ORDER_STATUS_SYNC", "DOCUMENT_OUTBOUND", "DOCUMENT_STATUS_SYNC"]),
-  entityType: z.enum(["PRODUCT", "MARKETPLACE_ACCOUNT", "MARKETPLACE_PACKAGE", "ORDER", "BUSINESS_DOCUMENT"]),
+  channel: integrationChannelSchema,
+  jobType: integrationJobTypeSchema,
+  entityType: integrationEntityTypeSchema,
   entityIds: z.array(z.string().trim().min(1)).min(1).max(100),
   maxAttempts: z.coerce.number().int().min(1).max(10).optional(),
   payload: z.record(z.string(), z.unknown()).optional(),
@@ -50,12 +75,13 @@ const retrySchema = z.object({
   resolvedByUserId: z.string().trim().min(1),
 });
 
-const connectors: Record<"TRENDYOL" | "N11" | "PAZARAMA" | "HEPSIBURADA" | "EDOCS_MOCK", ChannelConnector> = {
+const connectors: Record<"TRENDYOL" | "N11" | "PAZARAMA" | "HEPSIBURADA" | "EDOCS_MOCK" | "BANK_SANDBOX", ChannelConnector> = {
   TRENDYOL: new TrendyolConnector(),
   N11: new N11Connector(),
   PAZARAMA: new PazaramaConnector(),
   HEPSIBURADA: new HepsiburadaConnector(),
   EDOCS_MOCK: new EDocsMockConnector(),
+  BANK_SANDBOX: new BankSandboxConnector(),
 };
 
 async function invalidateIntegrationCache() {
@@ -65,9 +91,9 @@ async function invalidateIntegrationCache() {
 function mapJob(item: {
   id: string;
   idempotencyKey: string;
-  channel: "TRENDYOL" | "N11" | "PAZARAMA" | "HEPSIBURADA" | "EDOCS_MOCK";
-  jobType: "PRODUCT_SYNC" | "PRICE_SYNC" | "STOCK_SYNC" | "ORDER_IMPORT" | "ORDER_STATUS_SYNC" | "DOCUMENT_OUTBOUND" | "DOCUMENT_STATUS_SYNC";
-  entityType: "PRODUCT" | "MARKETPLACE_ACCOUNT" | "MARKETPLACE_PACKAGE" | "ORDER" | "BUSINESS_DOCUMENT";
+  channel: IntegrationChannel;
+  jobType: IntegrationJobType;
+  entityType: IntegrationEntityType;
   entityId: string;
   status: "PENDING" | "PROCESSING" | "SUCCESS" | "FAILED" | "DEAD_LETTER";
   attemptCount: number;
@@ -109,9 +135,9 @@ function mapJob(item: {
 function mapDeadLetter(item: {
   id: string;
   jobId: string;
-  channel: "TRENDYOL" | "N11" | "PAZARAMA" | "HEPSIBURADA" | "EDOCS_MOCK";
-  jobType: "PRODUCT_SYNC" | "PRICE_SYNC" | "STOCK_SYNC" | "ORDER_IMPORT" | "ORDER_STATUS_SYNC" | "DOCUMENT_OUTBOUND" | "DOCUMENT_STATUS_SYNC";
-  entityType: "PRODUCT" | "MARKETPLACE_ACCOUNT" | "MARKETPLACE_PACKAGE" | "ORDER" | "BUSINESS_DOCUMENT";
+  channel: IntegrationChannel;
+  jobType: IntegrationJobType;
+  entityType: IntegrationEntityType;
   entityId: string;
   lastError: string;
   attemptCount: number;
@@ -189,10 +215,29 @@ export class IntegrationService {
           payload: (job.payload as Record<string, unknown> | null) ?? null,
         });
 
+        let externalReference = dispatchResult?.externalReference ?? null;
+        let responsePayload = dispatchResult?.responsePayload ?? null;
+
+        if (job.channel === "BANK_SANDBOX" && job.jobType === "BANK_STATEMENT_SYNC" && job.entityType === "FINANCIAL_ACCOUNT") {
+          const importResult = await financeBankIntegrationService.importSandboxStatementFromConnectorResult({
+            financialAccountId: job.entityId,
+            integrationJobId: job.id,
+            responsePayload,
+          });
+
+          externalReference = importResult.import.id;
+          responsePayload = {
+            ...(responsePayload ?? {}),
+            bankStatementImportId: importResult.import.id,
+            suggestedCount: importResult.import.suggestedCount,
+            unmatchedCount: importResult.import.unmatchedCount,
+          };
+        }
+
         await this.repository.markJobSuccess({
           id: job.id,
-          externalReference: dispatchResult?.externalReference ?? null,
-          responsePayload: dispatchResult?.responsePayload ?? null,
+          externalReference,
+          responsePayload,
         });
 
         if (job.entityType === "BUSINESS_DOCUMENT" && job.jobType === "DOCUMENT_OUTBOUND") {

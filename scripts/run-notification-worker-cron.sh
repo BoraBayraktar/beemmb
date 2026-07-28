@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-LOCK_DIR="${TMPDIR:-/tmp}/arventatrade-notification-worker.lock"
+LOCK_DIR="${TMPDIR:-/tmp}/beemmb-notification-worker.lock"
 
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
   echo "notification worker is already running" >&2

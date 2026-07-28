@@ -15,6 +15,8 @@ type CustomerAccountRow = {
   taxNumber: string | null;
   address: string | null;
   note: string | null;
+  defaultPaymentTermDays: number | null;
+  creditLimit: unknown;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -58,6 +60,8 @@ export class CustomerAccountRepository {
         "taxNumber",
         "address",
         "note",
+        "defaultPaymentTermDays",
+        "creditLimit",
         "isActive",
         "createdAt",
         "updatedAt",
@@ -81,6 +85,8 @@ export class CustomerAccountRepository {
           taxNumber: input.taxNumber ?? null,
           address: input.address ?? null,
           note: input.note ?? null,
+          defaultPaymentTermDays: input.defaultPaymentTermDays ?? null,
+          creditLimit: input.creditLimit ?? null,
           isActive: input.isActive ?? true,
         },
       });
@@ -96,6 +102,8 @@ export class CustomerAccountRepository {
         "taxNumber",
         "address",
         "note",
+        "defaultPaymentTermDays",
+        "creditLimit",
         "isActive",
         "createdAt",
         "updatedAt",
@@ -110,6 +118,8 @@ export class CustomerAccountRepository {
         ${input.taxNumber ?? null},
         ${input.address ?? null},
         ${input.note ?? null},
+        ${input.defaultPaymentTermDays ?? null},
+        ${input.creditLimit ?? null},
         ${input.isActive ?? true},
         NOW(),
         NOW(),
@@ -124,6 +134,8 @@ export class CustomerAccountRepository {
         "taxNumber",
         "address",
         "note",
+        "defaultPaymentTermDays",
+        "creditLimit",
         "isActive",
         "createdAt",
         "updatedAt",
@@ -149,6 +161,8 @@ export class CustomerAccountRepository {
           taxNumber: input.taxNumber ?? null,
           address: input.address ?? null,
           note: input.note ?? null,
+          defaultPaymentTermDays: input.defaultPaymentTermDays ?? null,
+          creditLimit: input.creditLimit ?? null,
           isActive: input.isActive ?? true,
         },
       });
@@ -164,6 +178,8 @@ export class CustomerAccountRepository {
         "taxNumber" = ${input.taxNumber ?? null},
         "address" = ${input.address ?? null},
         "note" = ${input.note ?? null},
+        "defaultPaymentTermDays" = ${input.defaultPaymentTermDays ?? null},
+        "creditLimit" = ${input.creditLimit ?? null},
         "isActive" = ${input.isActive ?? true},
         "updatedAt" = NOW()
       WHERE "id" = ${input.id} AND "deleted" = false
@@ -176,6 +192,8 @@ export class CustomerAccountRepository {
         "taxNumber",
         "address",
         "note",
+        "defaultPaymentTermDays",
+        "creditLimit",
         "isActive",
         "createdAt",
         "updatedAt",
@@ -207,6 +225,8 @@ export class CustomerAccountRepository {
         "taxNumber",
         "address",
         "note",
+        "defaultPaymentTermDays",
+        "creditLimit",
         "isActive",
         "createdAt",
         "updatedAt",
@@ -241,6 +261,8 @@ export class CustomerAccountRepository {
         "taxNumber",
         "address",
         "note",
+        "defaultPaymentTermDays",
+        "creditLimit",
         "isActive",
         "createdAt",
         "updatedAt",
@@ -278,6 +300,8 @@ export class CustomerAccountRepository {
         "taxNumber",
         "address",
         "note",
+        "defaultPaymentTermDays",
+        "creditLimit",
         "isActive",
         "createdAt",
         "updatedAt",

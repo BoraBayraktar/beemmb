@@ -86,7 +86,7 @@ ON CONFLICT ("key") DO UPDATE SET
 
 INSERT INTO "Role" ("id", "key", "name", "description", "isSystem", "isActive")
 VALUES
-  ('role-super-admin', 'super-admin', 'Süper Yönetici', '2BEM genelindeki tüm menü, API ve güvenlik yönetimi yetkilerine sahiptir.', true, true),
+  ('role-super-admin', 'super-admin', 'Süper Yönetici', 'BEEMMB genelindeki tüm menü, API ve güvenlik yönetimi yetkilerine sahiptir.', true, true),
   ('role-operation', 'operation', 'Operasyon', 'Ürün, sipariş, stok ve belge süreçlerini günlük operasyon için yönetir.', true, true),
   ('role-auditor', 'auditor', 'Denetçi', 'İşlem kayıtları ve kritik kayıtları salt okunur izler.', true, true),
   ('role-finance', 'finance', 'Finans', 'Tahsilat, ödeme, cari ve finans raporlarını yönetir.', true, true),

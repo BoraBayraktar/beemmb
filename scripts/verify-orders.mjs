@@ -88,7 +88,7 @@ async function main() {
   const editorPasswordHash = await bcrypt.hash("Editor123!", 10);
 
   const adminUser = await prisma.user.upsert({
-    where: { email: "admin@arventatrade.local" },
+    where: { email: "admin@beemmb.local" },
     update: {
       name: "Admin User",
       role: "ADMIN",
@@ -98,7 +98,7 @@ async function main() {
       deletedUserId: null,
     },
     create: {
-      email: "admin@arventatrade.local",
+      email: "admin@beemmb.local",
       name: "Admin User",
       role: "ADMIN",
       passwordHash: adminPasswordHash,
@@ -106,7 +106,7 @@ async function main() {
   });
 
   await prisma.user.upsert({
-    where: { email: "editor@arventatrade.local" },
+    where: { email: "editor@beemmb.local" },
     update: {
       name: "Editor User",
       role: "EDITOR",
@@ -116,15 +116,15 @@ async function main() {
       deletedUserId: null,
     },
     create: {
-      email: "editor@arventatrade.local",
+      email: "editor@beemmb.local",
       name: "Editor User",
       role: "EDITOR",
       passwordHash: editorPasswordHash,
     },
   });
 
-  const adminCookie = await login("admin@arventatrade.local", "Admin123!");
-  const editorCookie = await login("editor@arventatrade.local", "Editor123!");
+  const adminCookie = await login("admin@beemmb.local", "Admin123!");
+  const editorCookie = await login("editor@beemmb.local", "Editor123!");
 
   const unique = Date.now();
   const createProductResponse = await authFetch("/api/admin/products", adminCookie, {

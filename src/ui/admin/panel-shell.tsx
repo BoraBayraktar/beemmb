@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   BarChart3,
+  BookOpen,
   BadgeDollarSign,
   Bell,
   Barcode,
@@ -19,6 +20,7 @@ import {
   FileClock,
   Files,
   FolderTree,
+  GitCompare,
   HandCoins,
   LayoutGrid,
   Landmark,
@@ -28,6 +30,8 @@ import {
   PlugZap,
   PieChart,
   ReceiptText,
+  Scale,
+  ScrollText,
   Search,
   ShieldCheck,
   Store,
@@ -80,6 +84,11 @@ const adminMenuIcons: Array<{ route: string; icon: LucideIcon }> = [
   { route: "/admin/documents/providers", icon: PlugZap },
   { route: "/admin/documents/webhooks", icon: Webhook },
   { route: "/admin/documents", icon: Files },
+  { route: "/admin/finance/reports/trial-balance", icon: Scale },
+  { route: "/admin/finance/bank-reconciliation", icon: GitCompare },
+  { route: "/admin/finance/ledger-entries", icon: BookOpen },
+  { route: "/admin/finance/instruments", icon: ScrollText },
+  { route: "/admin/finance/exports", icon: FileOutput },
   { route: "/admin/finance/payables", icon: HandCoins },
   { route: "/admin/finance/receivables", icon: BadgeDollarSign },
   { route: "/admin/finance/accounts", icon: Landmark },
@@ -837,7 +846,7 @@ function getActiveAdminGuide(pathname: string, searchParams: Pick<URLSearchParam
   return createGuide({
     eyebrow: "Admin rehberi",
     title: "Bu sayfa nasıl kullanılmalı?",
-    description: "Bulunduğunuz ekran 2BEM içindeki bir operasyon adımını yönetir. En doğru kullanım için önce hedef kaydı bulun, ardından bağlı modüllere geçerek süreci tamamlayın.",
+    description: "Bulunduğunuz ekran BEEMMB içindeki bir operasyon adımını yönetir. En doğru kullanım için önce hedef kaydı bulun, ardından bağlı modüllere geçerek süreci tamamlayın.",
     sections: [
       {
         title: "Genel sıra",

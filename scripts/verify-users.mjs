@@ -45,12 +45,12 @@ async function authFetch(path, cookie, options = {}) {
 }
 
 async function main() {
-  const adminCookie = await login("admin@arventatrade.local", "Admin123!");
-  const editorCookie = await login("editor@arventatrade.local", "Editor123!");
+  const adminCookie = await login("admin@beemmb.local", "Admin123!");
+  const editorCookie = await login("editor@beemmb.local", "Editor123!");
 
   const unique = Date.now();
-  const createEmail = `user-test-${unique}@arventatrade.local`;
-  const updateEmail = `user-test-updated-${unique}@arventatrade.local`;
+  const createEmail = `user-test-${unique}@beemmb.local`;
+  const updateEmail = `user-test-updated-${unique}@beemmb.local`;
   let createdUserId = null;
 
   const unauthorizedResponse = await fetch(`${baseUrl}/api/admin/users`);

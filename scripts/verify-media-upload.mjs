@@ -45,7 +45,7 @@ async function authFetch(path, cookie, options = {}) {
 }
 
 async function main() {
-  const adminCookie = await login("admin@arventatrade.local", "Admin123!");
+  const adminCookie = await login("admin@beemmb.local", "Admin123!");
 
   const category = await prisma.category.findFirst({
     where: { deleted: false },

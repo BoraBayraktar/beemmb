@@ -13,6 +13,7 @@ export const RBAC_PERMISSIONS = [
   { key: "documents.manage", module: "documents", action: "manage", menuKey: "documents", name: "Belgeleri yönetme" },
   { key: "finance.read", module: "finance", action: "read", menuKey: "finance", name: "Finansı görüntüleme" },
   { key: "finance.manage", module: "finance", action: "manage", menuKey: "finance", name: "Finansı yönetme" },
+  { key: "finance.audit.read", module: "finance", action: "audit_read", menuKey: "finance-exports", name: "Mali müşavir export paketi" },
   { key: "integrations.read", module: "integrations", action: "read", menuKey: "integrations", name: "Entegrasyonları görüntüleme" },
   { key: "integrations.manage", module: "integrations", action: "manage", menuKey: "integrations", name: "Entegrasyonları yönetme" },
 ] as const;
@@ -25,7 +26,7 @@ export const RBAC_SYSTEM_ROLES = [
   {
     key: "super-admin",
     name: "Süper Yönetici",
-    description: "2BEM genelindeki tüm menü, API ve güvenlik yönetimi yetkilerine sahiptir.",
+    description: "BEEMMB genelindeki tüm menü, API ve güvenlik yönetimi yetkilerine sahiptir.",
     permissions: ALL_PERMISSION_KEYS,
     legacyRoles: ["ADMIN"],
   },
@@ -58,7 +59,14 @@ export const RBAC_SYSTEM_ROLES = [
     key: "finance",
     name: "Finans",
     description: "Tahsilat, ödeme, cari ve finans raporlarını yönetir.",
-    permissions: ["admin.access", "orders.read", "documents.read", "finance.read", "finance.manage"],
+    permissions: ["admin.access", "orders.read", "documents.read", "finance.read", "finance.manage", "finance.audit.read"],
+    legacyRoles: [],
+  },
+  {
+    key: "accountant",
+    name: "Mali Müşavir",
+    description: "Finans raporlarını salt okunur görür ve muhasebe export paketi indirir.",
+    permissions: ["admin.access", "documents.read", "finance.read", "finance.audit.read"],
     legacyRoles: [],
   },
   {

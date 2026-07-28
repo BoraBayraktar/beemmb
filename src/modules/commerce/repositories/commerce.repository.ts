@@ -1150,4 +1150,31 @@ export class CommerceRepository {
       });
     });
   }
+
+  async updateOrderCustomerAccountId(orderId: string, customerAccountId: string) {
+    return prisma.order.update({
+      where: {
+        id: orderId,
+      },
+      data: {
+        customerAccountId,
+      },
+    });
+  }
+
+  async findLatestBusinessDocumentForOrder(orderId: string) {
+    return prisma.businessDocument.findFirst({
+      where: {
+        orderId,
+        deleted: false,
+      },
+      orderBy: {
+        issueDate: "desc",
+      },
+      select: {
+        counterpartyName: true,
+        counterpartyEmail: true,
+      },
+    });
+  }
 }

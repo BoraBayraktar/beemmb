@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Download, Pencil, Plus, Upload, X } from "lucide-react";
 
@@ -18,6 +19,11 @@ import type {
   AdminBusinessDocumentSyncStatus,
   AdminBusinessDocumentType,
 } from "@/modules/documents/contracts/document.contract";
+import type {
+  AdminBusinessDocumentXmlArtifactItem,
+  EDocumentConfigReadinessReport,
+  GIBComplianceReport,
+} from "@/modules/edocument/contracts/edocument.contract";
 
 type Labels = {
   title: string;
@@ -84,6 +90,32 @@ type Labels = {
   noCounterpartyResults: string;
   queueStatusSync: string;
   statusSyncing: string;
+  generateXml: string;
+  generatingXml: string;
+  xmlArtifacts: string;
+  noXmlArtifacts: string;
+  xmlValidationStatus: string;
+  xmlDownload: string;
+  complianceReport: string;
+  officialSchemaReady: string;
+  officialSchematronReady: string;
+  schemaHash: string;
+  schematronHash: string;
+  localRuleValid: string;
+  xsdValidationReady: string;
+  schematronValidationReady: string;
+  validationEngineReady: string;
+  providerReady: string;
+  providerMode: string;
+  registeredProviderAdapters: string;
+  adapterConfigured: string;
+  adapterOperational: string;
+  productionChecklist: string;
+  liveProviderTestScenarios: string;
+  requiredEvidence: string;
+  configReadiness: string;
+  configReady: string;
+  configMissing: string;
   badgeNotSent: string;
   badgeQueued: string;
   badgeSent: string;
@@ -97,6 +129,7 @@ type Labels = {
   importCsv: string;
   exportCsv: string;
   close: string;
+  financeDocumentMovementPreviewOpen: string;
 };
 
 type Props = {
@@ -267,6 +300,7 @@ function exportItemsAsCsv(items: AdminBusinessDocumentListItem[]) {
 }
 
 export function DocumentManager({
+  locale,
   result,
   providerOptions,
   supplierOptions,
@@ -293,6 +327,10 @@ export function DocumentManager({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dispatchingId, setDispatchingId] = useState<string | null>(null);
   const [statusSyncingId, setStatusSyncingId] = useState<string | null>(null);
+  const [xmlGeneratingId, setXmlGeneratingId] = useState<string | null>(null);
+  const [xmlArtifacts, setXmlArtifacts] = useState<AdminBusinessDocumentXmlArtifactItem[]>([]);
+  const [complianceReport, setComplianceReport] = useState<GIBComplianceReport | null>(null);
+  const [configReadinessReport, setConfigReadinessReport] = useState<EDocumentConfigReadinessReport | null>(null);
   const [createForm, setCreateForm] = useState<DocumentForm>(() => buildEmptyForm(defaultDateTimeLocal, defaultProviderConfigId));
   const [editForm, setEditForm] = useState<DocumentForm>(() => buildEmptyForm(defaultDateTimeLocal, defaultProviderConfigId));
 
@@ -415,7 +453,11 @@ export function DocumentManager({
   }
 
   async function openDetail(id: string) {
-    const response = await fetch(`/api/admin/documents/${id}`, { cache: "no-store" });
+    const [response, artifactResponse, configResponse] = await Promise.all([
+      fetch(`/api/admin/documents/${id}`, { cache: "no-store" }),
+      fetch(`/api/admin/documents/${id}/xml-artifacts`, { cache: "no-store" }),
+      fetch("/api/admin/edocuments/config-readiness", { cache: "no-store" }),
+    ]);
     if (!response.ok) {
       const payload = (await response.json().catch(() => null)) as { message?: string } | null;
       setError(payload?.message ?? labels.opFailed);
@@ -424,6 +466,25 @@ export function DocumentManager({
 
     const payload = (await response.json()) as { item: AdminBusinessDocumentDetail };
     setDetail(payload.item);
+
+    if (artifactResponse.ok) {
+      const artifactPayload = (await artifactResponse.json()) as {
+        items: AdminBusinessDocumentXmlArtifactItem[];
+        complianceReport: GIBComplianceReport | null;
+      };
+      setXmlArtifacts(artifactPayload.items);
+      setComplianceReport(artifactPayload.complianceReport);
+    } else {
+      setXmlArtifacts([]);
+      setComplianceReport(null);
+    }
+
+    if (configResponse.ok) {
+      const configPayload = (await configResponse.json()) as { report: EDocumentConfigReadinessReport };
+      setConfigReadinessReport(configPayload.report);
+    } else {
+      setConfigReadinessReport(null);
+    }
   }
 
   async function submitDocument(event: React.FormEvent<HTMLFormElement>) {
@@ -587,6 +648,37 @@ export function DocumentManager({
       setError(caughtError instanceof Error ? caughtError.message : labels.opFailed);
     } finally {
       setStatusSyncingId(null);
+    }
+  }
+
+  async function generateXml(id: string) {
+    setXmlGeneratingId(id);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/admin/documents/${id}/xml-artifacts`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ validate: true }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+        setError(payload?.message ?? labels.opFailed);
+        return;
+      }
+
+      const payload = (await response.json()) as { item: AdminBusinessDocumentXmlArtifactItem; created: boolean };
+      setXmlArtifacts((current) => {
+        const withoutDuplicate = current.filter((item) => item.id !== payload.item.id);
+        return [payload.item, ...withoutDuplicate];
+      });
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : labels.opFailed);
+    } finally {
+      setXmlGeneratingId(null);
     }
   }
 
@@ -1148,6 +1240,17 @@ export function DocumentManager({
 
                 <div className="rounded-2xl border border-slate-200 p-4">
                   <div className="flex flex-wrap gap-2">
+                    <Button type="button" variant="outline" asChild>
+                      <Link href={`/${locale}/admin/finance/business-documents/${detail.id}/movements`}>
+                        {labels.financeDocumentMovementPreviewOpen}
+                      </Link>
+                    </Button>
+                    {(detail.documentType === "E_INVOICE" || detail.documentType === "E_DISPATCH") ? (
+                      <Button type="button" variant="outline" onClick={() => void generateXml(detail.id)} disabled={xmlGeneratingId === detail.id}>
+                        <Download className="mr-2 h-4 w-4" />
+                        {xmlGeneratingId === detail.id ? labels.generatingXml : labels.generateXml}
+                      </Button>
+                    ) : null}
                     {(detail.documentType === "E_INVOICE" || detail.documentType === "E_DISPATCH") ? (
                       <Button type="button" variant="outline" onClick={() => void queueDispatch(detail.id, detail.providerConfigId)} disabled={dispatchingId === detail.id}>
                         {dispatchingId === detail.id ? labels.queueing : labels.queueDispatch}
@@ -1160,6 +1263,160 @@ export function DocumentManager({
                     ) : null}
                   </div>
                 </div>
+
+                {(detail.documentType === "E_INVOICE" || detail.documentType === "E_DISPATCH") ? (
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-950">{labels.xmlArtifacts}</h3>
+                    {complianceReport ? (
+                      <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+                        <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                          <div>
+                            <p className="font-semibold text-slate-950">{labels.complianceReport}</p>
+                            <p className="mt-1">{complianceReport.documentRootType} • {complianceReport.schemaVersion}</p>
+                            <p className="mt-1">{labels.localRuleValid}: {complianceReport.localRuleValid ? labels.badgeSent : labels.badgeFailed}</p>
+                            <p className="mt-1">{labels.officialSchemaReady}: {complianceReport.officialSchemaReady ? labels.badgeSent : labels.badgeFailed}</p>
+                            {complianceReport.xsdHash ? (
+                              <p className="mt-1 break-all text-xs">{labels.schemaHash}: {complianceReport.xsdHash}</p>
+                            ) : null}
+                            <p className="mt-1">{labels.officialSchematronReady}: {complianceReport.officialSchematronReady ? labels.badgeSent : labels.badgeFailed}</p>
+                            {complianceReport.schematronHash ? (
+                              <p className="mt-1 break-all text-xs">{labels.schematronHash}: {complianceReport.schematronHash}</p>
+                            ) : null}
+                            <p className="mt-1">{labels.xsdValidationReady}: {complianceReport.xsdValidationReady ? labels.badgeSent : labels.badgeFailed}</p>
+                            <p className="mt-1">{labels.schematronValidationReady}: {complianceReport.schematronValidationReady ? labels.badgeSent : labels.badgeFailed}</p>
+                          </div>
+                          <Badge variant={complianceReport.valid ? "default" : "secondary"}>
+                            {complianceReport.valid ? labels.badgeSent : labels.badgeFailed}
+                          </Badge>
+                        </div>
+                        {complianceReport.issues.length > 0 ? (
+                          <div className="mt-3 space-y-2">
+                            {complianceReport.issues.map((issue, index) => (
+                              <p key={`${issue.code}-${index}`} className={issue.severity === "ERROR" ? "text-xs text-rose-700" : "text-xs text-amber-700"}>
+                                {issue.message}
+                              </p>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
+                    {configReadinessReport ? (
+                      <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+                        <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                          <div>
+                            <p className="font-semibold text-slate-950">{labels.configReadiness}</p>
+                            <p className="mt-1">
+                              {configReadinessReport.ready ? labels.configReady : labels.configMissing}
+                            </p>
+                            <p className="mt-1">
+                              {labels.validationEngineReady}: {configReadinessReport.validationEngineReady ? labels.badgeSent : labels.badgeFailed}
+                            </p>
+                            <p className="mt-1">
+                              {labels.providerMode}: {configReadinessReport.providerMode}
+                            </p>
+                            <p className="mt-1 break-all">
+                              {labels.registeredProviderAdapters}: {configReadinessReport.registeredProviderAdapters.length > 0 ? configReadinessReport.registeredProviderAdapters.join(", ") : labels.empty}
+                            </p>
+                            {configReadinessReport.providerAdapters.length > 0 ? (
+                              <div className="mt-2 space-y-1">
+                                {configReadinessReport.providerAdapters.map((adapter) => (
+                                  <p key={adapter.providerKey} className="break-all text-xs">
+                                    {adapter.providerKey}: {labels.adapterConfigured} {adapter.configured ? labels.badgeSent : labels.badgeFailed} · {labels.adapterOperational} {adapter.operational ? labels.badgeSent : labels.badgeFailed}
+                                  </p>
+                                ))}
+                              </div>
+                            ) : null}
+                            <p className="mt-1">
+                              {labels.providerReady}: {configReadinessReport.providerReady ? labels.badgeSent : labels.badgeFailed}
+                            </p>
+                          </div>
+                          <Badge variant={configReadinessReport.ready ? "default" : "secondary"}>
+                            {configReadinessReport.ready ? labels.badgeSent : labels.badgeFailed}
+                          </Badge>
+                        </div>
+                        {configReadinessReport.checks.some((check) => !check.ready) ? (
+                          <div className="mt-3 space-y-2">
+                            {configReadinessReport.checks
+                              .filter((check) => !check.ready)
+                              .map((check) => (
+                                <p key={check.key} className="break-all text-xs text-rose-700">
+                                  {check.label}: {check.message}
+                                </p>
+                              ))}
+                          </div>
+                        ) : null}
+                        {configReadinessReport.productionChecklist.length > 0 ? (
+                          <div className="mt-3 border-t border-slate-200 pt-3">
+                            <p className="text-xs font-semibold text-slate-900">{labels.productionChecklist}</p>
+                            <div className="mt-2 space-y-2">
+                              {configReadinessReport.productionChecklist.map((item) => (
+                                <div key={item.key} className="text-xs text-slate-600">
+                                  <p className="font-medium text-slate-800">{item.label}</p>
+                                  <p className="mt-1 break-all">
+                                    {labels.requiredEvidence}: {item.requiredEvidence.join(", ")}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
+                        {configReadinessReport.liveProviderTestScenarios.length > 0 ? (
+                          <div className="mt-3 border-t border-slate-200 pt-3">
+                            <p className="text-xs font-semibold text-slate-900">{labels.liveProviderTestScenarios}</p>
+                            <div className="mt-2 space-y-2">
+                              {configReadinessReport.liveProviderTestScenarios.map((item) => (
+                                <div key={item.key} className="text-xs text-slate-600">
+                                  <p className="font-medium text-slate-800">{item.label}</p>
+                                  <p className="mt-1 break-all">
+                                    {labels.requiredEvidence}: {item.requiredEvidence.join(", ")}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
+                    {xmlArtifacts.length === 0 ? (
+                      <p className="mt-3 text-sm text-slate-500">{labels.noXmlArtifacts}</p>
+                    ) : (
+                      <div className="mt-3 space-y-3">
+                        {xmlArtifacts.map((artifact) => (
+                          <article key={artifact.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                              <div>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <p className="font-semibold text-slate-950">{artifact.documentRootType} • {artifact.schemaVersion}</p>
+                                  {artifact.isCurrent ? <Badge variant="default">Güncel</Badge> : null}
+                                </div>
+                                {artifact.supersedesArtifactId ? (
+                                  <p className="mt-1 break-all text-xs text-slate-600">Önceki XML: {artifact.supersedesArtifactId}</p>
+                                ) : null}
+                                <p className="mt-1">{labels.xmlValidationStatus}: {artifact.validationStatus}</p>
+                                <p className="mt-1 break-all text-xs text-slate-600">{labels.lifecyclePayloadHash}: {artifact.xmlHash}</p>
+                                {artifact.xsdHash ? (
+                                  <p className="mt-1 break-all text-xs text-slate-600">{labels.schemaHash}: {artifact.xsdHash}</p>
+                                ) : null}
+                                {artifact.schematronHash ? (
+                                  <p className="mt-1 break-all text-xs text-slate-600">{labels.schematronHash}: {artifact.schematronHash}</p>
+                                ) : null}
+                                {artifact.validationErrors.length > 0 ? (
+                                  <p className="mt-2 text-xs text-rose-700">{artifact.validationErrors.join(" ")}</p>
+                                ) : null}
+                              </div>
+                              <Button type="button" size="sm" variant="outline" asChild>
+                                <a href={`/api/admin/document-xml-artifacts/${artifact.id}`}>
+                                  <Download className="mr-2 h-4 w-4" />
+                                  {labels.xmlDownload}
+                                </a>
+                              </Button>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : null}
 
                 <div>
                   <h3 className="text-sm font-semibold text-slate-950">{labels.viewLines}</h3>

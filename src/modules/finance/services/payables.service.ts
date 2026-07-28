@@ -3,8 +3,10 @@ import { financeRepository } from "@/modules/finance/repositories/finance.reposi
 import type {
   AdminSupplierPayableDetail,
   AdminSupplierPayableSummary,
+  AdminSupplierPayablesListResult,
   AdminSupplierPayablesQuery,
 } from "@/modules/finance/contracts/payables.contract";
+import { buildFinanceDueKpi } from "@/modules/finance/services/finance-due-date.util";
 
 function normalizeSupplierKey(value: string) {
   return value.trim().toLocaleLowerCase("tr-TR");
@@ -37,56 +39,97 @@ function buildTopVariantSummary(documents: Array<{
   return topEntries.length > 0 ? topEntries.join(" + ") : null;
 }
 
-export class PayablesService {
-  async listSupplierPayables(query: AdminSupplierPayablesQuery = {}): Promise<AdminSupplierPayableSummary[]> {
-    const documents = await documentService.listOperationalPayableDocuments(query.search);
-    const grouped = new Map<string, AdminSupplierPayableSummary>();
+function buildSupplierSummaryFromDocuments(
+  documents: Awaited<ReturnType<typeof documentService.listOperationalPayableDocuments>>,
+): AdminSupplierPayableSummary[] {
+  const grouped = new Map<string, AdminSupplierPayableSummary>();
 
-    for (const document of documents) {
-      const supplierName = document.counterpartyName.trim() || "Belirtilmedi";
-      const supplierId = document.supplierId ?? null;
-      const currency = document.currency || "TRY";
-      const supplierKey = `${normalizeSupplierKey(supplierName)}:${currency}`;
-      const current = grouped.get(supplierKey);
+  for (const document of documents) {
+    const supplierName = document.counterpartyName.trim() || "Belirtilmedi";
+    const supplierId = document.supplierId ?? null;
+    const currency = document.currency || "TRY";
+    const supplierKey = `${normalizeSupplierKey(supplierName)}:${currency}`;
+    const current = grouped.get(supplierKey);
+    const amount = document.totalAmount ?? 0;
 
-      if (!current) {
-        grouped.set(supplierKey, {
-          supplierId,
-          supplierKey,
-          supplierName,
-          currency,
-          totalAmount: document.totalAmount ?? 0,
-          documentCount: 1,
-          draftCount: document.status === "DRAFT" ? 1 : 0,
-          lastIssueDate: document.issueDate,
-          topVariantSummary: null,
-          documents: [document],
-        });
-        continue;
-      }
-
-      current.supplierId = current.supplierId ?? supplierId;
-      current.totalAmount += document.totalAmount ?? 0;
-      current.documentCount += 1;
-      current.draftCount += document.status === "DRAFT" ? 1 : 0;
-      current.lastIssueDate = !current.lastIssueDate || new Date(document.issueDate) > new Date(current.lastIssueDate)
-        ? document.issueDate
-        : current.lastIssueDate;
-      current.documents.push(document);
+    if (!current) {
+      grouped.set(supplierKey, {
+        supplierId,
+        supplierSlug: null,
+        supplierKey,
+        supplierName,
+        currency,
+        totalAmount: amount,
+        documentCount: 1,
+        draftCount: document.status === "DRAFT" ? 1 : 0,
+        lastIssueDate: document.issueDate,
+        nearestDueDate: document.effectiveDueDate,
+        overdueAmount: document.isOverdue ? amount : 0,
+        topVariantSummary: null,
+        documents: [document],
+      });
+      continue;
     }
 
-    return Array.from(grouped.values())
-      .map((item) => ({
+    current.supplierId = current.supplierId ?? supplierId;
+    current.totalAmount += amount;
+    current.documentCount += 1;
+    current.draftCount += document.status === "DRAFT" ? 1 : 0;
+    current.overdueAmount += document.isOverdue ? amount : 0;
+    current.lastIssueDate = !current.lastIssueDate || new Date(document.issueDate) > new Date(current.lastIssueDate)
+      ? document.issueDate
+      : current.lastIssueDate;
+    if (!current.nearestDueDate || new Date(document.effectiveDueDate) < new Date(current.nearestDueDate)) {
+      current.nearestDueDate = document.effectiveDueDate;
+    }
+    current.documents.push(document);
+  }
+
+  return Array.from(grouped.values())
+    .map((item) => ({
+      ...item,
+      totalAmount: Number(item.totalAmount.toFixed(2)),
+      overdueAmount: Number(item.overdueAmount.toFixed(2)),
+      topVariantSummary: null,
+      documents: item.documents.sort((left, right) => right.issueDate.localeCompare(left.issueDate)),
+    }))
+    .sort((left, right) => right.totalAmount - left.totalAmount);
+}
+
+export class PayablesService {
+  async listSupplierPayables(query: AdminSupplierPayablesQuery = {}): Promise<AdminSupplierPayablesListResult> {
+    const documents = await documentService.listOperationalPayableDocuments(query.search);
+    const dueKpi = buildFinanceDueKpi(
+      documents.map((document) => ({
+        amount: document.totalAmount ?? 0,
+        effectiveDueDate: document.effectiveDueDate,
+        currency: document.currency || "TRY",
+      })),
+    );
+
+    const filteredDocuments = query.overdueOnly
+      ? documents.filter((document) => document.isOverdue)
+      : documents;
+
+    const summaries = buildSupplierSummaryFromDocuments(filteredDocuments);
+
+    const items = await Promise.all(summaries.map(async (item) => {
+      if (!item.supplierId) {
+        return item;
+      }
+
+      const supplier = await financeRepository.findSupplierById(item.supplierId);
+      return {
         ...item,
-        totalAmount: Number(item.totalAmount.toFixed(2)),
-        topVariantSummary: null,
-        documents: item.documents.sort((left, right) => right.issueDate.localeCompare(left.issueDate)),
-      }))
-      .sort((left, right) => right.totalAmount - left.totalAmount);
+        supplierSlug: supplier?.slug ?? null,
+      };
+    }));
+
+    return { items, dueKpi };
   }
 
   async getSupplierPayableByKey(supplierKey: string): Promise<AdminSupplierPayableDetail | null> {
-    const items = await this.listSupplierPayables();
+    const { items } = await this.listSupplierPayables();
     const summary = items.find((item) => item.supplierKey === supplierKey) ?? null;
     if (!summary) {
       return null;

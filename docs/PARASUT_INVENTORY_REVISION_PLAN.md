@@ -1,6 +1,6 @@
 # Paraşüt Bazlı Stok Revizyon Planı
 
-Bu dokuman, mevcut ArventaTrade stok yonetimini Paraşüt'teki stok ve depo operasyonlarina daha yakin hale getirmek icin fazli bir uygulama plani sunar.
+Bu dokuman, mevcut BEEMMB stok yonetimini Paraşüt'teki stok ve depo operasyonlarina daha yakin hale getirmek icin fazli bir uygulama plani sunar.
 
 Not:
 

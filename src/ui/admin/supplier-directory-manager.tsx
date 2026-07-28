@@ -32,6 +32,8 @@ type Labels = {
   email: string;
   phone: string;
   taxNumber: string;
+  defaultPaymentTermDays: string;
+  creditLimit: string;
   productCount: string;
   create: string;
   edit: string;
@@ -61,6 +63,8 @@ type SupplierForm = {
   email: string;
   phone: string;
   taxNumber: string;
+  defaultPaymentTermDays: string;
+  creditLimit: string;
 };
 
 const emptyForm: SupplierForm = {
@@ -69,6 +73,8 @@ const emptyForm: SupplierForm = {
   email: "",
   phone: "",
   taxNumber: "",
+  defaultPaymentTermDays: "",
+  creditLimit: "",
 };
 
 export function SupplierDirectoryManager({ items, labels, canDelete }: Props) {
@@ -159,6 +165,8 @@ export function SupplierDirectoryManager({ items, labels, canDelete }: Props) {
       email: item.email ?? "",
       phone: item.phone ?? "",
       taxNumber: item.taxNumber ?? "",
+      defaultPaymentTermDays: item.defaultPaymentTermDays != null ? String(item.defaultPaymentTermDays) : "",
+      creditLimit: item.creditLimit != null ? String(item.creditLimit) : "",
     });
     setDrawerMode("edit");
   }
@@ -208,6 +216,8 @@ export function SupplierDirectoryManager({ items, labels, canDelete }: Props) {
           email: form.email.trim() || null,
           phone: form.phone.trim() || null,
           taxNumber: form.taxNumber.trim() || null,
+          defaultPaymentTermDays: form.defaultPaymentTermDays.trim() ? Number(form.defaultPaymentTermDays) : null,
+          creditLimit: form.creditLimit.trim() ? Number(form.creditLimit) : null,
         }),
       });
 
@@ -515,6 +525,14 @@ export function SupplierDirectoryManager({ items, labels, canDelete }: Props) {
               <div className="grid gap-2">
                 <Label>{labels.taxNumber}</Label>
                 <Input value={activeForm.taxNumber} onChange={(event) => patchActiveField("taxNumber", event.target.value)} />
+              </div>
+              <div className="grid gap-2">
+                <Label>{labels.defaultPaymentTermDays}</Label>
+                <Input type="number" min={0} max={365} value={activeForm.defaultPaymentTermDays} onChange={(event) => patchActiveField("defaultPaymentTermDays", event.target.value)} />
+              </div>
+              <div className="grid gap-2">
+                <Label>{labels.creditLimit}</Label>
+                <Input type="number" min={0} step="0.01" value={activeForm.creditLimit} onChange={(event) => patchActiveField("creditLimit", event.target.value)} />
               </div>
               <div className="mt-2 flex items-center justify-end gap-2">
                 <Button type="button" variant="secondary" onClick={closeDrawer} disabled={loading}>

@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 ENV_FILE="$REPO_ROOT/.env"
-LOCK_DIR="${TMPDIR:-/tmp}/arventatrade-notification-worker.lock"
+LOCK_DIR="${TMPDIR:-/tmp}/beemmb-notification-worker.lock"
 
 if [[ -f "$ENV_FILE" ]]; then
   set -a

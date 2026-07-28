@@ -201,6 +201,35 @@ export class DocumentRepository {
     });
   }
 
+  async listBusinessDocumentsForVatProjection(args: { fromDate: Date; toDate: Date }) {
+    return (prisma.businessDocument as any).findMany({
+      where: {
+        deleted: false,
+        status: { in: ["ISSUED", "LINKED"] },
+        documentType: { in: ["E_INVOICE", "PURCHASE_DOCUMENT"] },
+        issueDate: {
+          gte: args.fromDate,
+          lte: args.toDate,
+        },
+      },
+      orderBy: [{ issueDate: "desc" }, { createdAt: "desc" }],
+      include: {
+        lines: {
+          select: {
+            id: true,
+            productSku: true,
+            productName: true,
+            quantity: true,
+            unitPrice: true,
+            lineTotal: true,
+            currency: true,
+            note: true,
+          },
+        },
+      },
+    });
+  }
+
   async listPendingInvoiceCandidateDeliveryNotes(search?: string) {
     return (prisma.businessDocument as any).findMany({
       where: {

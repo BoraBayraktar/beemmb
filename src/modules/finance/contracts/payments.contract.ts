@@ -1,3 +1,5 @@
+import type { AdminCounterpartyFinanceTerms } from "@/modules/finance/contracts/counterparty-finance-terms.contract";
+
 export type AdminPaymentReadinessItem = {
   supplierId: string;
   supplierKey: string;
@@ -12,6 +14,7 @@ export type AdminPaymentReadinessItem = {
   topVariantSummary: string | null;
   detailHref: string;
   sourceHref: string;
+  counterpartyFinanceTerms: AdminCounterpartyFinanceTerms | null;
 };
 
 export type AdminPaymentsSummary = {

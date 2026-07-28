@@ -51,6 +51,18 @@ APP_URL=http://localhost:3000 npm run verify:integrations
 APP_URL=http://localhost:3000 npm run verify:orders
 ```
 
+## Finans modulu dogrulama
+
+Finans Faz 3 / 4C degisikliklerinden veya finans migration'larindan sonra:
+
+1. Otomatik zincir:
+
+```bash
+npm run verify:finance:phase4c
+```
+
+2. Admin panelinde elle kontrol listesi: `docs/FINANCE_MODULE_ARCHITECTURE.md` dosyasindaki **Admin Manuel Kontrol Listesi (Faz 3 / 4C)** bolumu.
+
 ## Notification Email Live Test
 
 Canli e-posta testi icin asagidaki degiskenlerden en az biri tanimli olmalidir:
@@ -82,7 +94,7 @@ npm run worker:notifications:cron
 Ornek cron (her 2 dakikada bir):
 
 ```bash
-*/2 * * * * cd /path/to/arventatrade && npm run worker:notifications:cron >> /var/log/arventatrade-notification-worker.log 2>&1
+*/2 * * * * cd /path/to/beemmb && npm run worker:notifications:cron >> /var/log/beemmb-notification-worker.log 2>&1
 ```
 
 Onerilen araliklar:
@@ -96,7 +108,7 @@ Onerilen araliklar:
 macOS ortaminda cron yerine launchd kullanmak daha sagliklidir. Repo icindeki hazir dosyalar:
 
 - `scripts/run-notification-worker-launchd.sh`
-- `launchd/com.arventatrade.notification-worker.plist`
+- `launchd/com.beemmb.notification-worker.plist`
 
 Kurulum adimlari:
 
@@ -104,23 +116,23 @@ Kurulum adimlari:
 
 ```bash
 mkdir -p ~/Library/LaunchAgents
-cp /Users/borabayraktar/Documents/GitHub/arventatrade/launchd/com.arventatrade.notification-worker.plist ~/Library/LaunchAgents/
+cp /Users/borabayraktar/Documents/GitHub/beemmb/launchd/com.beemmb.notification-worker.plist ~/Library/LaunchAgents/
 ```
 
 1. Plist icindeki repo yolunun sizin ortaminizla eslestiginden emin olun.
 1. Servisi yukleyin ve calistirin.
 
 ```bash
-launchctl unload ~/Library/LaunchAgents/com.arventatrade.notification-worker.plist 2>/dev/null || true
-launchctl load ~/Library/LaunchAgents/com.arventatrade.notification-worker.plist
-launchctl start com.arventatrade.notification-worker
+launchctl unload ~/Library/LaunchAgents/com.beemmb.notification-worker.plist 2>/dev/null || true
+launchctl load ~/Library/LaunchAgents/com.beemmb.notification-worker.plist
+launchctl start com.beemmb.notification-worker
 ```
 
 1. Loglari kontrol edin.
 
 ```bash
-tail -f ~/Library/Logs/arventatrade-notification-worker.log
-tail -f ~/Library/Logs/arventatrade-notification-worker.error.log
+tail -f ~/Library/Logs/beemmb-notification-worker.log
+tail -f ~/Library/Logs/beemmb-notification-worker.error.log
 ```
 
 Not: Launchd scripti repo icindeki `.env` dosyasini otomatik yukler. Bu sayede `RESEND_API_KEY`, `NOTIFICATION_EMAIL_FROM` ve `NOTIFICATION_EMAIL_WEBHOOK_URL` degiskenleri servis tarafinda gorunur.

@@ -58,7 +58,7 @@ async function createProduct(cookie, payload) {
 }
 
 async function main() {
-  const adminCookie = await login("admin@arventatrade.local", "Admin123!");
+  const adminCookie = await login("admin@beemmb.local", "Admin123!");
 
   const categories = await prisma.category.findMany({
     where: { deleted: false },

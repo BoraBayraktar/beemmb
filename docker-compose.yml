@@ -1,12 +1,12 @@
 services:
   postgres:
     image: postgres:16
-    container_name: arventa-postgres
+    container_name: beemmb-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: arventatrade
-      POSTGRES_USER: arventa
-      POSTGRES_PASSWORD: arventa123
+      POSTGRES_DB: beemmb
+      POSTGRES_USER: beemmb
+      POSTGRES_PASSWORD: beemmb123
     ports:
       - "5432:5432"
     volumes:
@@ -14,7 +14,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: arventa-redis
+    container_name: beemmb-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -23,7 +23,7 @@ services:
 
   minio:
     image: minio/minio:latest
-    container_name: 2bem-minio
+    container_name: beemmb-minio
     restart: unless-stopped
     environment:
       MINIO_ROOT_USER: minioadmin
@@ -37,7 +37,7 @@ services:
 
   minio-init:
     image: minio/mc:latest
-    container_name: 2bem-minio-init
+    container_name: beemmb-minio-init
     depends_on:
       - minio
     restart: "no"
@@ -46,8 +46,8 @@ services:
       until mc alias set local http://minio:9000 minioadmin minioadmin; do
         sleep 1;
       done;
-      mc mb -p local/2bem-media || true;
-      mc anonymous set download local/2bem-media;
+      mc mb -p local/beemmb-media || true;
+      mc anonymous set download local/beemmb-media;
       "
 
 volumes:

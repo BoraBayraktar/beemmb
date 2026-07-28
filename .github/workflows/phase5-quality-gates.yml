@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      DATABASE_URL: postgresql://arventa:arventa123@localhost:5432/arventatrade?schema=public
+      DATABASE_URL: postgresql://beemmb:beemmb123@localhost:5432/beemmb?schema=public
       REDIS_URL: redis://localhost:6379
       AUTH_SECRET: ci-auth-secret
       APP_URL: http://localhost:3000
@@ -20,20 +20,38 @@ jobs:
       MINIO_USE_SSL: "false"
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
-      MINIO_BUCKET: arventa-media
-      MEDIA_PUBLIC_BASE_URL: http://localhost:9000/arventa-media
+      MINIO_BUCKET: beemmb-media
+      MEDIA_PUBLIC_BASE_URL: http://localhost:9000/beemmb-media
+      EDOCUMENT_SENDER_NAME: BEEMMB CI
+      EDOCUMENT_SENDER_TAX_NUMBER: "1234567890"
+      EDOCUMENT_SENDER_TAX_OFFICE: CI
+      EDOCUMENT_SENDER_EMAIL: ebelge-ci@example.com
+      EDOCUMENT_SENDER_ADDRESS: CI adresi
+      EDOCUMENT_INVOICE_NUMBER_PREFIX: BEF
+      EDOCUMENT_DEFAULT_VAT_RATE: "20"
+      EDOCUMENT_SHIPMENT_CARRIER_NAME: CI Taşıyıcı
+      EDOCUMENT_SHIPMENT_CARRIER_TAX_NUMBER: "1234567890"
+      EDOCUMENT_SHIPMENT_VEHICLE_PLATE: 34CI123
+      EDOCUMENT_SHIPMENT_DRIVER_NAME: CI Şoför
+      EDOCUMENT_SHIPMENT_DRIVER_TCKN: "10000000146"
+      EDOCUMENT_XSD_VALIDATOR_COMMAND: node
+      EDOCUMENT_XSD_VALIDATOR_ARGS: --schema {schema} {xml}
+      EDOCUMENT_SCHEMATRON_VALIDATOR_COMMAND: node
+      EDOCUMENT_SCHEMATRON_VALIDATOR_ARGS: --schema {schema} --xml {xml}
+      EDOCUMENT_PROVIDER_MODE: LIVE
+      EDOCUMENT_LIVE_PROVIDER_PROTOCOL: CUSTOM_HTTP_JSON
 
     services:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_DB: arventatrade
-          POSTGRES_USER: arventa
-          POSTGRES_PASSWORD: arventa123
+          POSTGRES_DB: beemmb
+          POSTGRES_USER: beemmb
+          POSTGRES_PASSWORD: beemmb123
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U arventa -d arventatrade"
+          --health-cmd "pg_isready -U beemmb -d beemmb"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
@@ -69,6 +87,9 @@ jobs:
 
       - name: Seed database
         run: npm run db:seed
+
+      - name: Verify finance counterparty (DB)
+        run: npm run verify:finance:counterparty
 
       - name: Lint
         run: npm run lint
@@ -114,6 +135,12 @@ jobs:
 
       - name: Verify audit coverage
         run: npm run verify:audit:coverage
+
+      - name: Verify finance phase 4c
+        run: npm run verify:finance:phase4c
+
+      - name: Verify e-document
+        run: npm run verify:edocument
 
       - name: Print app logs on failure
         if: failure()

@@ -1,6 +1,6 @@
-# 2BEM Development Rules
+# BEEMMB Development Rules
 
-Bu dosya ArventaTrade gelistirme standardi icin tek kaynak (single source of truth) olarak kullanilir.
+Bu dosya BEEMMB gelistirme standardi icin tek kaynak (single source of truth) olarak kullanilir.
 Tum yeni gelistirmeler ve refactor islemleri bu kurallara uygun yapilmalidir.
 
 ## 1) Modular Monolith ve Katman Sinirlari

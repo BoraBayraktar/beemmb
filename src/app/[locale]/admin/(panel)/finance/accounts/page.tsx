@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
-import { accountsService } from "@/modules/finance/services/accounts.service";
+import { financeAccountEntryProjectionService } from "@/modules/finance/services/finance-account-entry-projection.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { FinanceAccountsManager } from "@/ui/admin/finance-accounts-manager";
 
@@ -30,7 +30,7 @@ export default async function AdminFinanceAccountsPage({
       ? resolvedSearchParams.type
       : "all";
 
-  const result = await accountsService.listAccountEntries(locale, {
+  const result = await financeAccountEntryProjectionService.listAccountEntries(locale, {
     search: resolvedSearchParams.search,
     type,
   });
@@ -59,7 +59,9 @@ export default async function AdminFinanceAccountsPage({
         amount: dictionary.admin.financeAccountsAmount,
         openFinanceRoute: dictionary.admin.financeAccountsOpenFinanceRoute,
         openSource: dictionary.admin.financeAccountsOpenSource,
+        openCounterpartyLedger: dictionary.admin.financeAccountsOpenCounterpartyLedger,
         openDetail: dictionary.admin.financeCollectionsOpenDetail,
+        openFinanceMovementPreview: dictionary.admin.financeDocumentMovementPreviewOpen,
         noResults: dictionary.admin.financeAccountsEmpty,
         cancel: dictionary.admin.cancel,
       }}

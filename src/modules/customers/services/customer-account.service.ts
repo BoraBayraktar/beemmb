@@ -6,6 +6,7 @@ import type {
   AdminUpdateCustomerAccountInput,
 } from "@/modules/customers/contracts/customer-account.contract";
 import { customerAccountRepository } from "@/modules/customers/repositories/customer-account.repository";
+import { counterpartyLookupService } from "@/modules/finance/services/counterparty-lookup.service";
 
 const createCustomerAccountSchema = z.object({
   slug: z.string().trim().min(1).max(120),
@@ -15,6 +16,8 @@ const createCustomerAccountSchema = z.object({
   taxNumber: z.string().trim().max(64).optional().nullable().or(z.literal("")).transform((value) => value || null),
   address: z.string().trim().max(500).optional().nullable().or(z.literal("")).transform((value) => value || null),
   note: z.string().trim().max(500).optional().nullable().or(z.literal("")).transform((value) => value || null),
+  defaultPaymentTermDays: z.coerce.number().int().min(0).max(365).optional().nullable(),
+  creditLimit: z.coerce.number().nonnegative().optional().nullable(),
   isActive: z.boolean().default(true),
 });
 
@@ -32,6 +35,12 @@ function mapCustomerAccount(item: Awaited<ReturnType<typeof customerAccountRepos
     taxNumber: item.taxNumber,
     address: item.address,
     note: item.note,
+    defaultPaymentTermDays: item.defaultPaymentTermDays ?? null,
+    creditLimit: item.creditLimit != null
+      ? (typeof item.creditLimit === "object" && item.creditLimit !== null && "toNumber" in item.creditLimit
+        ? (item.creditLimit as { toNumber: () => number }).toNumber()
+        : Number(item.creditLimit))
+      : null,
     isActive: item.isActive,
     createdAt: item.createdAt.toISOString(),
     updatedAt: item.updatedAt.toISOString(),
@@ -47,6 +56,7 @@ export class CustomerAccountService {
   async createCustomerAccount(input: AdminCreateCustomerAccountInput): Promise<AdminCustomerAccountItem> {
     const parsed = createCustomerAccountSchema.parse(input);
     const created = await customerAccountRepository.createCustomerAccount(parsed);
+    await counterpartyLookupService.invalidateLookupCache();
     return mapCustomerAccount(created);
   }
 
@@ -57,6 +67,7 @@ export class CustomerAccountService {
       throw new Error("Müşteri kartı bulunamadı.");
     }
 
+    await counterpartyLookupService.invalidateLookupCache();
     return mapCustomerAccount(updated);
   }
 

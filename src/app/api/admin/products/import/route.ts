@@ -11,10 +11,13 @@ export async function POST(request: Request) {
     const file = formData.get("file");
 
     if (!(file instanceof File)) {
-      return NextResponse.json({ message: "İçe aktarmak için CSV dosyası gereklidir." }, { status: 400 });
+      return NextResponse.json({ message: "İçe aktarmak için Excel veya CSV dosyası gereklidir." }, { status: 400 });
     }
 
-    const result = await catalogImportService.importProductsFromCsv(await file.text());
+    const filename = file.name.toLocaleLowerCase("tr-TR");
+    const result = filename.endsWith(".xlsx")
+      ? await catalogImportService.importProductsFromXlsx(await file.arrayBuffer())
+      : await catalogImportService.importProductsFromText(await file.text());
 
     await auditLogService.recordFromRequest(request, {
       entityType: "PRODUCT",
@@ -25,6 +28,7 @@ export async function POST(request: Request) {
         scope: "product_import",
         createdCount: result.createdCount,
         failedCount: result.failedCount,
+        validatedCount: result.validatedCount ?? 0,
       },
     });
 

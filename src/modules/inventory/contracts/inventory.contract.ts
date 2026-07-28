@@ -687,3 +687,10 @@ export type ReceiveExternalStockEventResult = {
   productId: string | null;
   warehouseId: string | null;
 };
+
+export type AdminInventoryTransactionFinanceSummary = {
+  id: string;
+  transactionNumber: string;
+  type: string;
+  createdAt: string;
+};

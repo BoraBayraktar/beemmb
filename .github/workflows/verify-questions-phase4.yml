@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      DATABASE_URL: postgresql://arventa:arventa123@localhost:5432/arventatrade?schema=public
+      DATABASE_URL: postgresql://beemmb:beemmb123@localhost:5432/beemmb?schema=public
       REDIS_URL: redis://localhost:6379
       AUTH_SECRET: ci-auth-secret
       APP_URL: http://localhost:3000
@@ -20,20 +20,20 @@ jobs:
       MINIO_USE_SSL: "false"
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
-      MINIO_BUCKET: arventa-media
-      MEDIA_PUBLIC_BASE_URL: http://localhost:9000/arventa-media
+      MINIO_BUCKET: beemmb-media
+      MEDIA_PUBLIC_BASE_URL: http://localhost:9000/beemmb-media
 
     services:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_DB: arventatrade
-          POSTGRES_USER: arventa
-          POSTGRES_PASSWORD: arventa123
+          POSTGRES_DB: beemmb
+          POSTGRES_USER: beemmb
+          POSTGRES_PASSWORD: beemmb123
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U arventa -d arventatrade"
+          --health-cmd "pg_isready -U beemmb -d beemmb"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10

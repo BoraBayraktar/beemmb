@@ -45,6 +45,7 @@ type Labels = {
   movementReference: string;
   notSpecified: string;
   empty: string;
+  openReconciliation?: string;
 };
 
 type Props = {
@@ -164,6 +165,14 @@ export function FinancialAccountDetailManager({ locale, detail, accountId, initi
           <p className="text-sm font-medium text-neutral-500">{labels.title}</p>
           <h1 className="text-2xl font-semibold text-neutral-950">{detail.account.name}</h1>
           <p className="text-sm text-neutral-600">{labels.description}</p>
+          {detail.account.type === "BANK" && labels.openReconciliation ? (
+            <Link
+              href={`/${locale}/admin/finance/bank-cash/${accountId}/reconciliation`}
+              className="inline-flex text-sm font-medium text-neutral-900 underline-offset-4 hover:underline"
+            >
+              {labels.openReconciliation}
+            </Link>
+          ) : null}
         </div>
         <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
           <article className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">

@@ -17,6 +17,8 @@ type Labels = {
 type Props = {
   report: AdminFinanceReportDetail;
   labels: Labels;
+  serverExportHref?: string;
+  exportCsvLabel?: string;
 };
 
 function formatMetricValue(value: number, currency?: string) {
@@ -43,7 +45,7 @@ function resolveToneClass(tone: "neutral" | "success" | "warning") {
   return "border-neutral-200 bg-white text-neutral-950";
 }
 
-export function FinanceReportDetailManager({ report, labels }: Props) {
+export function FinanceReportDetailManager({ report, labels, serverExportHref, exportCsvLabel }: Props) {
   const reportTable = report.table ?? null;
   const [tableQuery, setTableQuery] = useState("");
   const [activeColumnKey, setActiveColumnKey] = useState<string>("all");
@@ -490,10 +492,19 @@ export function FinanceReportDetailManager({ report, labels }: Props) {
                 <p className="text-xs text-neutral-500">
                   Görünen satır: {filteredTableRows.length}/{reportTable.rows.length}
                 </p>
-                <Button type="button" variant="outline" onClick={exportTableCsv} disabled={filteredTableRows.length === 0}>
-                  <Download className="mr-2 h-4 w-4" />
-                  CSV dışa aktar
-                </Button>
+                {serverExportHref ? (
+                  <Button asChild variant="outline" disabled={filteredTableRows.length === 0}>
+                    <a href={serverExportHref}>
+                      <Download className="mr-2 h-4 w-4" />
+                      {exportCsvLabel ?? "CSV dışa aktar"}
+                    </a>
+                  </Button>
+                ) : (
+                  <Button type="button" variant="outline" onClick={exportTableCsv} disabled={filteredTableRows.length === 0}>
+                    <Download className="mr-2 h-4 w-4" />
+                    {exportCsvLabel ?? "CSV dışa aktar"}
+                  </Button>
+                )}
               </div>
             </div>
           </div>

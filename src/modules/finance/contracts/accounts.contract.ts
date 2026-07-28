@@ -4,6 +4,7 @@ export type AdminFinanceAccountEntry = {
   id: string;
   type: AdminFinanceAccountEntryType;
   counterpartyName: string;
+  counterpartyLedgerHref: string | null;
   sourceNumber: string;
   sourceDate: string;
   statusLabel: string;
@@ -11,6 +12,7 @@ export type AdminFinanceAccountEntry = {
   currency: string;
   detailHref: string;
   sourceHref: string;
+  financeMovementPreviewHref: string | null;
 };
 
 export type AdminFinanceAccountsQuery = {

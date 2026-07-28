@@ -1,6 +1,6 @@
 # Oqlid Tarzina Yakin Tasarim Recetesi
 
-Bu dokuman, app.oqlid.com tasarim dilini ArventaTrade icinde yeniden uretmek icin pratik bir yol haritasi sunar.
+Bu dokuman, app.oqlid.com tasarim dilini BEEMMB icinde yeniden uretmek icin pratik bir yol haritasi sunar.
 
 ## 1. Tespit Edilen Tasarim/Stack Ozet
 
@@ -13,7 +13,7 @@ Bu dokuman, app.oqlid.com tasarim dilini ArventaTrade icinde yeniden uretmek ici
 - Roboto font ailesi
 - Login ekraninda sade iki kolonlu kurgu + hafif animasyonlu gorsel panel
 
-## 2. ArventaTrade Icin Tasarim Hedefi
+## 2. BEEMMB Icin Tasarim Hedefi
 
 Mevcut sade ve kurumsal dil korunurken su uc hedef uygulanir:
 
@@ -63,7 +63,7 @@ Not: Hali hazirda bulunan --color-* degiskenlerini silmeden, semantik degiskenle
 
 ## 4. Ornek Semantik Token Seti
 
-Asagidaki set, oqlid diline yakin ama ArventaTrade tonu ile dengeli bir baslangic profilidir.
+Asagidaki set, oqlid diline yakin ama BEEMMB tonu ile dengeli bir baslangic profilidir.
 
 ~~~css
 :root {
@@ -150,7 +150,7 @@ Asagidaki set, oqlid diline yakin ama ArventaTrade tonu ile dengeli bir baslangi
 ## 7. Tipografi Rehberi
 
 - Oqlid benzeri gorunum icin Roboto uygun.
-- ArventaTrade markasi Space Grotesk kullaniyorsa:
+- BEEMMB markasi Space Grotesk kullaniyorsa:
   - Govde metinleri Roboto
   - Basliklarda Space Grotesk (hibrit sistem)
 - Baslikta tracking-tight, govdede rahat line-height korunur.

@@ -13,6 +13,10 @@ type Labels = {
   backToList: string;
   openOrder: string;
   notSpecified: string;
+  documentsTitle: string;
+  openCollection: string;
+  financeDocumentMovementPreviewOpen: string;
+  counterpartyFinanceHint: string | null;
 };
 
 type Props = {
@@ -49,9 +53,18 @@ export function ReceivableDetailManager({ locale, item, labels }: Props) {
             <Link href={`/${locale}/admin/orders/${item.orderId}`} className="inline-flex h-10 items-center rounded-xl border border-neutral-300 px-4 text-sm font-medium text-neutral-700">
               {labels.openOrder}
             </Link>
+            <Link href={`/${locale}/admin/finance/collections/${item.orderId}`} className="inline-flex h-10 items-center rounded-xl border border-neutral-300 px-4 text-sm font-medium text-neutral-700">
+              {labels.openCollection}
+            </Link>
           </div>
         </div>
       </section>
+
+      {labels.counterpartyFinanceHint ? (
+        <section className="rounded-3xl border border-blue-200 bg-blue-50 p-5 shadow-sm">
+          <p className="text-sm text-blue-900">{labels.counterpartyFinanceHint}</p>
+        </section>
+      ) : null}
 
       <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <article className="rounded-3xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
@@ -82,6 +95,32 @@ export function ReceivableDetailManager({ locale, item, labels }: Props) {
           <p>{labels.orderDate}: {new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))}</p>
           <p>{labels.title}: {item.counterpartyName}</p>
         </div>
+      </section>
+
+      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+        <h2 className="text-lg font-semibold text-neutral-950">{labels.documentsTitle}</h2>
+        {item.documents.length === 0 ? (
+          <p className="mt-3 text-sm text-neutral-500">{labels.notSpecified}</p>
+        ) : (
+          <ul className="mt-4 space-y-3">
+            {item.documents.map((document) => (
+              <li key={document.id} className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700">
+                <p className="font-semibold text-neutral-950">{document.documentNumber}</p>
+                <p className="mt-1">
+                  {new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium" }).format(new Date(document.issueDate))}
+                  {" • "}
+                  {(document.totalAmount ?? 0).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {document.currency}
+                </p>
+                <Link
+                  href={`/${locale}/admin/finance/business-documents/${document.id}/movements`}
+                  className="mt-2 inline-flex text-sm font-medium text-neutral-800 underline-offset-2 hover:underline"
+                >
+                  {labels.financeDocumentMovementPreviewOpen}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </div>
   );

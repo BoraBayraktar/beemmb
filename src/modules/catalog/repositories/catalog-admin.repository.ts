@@ -1,3 +1,5 @@
+import { Prisma } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
 import type {
   AdminAnswerProductQuestionInput,
@@ -220,6 +222,55 @@ export class CatalogAdminRepository {
         select: {
           id: true,
           sku: true,
+          title: true,
+          productId: true,
+          deleted: true,
+        },
+      }),
+    ]);
+
+    return {
+      products,
+      variants,
+    };
+  }
+
+  async findSlugOwners(slugs: string[]) {
+    const normalizedSlugs = Array.from(new Set(slugs.map((slug) => slug.trim()).filter(Boolean)));
+
+    if (normalizedSlugs.length === 0) {
+      return {
+        products: [],
+        variants: [],
+      };
+    }
+
+    const slugFilters = normalizedSlugs.map((slug) => ({
+      slug: {
+        equals: slug,
+        mode: "insensitive" as const,
+      },
+    }));
+
+    const [products, variants] = await Promise.all([
+      prisma.product.findMany({
+        where: {
+          OR: slugFilters,
+        },
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          deleted: true,
+        },
+      }),
+      prisma.productVariant.findMany({
+        where: {
+          OR: slugFilters,
+        },
+        select: {
+          id: true,
+          slug: true,
           title: true,
           productId: true,
           deleted: true,
@@ -916,6 +967,8 @@ export class CatalogAdminRepository {
         taxNumber: input.taxNumber ?? null,
         email: input.email ?? null,
         phone: input.phone ?? null,
+        defaultPaymentTermDays: input.defaultPaymentTermDays ?? null,
+        creditLimit: input.creditLimit != null ? new Prisma.Decimal(input.creditLimit) : null,
         isActive: input.isActive ?? true,
       },
       include: {
@@ -943,6 +996,8 @@ export class CatalogAdminRepository {
         ...(input.taxNumber !== undefined ? { taxNumber: input.taxNumber ?? null } : {}),
         ...(input.email !== undefined ? { email: input.email ?? null } : {}),
         ...(input.phone !== undefined ? { phone: input.phone ?? null } : {}),
+        ...(input.defaultPaymentTermDays !== undefined ? { defaultPaymentTermDays: input.defaultPaymentTermDays ?? null } : {}),
+        ...(input.creditLimit !== undefined ? { creditLimit: input.creditLimit != null ? new Prisma.Decimal(input.creditLimit) : null } : {}),
         ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
       },
       include: {
@@ -1208,6 +1263,8 @@ export class CatalogAdminRepository {
         taxNumber: true,
         email: true,
         phone: true,
+        defaultPaymentTermDays: true,
+        creditLimit: true,
         isActive: true,
         _count: {
           select: {

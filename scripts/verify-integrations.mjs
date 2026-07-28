@@ -1,4 +1,6 @@
 import bcrypt from "bcryptjs";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { PrismaClient } from "@prisma/client";
 
 const baseUrl = process.env.APP_URL || "http://localhost:3001";
@@ -44,10 +46,14 @@ async function authFetch(path, cookie, options = {}) {
 }
 
 async function main() {
+  const integrationServiceSource = readFileSync(join(process.cwd(), "src/modules/integration/services/integration.service.ts"), "utf8");
+  assert(integrationServiceSource.includes("BANK_SANDBOX"), "Integration servisi PF9 BANK_SANDBOX kanalını içermelidir.");
+  assert(integrationServiceSource.includes("financeBankIntegrationService"), "Integration servisi banka finans entegrasyonunu tetiklemelidir.");
+
   const adminPasswordHash = await bcrypt.hash("Admin123!", 10);
 
   await prisma.user.upsert({
-    where: { email: "admin@arventatrade.local" },
+    where: { email: "admin@beemmb.local" },
     update: {
       name: "Admin User",
       role: "ADMIN",
@@ -57,14 +63,14 @@ async function main() {
       deletedUserId: null,
     },
     create: {
-      email: "admin@arventatrade.local",
+      email: "admin@beemmb.local",
       name: "Admin User",
       role: "ADMIN",
       passwordHash: adminPasswordHash,
     },
   });
 
-  const adminCookie = await login("admin@arventatrade.local", "Admin123!");
+  const adminCookie = await login("admin@beemmb.local", "Admin123!");
 
   const unique = Date.now();
   const createProductResponse = await authFetch("/api/admin/products", adminCookie, {

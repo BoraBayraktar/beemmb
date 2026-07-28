@@ -1,80 +1,117 @@
 import type { AdminFinanceOverview } from "@/modules/finance/contracts/finance-overview.contract";
+import { resolveFinanceOverviewCopy } from "@/modules/finance/services/finance-overview-copy.resolver";
 import { financialAccountsService } from "@/modules/finance/services/financial-accounts.service";
 import { payablesService } from "@/modules/finance/services/payables.service";
 import { receivablesService } from "@/modules/finance/services/receivables.service";
 
 export class FinanceOverviewService {
   async getOverview(locale: string): Promise<AdminFinanceOverview> {
+    const copy = resolveFinanceOverviewCopy(locale);
     const [payables, receivablesSummary, accountSummary] = await Promise.all([
-      payablesService.listSupplierPayables(),
+      payablesService.listSupplierPayables().then((result) => result.items),
       receivablesService.getReceivablesSummary(),
       financialAccountsService.listAccounts(),
     ]);
 
     const totalPayables = payables.reduce((sum, item) => sum + item.totalAmount, 0);
     const totalDraftPayables = payables.reduce((sum, item) => sum + item.draftCount, 0);
+    const openOrderCount =
+      receivablesSummary.pendingCount + receivablesSummary.authorizedCount + receivablesSummary.failedCount;
 
     return {
       metrics: [
         {
-          label: "Açık alacak",
+          label: copy.metricOpenReceivableLabel,
           value: receivablesSummary.totalOpenAmount,
           currency: receivablesSummary.currency,
           tone: "success",
           href: `/${locale}/admin/finance/receivables`,
-          hint: `${receivablesSummary.pendingCount + receivablesSummary.authorizedCount + receivablesSummary.failedCount} açık sipariş kaydı`,
+          hint: `${openOrderCount} ${copy.metricOpenReceivableHintSuffix}`,
         },
         {
-          label: "Tedarikçi borcu",
+          label: copy.metricSupplierPayableLabel,
           value: totalPayables,
           currency: payables[0]?.currency ?? "TRY",
           tone: "warning",
           href: `/${locale}/admin/finance/payables`,
-          hint: `${payables.length} tedarikçi özeti`,
+          hint: `${payables.length} ${copy.metricSupplierPayableHintSuffix}`,
         },
         {
-          label: "Bekleyen tahsilat",
+          label: copy.metricPendingCollectionLabel,
           value: receivablesSummary.pendingCount,
           tone: "neutral",
           href: `/${locale}/admin/finance/receivables?paymentStatus=PENDING`,
-          hint: "Ödeme bekleyen siparişler",
+          hint: copy.metricPendingCollectionHint,
         },
         {
-          label: "Taslak borç belgesi",
+          label: copy.metricDraftPayableDocLabel,
           value: totalDraftPayables,
           tone: "neutral",
           href: `/${locale}/admin/finance/payables`,
-          hint: "Tedarikçi tarafında kontrol bekleyen belge",
+          hint: copy.metricDraftPayableDocHint,
         },
         {
-          label: "Kasa ve banka bakiyesi",
+          label: copy.metricBankBalanceLabel,
           value: accountSummary.summary.totalBalance,
           currency: accountSummary.summary.currency,
           tone: "success",
           href: `/${locale}/admin/finance/bank-cash`,
-          hint: `${accountSummary.summary.activeAccountCount} aktif finans hesabı`,
+          hint: `${accountSummary.summary.activeAccountCount} ${copy.metricBankBalanceHintSuffix}`,
         },
       ],
       sections: [
         {
-          title: "Alacaklar",
-          description: "Sipariş ve ödeme durumlarından üretilen açık alacak görünümünü ayrı bir rotada izleyin.",
+          title: copy.sectionReceivablesTitle,
+          description: copy.sectionReceivablesDescription,
           href: `/${locale}/admin/finance/receivables`,
         },
         {
-          title: "Borçlar",
-          description: "Satın alma ve belge akışından gelen tedarikçi borçlarını karışık ekranlar oluşturmadan yönetin.",
+          title: copy.sectionPayablesTitle,
+          description: copy.sectionPayablesDescription,
           href: `/${locale}/admin/finance/payables`,
         },
         {
-          title: "Kasa ve Banka",
-          description: "Gerçek finans hesaplarını ayrı bir yüzeyde yönetin; bakiye ve hareketler burada sade biçimde görünür.",
+          title: copy.sectionBankCashTitle,
+          description: copy.sectionBankCashDescription,
           href: `/${locale}/admin/finance/bank-cash`,
         },
         {
-          title: "Nakit Hareketleri",
-          description: "Manuel gelir ve gider hareketlerini ayrı listeleyin. Tahsilat ve ödeme entegrasyonu sonraki fazda genişletilebilir.",
+          title: copy.sectionTransactionsTitle,
+          description: copy.sectionTransactionsDescription,
           href: `/${locale}/admin/finance/transactions`,
+        },
+        {
+          title: copy.sectionReportsTitle,
+          description: copy.sectionReportsDescription,
+          href: `/${locale}/admin/finance/reports`,
+        },
+        {
+          title: copy.sectionTrialBalanceTitle,
+          description: copy.sectionTrialBalanceDescription,
+          href: `/${locale}/admin/finance/reports/trial-balance`,
+        },
+        {
+          title: copy.sectionLedgerTitle,
+          description: copy.sectionLedgerDescription,
+          href: `/${locale}/admin/finance/ledger-entries`,
+        },
+        {
+          title: copy.sectionInstrumentsTitle,
+          description: copy.sectionInstrumentsDescription,
+          href: `/${locale}/admin/finance/instruments`,
+          permissionKey: "finance.manage",
+        },
+        {
+          title: copy.sectionBankReconciliationTitle,
+          description: copy.sectionBankReconciliationDescription,
+          href: `/${locale}/admin/finance/bank-reconciliation`,
+          permissionKey: "finance.manage",
+        },
+        {
+          title: copy.sectionExportsTitle,
+          description: copy.sectionExportsDescription,
+          href: `/${locale}/admin/finance/exports`,
+          permissionKey: "finance.audit.read",
         },
       ],
     };

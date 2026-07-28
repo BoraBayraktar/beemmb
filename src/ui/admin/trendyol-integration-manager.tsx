@@ -271,7 +271,7 @@ export function TrendyolIntegrationManager({
   const [sellerId, setSellerId] = useState(configs[0]?.sellerId ?? "");
   const [apiKey, setApiKey] = useState("");
   const [apiSecret, setApiSecret] = useState("");
-  const [userAgent, setUserAgent] = useState(configs[0]?.userAgent ?? "2BEM B2BEM");
+  const [userAgent, setUserAgent] = useState(configs[0]?.userAgent ?? "BEEMMB BEEMMB");
   const [storeFrontCode, setStoreFrontCode] = useState(configs[0]?.storeFrontCode ?? "");
   const [productV2CargoCompanyId, setProductV2CargoCompanyId] = useState(configs[0]?.trendyolCargoCompanyId ? String(configs[0].trendyolCargoCompanyId) : "");
   const [productV2ShipmentAddressId, setProductV2ShipmentAddressId] = useState(configs[0]?.trendyolShipmentAddressId != null ? String(configs[0].trendyolShipmentAddressId) : "");

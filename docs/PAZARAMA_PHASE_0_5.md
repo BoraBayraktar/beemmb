@@ -1,6 +1,6 @@
 # Pazarama Faz 0-5 Tamamlama Notu
 
-Bu dokuman, 19 Temmuz 2026 itibariyla ArventaTrade icindeki Pazarama entegrasyonunun Faz 0-5 kapsamini hangi sinirlarla tamamladigimizi kayda gecirir.
+Bu dokuman, 19 Temmuz 2026 itibariyla BEEMMB icindeki Pazarama entegrasyonunun Faz 0-5 kapsamini hangi sinirlarla tamamladigimizi kayda gecirir.
 
 ## Faz 0
 

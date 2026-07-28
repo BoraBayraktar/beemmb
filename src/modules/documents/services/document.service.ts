@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { buildDocumentDueFields } from "@/modules/finance/services/finance-due-date.util";
+
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { customerAccountService } from "@/modules/customers/services/customer-account.service";
 import type {
@@ -19,6 +21,8 @@ import type {
 import { DocumentRepository } from "@/modules/documents/repositories/document.repository";
 import { documentLifecycleService } from "@/modules/documents/services/document-lifecycle.service";
 import { documentProviderCryptoService } from "@/modules/documents/services/document-provider-crypto.service";
+import { financeAccountEntryService } from "@/modules/finance/services/finance-account-entry.service";
+import { EDocumentProviderRegistryError, eDocumentProviderRegistryService } from "@/modules/edocument/services/edocument-provider-registry.service";
 
 const listQuerySchema = z.object({
   search: z.string().trim().optional(),
@@ -39,6 +43,7 @@ const createSchema = z.object({
   documentType: z.enum(["PURCHASE_DOCUMENT", "DELIVERY_NOTE", "E_INVOICE", "E_DISPATCH"]),
   status: z.enum(["DRAFT", "LINKED", "ISSUED", "CANCELLED"]).optional(),
   issueDate: z.string().datetime(),
+  dueDate: z.string().datetime().optional().nullable(),
   currency: z.string().trim().min(3).max(8).optional(),
   totalAmount: z.coerce.number().nonnegative().optional().nullable(),
   externalReference: z.string().trim().max(160).optional().nullable(),
@@ -123,17 +128,63 @@ export class DocumentAdminError extends Error {
   }
 }
 
+export function assertActiveDocumentProviderAdapter(args: { providerCode: string; isActive: boolean }) {
+  if (!args.isActive) {
+    return;
+  }
+
+  try {
+    eDocumentProviderRegistryService.resolveRequired(args.providerCode);
+  } catch (error) {
+    if (error instanceof EDocumentProviderRegistryError) {
+      throw new DocumentAdminError(error.message, 400);
+    }
+
+    throw error;
+  }
+}
+
+export function getDocumentProviderAdapterStatus(providerCode: string) {
+  const status = eDocumentProviderRegistryService
+    .listProviderStatuses()
+    .find((item) => item.providerKey === providerCode);
+
+  return {
+    registered: Boolean(status),
+    configured: status?.configured ?? false,
+    operational: status?.operational ?? false,
+  };
+}
+
 function toNumber(value: { toNumber: () => number } | null | undefined) {
   return value ? value.toNumber() : null;
 }
 
+function resolveDocumentPaymentTermDays(item: {
+  supplier?: { defaultPaymentTermDays?: number | null } | null;
+  customerAccount?: { defaultPaymentTermDays?: number | null } | null;
+}) {
+  return item.supplier?.defaultPaymentTermDays ?? item.customerAccount?.defaultPaymentTermDays ?? null;
+}
+
 function mapDocument(item: Awaited<ReturnType<DocumentRepository["findBusinessDocumentById"]>> extends infer T ? NonNullable<T> : never): AdminBusinessDocumentDetail {
+  const dueFields = buildDocumentDueFields(
+    item.issueDate.toISOString(),
+    item.dueDate ? item.dueDate.toISOString() : null,
+    new Date(),
+    resolveDocumentPaymentTermDays(item),
+  );
+
   return {
     id: item.id,
     documentNumber: item.documentNumber,
     documentType: item.documentType,
     status: item.status,
     issueDate: item.issueDate.toISOString(),
+    dueDate: dueFields.dueDate,
+    effectiveDueDate: dueFields.effectiveDueDate,
+    daysUntilDue: dueFields.daysUntilDue,
+    isOverdue: dueFields.isOverdue,
     currency: item.currency,
     totalAmount: toNumber(item.totalAmount),
     externalReference: item.externalReference,
@@ -270,6 +321,8 @@ function maskSecret(value: string | null | undefined) {
 }
 
 function mapProviderConfig(item: Awaited<ReturnType<DocumentRepository["listProviderConfigs"]>>[number]): AdminDocumentProviderConfigItem {
+  const adapterStatus = getDocumentProviderAdapterStatus(item.providerCode);
+
   return {
     id: item.id,
     providerCode: item.providerCode,
@@ -285,6 +338,9 @@ function mapProviderConfig(item: Awaited<ReturnType<DocumentRepository["listProv
     supportsStatusSync: item.supportsStatusSync,
     isActive: item.isActive,
     isDefault: item.isDefault,
+    adapterRegistered: adapterStatus.registered,
+    adapterConfigured: adapterStatus.configured,
+    adapterOperational: adapterStatus.operational,
     note: item.note,
     createdAt: item.createdAt.toISOString(),
     updatedAt: item.updatedAt.toISOString(),
@@ -312,12 +368,23 @@ function mapResolvedProviderConfig(item: NonNullable<Awaited<ReturnType<Document
 }
 
 function mapDocumentListItem(item: Awaited<ReturnType<DocumentRepository["listBusinessDocuments"]>>[number]): AdminBusinessDocumentListItem {
+  const dueFields = buildDocumentDueFields(
+    item.issueDate.toISOString(),
+    item.dueDate ? item.dueDate.toISOString() : null,
+    new Date(),
+    resolveDocumentPaymentTermDays(item),
+  );
+
   return {
     id: item.id,
     documentNumber: item.documentNumber,
     documentType: item.documentType,
     status: item.status,
     issueDate: item.issueDate.toISOString(),
+    dueDate: dueFields.dueDate,
+    effectiveDueDate: dueFields.effectiveDueDate,
+    daysUntilDue: dueFields.daysUntilDue,
+    isOverdue: dueFields.isOverdue,
     currency: item.currency,
     totalAmount: toNumber(item.totalAmount),
     externalReference: item.externalReference,
@@ -350,12 +417,6 @@ function paginateItems<T>(items: T[], page: number, pageSize: number) {
     total,
     totalPages,
   };
-}
-
-function buildInvoiceDocumentNumber(sourceDocumentNumber: string, sourceDocumentId: string) {
-  const sanitizedBase = sourceDocumentNumber.replace(/[^A-Za-z0-9-]/g, "").slice(0, 80) || "DOC";
-  const suffix = sourceDocumentId.slice(-6).toUpperCase();
-  return `EF-${sanitizedBase}-${suffix}`.slice(0, 120);
 }
 
 export class DocumentService {
@@ -463,7 +524,7 @@ export class DocumentService {
 
     const created = await this.repository.createBusinessDocumentFromSource({
       sourceDocumentId: sourceDocument.id,
-      documentNumber: buildInvoiceDocumentNumber(sourceDocument.documentNumber, sourceDocument.id),
+      numberPrefix: process.env.EDOCUMENT_INVOICE_NUMBER_PREFIX ?? "BEF",
       documentType: "E_INVOICE",
       status: "LINKED",
       note: sourceDocument.note
@@ -519,6 +580,11 @@ export class DocumentService {
       if (!provider || !provider.isActive) {
         throw new DocumentAdminError("Seçilen belge sağlayıcısı bulunamadı veya aktif değil.", 404);
       }
+
+      assertActiveDocumentProviderAdapter({
+        providerCode: provider.providerCode,
+        isActive: provider.isActive,
+      });
     }
 
     if (requiresSupplier && !selectedSupplier) {
@@ -621,6 +687,11 @@ export class DocumentService {
       if (!provider || !provider.isActive) {
         throw new DocumentAdminError("Seçilen belge sağlayıcısı bulunamadı veya aktif değil.", 404);
       }
+
+      assertActiveDocumentProviderAdapter({
+        providerCode: provider.providerCode,
+        isActive: provider.isActive,
+      });
     }
 
     const updated = await this.repository.updateBusinessDocument(parsed);
@@ -638,6 +709,13 @@ export class DocumentService {
         previousExternalSystemStatus: existing.externalSystemStatus,
       },
     });
+    if (updated.status === "ISSUED") {
+      try {
+        await financeAccountEntryService.syncFromBusinessDocument(updated.id);
+      } catch (error) {
+        console.error("PF8 defter projeksiyonu", error);
+      }
+    }
     return mapDocument(updated);
   }
 
@@ -648,6 +726,10 @@ export class DocumentService {
 
   async upsertProviderConfig(input: AdminUpsertDocumentProviderConfigInput): Promise<AdminDocumentProviderConfigItem> {
     const parsed = providerConfigSchema.parse(input);
+    assertActiveDocumentProviderAdapter({
+      providerCode: parsed.providerCode,
+      isActive: parsed.isActive,
+    });
     const item = await this.repository.upsertProviderConfig({
       ...parsed,
       secretKey: parsed.secretKey ? documentProviderCryptoService.encrypt(parsed.secretKey) : parsed.secretKey,

@@ -7,8 +7,13 @@ import type {
   AdminPaymentsResult,
 } from "@/modules/finance/contracts/payments.contract";
 import { financeRepository } from "@/modules/finance/repositories/finance.repository";
+import { financeAllocationService } from "@/modules/finance/services/allocation.service";
+import { buildFinanceMovementReference } from "@/modules/finance/services/finance-movement-reference.service";
 import { cashTransactionsService } from "@/modules/finance/services/cash-transactions.service";
+import { financeAccountEntryService } from "@/modules/finance/services/finance-account-entry.service";
 import { payablesService } from "@/modules/finance/services/payables.service";
+import { financeCounterpartyFinanceTermsService } from "@/modules/finance/services/finance-counterparty-finance-terms.service";
+import { resolveFinanceServiceMessages } from "@/modules/finance/services/finance-service-messages.resolver";
 
 const createPaymentRecordSchema = z.object({
   supplierId: z.string().trim().min(1),
@@ -36,7 +41,7 @@ function mapPaymentRecord(item: Awaited<ReturnType<typeof financeRepository.list
 
 export class PaymentsService {
   async listPaymentReadiness(locale: string): Promise<AdminPaymentsResult> {
-    const items = await payablesService.listSupplierPayables();
+    const { items } = await payablesService.listSupplierPayables();
     const paymentRecords = await financeRepository.listPaymentRecords();
     const paymentRecordTotals = new Map<string, AdminPaymentRecordItem[]>();
 
@@ -73,6 +78,9 @@ export class PaymentsService {
         topVariantSummary,
         detailHref: `/${locale}/admin/finance/payments/${encodeURIComponent(item.supplierKey)}`,
         sourceHref: `/${locale}/admin/documents`,
+        counterpartyFinanceTerms: item.supplierId
+          ? await financeCounterpartyFinanceTermsService.getSupplierFinanceTerms(item.supplierId, locale)
+          : null,
       };
     }));
 
@@ -103,19 +111,28 @@ export class PaymentsService {
     return items.map(mapPaymentRecord);
   }
 
-  async createPaymentRecord(input: AdminCreatePaymentRecordInput) {
+  async listSupplierAllocationContexts(supplierId: string, locale?: string) {
+    return financeAllocationService.getSupplierAllocationContexts(supplierId, locale);
+  }
+
+  async listSupplierAllocationLinks(supplierId: string) {
+    return financeAllocationService.listAllocationsForSupplierDocuments(supplierId);
+  }
+
+  async createPaymentRecord(input: AdminCreatePaymentRecordInput & { locale?: string }) {
     const parsed = createPaymentRecordSchema.parse(input);
+    const errors = resolveFinanceServiceMessages(input.locale).errors;
     const supplier = await financeRepository.findSupplierById(parsed.supplierId);
 
     if (!supplier) {
-      throw new Error("Ödeme kaydı oluşturulacak tedarikçi bulunamadı.");
+      throw new Error(errors.paymentSupplierNotFound);
     }
 
-    const payableItems = await payablesService.listSupplierPayables();
+    const { items: payableItems } = await payablesService.listSupplierPayables();
     const payable = payableItems.find((item) => item.supplierId === supplier.id);
 
     if (!payable) {
-      throw new Error("Ödeme kaydı oluşturulacak tedarikçi borcu bulunamadı.");
+      throw new Error(errors.paymentPayableNotFound);
     }
 
     const existingRecords = await this.listPaymentRecords(parsed.supplierId);
@@ -123,13 +140,13 @@ export class PaymentsService {
     const remainingAmount = Number((payable.totalAmount - paidAmount).toFixed(2));
 
     if (parsed.amount > remainingAmount) {
-      throw new Error("Ödeme tutarı kalan borç tutarını aşamaz.");
+      throw new Error(errors.paymentAmountExceedsDebt);
     }
 
     const financialAccount = await financeRepository.findFinancialAccountById(parsed.financialAccountId);
 
     if (!financialAccount || !financialAccount.isActive) {
-      throw new Error("Ödeme için geçerli bir finans hesabı seçin.");
+      throw new Error(errors.paymentInvalidFinancialAccount);
     }
 
     const created = await financeRepository.createPaymentRecord({
@@ -142,17 +159,33 @@ export class PaymentsService {
       recordedByUserId: parsed.recordedByUserId,
     });
 
+    await financeAllocationService.createPaymentAllocations({
+      paymentRecordId: created.id,
+      supplierId: parsed.supplierId,
+      amount: parsed.amount,
+      currency: payable.currency,
+    });
+
     await cashTransactionsService.createTransaction({
       accountId: parsed.financialAccountId,
       direction: "OUT",
       sourceType: "PAYMENT",
+      sourceReferenceId: buildFinanceMovementReference("payment", created.id),
       amount: parsed.amount,
       transactionAt: parsed.paidAt,
       title: `Ödeme • ${payable.supplierName}`,
       note: parsed.note ?? `Tedarikçi ödemesi • ${payable.supplierName}`,
+      counterpartyKind: "SUPPLIER",
+      supplierId: supplier.id,
       counterpartyName: payable.supplierName,
       recordedByUserId: parsed.recordedByUserId,
     });
+
+    try {
+      await financeAccountEntryService.syncFromPaymentRecord(created.id);
+    } catch (error) {
+      console.error("PF8 defter projeksiyonu (ödeme) başarısız oldu.", error);
+    }
 
     return mapPaymentRecord(created);
   }

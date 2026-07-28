@@ -1,30 +1,38 @@
-import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
+import { buildNoStoreHeaders, noStoreJson } from "@/lib/no-store-json-response";
 import { documentService, DocumentAdminError } from "@/modules/documents/services/document.service";
 import { AuthContextError, requirePermission } from "@/modules/identity/services/auth-context.service";
 import { auditLogService } from "@/modules/system/services/audit-log.service";
+
+export function buildAdminDocumentDetailHeaders() {
+  return buildNoStoreHeaders();
+}
+
+export function adminDocumentDetailJson(body: unknown, init?: ResponseInit) {
+  return noStoreJson(body, init);
+}
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   try {
     await requirePermission("documents.read");
     const { id } = await context.params;
     const item = await documentService.getBusinessDocumentById(id);
-    return NextResponse.json({ item });
+    return adminDocumentDetailJson({ item });
   } catch (error) {
     if (error instanceof AuthContextError) {
-      return NextResponse.json({ message: error.message }, { status: error.status });
+      return adminDocumentDetailJson({ message: error.message }, { status: error.status });
     }
 
     if (error instanceof DocumentAdminError) {
-      return NextResponse.json({ message: error.message }, { status: error.status });
+      return adminDocumentDetailJson({ message: error.message }, { status: error.status });
     }
 
     if (error instanceof ZodError) {
-      return NextResponse.json({ message: error.issues[0]?.message ?? "Doğrulama hatası oluştu." }, { status: 400 });
+      return adminDocumentDetailJson({ message: error.issues[0]?.message ?? "Doğrulama hatası oluştu." }, { status: 400 });
     }
 
-    return NextResponse.json({ message: "Beklenmeyen bir hata oluştu." }, { status: 500 });
+    return adminDocumentDetailJson({ message: "Beklenmeyen bir hata oluştu." }, { status: 500 });
   }
 }
 
@@ -49,20 +57,20 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       },
     });
 
-    return NextResponse.json({ item: updated });
+    return adminDocumentDetailJson({ item: updated });
   } catch (error) {
     if (error instanceof AuthContextError) {
-      return NextResponse.json({ message: error.message }, { status: error.status });
+      return adminDocumentDetailJson({ message: error.message }, { status: error.status });
     }
 
     if (error instanceof DocumentAdminError) {
-      return NextResponse.json({ message: error.message }, { status: error.status });
+      return adminDocumentDetailJson({ message: error.message }, { status: error.status });
     }
 
     if (error instanceof ZodError) {
-      return NextResponse.json({ message: error.issues[0]?.message ?? "Doğrulama hatası oluştu." }, { status: 400 });
+      return adminDocumentDetailJson({ message: error.issues[0]?.message ?? "Doğrulama hatası oluştu." }, { status: 400 });
     }
 
-    return NextResponse.json({ message: "Beklenmeyen bir hata oluştu." }, { status: 500 });
+    return adminDocumentDetailJson({ message: "Beklenmeyen bir hata oluştu." }, { status: 500 });
   }
 }

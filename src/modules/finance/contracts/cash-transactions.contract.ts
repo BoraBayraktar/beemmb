@@ -1,3 +1,5 @@
+import type { AdminFinanceAllocationSummary } from "@/modules/finance/contracts/allocation.contract";
+
 export type AdminCashTransactionDirection = "IN" | "OUT" | "TRANSFER";
 export type AdminCashTransactionSourceType = "MANUAL" | "COLLECTION" | "PAYMENT" | "TRANSFER" | "ORDER" | "DOCUMENT" | "REFUND";
 export type AdminCashTransactionCategory =
@@ -8,6 +10,8 @@ export type AdminCashTransactionCategory =
   | "SERVICE_FEE"
   | "REFUND"
   | "TRANSFER";
+
+export type AdminCashTransactionCounterpartyKind = "CUSTOMER" | "SUPPLIER" | "UNREGISTERED";
 
 export type AdminCashTransactionItem = {
   id: string;
@@ -22,8 +26,17 @@ export type AdminCashTransactionItem = {
   transactionAt: string;
   title: string;
   note: string | null;
+  counterpartyKind: AdminCashTransactionCounterpartyKind;
   counterpartyName: string | null;
+  customerAccountId: string | null;
+  supplierId: string | null;
+  customerAccountSlug: string | null;
+  supplierSlug: string | null;
   sourceReferenceId: string | null;
+};
+
+export type AdminCashTransactionDetail = AdminCashTransactionItem & {
+  allocationSummary: AdminFinanceAllocationSummary | null;
 };
 
 export type AdminCashTransactionsSummary = {
@@ -42,6 +55,8 @@ export type AdminCashTransactionsResult = {
 export type AdminCashTransactionsQuery = {
   search?: string;
   direction?: "all" | AdminCashTransactionDirection;
+  from?: string;
+  to?: string;
   accountId?: string;
 };
 
@@ -56,5 +71,8 @@ export type AdminCreateCashTransactionInput = {
   transactionAt?: string;
   title: string;
   note?: string | null;
+  counterpartyKind?: AdminCashTransactionCounterpartyKind;
+  customerAccountId?: string | null;
+  supplierId?: string | null;
   counterpartyName?: string | null;
 };

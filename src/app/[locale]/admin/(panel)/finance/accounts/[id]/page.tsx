@@ -1,0 +1,30 @@
+import { redirect, notFound } from "next/navigation";
+
+import { isLocale, type Locale } from "@/lib/i18n";
+import { financeCounterpartyRouteService } from "@/modules/finance/services/finance-counterparty-route.service";
+import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
+
+export default async function AdminFinanceAccountCounterpartyPage({
+  params,
+}: {
+  params: Promise<{ locale: string; id: string }>;
+}) {
+  const { locale, id } = await params;
+
+  if (!isLocale(locale)) {
+    notFound();
+  }
+
+  const user = await getCurrentUserFromContext();
+  if (!user) {
+    notFound();
+  }
+
+  const path = await financeCounterpartyRouteService.resolveCounterpartyLedgerPath(id);
+
+  if (!path) {
+    notFound();
+  }
+
+  redirect(`/${locale}${path}`);
+}

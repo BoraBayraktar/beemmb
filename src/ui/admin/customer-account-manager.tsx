@@ -30,6 +30,8 @@ type Labels = {
   taxNumber: string;
   address: string;
   note: string;
+  defaultPaymentTermDays: string;
+  creditLimit: string;
   status: string;
   create: string;
   save: string;
@@ -54,6 +56,8 @@ type CustomerAccountForm = {
   taxNumber: string;
   address: string;
   note: string;
+  defaultPaymentTermDays: string;
+  creditLimit: string;
   isActive: boolean;
 };
 
@@ -65,6 +69,8 @@ const emptyForm: CustomerAccountForm = {
   taxNumber: "",
   address: "",
   note: "",
+  defaultPaymentTermDays: "",
+  creditLimit: "",
   isActive: true,
 };
 
@@ -129,6 +135,8 @@ export function CustomerAccountManager({ items, labels }: Props) {
       taxNumber: item.taxNumber ?? "",
       address: item.address ?? "",
       note: item.note ?? "",
+      defaultPaymentTermDays: item.defaultPaymentTermDays != null ? String(item.defaultPaymentTermDays) : "",
+      creditLimit: item.creditLimit != null ? String(item.creditLimit) : "",
       isActive: item.isActive,
     });
     setDrawerMode("edit");
@@ -164,7 +172,11 @@ export function CustomerAccountManager({ items, labels }: Props) {
       const response = await fetch(drawerMode === "edit" && editingId ? `/api/admin/customer-accounts/${editingId}` : "/api/admin/customer-accounts", {
         method: drawerMode === "edit" ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          defaultPaymentTermDays: form.defaultPaymentTermDays.trim() ? Number(form.defaultPaymentTermDays) : null,
+          creditLimit: form.creditLimit.trim() ? Number(form.creditLimit) : null,
+        }),
       });
 
       if (!response.ok) {
@@ -299,6 +311,14 @@ export function CustomerAccountManager({ items, labels }: Props) {
               <div className="grid gap-2">
                 <Label>{labels.address}</Label>
                 <Textarea value={form.address} onChange={(event) => setForm((prev) => ({ ...prev, address: event.target.value }))} rows={3} />
+              </div>
+              <div className="grid gap-2">
+                <Label>{labels.defaultPaymentTermDays}</Label>
+                <Input type="number" min={0} max={365} value={form.defaultPaymentTermDays} onChange={(event) => setForm((prev) => ({ ...prev, defaultPaymentTermDays: event.target.value }))} />
+              </div>
+              <div className="grid gap-2">
+                <Label>{labels.creditLimit}</Label>
+                <Input type="number" min={0} step="0.01" value={form.creditLimit} onChange={(event) => setForm((prev) => ({ ...prev, creditLimit: event.target.value }))} />
               </div>
               <div className="grid gap-2">
                 <Label>{labels.note}</Label>

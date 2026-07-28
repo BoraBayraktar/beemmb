@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type {
   AdminCashTransactionCategory,
+  AdminCashTransactionCounterpartyKind,
   AdminCashTransactionDirection,
   AdminCashTransactionSourceType,
   AdminCashTransactionsResult,
 } from "@/modules/finance/contracts/cash-transactions.contract";
+import type { AdminFinanceCounterpartyOption } from "@/modules/finance/contracts/counterparty-lookup.contract";
 
 type AccountOption = {
   id: string;
@@ -42,6 +44,13 @@ type Labels = {
   category: string;
   note: string;
   counterparty: string;
+  counterpartyKind: string;
+  counterpartyCustomer: string;
+  counterpartySupplier: string;
+  counterpartyUnregistered: string;
+  counterpartySearch: string;
+  counterpartySelected: string;
+  openLedger: string;
   createTitle: string;
   createAction: string;
   creatingAction: string;
@@ -125,8 +134,34 @@ export function CashTransactionsManager({
     amount: "",
     title: "",
     note: "",
+    counterpartyKind: "CUSTOMER" as AdminCashTransactionCounterpartyKind,
+    customerAccountId: "",
+    supplierId: "",
     counterpartyName: "",
+    useUnregisteredCounterparty: false,
   });
+  const [counterpartySearch, setCounterpartySearch] = useState("");
+  const [counterpartyOptions, setCounterpartyOptions] = useState<AdminFinanceCounterpartyOption[]>([]);
+  const [selectedCounterparty, setSelectedCounterparty] = useState<AdminFinanceCounterpartyOption | null>(null);
+
+  useEffect(() => {
+    if (!drawerOpen || form.direction === "TRANSFER" || form.useUnregisteredCounterparty) {
+      return;
+    }
+
+    const timeout = window.setTimeout(async () => {
+      const kind = form.counterpartyKind === "CUSTOMER" ? "CUSTOMER" : form.counterpartyKind === "SUPPLIER" ? "SUPPLIER" : "all";
+      const response = await fetch(`/api/admin/finance/counterparties?search=${encodeURIComponent(counterpartySearch)}&kind=${kind}`);
+      if (!response.ok) {
+        return;
+      }
+
+      const payload = await response.json() as { items: AdminFinanceCounterpartyOption[] };
+      setCounterpartyOptions(payload.items ?? []);
+    }, 250);
+
+    return () => window.clearTimeout(timeout);
+  }, [counterpartySearch, drawerOpen, form.counterpartyKind, form.direction, form.useUnregisteredCounterparty]);
 
   function resetForm() {
     setForm((current) => ({
@@ -139,8 +174,15 @@ export function CashTransactionsManager({
       amount: "",
       title: "",
       note: "",
+      counterpartyKind: "CUSTOMER",
+      customerAccountId: "",
+      supplierId: "",
       counterpartyName: "",
+      useUnregisteredCounterparty: false,
     }));
+    setCounterpartySearch("");
+    setCounterpartyOptions([]);
+    setSelectedCounterparty(null);
   }
 
   function openCreateDrawer() {
@@ -178,7 +220,10 @@ export function CashTransactionsManager({
             amount: Number(form.amount || "0"),
             title: form.title,
             note: form.note.trim() || null,
-            counterpartyName: form.counterpartyName.trim() || null,
+            counterpartyKind: form.useUnregisteredCounterparty ? "UNREGISTERED" : form.counterpartyKind,
+            customerAccountId: form.useUnregisteredCounterparty ? null : form.counterpartyKind === "CUSTOMER" ? form.customerAccountId || null : null,
+            supplierId: form.useUnregisteredCounterparty ? null : form.counterpartyKind === "SUPPLIER" ? form.supplierId || null : null,
+            counterpartyName: form.useUnregisteredCounterparty ? form.counterpartyName.trim() || null : null,
           }),
         });
 
@@ -272,13 +317,29 @@ export function CashTransactionsManager({
                 </span>
               </div>
               <div>
-                <h3 className="font-medium text-neutral-950">{item.title}</h3>
+                <h3 className="font-medium text-neutral-950">
+                  <Link href={`/${locale}/admin/finance/transactions/${item.id}`} className="text-neutral-950 no-underline hover:underline">
+                    {item.title}
+                  </Link>
+                </h3>
                 <p className="mt-1 text-xs text-neutral-500">{item.sourceType === "REFUND" ? labels.refund : item.sourceType === "TRANSFER" ? labels.transfer : item.sourceType}</p>
               </div>
               <p className="text-sm text-neutral-500">{item.accountName}</p>
               <p className="text-sm font-medium text-neutral-950">{formatMoney(item.amount, item.currency)}</p>
               <p className="text-sm text-neutral-500">{formatDate(item.transactionAt)}</p>
-              <p className="text-sm text-neutral-500">{item.counterpartyName ?? "-"}</p>
+              <div className="text-sm text-neutral-500">
+                {item.customerAccountSlug ? (
+                  <Link href={`/${locale}/admin/finance/customers/${encodeURIComponent(item.customerAccountSlug)}`} className="text-neutral-700 no-underline hover:text-neutral-950">
+                    {item.counterpartyName ?? labels.openLedger}
+                  </Link>
+                ) : item.supplierSlug ? (
+                  <Link href={`/${locale}/admin/finance/suppliers/${encodeURIComponent(item.supplierSlug)}`} className="text-neutral-700 no-underline hover:text-neutral-950">
+                    {item.counterpartyName ?? labels.openLedger}
+                  </Link>
+                ) : (
+                  item.counterpartyName ?? "-"
+                )}
+              </div>
               <p className="text-sm text-neutral-500">{item.note ?? "-"}</p>
             </article>
           ))}
@@ -320,7 +381,11 @@ export function CashTransactionsManager({
                       direction: nextDirection,
                       sourceType: nextDirection === "TRANSFER" ? "TRANSFER" : nextDirection === "OUT" ? current.sourceType : "MANUAL",
                       category: nextDirection === "TRANSFER" ? "TRANSFER" : nextDirection === "IN" ? "GENERAL_INCOME" : current.sourceType === "REFUND" ? "REFUND" : "GENERAL_EXPENSE",
+                      counterpartyKind: nextDirection === "OUT" ? "SUPPLIER" : nextDirection === "IN" ? "CUSTOMER" : current.counterpartyKind,
+                      customerAccountId: "",
+                      supplierId: "",
                     }));
+                    setSelectedCounterparty(null);
                   }}
                   className="h-10 rounded-xl border border-neutral-300 px-3 text-sm text-neutral-700"
                 >
@@ -383,7 +448,85 @@ export function CashTransactionsManager({
               </div>
               <div className="grid gap-2">
                 <Label>{labels.counterparty}</Label>
-                <Input value={form.counterpartyName} onChange={(event) => setForm((current) => ({ ...current, counterpartyName: event.target.value }))} />
+                {form.direction !== "TRANSFER" ? (
+                  <>
+                    <label className="flex items-center gap-2 text-sm text-neutral-700">
+                      <input
+                        type="checkbox"
+                        checked={form.useUnregisteredCounterparty}
+                        onChange={(event) => {
+                          const checked = event.target.checked;
+                          setForm((current) => ({
+                            ...current,
+                            useUnregisteredCounterparty: checked,
+                            customerAccountId: "",
+                            supplierId: "",
+                            counterpartyName: checked ? current.counterpartyName : "",
+                          }));
+                          if (checked) {
+                            setSelectedCounterparty(null);
+                          }
+                        }}
+                      />
+                      {labels.counterpartyUnregistered}
+                    </label>
+                    {form.useUnregisteredCounterparty ? (
+                      <Input value={form.counterpartyName} onChange={(event) => setForm((current) => ({ ...current, counterpartyName: event.target.value }))} placeholder={labels.counterpartyUnregistered} />
+                    ) : (
+                      <>
+                        <Label className="text-xs text-neutral-500">{labels.counterpartyKind}</Label>
+                        <select
+                          value={form.counterpartyKind}
+                          onChange={(event) => {
+                            const nextKind = event.target.value as AdminCashTransactionCounterpartyKind;
+                            setForm((current) => ({
+                              ...current,
+                              counterpartyKind: nextKind,
+                              customerAccountId: "",
+                              supplierId: "",
+                            }));
+                            setSelectedCounterparty(null);
+                          }}
+                          className="h-10 rounded-xl border border-neutral-300 px-3 text-sm text-neutral-700"
+                        >
+                          <option value="CUSTOMER">{labels.counterpartyCustomer}</option>
+                          <option value="SUPPLIER">{labels.counterpartySupplier}</option>
+                        </select>
+                        <Input value={counterpartySearch} onChange={(event) => setCounterpartySearch(event.target.value)} placeholder={labels.counterpartySearch} />
+                        {selectedCounterparty ? (
+                          <p className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-700">
+                            {labels.counterpartySelected}: <span className="font-medium text-neutral-950">{selectedCounterparty.label}</span>
+                          </p>
+                        ) : null}
+                        <div className="max-h-40 overflow-y-auto rounded-xl border border-neutral-200">
+                          {counterpartyOptions.length === 0 ? (
+                            <p className="p-3 text-sm text-neutral-500">{labels.counterpartySearch}</p>
+                          ) : counterpartyOptions.map((option) => (
+                            <button
+                              key={`${option.kind}:${option.id}`}
+                              type="button"
+                              className="flex w-full flex-col items-start border-b border-neutral-100 px-3 py-2 text-left last:border-b-0 hover:bg-neutral-50"
+                              onClick={() => {
+                                setSelectedCounterparty(option);
+                                setForm((current) => ({
+                                  ...current,
+                                  counterpartyKind: option.kind,
+                                  customerAccountId: option.kind === "CUSTOMER" ? option.id : "",
+                                  supplierId: option.kind === "SUPPLIER" ? option.id : "",
+                                }));
+                              }}
+                            >
+                              <span className="text-sm font-medium text-neutral-950">{option.label}</span>
+                              {option.subtitle ? <span className="text-xs text-neutral-500">{option.subtitle}</span> : null}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm text-neutral-500">{labels.transfer}</p>
+                )}
               </div>
               <div className="grid gap-2">
                 <Label>{labels.note}</Label>

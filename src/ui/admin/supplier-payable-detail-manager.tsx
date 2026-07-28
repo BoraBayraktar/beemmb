@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import type { AdminSupplierPayableDetail } from "@/modules/finance/contracts/payables.contract";
+import type { AdminInventoryPayableSummary } from "@/modules/finance/contracts/inventory-payable-summary.contract";
+import { FinanceInventoryPayableSummaryPanel } from "@/ui/admin/finance-inventory-payable-summary-panel";
 
 type Labels = {
   title: string;
@@ -17,15 +19,25 @@ type Labels = {
   backToList: string;
   openDocuments: string;
   notSpecified: string;
+  financeDocumentMovementPreviewOpen: string;
+  inventoryPayableSummaryTitle: string;
+  inventoryPayableSummaryLinkedCount: string;
+  inventoryPayableSummaryLineQuantity: string;
+  inventoryPayableSummaryInventoryTransaction: string;
+  inventoryPayableSummaryLineQuantityLabel: string;
+  inventoryPayableSummaryOpenInventory: string;
+  inventoryPayableSummaryEmpty: string;
+  counterpartyFinanceHint: string | null;
 };
 
 type Props = {
   locale: string;
   item: AdminSupplierPayableDetail;
+  inventorySummary: AdminInventoryPayableSummary;
   labels: Labels;
 };
 
-export function SupplierPayableDetailManager({ locale, item, labels }: Props) {
+export function SupplierPayableDetailManager({ locale, item, inventorySummary, labels }: Props) {
   return (
     <div className="space-y-6">
       <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
@@ -33,6 +45,9 @@ export function SupplierPayableDetailManager({ locale, item, labels }: Props) {
           <div className="space-y-2">
             <h1 className="text-2xl font-semibold text-neutral-950">{item.supplierName}</h1>
             <p className="text-sm text-neutral-600">{labels.description}</p>
+            {labels.counterpartyFinanceHint ? (
+              <p className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">{labels.counterpartyFinanceHint}</p>
+            ) : null}
           </div>
           <div className="flex flex-wrap gap-2">
             <Link href={`/${locale}/admin/finance/payables`} className="inline-flex h-10 items-center rounded-xl border border-neutral-300 px-4 text-sm font-medium text-neutral-700">
@@ -64,6 +79,21 @@ export function SupplierPayableDetailManager({ locale, item, labels }: Props) {
         </article>
       </section>
 
+      <FinanceInventoryPayableSummaryPanel
+        summary={inventorySummary}
+        labels={{
+          title: labels.inventoryPayableSummaryTitle,
+          linkedDocumentCount: labels.inventoryPayableSummaryLinkedCount,
+          totalLineQuantity: labels.inventoryPayableSummaryLineQuantity,
+          documentNumber: labels.documentNumber,
+          inventoryTransaction: labels.inventoryPayableSummaryInventoryTransaction,
+          lineQuantity: labels.inventoryPayableSummaryLineQuantityLabel,
+          openInventory: labels.inventoryPayableSummaryOpenInventory,
+          empty: labels.inventoryPayableSummaryEmpty,
+          notSpecified: labels.notSpecified,
+        }}
+      />
+
       <section className="space-y-3">
         {item.documents.map((document) => (
           <article key={document.id} className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
@@ -79,6 +109,14 @@ export function SupplierPayableDetailManager({ locale, item, labels }: Props) {
               <p>{labels.inventoryTransactionNumber}: {document.inventoryTransactionNumber ?? labels.notSpecified}</p>
               <p>{labels.lastIssueDate}: {new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(document.issueDate))}</p>
               <p>{labels.totalAmount}: {(document.totalAmount ?? 0).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {document.currency}</p>
+            </div>
+            <div className="mt-4">
+              <Link
+                href={`/${locale}/admin/finance/business-documents/${document.id}/movements`}
+                className="inline-flex text-sm font-medium text-neutral-800 underline-offset-2 hover:underline"
+              >
+                {labels.financeDocumentMovementPreviewOpen}
+              </Link>
             </div>
             <div className="mt-4 space-y-2">
               {document.lines.map((line) => (

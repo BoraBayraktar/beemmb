@@ -333,6 +333,7 @@ type Labels = {
   addFeature: string;
   removeFeature: string;
   importCsv: string;
+  importTemplate: string;
   exportCsv: string;
   importHint: string;
   importSuccess: string;
@@ -1964,6 +1965,34 @@ export function ProductManager({
     }
   }
 
+  async function downloadImportTemplate() {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/admin/products/import/template");
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+        setError(payload?.message ?? labels.exportFailed);
+        return;
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = downloadUrl;
+      anchor.download = "2bem-product-import-template.xlsx";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(downloadUrl);
+    } catch {
+      setError(labels.exportFailed);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function importProductsCsv(file: File | null) {
     if (!file) {
       return;
@@ -1985,7 +2014,8 @@ export function ProductManager({
         message?: string;
         createdCount?: number;
         failedCount?: number;
-        errors?: Array<{ rowNumber: number; message: string }>;
+        validatedCount?: number;
+        errors?: Array<{ rowNumber: number; sheetName?: string; message: string }>;
       } | null;
 
       if (!response.ok) {
@@ -1995,7 +2025,7 @@ export function ProductManager({
 
       const firstError = payload?.errors?.[0];
       setImportSummary(firstError
-        ? `${labels.importSuccess} ${payload?.createdCount ?? 0} | ${labels.importFailed} ${payload?.failedCount ?? 0} | Satır ${firstError.rowNumber}: ${firstError.message}`
+        ? `${labels.importSuccess} ${payload?.createdCount ?? 0} | ${labels.importFailed} ${payload?.failedCount ?? 0} | ${firstError.sheetName ? `${firstError.sheetName} ` : ""}Satır ${firstError.rowNumber}: ${firstError.message}`
         : `${labels.importSuccess} ${payload?.createdCount ?? 0}`);
       router.refresh();
     } catch {
@@ -2441,10 +2471,13 @@ export function ProductManager({
           <input
             ref={importFileInputRef}
             type="file"
-            accept=".csv,text/csv"
+            accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
             className="hidden"
             onChange={(event) => importProductsCsv(event.target.files?.[0] ?? null)}
           />
+          <Button type="button" variant="secondary" disabled={loading} onClick={downloadImportTemplate}>
+            {labels.importTemplate}
+          </Button>
           <Button type="button" variant="secondary" disabled={importingCsv} onClick={() => importFileInputRef.current?.click()}>
             {labels.importCsv}
           </Button>

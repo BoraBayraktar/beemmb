@@ -30,6 +30,7 @@ import type {
   AdminInventoryTransactionItem,
   AdminInventoryTransactionListQuery,
   AdminInventoryTransactionListResult,
+  AdminInventoryTransactionFinanceSummary,
   AdminStockCountItem,
   AdminUpdateStockCountLineInput,
   AdminUpdateWarehouseInput,
@@ -2872,6 +2873,23 @@ export class InventoryService {
       transactionNumber: applied.transactionNumber,
       countNumber: applied.countNumber,
     };
+  }
+
+  async listTransactionSummariesForFinance(ids: string[]) {
+    const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
+
+    if (uniqueIds.length === 0) {
+      return [] as AdminInventoryTransactionFinanceSummary[];
+    }
+
+    const items = await this.repository.findInventoryTransactionSummariesByIds(uniqueIds);
+
+    return items.map((item) => ({
+      id: item.id,
+      transactionNumber: item.transactionNumber,
+      type: item.type,
+      createdAt: item.createdAt.toISOString(),
+    }));
   }
 }
 

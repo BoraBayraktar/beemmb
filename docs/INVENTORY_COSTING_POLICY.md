@@ -1,6 +1,6 @@
 # Inventory Costing Policy
 
-Bu doküman, 2BEM stok raporlarında hangi maliyet yaklaşımının resmi kabul edildiğini tanımlar.
+Bu doküman, BEEMMB stok raporlarında hangi maliyet yaklaşımının resmi kabul edildiğini tanımlar.
 
 ## Resmi Karar
 

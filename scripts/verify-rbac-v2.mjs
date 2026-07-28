@@ -21,11 +21,12 @@ const requiredPermissions = [
   "documents.manage",
   "finance.read",
   "finance.manage",
+  "finance.audit.read",
   "integrations.read",
   "integrations.manage",
 ];
 
-const requiredRoles = ["super-admin", "operation", "auditor", "finance", "catalog-manager", "integration-manager"];
+const requiredRoles = ["super-admin", "operation", "auditor", "finance", "accountant", "catalog-manager", "integration-manager"];
 
 function assert(condition, message) {
   if (!condition) {

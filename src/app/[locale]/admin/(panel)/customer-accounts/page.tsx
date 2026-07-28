@@ -47,6 +47,8 @@ export default async function AdminCustomerAccountsPage({
         taxNumber: dictionary.admin.supplierTaxNumber,
         address: dictionary.admin.customerAccountsAddress,
         note: dictionary.admin.documentsNote,
+        defaultPaymentTermDays: dictionary.admin.customerDefaultPaymentTermDays,
+        creditLimit: dictionary.admin.customerCreditLimit,
         status: dictionary.admin.status,
         create: dictionary.admin.create,
         save: dictionary.admin.save,

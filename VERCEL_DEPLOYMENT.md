@@ -4,7 +4,7 @@ This project can run on Vercel as a Node.js Next.js application.
 
 ## Build mode
 
-The production build script uses `next build --webpack` from [`package.json`](/Users/borabayraktar/Documents/GitHub/arventatrade/package.json:8).
+The production build script uses `next build --webpack` from [`package.json`](/Users/borabayraktar/Documents/GitHub/beemmb/package.json:8).
 
 This is intentional. In this repository, Turbopack production build was hanging during `Creating an optimized production build ...`, so the deploy path is pinned to Webpack for a more predictable Vercel build.
 
@@ -38,7 +38,7 @@ If `REDIS_URL` is omitted, the application can still serve requests, but cache-b
 
 ## Scheduled jobs
 
-[`vercel.json`](/Users/borabayraktar/Documents/GitHub/arventatrade/vercel.json:1) registers daily production crons:
+[`vercel.json`](/Users/borabayraktar/Documents/GitHub/beemmb/vercel.json:1) registers daily production crons:
 
 - Path: `/api/system/integrations/trendyol-sync`
 - Schedule: `0 3 * * *` (03:00 UTC)
@@ -52,7 +52,7 @@ If `REDIS_URL` is omitted, the application can still serve requests, but cache-b
 - Schedule: `0 4 * * *` (04:00 UTC)
 - Scope: queues active Hepsiburada order imports and processes the integration queue.
 
-- Available but not yet registered in [`vercel.json`](/Users/borabayraktar/Documents/GitHub/arventatrade/vercel.json:1):
+- Available but not yet registered in [`vercel.json`](/Users/borabayraktar/Documents/GitHub/beemmb/vercel.json:1):
 - Path: `/api/system/integrations/n11-task-follow-up`
 - Scope: only checks pending N11 task results for successful `PRODUCT_SYNC`, `PRICE_SYNC`, and `STOCK_SYNC` jobs.
 
@@ -133,7 +133,7 @@ Common production pattern:
 
 ## Runtime behavior
 
-- The localized app tree is forced to `nodejs` runtime in [`src/app/[locale]/layout.tsx`](/Users/borabayraktar/Documents/GitHub/arventatrade/src/app/[locale]/layout.tsx:1).
+- The localized app tree is forced to `nodejs` runtime in [`src/app/[locale]/layout.tsx`](/Users/borabayraktar/Documents/GitHub/beemmb/src/app/[locale]/layout.tsx:1).
 - The same layout is marked `force-dynamic` so Vercel does not try to pre-render data-backed routes at build time.
 
 This is important because storefront, admin, auth, Prisma, Redis, and media flows are request-time concerns in this app.

@@ -104,7 +104,7 @@ export class N11ProductSyncService {
       draftPayload: blockingIssues.length === 0
         ? {
             payload: {
-              integrator: config?.displayName ?? "2BEM",
+              integrator: config?.displayName ?? "BEEMMB",
               skus: [
                 {
                   stockCode: target.sku,

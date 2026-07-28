@@ -92,6 +92,7 @@ export default async function AdminFinancialAccountDetailPage({
         movementReference: dictionary.admin.financeAccountsSourceNumber,
         notSpecified: dictionary.common.notSpecified,
         empty: dictionary.admin.financeCashTransactionsEmpty,
+        openReconciliation: dictionary.admin.financeBankReconciliationOpenReconciliation,
       }}
     />
   );

@@ -3,20 +3,20 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.arventatrade.notification-worker</string>
+  <string>com.beemmb.notification-worker</string>
   <key>ProgramArguments</key>
   <array>
     <string>/bin/bash</string>
-    <string>/Users/borabayraktar/Documents/GitHub/arventatrade/scripts/run-notification-worker-launchd.sh</string>
+    <string>/Users/borabayraktar/Documents/GitHub/beemmb/scripts/run-notification-worker-launchd.sh</string>
   </array>
   <key>StartInterval</key>
   <integer>120</integer>
   <key>RunAtLoad</key>
   <true/>
   <key>StandardOutPath</key>
-  <string>/Users/borabayraktar/Library/Logs/arventatrade-notification-worker.log</string>
+  <string>/Users/borabayraktar/Library/Logs/beemmb-notification-worker.log</string>
   <key>StandardErrorPath</key>
-  <string>/Users/borabayraktar/Library/Logs/arventatrade-notification-worker.error.log</string>
+  <string>/Users/borabayraktar/Library/Logs/beemmb-notification-worker.error.log</string>
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key>

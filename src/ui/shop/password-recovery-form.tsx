@@ -70,7 +70,7 @@ export function PasswordRecoveryForm({ locale, labels }: PasswordRecoveryFormPro
             <span className={styles.heroEyebrow}>{labels.heroEyebrow}</span>
             <div className={styles.heroBadge}>
               <LifeBuoy className="h-4 w-4" />
-              <span>2BEM</span>
+              <span>BEEMMB</span>
             </div>
             <h1 className={styles.heroTitle}>{labels.heroTitle}</h1>
             <p className={styles.heroBody}>{labels.heroBody}</p>

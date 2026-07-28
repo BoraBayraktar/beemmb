@@ -17,16 +17,22 @@ export class AccountsService {
   async listAccountEntries(locale: string, query: AdminFinanceAccountsQuery = {}): Promise<AdminFinanceAccountsResult> {
     const parsed = querySchema.parse(query);
 
-    const [payables, receivables] = await Promise.all([
+    const [payablesResult, receivables] = await Promise.all([
       payablesService.listSupplierPayables({ search: parsed.search }),
-      receivablesService.listOperationalReceivables({ search: parsed.search, page: 1, pageSize: 100 }),
+      receivablesService.listOperationalReceivables({ search: parsed.search, page: 1, pageSize: 100, locale }),
     ]);
+    const payables = payablesResult.items;
 
     const payableEntries: AdminFinanceAccountEntry[] = payables.flatMap((group) =>
       group.documents.map((document) => ({
         id: `payable:${document.id}`,
         type: "PAYABLE",
         counterpartyName: group.supplierName,
+        counterpartyLedgerHref: group.supplierId
+          ? `/${locale}/admin/finance/accounts/${encodeURIComponent(group.supplierId)}`
+          : group.supplierSlug
+            ? `/${locale}/admin/finance/suppliers/${encodeURIComponent(group.supplierSlug)}`
+            : null,
         sourceNumber: document.documentNumber,
         sourceDate: document.issueDate,
         statusLabel: document.status,
@@ -34,6 +40,7 @@ export class AccountsService {
         currency: document.currency,
         detailHref: `/${locale}/admin/finance/payables/${encodeURIComponent(group.supplierKey)}`,
         sourceHref: `/${locale}/admin/documents`,
+        financeMovementPreviewHref: `/${locale}/admin/finance/business-documents/${document.id}/movements`,
       })),
     );
 
@@ -41,6 +48,9 @@ export class AccountsService {
       id: `receivable:${item.orderId}`,
       type: "RECEIVABLE",
       counterpartyName: item.counterpartyName,
+      counterpartyLedgerHref: item.customerAccountId
+        ? `/${locale}/admin/finance/accounts/${encodeURIComponent(item.customerAccountId)}`
+        : null,
       sourceNumber: item.orderNumber,
       sourceDate: item.createdAt,
       statusLabel: item.paymentStatus,
@@ -48,6 +58,9 @@ export class AccountsService {
       currency: item.currency,
       detailHref: `/${locale}/admin/finance/receivables/${item.orderId}`,
       sourceHref: `/${locale}/admin/orders/${item.orderId}`,
+      financeMovementPreviewHref: item.latestDocument?.id
+        ? `/${locale}/admin/finance/business-documents/${item.latestDocument.id}/movements`
+        : `/${locale}/admin/finance/collections/${item.orderId}`,
     }));
 
     const combined = [...receivableEntries, ...payableEntries]

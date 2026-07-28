@@ -52,6 +52,8 @@ export default async function AdminSuppliersPage({
         email: dictionary.admin.supplierEmail,
         phone: dictionary.admin.supplierPhone,
         taxNumber: dictionary.admin.supplierTaxNumber,
+        defaultPaymentTermDays: dictionary.admin.supplierDefaultPaymentTermDays,
+        creditLimit: dictionary.admin.supplierCreditLimit,
         productCount: dictionary.admin.productCount,
         create: dictionary.admin.create,
         edit: dictionary.admin.edit,

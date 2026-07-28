@@ -71,13 +71,13 @@ async function resolveBaseUrl() {
 
 async function main() {
   baseUrl = await resolveBaseUrl();
-  const { cookie, user } = await login("admin@arventatrade.local", "Admin123!");
+  const { cookie, user } = await login("admin@beemmb.local", "Admin123!");
   assert(user.role === "ADMIN", `Admin login expected ADMIN role, got ${user.role}`);
 
   const meResponse = await authFetch("/api/identity/me", cookie);
   assert(meResponse.status === 200, `Identity me expected 200, got ${meResponse.status}`);
   const mePayload = await meResponse.json();
-  assert(mePayload?.user?.email === "admin@arventatrade.local", "Identity me should return the admin user");
+  assert(mePayload?.user?.email === "admin@beemmb.local", "Identity me should return the admin user");
 
   const loginPageResponse = await fetch(`${baseUrl}/tr/admin/login`, {
     headers: {

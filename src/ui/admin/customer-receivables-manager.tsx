@@ -33,6 +33,19 @@ type Labels = {
   openDetail: string;
   notSpecified: string;
   cancel: string;
+  overdueAmountKpi: string;
+  dueWithinDaysKpi: string;
+  nearestDueDateKpi: string;
+  overdueFilter: string;
+  allOpenFilter: string;
+  dueColumn: string;
+  dueStatusOverdue: string;
+  dueStatusDueInDays: string;
+  dueStatusDueLater: string;
+  dueStatusOverdueDays: string;
+  dueStatusDueInDaysHint: string;
+  dueStatusDueLaterHint: string;
+  actions: string;
 };
 
 type Props = {
@@ -40,6 +53,7 @@ type Props = {
   result: AdminReceivablesResult;
   initialSearch: string;
   initialPaymentStatus: "all" | "PENDING" | "AUTHORIZED" | "FAILED";
+  overdueOnly: boolean;
   labels: Labels;
 };
 
@@ -58,7 +72,12 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-function buildStatusHref(locale: string, status: "all" | "PENDING" | "AUTHORIZED" | "FAILED", search: string) {
+function buildStatusHref(
+  locale: string,
+  status: "all" | "PENDING" | "AUTHORIZED" | "FAILED",
+  search: string,
+  overdueOnly: boolean,
+) {
   const params = new URLSearchParams();
   if (status !== "all") {
     params.set("paymentStatus", status);
@@ -66,8 +85,23 @@ function buildStatusHref(locale: string, status: "all" | "PENDING" | "AUTHORIZED
   if (search.trim()) {
     params.set("search", search.trim());
   }
+  if (overdueOnly) {
+    params.set("overdueOnly", "1");
+  }
   const query = params.toString();
   return query ? `/${locale}/admin/finance/receivables?${query}` : `/${locale}/admin/finance/receivables`;
+}
+
+function resolveDueHint(item: AdminReceivablesResult["items"][number], labels: Labels) {
+  if (item.isOverdue) {
+    return `${labels.dueStatusOverdue}: ${labels.dueStatusOverdueDays.replace("{days}", String(Math.abs(item.daysUntilDue)))}`;
+  }
+
+  if (item.daysUntilDue <= 7) {
+    return `${labels.dueStatusDueInDays}: ${labels.dueStatusDueInDaysHint.replace("{days}", String(item.daysUntilDue))}`;
+  }
+
+  return `${labels.dueStatusDueLater}: ${labels.dueStatusDueLaterHint.replace("{days}", String(item.daysUntilDue))}`;
 }
 
 function resolveStatusBadge(status: "PENDING" | "AUTHORIZED" | "FAILED") {
@@ -99,6 +133,7 @@ export function CustomerReceivablesManager({
   result,
   initialSearch,
   initialPaymentStatus,
+  overdueOnly,
   labels,
 }: Props) {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -136,6 +171,8 @@ export function CustomerReceivablesManager({
     };
   }, [openActionMenuId]);
 
+  const dueWithinLabel = labels.dueWithinDaysKpi.replace("{days}", String(result.dueKpi.dueWithinDaysThreshold));
+
   return (
     <section className="rounded-2xl border border-neutral-200 bg-white">
       <div className="flex flex-col gap-4 border-b border-neutral-200 p-5 lg:flex-row lg:items-center lg:justify-between">
@@ -155,16 +192,36 @@ export function CustomerReceivablesManager({
             placeholder={labels.search}
           />
           <input type="hidden" name="paymentStatus" value={initialPaymentStatus === "all" ? "" : initialPaymentStatus} />
+          {overdueOnly ? <input type="hidden" name="overdueOnly" value="1" /> : null}
           <Button type="submit" variant="secondary">
             {labels.search}
           </Button>
         </form>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          <Link href={buildStatusHref(locale, "all", initialSearch)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialPaymentStatus === "all" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-neutral-100 text-neutral-700 hover:text-neutral-950"}`}>{labels.allStatuses}</Link>
-          <Link href={buildStatusHref(locale, "PENDING", initialSearch)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialPaymentStatus === "PENDING" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-neutral-100 text-neutral-700 hover:text-neutral-950"}`}>{labels.pending}</Link>
-          <Link href={buildStatusHref(locale, "AUTHORIZED", initialSearch)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialPaymentStatus === "AUTHORIZED" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-neutral-100 text-neutral-700 hover:text-neutral-950"}`}>{labels.authorized}</Link>
-          <Link href={buildStatusHref(locale, "FAILED", initialSearch)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialPaymentStatus === "FAILED" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-neutral-100 text-neutral-700 hover:text-neutral-950"}`}>{labels.failed}</Link>
+          <Link href={buildStatusHref(locale, "all", initialSearch, overdueOnly)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialPaymentStatus === "all" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-neutral-100 text-neutral-700 hover:text-neutral-950"}`}>{labels.allStatuses}</Link>
+          <Link href={buildStatusHref(locale, "PENDING", initialSearch, overdueOnly)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialPaymentStatus === "PENDING" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-neutral-100 text-neutral-700 hover:text-neutral-950"}`}>{labels.pending}</Link>
+          <Link href={buildStatusHref(locale, "AUTHORIZED", initialSearch, overdueOnly)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialPaymentStatus === "AUTHORIZED" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-neutral-100 text-neutral-700 hover:text-neutral-950"}`}>{labels.authorized}</Link>
+          <Link href={buildStatusHref(locale, "FAILED", initialSearch, overdueOnly)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialPaymentStatus === "FAILED" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-neutral-100 text-neutral-700 hover:text-neutral-950"}`}>{labels.failed}</Link>
+          <Link href={buildStatusHref(locale, initialPaymentStatus, initialSearch, false)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${!overdueOnly ? "bg-neutral-950 !text-white hover:!text-white" : "bg-neutral-100 text-neutral-700 hover:text-neutral-950"}`}>{labels.allOpenFilter}</Link>
+          <Link href={buildStatusHref(locale, initialPaymentStatus, initialSearch, true)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${overdueOnly ? "bg-neutral-950 !text-white hover:!text-white" : "bg-neutral-100 text-neutral-700 hover:text-neutral-950"}`}>{labels.overdueFilter}</Link>
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-3 xl:grid-cols-7">
+          <article className="rounded-3xl border border-rose-200 bg-rose-50 p-5 shadow-sm md:col-span-1 xl:col-span-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-rose-700">{labels.overdueAmountKpi}</p>
+            <p className="mt-3 text-2xl font-semibold text-rose-950">{formatMoney(result.dueKpi.overdueAmount, result.dueKpi.currency)}</p>
+          </article>
+          <article className="rounded-3xl border border-amber-200 bg-amber-50 p-5 shadow-sm md:col-span-1 xl:col-span-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">{dueWithinLabel}</p>
+            <p className="mt-3 text-2xl font-semibold text-amber-950">{formatMoney(result.dueKpi.dueWithinDaysAmount, result.dueKpi.currency)}</p>
+          </article>
+          <article className="rounded-3xl border border-neutral-200 bg-neutral-50 p-5 shadow-sm md:col-span-1 xl:col-span-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.nearestDueDateKpi}</p>
+            <p className="mt-3 text-lg font-semibold text-neutral-950">
+              {result.dueKpi.nearestDueDate ? formatDate(result.dueKpi.nearestDueDate) : labels.notSpecified}
+            </p>
+          </article>
         </div>
 
         <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -187,13 +244,14 @@ export function CustomerReceivablesManager({
         </div>
 
         <div className="mt-5 overflow-hidden rounded-xl border border-neutral-200">
-          <div className="hidden grid-cols-[1.2fr_1.2fr_160px_180px_180px_88px] gap-4 border-b border-neutral-200 bg-neutral-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 lg:grid">
+          <div className="hidden grid-cols-[1.2fr_1.2fr_160px_180px_180px_200px_88px] gap-4 border-b border-neutral-200 bg-neutral-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 lg:grid">
             <span>{labels.orderNumber}</span>
             <span>{labels.counterparty}</span>
             <span>{labels.paymentStatus}</span>
             <span>{labels.totalAmount}</span>
             <span>{labels.orderDate}</span>
-            <span className="text-right">İşlem</span>
+            <span>{labels.dueColumn}</span>
+            <span className="text-right">{labels.actions}</span>
           </div>
 
           {result.items.length === 0 ? (
@@ -201,7 +259,7 @@ export function CustomerReceivablesManager({
           ) : (
             <div className="divide-y divide-neutral-200">
               {result.items.map((item) => (
-                <article key={item.orderId} className="grid gap-4 p-4 lg:grid-cols-[1.2fr_1.2fr_160px_180px_180px_88px] lg:items-center">
+                <article key={item.orderId} className="grid gap-4 p-4 lg:grid-cols-[1.2fr_1.2fr_160px_180px_180px_200px_88px] lg:items-center">
                   <div>
                     <p className="font-medium text-neutral-950">{item.orderNumber}</p>
                     <p className="mt-1 text-sm text-neutral-500">{labels.itemCount}: {item.itemCount}</p>
@@ -214,6 +272,7 @@ export function CustomerReceivablesManager({
                   </div>
                   <p className="text-sm font-medium text-neutral-950">{formatMoney(item.totalAmount, item.currency)}</p>
                   <p className="text-sm text-neutral-500">{formatDate(item.createdAt)}</p>
+                  <p className={`text-sm ${item.isOverdue ? "font-medium text-rose-700" : "text-neutral-600"}`}>{resolveDueHint(item, labels)}</p>
                   <div ref={openActionMenuId === item.orderId ? actionMenuRef : null} className="relative flex justify-start lg:justify-end">
                     <Button
                       type="button"

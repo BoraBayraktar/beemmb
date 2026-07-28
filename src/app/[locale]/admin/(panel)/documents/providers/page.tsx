@@ -47,6 +47,11 @@ export default async function AdminDocumentProvidersPage({
         providerNone: dictionary.admin.documentsProviderNone,
         notSpecified: dictionary.common.notSpecified,
         operationFailed: dictionary.admin.operationFailed,
+        adapterRegistered: dictionary.admin.documentsProviderAdapterRegistered,
+        adapterConfigured: dictionary.admin.documentsProviderAdapterConfigured,
+        adapterOperational: dictionary.admin.documentsProviderAdapterOperational,
+        adapterReady: dictionary.admin.documentsProviderAdapterReady,
+        adapterNotReady: dictionary.admin.documentsProviderAdapterNotReady,
       }}
     />
   );

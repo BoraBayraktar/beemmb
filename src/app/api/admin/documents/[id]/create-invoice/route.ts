@@ -1,9 +1,17 @@
-import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
+import { buildNoStoreHeaders, noStoreJson } from "@/lib/no-store-json-response";
 import { documentService, DocumentAdminError } from "@/modules/documents/services/document.service";
 import { AuthContextError, requirePermission } from "@/modules/identity/services/auth-context.service";
 import { auditLogService } from "@/modules/system/services/audit-log.service";
+
+export function buildCreateInvoiceHeaders() {
+  return buildNoStoreHeaders();
+}
+
+export function createInvoiceJson(body: unknown, init?: ResponseInit) {
+  return noStoreJson(body, init);
+}
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
@@ -26,24 +34,24 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       },
     });
 
-    return NextResponse.json({ item: created }, { status: 201 });
+    return createInvoiceJson({ item: created }, { status: 201 });
   } catch (error) {
     if (error instanceof AuthContextError) {
-      return NextResponse.json({ message: error.message }, { status: error.status });
+      return createInvoiceJson({ message: error.message }, { status: error.status });
     }
 
     if (error instanceof DocumentAdminError) {
-      return NextResponse.json({ message: error.message }, { status: error.status });
+      return createInvoiceJson({ message: error.message }, { status: error.status });
     }
 
     if (error instanceof ZodError) {
-      return NextResponse.json({ message: error.issues[0]?.message ?? "Doğrulama hatası oluştu." }, { status: 400 });
+      return createInvoiceJson({ message: error.issues[0]?.message ?? "Doğrulama hatası oluştu." }, { status: 400 });
     }
 
     if (error instanceof Error && error.message.includes("BusinessDocument_documentNumber_key")) {
-      return NextResponse.json({ message: "Bu e-fatura numarası zaten kullanılıyor." }, { status: 409 });
+      return createInvoiceJson({ message: "Bu e-fatura numarası zaten kullanılıyor." }, { status: 409 });
     }
 
-    return NextResponse.json({ message: "Beklenmeyen bir hata oluştu." }, { status: 500 });
+    return createInvoiceJson({ message: "Beklenmeyen bir hata oluştu." }, { status: 500 });
   }
 }

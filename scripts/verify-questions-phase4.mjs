@@ -151,7 +151,7 @@ async function bulkModerate(cookie, body) {
 
 async function main() {
   baseUrl = await resolveBaseUrl();
-  const { cookie: adminCookie } = await login("admin@arventatrade.local", "Admin123!");
+  const { cookie: adminCookie } = await login("admin@beemmb.local", "Admin123!");
 
   const unique = Date.now();
   const slug = `phase4-question-${unique}`;

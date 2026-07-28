@@ -2892,4 +2892,22 @@ export class InventoryRepository {
       },
     });
   }
+
+  async findInventoryTransactionSummariesByIds(ids: string[]) {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    return prisma.inventoryTransaction.findMany({
+      where: {
+        id: { in: ids },
+      },
+      select: {
+        id: true,
+        transactionNumber: true,
+        type: true,
+        createdAt: true,
+      },
+    });
+  }
 }

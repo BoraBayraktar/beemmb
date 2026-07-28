@@ -39,10 +39,10 @@ async function main() {
 
   await prisma.user.upsert({
     where: {
-      email: "admin@arventatrade.local",
+      email: "admin@beemmb.local",
     },
     update: {
-      name: "Arventa Admin",
+      name: "BEEMMB Admin",
       passwordHash: adminPasswordHash,
       role: "ADMIN",
       deleted: false,
@@ -50,8 +50,8 @@ async function main() {
       deletedUserId: null,
     },
     create: {
-      email: "admin@arventatrade.local",
-      name: "Arventa Admin",
+      email: "admin@beemmb.local",
+      name: "BEEMMB Admin",
       passwordHash: adminPasswordHash,
       role: "ADMIN",
     },
@@ -59,10 +59,10 @@ async function main() {
 
   await prisma.user.upsert({
     where: {
-      email: "customer@arventatrade.local",
+      email: "customer@beemmb.local",
     },
     update: {
-      name: "Arventa Customer",
+      name: "BEEMMB Customer",
       passwordHash: customerPasswordHash,
       role: "CUSTOMER",
       deleted: false,
@@ -70,8 +70,8 @@ async function main() {
       deletedUserId: null,
     },
     create: {
-      email: "customer@arventatrade.local",
-      name: "Arventa Customer",
+      email: "customer@beemmb.local",
+      name: "BEEMMB Customer",
       passwordHash: customerPasswordHash,
       role: "CUSTOMER",
     },
@@ -79,10 +79,10 @@ async function main() {
 
   await prisma.user.upsert({
     where: {
-      email: "editor@arventatrade.local",
+      email: "editor@beemmb.local",
     },
     update: {
-      name: "Arventa Editor",
+      name: "BEEMMB Editor",
       passwordHash: editorPasswordHash,
       role: "EDITOR",
       deleted: false,
@@ -90,8 +90,8 @@ async function main() {
       deletedUserId: null,
     },
     create: {
-      email: "editor@arventatrade.local",
-      name: "Arventa Editor",
+      email: "editor@beemmb.local",
+      name: "BEEMMB Editor",
       passwordHash: editorPasswordHash,
       role: "EDITOR",
     },
@@ -283,7 +283,7 @@ async function main() {
           askedBy: "Burak A.",
           askedDaysAgo: 10,
           answer: "Evet, iOS 16 ve sonrasi surumlerde uygulama ile tam uyumlu calisir.",
-          answeredBy: "Arventa Support",
+          answeredBy: "BEEMMB Support",
           answeredDaysAgo: 9,
         },
         {
@@ -291,7 +291,7 @@ async function main() {
           askedBy: "Can O.",
           askedDaysAgo: 6,
           answer: "Surekli GPS kullaniminda senaryoya gore 1-2 gun arasi degisebilir.",
-          answeredBy: "Arventa Support",
+          answeredBy: "BEEMMB Support",
           answeredDaysAgo: 5,
         },
       ],
@@ -321,7 +321,7 @@ async function main() {
           askedBy: "Mert S.",
           askedDaysAgo: 7,
           answer: "Evet, sag veya sol kulakligi tek basina kullanabilirsiniz.",
-          answeredBy: "Arventa Support",
+          answeredBy: "BEEMMB Support",
           answeredDaysAgo: 6,
         },
       ],
@@ -343,7 +343,7 @@ async function main() {
           askedBy: "Derya P.",
           askedDaysAgo: 12,
           answer: "Urunun maksimum onerilen tasima kapasitesi 120 kg'dir.",
-          answeredBy: "Arventa Support",
+          answeredBy: "BEEMMB Support",
           answeredDaysAgo: 10,
         },
       ],

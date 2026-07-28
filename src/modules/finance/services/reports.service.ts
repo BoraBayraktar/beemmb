@@ -1,30 +1,33 @@
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
+import type { AdminFinanceReportDateRangeQuery } from "@/modules/finance/contracts/finance-report-date-range.contract";
 import type {
   AdminFinanceReportDetail,
   AdminFinanceReportDetailRow,
   AdminFinanceReportsOverview,
 } from "@/modules/finance/contracts/reports.contract";
+import type { FinanceReportsAgingBucketCopy } from "@/modules/finance/contracts/finance-reports-copy.contract";
+import { resolveFinanceReportsCopy } from "@/modules/finance/services/finance-reports-copy.resolver";
 import { accountsService } from "@/modules/finance/services/accounts.service";
 import { cashTransactionsService } from "@/modules/finance/services/cash-transactions.service";
 import { collectionsService } from "@/modules/finance/services/collections.service";
+import { financeVatSummaryService } from "@/modules/finance/services/finance-vat-summary.service";
+import { financeTrialBalanceService } from "@/modules/finance/services/finance-trial-balance.service";
 import { financialAccountsService } from "@/modules/finance/services/financial-accounts.service";
 import { payablesService } from "@/modules/finance/services/payables.service";
 import { paymentsService } from "@/modules/finance/services/payments.service";
 import { receivablesService } from "@/modules/finance/services/receivables.service";
-
-type AgingBucket = {
-  id: string;
-  label: string;
-  minDays: number;
-  maxDays: number | null;
-};
-
-const agingBuckets: AgingBucket[] = [
-  { id: "0-7", label: "0-7 gün", minDays: 0, maxDays: 7 },
-  { id: "8-30", label: "8-30 gün", minDays: 8, maxDays: 30 },
-  { id: "31-60", label: "31-60 gün", minDays: 31, maxDays: 60 },
-  { id: "61-plus", label: "61+ gün", minDays: 61, maxDays: null },
-];
+import { computeDaysPastDue } from "@/modules/finance/services/finance-due-date.util";
+import {
+  INCOME_EXPENSE_CATEGORY_ORDER,
+  normalizeIncomeExpenseCategoryKey,
+  resolveCashTransactionCategoryLabel,
+} from "@/modules/finance/services/finance-income-expense-category.util";
+import {
+  appendFinanceReportDateRangeDescription,
+  formatFinanceReportDateRangeLabel,
+  isInstantInFinanceReportRange,
+  parseFinanceReportDateRangeQuery,
+} from "@/modules/finance/services/finance-report-date-range.util";
 
 function diffInDays(value: string) {
   const msPerDay = 1000 * 60 * 60 * 24;
@@ -32,7 +35,7 @@ function diffInDays(value: string) {
   return Math.max(0, Math.floor(diff / msPerDay));
 }
 
-function resolveBucketLabel(days: number) {
+function resolveBucketLabel(days: number, agingBuckets: FinanceReportsAgingBucketCopy[]) {
   const bucket = agingBuckets.find((item) => days >= item.minDays && (item.maxDays == null || days <= item.maxDays));
   return bucket?.label ?? agingBuckets[agingBuckets.length - 1].label;
 }
@@ -49,9 +52,9 @@ function resolveTone(value: number): "neutral" | "success" | "warning" {
   return "neutral";
 }
 
-function formatMoney(value: number | null, currency = "TRY") {
+function formatMoney(value: number | null, currency: string, notSpecified: string) {
   if (value === null) {
-    return "Belirtilmedi";
+    return notSpecified;
   }
 
   return new Intl.NumberFormat("tr-TR", {
@@ -61,19 +64,31 @@ function formatMoney(value: number | null, currency = "TRY") {
   }).format(value);
 }
 
-function formatDate(value: string | null) {
+function formatDate(value: string | null, notSpecified: string) {
   if (!value) {
-    return "Belirtilmedi";
+    return notSpecified;
   }
 
   return new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium" }).format(new Date(value));
 }
 
+async function loadReportPeriodTransactions(query: AdminFinanceReportDateRangeQuery = {}) {
+  const range = parseFinanceReportDateRangeQuery(query);
+  const transactions = await cashTransactionsService.listTransactions({
+    from: range.fromIso,
+    to: range.toIso,
+    accountId: query.financialAccountId,
+  });
+
+  return { range, transactions };
+}
+
 export class ReportsService {
   async getOverview(locale: string): Promise<AdminFinanceReportsOverview> {
-    const [accounts, payables, receivables, financialAccounts, transactions] = await Promise.all([
+    const copy = resolveFinanceReportsCopy(locale);
+    const [, payables, receivables, financialAccounts, transactions] = await Promise.all([
       accountsService.listAccountEntries(locale),
-      payablesService.listSupplierPayables(),
+      payablesService.listSupplierPayables().then((result) => result.items),
       receivablesService.getReceivablesSummary(),
       financialAccountsService.listAccounts(),
       cashTransactionsService.listTransactions(),
@@ -86,82 +101,374 @@ export class ReportsService {
     return {
       metrics: [
         {
-          label: "Net operasyon bakiyesi",
+          label: copy.overview.netBalanceLabel,
           value: netOperationalBalance,
           currency: "TRY",
           tone: netOperationalBalance >= 0 ? "success" : "warning",
           href: `/${locale}/admin/finance/accounts`,
-          hint: "Açık alacak ve borç farkı",
+          hint: copy.overview.netBalanceHint,
         },
         {
-          label: "Kasa ve banka bakiyesi",
+          label: copy.overview.bankBalanceLabel,
           value: financialAccounts.summary.totalBalance,
           currency: financialAccounts.summary.currency,
           tone: "success",
           href: `/${locale}/admin/finance/bank-cash`,
-          hint: `${financialAccounts.summary.activeAccountCount} aktif hesap`,
+          hint: `${financialAccounts.summary.activeAccountCount} ${copy.overview.bankBalanceHintSuffix}`,
         },
         {
-          label: "Kayıtlı net nakit",
+          label: copy.overview.recordedNetCashLabel,
           value: transactions.summary.netAmount,
           currency: transactions.summary.currency,
           tone: resolveTone(transactions.summary.netAmount),
           href: `/${locale}/admin/finance/transactions`,
-          hint: `${transactions.summary.transactionCount} finans hareketi`,
+          hint: `${transactions.summary.transactionCount} ${copy.overview.recordedNetCashHintSuffix}`,
         },
         {
-          label: "Nakit pozisyon farkı",
+          label: copy.overview.cashGapLabel,
           value: cashPositionGap,
           currency: financialAccounts.summary.currency,
           tone: resolveTone(cashPositionGap),
           href: `/${locale}/admin/finance/reports/cashflow`,
-          hint: "Hesap bakiyesi eksi kayıtlı net nakit",
+          hint: copy.overview.cashGapHint,
         },
       ],
       cards: [
         {
-          title: "Yaşlandırma raporu",
-          description: "Açık alacak ve borçları gün aralıklarında görüp operasyon yükünü erken fark edin.",
+          title: copy.overview.cardAgingTitle,
+          description: copy.overview.cardAgingDescription,
           href: `/${locale}/admin/finance/reports/aging`,
-          ctaLabel: "Raporu aç",
+          ctaLabel: copy.openCta,
         },
         {
-          title: "Nakit akış özeti",
-          description: "Beklenen giriş ve çıkışları, kaydedilmiş tahsilat ve ödemelerle aynı yüzeyde kıyaslayın.",
+          title: copy.overview.cardCashflowTitle,
+          description: copy.overview.cardCashflowDescription,
           href: `/${locale}/admin/finance/reports/cashflow`,
-          ctaLabel: "Raporu aç",
+          ctaLabel: copy.openCta,
         },
         {
-          title: "Stok değer raporu",
-          description: "Ürün stok değerini finans bakışıyla sıralı görün; detay ürün yönetimi yine ayrı modülde kalsın.",
+          title: copy.overview.cardBankCashTitle,
+          description: copy.overview.cardBankCashDescription,
+          href: `/${locale}/admin/finance/reports/bank-cash`,
+          ctaLabel: copy.openCta,
+        },
+        {
+          title: copy.overview.cardStockTitle,
+          description: copy.overview.cardStockDescription,
           href: `/${locale}/admin/finance/reports/stock-value`,
-          ctaLabel: "Raporu aç",
+          ctaLabel: copy.openCta,
+        },
+        {
+          title: copy.overview.cardPerformanceTitle,
+          description: copy.overview.cardPerformanceDescription,
+          href: `/${locale}/admin/finance/reports/performance`,
+          ctaLabel: copy.openCta,
+        },
+        {
+          title: copy.overview.cardIncomeExpenseTitle,
+          description: copy.overview.cardIncomeExpenseDescription,
+          href: `/${locale}/admin/finance/reports/income-expense`,
+          ctaLabel: copy.openCta,
+        },
+        {
+          title: copy.overview.cardVatSummaryTitle,
+          description: copy.overview.cardVatSummaryDescription,
+          href: `/${locale}/admin/finance/reports/vat-summary`,
+          ctaLabel: copy.openCta,
+        },
+        {
+          title: copy.overview.cardTrialBalanceTitle,
+          description: copy.overview.cardTrialBalanceDescription,
+          href: `/${locale}/admin/finance/reports/trial-balance`,
+          ctaLabel: copy.openCta,
         },
       ],
     };
   }
 
-  async getAgingReport(locale: string): Promise<AdminFinanceReportDetail> {
+  async getIncomeExpenseReport(
+    locale: string,
+    query: AdminFinanceReportDateRangeQuery = {},
+  ): Promise<AdminFinanceReportDetail> {
+    const copy = resolveFinanceReportsCopy(locale);
+    const range = parseFinanceReportDateRangeQuery(query);
+    const transactions = await cashTransactionsService.listTransactionsForIncomeExpenseReport({
+      from: range.fromIso,
+      to: range.toIso,
+      financialAccountId: query.financialAccountId,
+    });
+
+    type CategoryBucket = {
+      categoryKey: string;
+      income: number;
+      expense: number;
+      movementCount: number;
+      currency: string;
+    };
+
+    const bucketMap = new Map<string, CategoryBucket>();
+
+    for (const item of transactions) {
+      const categoryKey = normalizeIncomeExpenseCategoryKey(item.category);
+      const amount = typeof item.amount?.toNumber === "function" ? item.amount.toNumber() : Number(item.amount);
+      const bucket = bucketMap.get(categoryKey) ?? {
+        categoryKey,
+        income: 0,
+        expense: 0,
+        movementCount: 0,
+        currency: item.currency ?? "TRY",
+      };
+
+      if (item.direction === "IN" || item.direction === "TRANSFER") {
+        bucket.income += amount;
+      }
+
+      if (item.direction === "OUT") {
+        bucket.expense += amount;
+      }
+
+      bucket.movementCount += 1;
+      bucketMap.set(categoryKey, bucket);
+    }
+
+    const buckets = INCOME_EXPENSE_CATEGORY_ORDER.map((categoryKey) => {
+      const bucket = bucketMap.get(categoryKey) ?? {
+        categoryKey,
+        income: 0,
+        expense: 0,
+        movementCount: 0,
+        currency: transactions[0]?.currency ?? "TRY",
+      };
+
+      return {
+        ...bucket,
+        income: Number(bucket.income.toFixed(2)),
+        expense: Number(bucket.expense.toFixed(2)),
+        net: Number((bucket.income - bucket.expense).toFixed(2)),
+      };
+    }).filter((bucket) => bucket.movementCount > 0 || bucket.income > 0 || bucket.expense > 0);
+
+    const displayBuckets = buckets.length > 0
+      ? buckets
+      : INCOME_EXPENSE_CATEGORY_ORDER.map((categoryKey) => ({
+          categoryKey,
+          income: 0,
+          expense: 0,
+          movementCount: 0,
+          currency: "TRY",
+          net: 0,
+        }));
+
+    const totalIncome = Number(displayBuckets.reduce((sum, bucket) => sum + bucket.income, 0).toFixed(2));
+    const totalExpense = Number(displayBuckets.reduce((sum, bucket) => sum + bucket.expense, 0).toFixed(2));
+    const netAmount = Number((totalIncome - totalExpense).toFixed(2));
+    const movementCount = transactions.length;
+    const currency = transactions[0]?.currency ?? "TRY";
+    const dateRangeLabel = formatFinanceReportDateRangeLabel(range.fromIso, range.toIso);
+
+    const resolveCategoryLabel = (categoryKey: string) => {
+      if (categoryKey === "UNSPECIFIED") {
+        return copy.incomeExpense.categoryUnspecified;
+      }
+
+      return resolveCashTransactionCategoryLabel(
+        categoryKey as "GENERAL_INCOME" | "GENERAL_EXPENSE" | "MARKETPLACE_COMMISSION" | "SHIPPING_EXPENSE" | "SERVICE_FEE" | "REFUND" | "TRANSFER",
+        copy.incomeExpense,
+      );
+    };
+
+    const rows: AdminFinanceReportDetailRow[] = displayBuckets
+      .filter((bucket) => bucket.movementCount > 0)
+      .sort((left, right) => Math.abs(right.net) - Math.abs(left.net))
+      .slice(0, 8)
+      .map((bucket) => ({
+        id: bucket.categoryKey,
+        label: resolveCategoryLabel(bucket.categoryKey),
+        supportingText: `${bucket.movementCount} ${copy.incomeExpense.movementCountHintSuffix}`,
+        primaryValue: bucket.net,
+        primaryCurrency: bucket.currency,
+        secondaryValue: bucket.income,
+        secondaryCurrency: bucket.currency,
+        tone: resolveTone(bucket.net),
+        href: `/${locale}/admin/finance/transactions`,
+      }));
+
+    const money = (value: number, rowCurrency: string) =>
+      new Intl.NumberFormat("tr-TR", { style: "currency", currency: rowCurrency, maximumFractionDigits: 2 }).format(value);
+
+    return {
+      title: copy.incomeExpense.title,
+      description: appendFinanceReportDateRangeDescription(copy.incomeExpense.description, copy.incomeExpense.dateRangeHint, range),
+      metrics: [
+        {
+          label: copy.incomeExpense.totalIncomeLabel,
+          value: totalIncome,
+          currency,
+          tone: totalIncome > 0 ? "success" : "neutral",
+          hint: dateRangeLabel,
+        },
+        {
+          label: copy.incomeExpense.totalExpenseLabel,
+          value: totalExpense,
+          currency,
+          tone: totalExpense > 0 ? "warning" : "neutral",
+          hint: dateRangeLabel,
+        },
+        {
+          label: copy.incomeExpense.netLabel,
+          value: netAmount,
+          currency,
+          tone: resolveTone(netAmount),
+          hint: copy.incomeExpense.netHint,
+        },
+        {
+          label: copy.incomeExpense.movementCountLabel,
+          value: movementCount,
+          tone: movementCount > 0 ? "neutral" : "warning",
+          hint: `${copy.incomeExpense.dateRangeHint}: ${dateRangeLabel}`,
+        },
+      ],
+      rows,
+      table: {
+        title: copy.incomeExpense.tableTitle,
+        description: copy.incomeExpense.tableDescription,
+        columns: [
+          { key: "category", label: copy.incomeExpense.colCategory },
+          { key: "income", label: copy.incomeExpense.colIncome, align: "right" },
+          { key: "expense", label: copy.incomeExpense.colExpense, align: "right" },
+          { key: "net", label: copy.incomeExpense.colNet, align: "right" },
+          { key: "movements", label: copy.incomeExpense.colMovements, align: "right" },
+        ],
+        rows: displayBuckets.map((bucket) => ({
+          id: bucket.categoryKey,
+          href: `/${locale}/admin/finance/transactions`,
+          cells: {
+            category: resolveCategoryLabel(bucket.categoryKey),
+            income: money(bucket.income, bucket.currency),
+            expense: money(bucket.expense, bucket.currency),
+            net: money(bucket.net, bucket.currency),
+            movements: bucket.movementCount.toLocaleString("tr-TR"),
+          },
+        })),
+      },
+    };
+  }
+
+  async getCollectionPaymentPerformanceReport(locale: string): Promise<AdminFinanceReportDetail> {
+    const copy = resolveFinanceReportsCopy(locale);
+    const [collections, payments] = await Promise.all([
+      collectionsService.listCollectionReadiness(locale),
+      paymentsService.listPaymentReadiness(locale),
+    ]);
+
+    const collectionCompletionRate = collections.summary.totalPendingAmount > 0
+      ? Number(((collections.summary.totalRecordedAmount / (collections.summary.totalPendingAmount + collections.summary.totalRecordedAmount)) * 100).toFixed(1))
+      : collections.summary.totalRecordedAmount > 0
+        ? 100
+        : 0;
+    const paymentCompletionRate = payments.summary.totalPendingAmount > 0
+      ? Number(((payments.summary.totalRecordedAmount / (payments.summary.totalPendingAmount + payments.summary.totalRecordedAmount)) * 100).toFixed(1))
+      : payments.summary.totalRecordedAmount > 0
+        ? 100
+        : 0;
+
+    const rows: AdminFinanceReportDetailRow[] = [
+      ...collections.items.slice(0, 8).map((item) => ({
+        id: `collection:${item.orderId}`,
+        label: item.orderNumber,
+        supportingText: `${item.counterpartyName} · ${item.recordedCollectionCount} ${copy.performance.collectionRowRecordSuffix}`,
+        primaryValue: item.remainingAmount,
+        primaryCurrency: item.currency,
+        secondaryValue: item.totalAmount - item.remainingAmount,
+        secondaryCurrency: item.currency,
+        tone: item.remainingAmount <= 0 ? "success" as const : "warning" as const,
+        href: item.detailHref,
+      })),
+      ...payments.items.slice(0, 8).map((item) => ({
+        id: `payment:${item.supplierId}`,
+        label: item.supplierName,
+        supportingText: `${item.recordedPaymentCount} ${copy.performance.paymentRowRecordSuffix} · ${item.documentCount} ${copy.performance.paymentRowDocumentSuffix}`,
+        primaryValue: item.remainingAmount,
+        primaryCurrency: item.currency,
+        secondaryValue: item.totalAmount - item.remainingAmount,
+        secondaryCurrency: item.currency,
+        tone: item.remainingAmount <= 0 ? "success" as const : "warning" as const,
+        href: item.detailHref,
+      })),
+    ];
+
+    return {
+      title: copy.performance.title,
+      description: copy.performance.description,
+      metrics: [
+        {
+          label: copy.performance.collectionCompletionLabel,
+          value: collectionCompletionRate,
+          tone: collectionCompletionRate >= 70 ? "success" : "warning",
+          hint: `${collections.summary.recordedCount} ${copy.performance.recordedCollectionHintSuffix}`,
+        },
+        {
+          label: copy.performance.paymentCompletionLabel,
+          value: paymentCompletionRate,
+          tone: paymentCompletionRate >= 70 ? "success" : "warning",
+          hint: `${payments.summary.recordedCount} ${copy.performance.recordedPaymentHintSuffix}`,
+        },
+        {
+          label: copy.performance.openReceivableLabel,
+          value: collections.summary.totalPendingAmount,
+          currency: collections.summary.currency,
+          tone: "warning",
+          hint: `${collections.summary.pendingCount} ${copy.performance.pendingOrdersHintSuffix}`,
+        },
+        {
+          label: copy.performance.openPayableLabel,
+          value: payments.summary.totalPendingAmount,
+          currency: payments.summary.currency,
+          tone: "warning",
+          hint: `${payments.summary.supplierCount} ${copy.performance.suppliersHintSuffix}`,
+        },
+      ],
+      rows,
+      table: null,
+    };
+  }
+
+  async getAgingReport(
+    locale: string,
+    query: AdminFinanceReportDateRangeQuery = {},
+  ): Promise<AdminFinanceReportDetail> {
+    const copy = resolveFinanceReportsCopy(locale);
+    const range = parseFinanceReportDateRangeQuery(query);
+    const agingBuckets = copy.agingBuckets;
     const [payableSummaries, receivables] = await Promise.all([
-      payablesService.listSupplierPayables(),
-      receivablesService.listOperationalReceivables({ page: 1, pageSize: 100 }),
+      payablesService.listSupplierPayables().then((result) => result.items),
+      receivablesService.listOperationalReceivables({ page: 1, pageSize: 5000, locale }),
     ]);
     const payables = (await Promise.all(
       payableSummaries.map((item) => payablesService.getSupplierPayableByKey(item.supplierKey)),
     )).filter((item): item is NonNullable<typeof item> => Boolean(item));
 
+    const filteredReceivables = receivables.items.filter((item) =>
+      isInstantInFinanceReportRange(item.latestDocument?.issueDate ?? item.createdAt, range),
+    );
+
+    const filteredPayables = payables.map((supplier) => ({
+      ...supplier,
+      documents: supplier.documents.filter((document) => isInstantInFinanceReportRange(document.issueDate, range)),
+    })).filter((supplier) => supplier.documents.length > 0);
+
     const rows: AdminFinanceReportDetailRow[] = agingBuckets.map((bucket) => {
-      const receivableAmount = receivables.items
+      const receivableAmount = filteredReceivables
         .filter((item) => {
-          const days = diffInDays(item.createdAt);
+          const days = computeDaysPastDue(item.effectiveDueDate);
           return days >= bucket.minDays && (bucket.maxDays == null || days <= bucket.maxDays);
         })
         .reduce((sum, item) => sum + item.totalAmount, 0);
 
-      const payableAmount = payables
+      const payableAmount = filteredPayables
         .flatMap((item) => item.documents)
         .filter((item) => {
-          const days = diffInDays(item.issueDate);
+          const days = computeDaysPastDue(item.effectiveDueDate);
           return days >= bucket.minDays && (bucket.maxDays == null || days <= bucket.maxDays);
         })
         .reduce((sum, item) => sum + (item.totalAmount ?? 0), 0);
@@ -170,21 +477,21 @@ export class ReportsService {
         id: bucket.id,
         label: bucket.label,
         supportingText: (() => {
-          const bucketPayables = payables
+          const bucketPayables = filteredPayables
             .flatMap((item) => item.documents.map((document) => ({ document, supplier: item })))
             .filter((entry) => {
-              const days = diffInDays(entry.document.issueDate);
+              const days = computeDaysPastDue(entry.document.effectiveDueDate);
               return days >= bucket.minDays && (bucket.maxDays == null || days <= bucket.maxDays);
             });
           const variantSummary = bucketPayables
             .map((entry) => entry.supplier.topVariantSummary)
             .filter((value): value is string => Boolean(value))
             .slice(0, 2)
-            .join(" + ");
+            .join(copy.variantJoiner);
 
           return variantSummary
-            ? `Açık operasyon bakiyesi yaş aralığı • ${variantSummary}`
-            : "Açık operasyon bakiyesi yaş aralığı";
+            ? `${copy.aging.rowSupportingWithVariantsPrefix}${variantSummary}`
+            : copy.aging.rowSupportingBase;
         })(),
         primaryValue: receivableAmount,
         primaryCurrency: "TRY",
@@ -196,92 +503,97 @@ export class ReportsService {
 
     const totalReceivable = rows.reduce((sum, item) => sum + item.primaryValue, 0);
     const totalPayable = rows.reduce((sum, item) => sum + (item.secondaryValue ?? 0), 0);
-    const payableTableRows = payables
+    const payableTableRows = filteredPayables
       .flatMap((supplier) => supplier.documents.map((document) => ({ supplier, document })))
       .flatMap(({ supplier, document }) => document.lines.map((line) => ({
         id: line.id,
         href: `/${locale}/admin/finance/payables/${encodeURIComponent(supplier.supplierKey)}`,
         cells: {
-          agingBucket: resolveBucketLabel(diffInDays(document.issueDate)),
+          agingBucket: resolveBucketLabel(computeDaysPastDue(document.effectiveDueDate), agingBuckets),
           supplier: supplier.supplierName,
           document: document.documentNumber,
-          issueDate: formatDate(document.issueDate),
+          issueDate: formatDate(document.issueDate, copy.notSpecified),
           product: line.productName,
           variant: line.productVariantTitle ?? "-",
           sku: line.productVariantSku ?? line.productSku,
           quantity: line.quantity.toLocaleString("tr-TR"),
-          unitPrice: formatMoney(line.unitPrice, line.currency),
-          lineTotal: formatMoney(line.lineTotal, line.currency),
+          unitPrice: formatMoney(line.unitPrice, line.currency, copy.notSpecified),
+          lineTotal: formatMoney(line.lineTotal, line.currency, copy.notSpecified),
         },
       })))
       .sort((left, right) => right.cells.lineTotal.localeCompare(left.cells.lineTotal));
 
     return {
-      title: "Yaşlandırma raporu",
-      description: "Açık alacak ve borçları gün aralıklarına göre izleyin. Operasyon detayı için ilgili alacak veya borç rotasına ilerleyin.",
+      title: copy.aging.title,
+      description: appendFinanceReportDateRangeDescription(copy.aging.description, copy.incomeExpense.dateRangeHint, range),
       metrics: [
         {
-          label: "Toplam açık alacak",
+          label: copy.aging.totalReceivableLabel,
           value: totalReceivable,
           currency: "TRY",
           tone: "success",
-          hint: `${receivables.total} açık sipariş`,
+          hint: `${filteredReceivables.length} ${copy.aging.openOrdersHintSuffix}`,
         },
         {
-          label: "Toplam açık borç",
+          label: copy.aging.totalPayableLabel,
           value: totalPayable,
           currency: "TRY",
           tone: "warning",
-          hint: `${payables.length} tedarikçi özeti`,
+          hint: `${filteredPayables.length} ${copy.aging.supplierSummaryHintSuffix}`,
         },
         {
-          label: "Net açık pozisyon",
+          label: copy.aging.netPositionLabel,
           value: totalReceivable - totalPayable,
           currency: "TRY",
           tone: resolveTone(totalReceivable - totalPayable),
-          hint: "Alacak eksi borç",
+          hint: copy.aging.netPositionHint,
         },
       ],
       rows,
       table: {
-        title: "Borç Yaşlandırma Detay Listesi",
-        description: "Açık borç belgelerinin ürün ve varyant satırlarını yaş aralığıyla birlikte tablo halinde inceleyin.",
+        title: copy.aging.tableTitle,
+        description: copy.aging.tableDescription,
         columns: [
-          { key: "agingBucket", label: "Yaş Aralığı" },
-          { key: "supplier", label: "Tedarikçi" },
-          { key: "document", label: "Belge" },
-          { key: "issueDate", label: "Belge Tarihi" },
-          { key: "product", label: "Ürün" },
-          { key: "variant", label: "Varyant" },
-          { key: "sku", label: "SKU" },
-          { key: "quantity", label: "Miktar", align: "right" },
-          { key: "unitPrice", label: "Birim Maliyet", align: "right" },
-          { key: "lineTotal", label: "Satır Toplamı", align: "right" },
+          { key: "agingBucket", label: copy.columns.agingBucket },
+          { key: "supplier", label: copy.columns.supplier },
+          { key: "document", label: copy.columns.document },
+          { key: "issueDate", label: copy.columns.issueDate },
+          { key: "product", label: copy.columns.product },
+          { key: "variant", label: copy.columns.variant },
+          { key: "sku", label: copy.columns.sku },
+          { key: "quantity", label: copy.columns.quantity, align: "right" },
+          { key: "unitPrice", label: copy.columns.unitCost, align: "right" },
+          { key: "lineTotal", label: copy.columns.lineTotal, align: "right" },
         ],
         rows: payableTableRows,
       },
     };
   }
 
-  async getCashflowReport(locale: string): Promise<AdminFinanceReportDetail> {
-    const [collections, payments, financialAccounts, transactions, payableSummaries] = await Promise.all([
+  async getCashflowReport(
+    locale: string,
+    query: AdminFinanceReportDateRangeQuery = {},
+  ): Promise<AdminFinanceReportDetail> {
+    const copy = resolveFinanceReportsCopy(locale);
+    const { range, transactions: periodTransactions } = await loadReportPeriodTransactions(query);
+    const [collections, payments, financialAccounts, payableSummaries] = await Promise.all([
       collectionsService.listCollectionReadiness(locale),
       paymentsService.listPaymentReadiness(locale),
       financialAccountsService.listAccounts(),
-      cashTransactionsService.listTransactions(),
-      payablesService.listSupplierPayables(),
+      payablesService.listSupplierPayables().then((result) => result.items),
     ]);
     const payableDetails = (await Promise.all(
       payableSummaries.map((item) => payablesService.getSupplierPayableByKey(item.supplierKey)),
     )).filter((item): item is NonNullable<typeof item> => Boolean(item));
 
     const netExpected = collections.summary.totalPendingAmount - payments.summary.totalPendingAmount;
-    const netRecorded = collections.summary.totalRecordedAmount - payments.summary.totalRecordedAmount;
+    const netRecordedInPeriod = periodTransactions.summary.netAmount;
     const actualCashBalance = financialAccounts.summary.totalBalance;
-    const cashCoverageGap = actualCashBalance - netRecorded;
+    const cashCoverageGap = actualCashBalance - netRecordedInPeriod;
+    const dateRangeLabel = formatFinanceReportDateRangeLabel(range.fromIso, range.toIso);
 
     const accountRows: AdminFinanceReportDetailRow[] = financialAccounts.items.map((account) => {
-      const accountTransactions = transactions.items.filter((item) => item.accountId === account.id);
+      const accountTransactions = periodTransactions.items.filter((item) => item.accountId === account.id);
       const incoming = accountTransactions
         .filter((item) => item.direction === "IN" || item.direction === "TRANSFER")
         .reduce((sum, item) => sum + item.amount, 0);
@@ -292,54 +604,54 @@ export class ReportsService {
       return {
         id: account.id,
         label: account.name,
-        supportingText: `${account.type === "CASH" ? "Kasa" : "Banka"} · ${account.transactionCount} hareket`,
+        supportingText: `${account.type === "CASH" ? copy.cashflow.cashAccountType : copy.cashflow.bankAccountType} · ${accountTransactions.length} ${copy.cashflow.movementsHintSuffix}`,
         primaryValue: account.currentBalance,
         primaryCurrency: account.currency,
         secondaryValue: Number((incoming - outgoing).toFixed(2)),
         secondaryCurrency: account.currency,
         tone: resolveTone(account.currentBalance),
-        href: `/${locale}/admin/finance/bank-cash`,
+        href: `/${locale}/admin/finance/bank-cash/${account.id}`,
       };
     });
 
     return {
-      title: "Nakit akış özeti",
-      description: "Beklenen tahsilat ve ödemeleri, kaydedilmiş hareketlerle yan yana izleyin. Operasyon kaydı ayrı finance route’larında kalır.",
+      title: copy.cashflow.title,
+      description: appendFinanceReportDateRangeDescription(copy.cashflow.description, copy.incomeExpense.dateRangeHint, range),
       metrics: [
         {
-          label: "Beklenen net nakit",
+          label: copy.cashflow.expectedNetLabel,
           value: netExpected,
           currency: collections.summary.currency,
           tone: resolveTone(netExpected),
-          hint: "Bekleyen alacak eksi bekleyen borç",
+          hint: copy.cashflow.expectedNetHint,
         },
         {
-          label: "Kayıtlı net nakit",
-          value: netRecorded,
-          currency: collections.summary.currency,
-          tone: resolveTone(netRecorded),
-          hint: "Tahsilat eksi ödeme kaydı",
+          label: copy.cashflow.recordedNetLabel,
+          value: netRecordedInPeriod,
+          currency: periodTransactions.summary.currency,
+          tone: resolveTone(netRecordedInPeriod),
+          hint: `${copy.cashflow.periodRecordedNetHint}: ${dateRangeLabel}`,
         },
         {
-          label: "Gerçek hesap bakiyesi",
+          label: copy.cashflow.actualBalanceLabel,
           value: actualCashBalance,
           currency: financialAccounts.summary.currency,
           tone: resolveTone(actualCashBalance),
-          hint: `${financialAccounts.summary.activeAccountCount} aktif finans hesabı`,
+          hint: `${financialAccounts.summary.activeAccountCount} ${copy.cashflow.actualBalanceHintSuffix}`,
         },
         {
-          label: "Kasa uyum farkı",
+          label: copy.cashflow.coverageGapLabel,
           value: cashCoverageGap,
           currency: financialAccounts.summary.currency,
           tone: resolveTone(cashCoverageGap),
-          hint: "Gerçek bakiye ile kayıtlı net nakit farkı",
+          hint: copy.cashflow.coverageGapHint,
         },
       ],
       rows: [
         {
           id: "collections-expected",
-          label: "Beklenen tahsilat",
-          supportingText: "Açık alacak toplamı",
+          label: copy.cashflow.expectedCollectionLabel,
+          supportingText: copy.cashflow.expectedCollectionSupporting,
           primaryValue: collections.summary.totalPendingAmount,
           primaryCurrency: collections.summary.currency,
           href: `/${locale}/admin/finance/collections`,
@@ -347,14 +659,16 @@ export class ReportsService {
         },
         {
           id: "payments-expected",
-          label: "Beklenen ödeme",
+          label: copy.cashflow.expectedPaymentLabel,
           supportingText: (() => {
             const topSummaries = payments.items
               .map((item) => item.topVariantSummary)
               .filter((value): value is string => Boolean(value))
               .slice(0, 2)
-              .join(" + ");
-            return topSummaries ? `Açık borç toplamı • ${topSummaries}` : "Açık borç toplamı";
+              .join(copy.variantJoiner);
+            return topSummaries
+              ? `${copy.cashflow.expectedPaymentSupportingWithVariantsPrefix}${topSummaries}`
+              : copy.cashflow.expectedPaymentSupportingBase;
           })(),
           primaryValue: payments.summary.totalPendingAmount,
           primaryCurrency: payments.summary.currency,
@@ -363,8 +677,8 @@ export class ReportsService {
         },
         {
           id: "collections-recorded",
-          label: "Kayıtlı tahsilat",
-          supportingText: `${collections.summary.recordedCount} tahsilat kaydı`,
+          label: copy.cashflow.recordedCollectionLabel,
+          supportingText: `${collections.summary.recordedCount} ${copy.cashflow.recordedCollectionHintSuffix}`,
           primaryValue: collections.summary.totalRecordedAmount,
           primaryCurrency: collections.summary.currency,
           href: `/${locale}/admin/finance/collections`,
@@ -372,8 +686,8 @@ export class ReportsService {
         },
         {
           id: "payments-recorded",
-          label: "Kayıtlı ödeme",
-          supportingText: `${payments.summary.recordedCount} ödeme kaydı`,
+          label: copy.cashflow.recordedPaymentLabel,
+          supportingText: `${payments.summary.recordedCount} ${copy.cashflow.recordedPaymentHintSuffix}`,
           primaryValue: payments.summary.totalRecordedAmount,
           primaryCurrency: payments.summary.currency,
           href: `/${locale}/admin/finance/payments`,
@@ -382,34 +696,35 @@ export class ReportsService {
         ...accountRows,
       ],
       table: {
-        title: "Beklenen Ödeme Ürün Detay Listesi",
-        description: "Açık tedarikçi borçlarının ürün ve varyant satırlarını ödeme planı gözüyle tablo halinde izleyin.",
+        title: copy.cashflow.tableTitle,
+        description: copy.cashflow.tableDescription,
         columns: [
-          { key: "supplier", label: "Tedarikçi" },
-          { key: "document", label: "Belge" },
-          { key: "issueDate", label: "Belge Tarihi" },
-          { key: "product", label: "Ürün" },
-          { key: "variant", label: "Varyant" },
-          { key: "sku", label: "SKU" },
-          { key: "quantity", label: "Miktar", align: "right" },
-          { key: "unitPrice", label: "Birim Maliyet", align: "right" },
-          { key: "lineTotal", label: "Ödeme Tutarı", align: "right" },
+          { key: "supplier", label: copy.columns.supplier },
+          { key: "document", label: copy.columns.document },
+          { key: "issueDate", label: copy.columns.issueDate },
+          { key: "product", label: copy.columns.product },
+          { key: "variant", label: copy.columns.variant },
+          { key: "sku", label: copy.columns.sku },
+          { key: "quantity", label: copy.columns.quantity, align: "right" },
+          { key: "unitPrice", label: copy.columns.unitCost, align: "right" },
+          { key: "lineTotal", label: copy.cashflow.paymentAmountColumn, align: "right" },
         ],
         rows: payableDetails
           .flatMap((supplier) => supplier.documents.map((document) => ({ supplier, document })))
+          .filter(({ document }) => isInstantInFinanceReportRange(document.issueDate, range))
           .flatMap(({ supplier, document }) => document.lines.map((line) => ({
             id: line.id,
             href: `/${locale}/admin/finance/payments/${encodeURIComponent(supplier.supplierKey)}`,
             cells: {
               supplier: supplier.supplierName,
               document: document.documentNumber,
-              issueDate: formatDate(document.issueDate),
+              issueDate: formatDate(document.issueDate, copy.notSpecified),
               product: line.productName,
               variant: line.productVariantTitle ?? "-",
               sku: line.productVariantSku ?? line.productSku,
               quantity: line.quantity.toLocaleString("tr-TR"),
-              unitPrice: formatMoney(line.unitPrice, line.currency),
-              lineTotal: formatMoney(line.lineTotal, line.currency),
+              unitPrice: formatMoney(line.unitPrice, line.currency, copy.notSpecified),
+              lineTotal: formatMoney(line.lineTotal, line.currency, copy.notSpecified),
             },
           })))
           .sort((left, right) => right.cells.lineTotal.localeCompare(left.cells.lineTotal)),
@@ -417,7 +732,315 @@ export class ReportsService {
     };
   }
 
+  async getBankCashMovementReport(
+    locale: string,
+    query: AdminFinanceReportDateRangeQuery = {},
+  ): Promise<AdminFinanceReportDetail> {
+    const copy = resolveFinanceReportsCopy(locale);
+    const { range, transactions } = await loadReportPeriodTransactions(query);
+    const financialAccounts = await financialAccountsService.listAccounts();
+    const dateRangeLabel = formatFinanceReportDateRangeLabel(range.fromIso, range.toIso);
+
+    const resolveDirectionLabel = (direction: "IN" | "OUT" | "TRANSFER") => {
+      if (direction === "IN") {
+        return copy.bankCash.directionIncoming;
+      }
+
+      if (direction === "OUT") {
+        return copy.bankCash.directionOutgoing;
+      }
+
+      return copy.bankCash.directionTransfer;
+    };
+
+    const resolveCategoryLabel = (category: string | null) => {
+      if (!category || category === "UNSPECIFIED") {
+        return copy.incomeExpense.categoryUnspecified;
+      }
+
+      return resolveCashTransactionCategoryLabel(
+        category as "GENERAL_INCOME" | "GENERAL_EXPENSE" | "MARKETPLACE_COMMISSION" | "SHIPPING_EXPENSE" | "SERVICE_FEE" | "REFUND" | "TRANSFER",
+        copy.incomeExpense,
+      );
+    };
+
+    const accountRows: AdminFinanceReportDetailRow[] = financialAccounts.items
+      .map((account) => {
+        const accountTransactions = transactions.items.filter((item) => item.accountId === account.id);
+        const incoming = accountTransactions
+          .filter((item) => item.direction === "IN" || item.direction === "TRANSFER")
+          .reduce((sum, item) => sum + item.amount, 0);
+        const outgoing = accountTransactions
+          .filter((item) => item.direction === "OUT")
+          .reduce((sum, item) => sum + item.amount, 0);
+
+        return {
+          id: account.id,
+          label: account.name,
+          supportingText: `${accountTransactions.length} ${copy.bankCash.movementCountHintSuffix}`,
+          primaryValue: Number((incoming - outgoing).toFixed(2)),
+          primaryCurrency: account.currency,
+          secondaryValue: account.currentBalance,
+          secondaryCurrency: account.currency,
+          tone: resolveTone(incoming - outgoing),
+          href: `/${locale}/admin/finance/bank-cash/${account.id}`,
+        };
+      })
+      .sort((left, right) => Math.abs(right.primaryValue) - Math.abs(left.primaryValue))
+      .slice(0, 12);
+
+    const money = (value: number, currency: string) =>
+      new Intl.NumberFormat("tr-TR", { style: "currency", currency, maximumFractionDigits: 2 }).format(value);
+
+    return {
+      title: copy.bankCash.title,
+      description: appendFinanceReportDateRangeDescription(copy.bankCash.description, copy.incomeExpense.dateRangeHint, range),
+      metrics: [
+        {
+          label: copy.bankCash.totalIncomingLabel,
+          value: transactions.summary.totalIncoming,
+          currency: transactions.summary.currency,
+          tone: "success",
+          hint: dateRangeLabel,
+        },
+        {
+          label: copy.bankCash.totalOutgoingLabel,
+          value: transactions.summary.totalOutgoing,
+          currency: transactions.summary.currency,
+          tone: "warning",
+          hint: dateRangeLabel,
+        },
+        {
+          label: copy.bankCash.netLabel,
+          value: transactions.summary.netAmount,
+          currency: transactions.summary.currency,
+          tone: resolveTone(transactions.summary.netAmount),
+          hint: copy.bankCash.netHint,
+        },
+        {
+          label: copy.bankCash.movementCountLabel,
+          value: transactions.summary.transactionCount,
+          tone: transactions.summary.transactionCount > 0 ? "neutral" : "warning",
+          hint: dateRangeLabel,
+        },
+      ],
+      rows: accountRows,
+      table: {
+        title: copy.bankCash.tableTitle,
+        description: copy.bankCash.tableDescription,
+        columns: [
+          { key: "account", label: copy.bankCash.colAccount },
+          { key: "date", label: copy.bankCash.colDate },
+          { key: "title", label: copy.bankCash.colTitle },
+          { key: "direction", label: copy.bankCash.colDirection },
+          { key: "amount", label: copy.bankCash.colAmount, align: "right" },
+          { key: "category", label: copy.bankCash.colCategory },
+        ],
+        rows: transactions.items.map((item) => ({
+          id: item.id,
+          href: `/${locale}/admin/finance/transactions/${item.id}`,
+          cells: {
+            account: item.accountName,
+            date: formatDate(item.transactionAt, copy.notSpecified),
+            title: item.title,
+            direction: resolveDirectionLabel(item.direction),
+            amount: money(item.amount, item.currency),
+            category: resolveCategoryLabel(item.category),
+          },
+        })),
+      },
+    };
+  }
+
+  async getVatSummaryReport(
+    locale: string,
+    query: AdminFinanceReportDateRangeQuery = {},
+  ): Promise<AdminFinanceReportDetail> {
+    const copy = resolveFinanceReportsCopy(locale);
+    const range = parseFinanceReportDateRangeQuery(query);
+    const summary = await financeVatSummaryService.getSummary({
+      from: range.fromIso,
+      to: range.toIso,
+      financialAccountId: query.financialAccountId,
+    });
+    const dateRangeLabel = formatFinanceReportDateRangeLabel(range.fromIso, range.toIso);
+
+    const money = (value: number, currency: string) =>
+      new Intl.NumberFormat("tr-TR", { style: "currency", currency, maximumFractionDigits: 2 }).format(value);
+
+    const resolveDocumentTypeLabel = (documentType: "E_INVOICE" | "PURCHASE_DOCUMENT") =>
+      documentType === "E_INVOICE" ? copy.vatSummary.documentTypeSales : copy.vatSummary.documentTypePurchase;
+
+    const resolveDirectionLabel = (direction: "OUTPUT" | "INPUT") =>
+      direction === "OUTPUT" ? copy.vatSummary.directionOutput : copy.vatSummary.directionInput;
+
+    const resolveVatRateLabel = (vatRate: number | null) =>
+      vatRate === null ? copy.vatSummary.rateUnspecified : `%${vatRate.toLocaleString("tr-TR")}`;
+
+    return {
+      title: copy.vatSummary.title,
+      description: appendFinanceReportDateRangeDescription(copy.vatSummary.description, copy.incomeExpense.dateRangeHint, range),
+      metrics: [
+        {
+          label: copy.vatSummary.outputTaxLabel,
+          value: summary.outputTaxAmount,
+          currency: "TRY",
+          tone: summary.outputTaxAmount > 0 ? "success" : "neutral",
+          hint: dateRangeLabel,
+        },
+        {
+          label: copy.vatSummary.inputTaxLabel,
+          value: summary.inputTaxAmount,
+          currency: "TRY",
+          tone: summary.inputTaxAmount > 0 ? "warning" : "neutral",
+          hint: dateRangeLabel,
+        },
+        {
+          label: copy.vatSummary.netTaxLabel,
+          value: summary.netTaxAmount,
+          currency: "TRY",
+          tone: resolveTone(summary.netTaxAmount),
+          hint: copy.vatSummary.netTaxHint,
+        },
+        {
+          label: copy.vatSummary.documentCountLabel,
+          value: summary.documentCount,
+          tone: summary.documentCount > 0 ? "neutral" : "warning",
+          hint: `${summary.documentCount} ${copy.vatSummary.documentCountHintSuffix}`,
+        },
+      ],
+      rows: summary.rateBuckets.slice(0, 8).map((bucket) => ({
+        id: bucket.vatRateLabel,
+        label: resolveVatRateLabel(bucket.vatRate),
+        supportingText: `${bucket.documentCount} ${copy.vatSummary.rateBucketRowSuffix}`,
+        primaryValue: bucket.netTaxAmount,
+        primaryCurrency: "TRY",
+        secondaryValue: bucket.outputTaxAmount,
+        secondaryCurrency: "TRY",
+        tone: resolveTone(bucket.netTaxAmount),
+        href: `/${locale}/admin/documents`,
+      })),
+      table: {
+        title: copy.vatSummary.tableTitle,
+        description: copy.vatSummary.tableDescription,
+        columns: [
+          { key: "document", label: copy.vatSummary.colDocument },
+          { key: "documentType", label: copy.vatSummary.colDocumentType },
+          { key: "counterparty", label: copy.vatSummary.colCounterparty },
+          { key: "issueDate", label: copy.vatSummary.colIssueDate },
+          { key: "direction", label: copy.vatSummary.colDirection },
+          { key: "vatRate", label: copy.vatSummary.colVatRate },
+          { key: "taxBase", label: copy.vatSummary.colTaxBase, align: "right" },
+          { key: "taxAmount", label: copy.vatSummary.colTaxAmount, align: "right" },
+          { key: "total", label: copy.vatSummary.colTotal, align: "right" },
+        ],
+        rows: summary.items.map((item) => ({
+          id: item.documentId,
+          href: `/${locale}/admin/documents`,
+          cells: {
+            document: item.documentNumber,
+            documentType: resolveDocumentTypeLabel(item.documentType),
+            counterparty: item.counterpartyName,
+            issueDate: formatDate(item.issueDate, copy.notSpecified),
+            direction: resolveDirectionLabel(item.direction),
+            vatRate: resolveVatRateLabel(item.vatRate),
+            taxBase: money(item.taxExclusiveAmount, item.currency),
+            taxAmount: money(item.taxAmount, item.currency),
+            total: money(item.taxInclusiveAmount, item.currency),
+          },
+        })),
+      },
+    };
+  }
+
+  async getTrialBalanceReport(
+    locale: string,
+    query: AdminFinanceReportDateRangeQuery = {},
+  ): Promise<AdminFinanceReportDetail> {
+    const copy = resolveFinanceReportsCopy(locale);
+    const range = parseFinanceReportDateRangeQuery(query);
+    const summary = await financeTrialBalanceService.getSummary({
+      fromDate: range.fromDate,
+      toDate: range.toDate,
+    });
+    const dateRangeLabel = formatFinanceReportDateRangeLabel(range.fromIso, range.toIso);
+
+    const money = (value: number, currency: string) =>
+      new Intl.NumberFormat("tr-TR", { style: "currency", currency, maximumFractionDigits: 2 }).format(value);
+
+    return {
+      title: copy.trialBalance.title,
+      description: appendFinanceReportDateRangeDescription(copy.trialBalance.description, copy.incomeExpense.dateRangeHint, range),
+      metrics: [
+        {
+          label: copy.trialBalance.totalDebitLabel,
+          value: summary.totalDebit,
+          currency: summary.currency,
+          tone: summary.totalDebit > 0 ? "neutral" : "warning",
+          hint: dateRangeLabel,
+        },
+        {
+          label: copy.trialBalance.totalCreditLabel,
+          value: summary.totalCredit,
+          currency: summary.currency,
+          tone: summary.totalCredit > 0 ? "neutral" : "warning",
+          hint: dateRangeLabel,
+        },
+        {
+          label: copy.trialBalance.balanceCheckLabel,
+          value: summary.isBalanced ? 0 : Math.abs(summary.totalDebit - summary.totalCredit),
+          currency: summary.currency,
+          tone: summary.isBalanced ? "success" : "warning",
+          hint: summary.isBalanced ? copy.trialBalance.balanceOkHint : copy.trialBalance.balanceGapHint,
+        },
+        {
+          label: copy.trialBalance.accountCountLabel,
+          value: summary.rows.length,
+          tone: summary.rows.length > 0 ? "neutral" : "warning",
+          hint: copy.trialBalance.accountCountHint,
+        },
+      ],
+      rows: summary.rows.slice(0, 12).map((row) => ({
+        id: row.ledgerAccountCode,
+        label: `${row.ledgerAccountCode} · ${row.ledgerAccountName}`,
+        supportingText: row.category,
+        primaryValue: row.debitTotal,
+        primaryCurrency: summary.currency,
+        secondaryValue: row.creditTotal,
+        secondaryCurrency: summary.currency,
+        tone: resolveTone(row.balance),
+        href: `/${locale}/admin/finance/ledger-entries`,
+      })),
+      table: {
+        title: copy.trialBalance.tableTitle,
+        description: copy.trialBalance.tableDescription,
+        columns: [
+          { key: "accountCode", label: copy.trialBalance.colAccountCode },
+          { key: "accountName", label: copy.trialBalance.colAccountName },
+          { key: "category", label: copy.trialBalance.colCategory },
+          { key: "debit", label: copy.trialBalance.colDebit, align: "right" },
+          { key: "credit", label: copy.trialBalance.colCredit, align: "right" },
+          { key: "balance", label: copy.trialBalance.colBalance, align: "right" },
+        ],
+        rows: summary.rows.map((row) => ({
+          id: row.ledgerAccountCode,
+          href: `/${locale}/admin/finance/ledger-entries`,
+          cells: {
+            accountCode: row.ledgerAccountCode,
+            accountName: row.ledgerAccountName,
+            category: row.category,
+            debit: money(row.debitTotal, summary.currency),
+            credit: money(row.creditTotal, summary.currency),
+            balance: money(row.balance, summary.currency),
+          },
+        })),
+      },
+    };
+  }
+
   async getStockValueReport(locale: string): Promise<AdminFinanceReportDetail> {
+    const copy = resolveFinanceReportsCopy(locale);
+    const agingBuckets = copy.agingBuckets;
     const products = await catalogAdminService.listProducts({
       page: 1,
       pageSize: 50,
@@ -428,27 +1051,27 @@ export class ReportsService {
     const inStockCount = products.items.filter((item) => item.stock > 0).length;
 
     return {
-      title: "Stok değer raporu",
-      description: "Finans bakışıyla en yüksek stok değerine sahip ürünleri görün. Ürün düzenleme ve stok operasyonu kendi modüllerinde kalır.",
+      title: copy.stockValue.title,
+      description: copy.stockValue.description,
       metrics: [
         {
-          label: "Toplam stok değeri",
+          label: copy.stockValue.totalValueLabel,
           value: totalStockValue,
           currency: "TRY",
           tone: "neutral",
-          hint: `${products.items.length} ürün görünümü`,
+          hint: `${products.items.length} ${copy.stockValue.totalValueHintSuffix}`,
         },
         {
-          label: "Toplam birim stok",
+          label: copy.stockValue.totalUnitsLabel,
           value: totalStockUnits,
           tone: "neutral",
-          hint: "Listelenen ürünlerin toplam stoku",
+          hint: copy.stockValue.totalUnitsHint,
         },
         {
-          label: "Stoklu ürün adedi",
+          label: copy.stockValue.inStockCountLabel,
           value: inStockCount,
           tone: "success",
-          hint: "Stokta kalan aktif ürünler",
+          hint: copy.stockValue.inStockCountHint,
         },
       ],
       rows: products.items
@@ -457,7 +1080,7 @@ export class ReportsService {
         .map((item) => ({
           id: item.id,
           label: item.name,
-          supportingText: `${item.sku} · ${resolveBucketLabel(diffInDays(item.lastOrderedAt ?? new Date().toISOString()))} içinde hareket görmüş`,
+          supportingText: `${item.sku} · ${resolveBucketLabel(diffInDays(item.lastOrderedAt ?? new Date().toISOString()), agingBuckets)} ${copy.stockValue.rowMovementInBucketSuffix}`,
           primaryValue: item.stockValue,
           primaryCurrency: item.currency,
           secondaryValue: item.stock,
@@ -465,17 +1088,17 @@ export class ReportsService {
           href: `/${locale}/admin/products`,
         })),
       table: {
-        title: "Ürün Bazlı Detay Liste",
-        description: "Stok değerini ürün bilgileriyle tablo halinde inceleyin. Bu alan özet kartlardan farklı olarak operasyonel rapor okuması içindir.",
+        title: copy.stockValue.tableTitle,
+        description: copy.stockValue.tableDescription,
         columns: [
-          { key: "name", label: "Ürün" },
-          { key: "sku", label: "SKU" },
-          { key: "supplier", label: "Tedarikçi" },
-          { key: "stock", label: "Stok", align: "right" },
-          { key: "purchasePrice", label: "Alış Fiyatı", align: "right" },
-          { key: "averageUnitCost", label: "Ort. Maliyet", align: "right" },
-          { key: "stockValue", label: "Stok Değeri", align: "right" },
-          { key: "lastOrderedAt", label: "Son Sipariş" },
+          { key: "name", label: copy.columns.name },
+          { key: "sku", label: copy.columns.sku },
+          { key: "supplier", label: copy.columns.supplier },
+          { key: "stock", label: copy.columns.stock, align: "right" },
+          { key: "purchasePrice", label: copy.stockValue.colPurchasePrice, align: "right" },
+          { key: "averageUnitCost", label: copy.stockValue.colAverageCost, align: "right" },
+          { key: "stockValue", label: copy.stockValue.colStockValue, align: "right" },
+          { key: "lastOrderedAt", label: copy.stockValue.colLastOrder },
         ],
         rows: products.items
           .sort((left, right) => right.stockValue - left.stockValue)
@@ -485,18 +1108,18 @@ export class ReportsService {
             cells: {
               name: item.name,
               sku: item.sku,
-              supplier: item.primarySupplierName ?? "Belirtilmedi",
+              supplier: item.primarySupplierName ?? copy.notSpecified,
               stock: item.stock.toLocaleString("tr-TR"),
               purchasePrice: item.purchasePrice === null
-                ? "Belirtilmedi"
+                ? copy.notSpecified
                 : new Intl.NumberFormat("tr-TR", { style: "currency", currency: item.currency, maximumFractionDigits: 2 }).format(item.purchasePrice),
               averageUnitCost: item.averageUnitCost === null
-                ? "Belirtilmedi"
+                ? copy.notSpecified
                 : new Intl.NumberFormat("tr-TR", { style: "currency", currency: item.currency, maximumFractionDigits: 2 }).format(item.averageUnitCost),
               stockValue: new Intl.NumberFormat("tr-TR", { style: "currency", currency: item.currency, maximumFractionDigits: 2 }).format(item.stockValue),
               lastOrderedAt: item.lastOrderedAt
                 ? new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium" }).format(new Date(item.lastOrderedAt))
-                : "Belirtilmedi",
+                : copy.notSpecified,
             },
           })),
       },

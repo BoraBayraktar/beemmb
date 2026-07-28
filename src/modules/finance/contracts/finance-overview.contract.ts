@@ -11,6 +11,7 @@ export type AdminFinanceOverviewSection = {
   title: string;
   description: string;
   href: string;
+  permissionKey?: string;
 };
 
 export type AdminFinanceOverview = {

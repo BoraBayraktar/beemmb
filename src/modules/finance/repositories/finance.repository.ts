@@ -34,7 +34,9 @@ export class FinanceRepository {
           select: {
             id: true,
             name: true,
+            slug: true,
             email: true,
+            defaultPaymentTermDays: true,
           },
         },
         items: {
@@ -56,6 +58,7 @@ export class FinanceRepository {
             id: true,
             documentNumber: true,
             issueDate: true,
+            dueDate: true,
             totalAmount: true,
             currency: true,
             counterpartyName: true,
@@ -67,6 +70,58 @@ export class FinanceRepository {
       },
       skip: (args.page - 1) * args.pageSize,
       take: args.pageSize,
+    });
+  }
+
+  async findOperationalReceivableOrderById(orderId: string) {
+    return (prisma.order as any).findFirst({
+      where: {
+        id: orderId,
+        deleted: false,
+        status: "CONFIRMED",
+        customerAccountId: {
+          not: null,
+        },
+        paymentStatus: {
+          in: ["PENDING", "AUTHORIZED", "FAILED"],
+        },
+      },
+      include: {
+        customerAccount: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            email: true,
+            defaultPaymentTermDays: true,
+          },
+        },
+        items: {
+          where: {
+            deleted: false,
+          },
+          select: {
+            quantity: true,
+          },
+        },
+        businessDocuments: {
+          where: {
+            deleted: false,
+          },
+          orderBy: {
+            issueDate: "desc",
+          },
+          select: {
+            id: true,
+            documentNumber: true,
+            issueDate: true,
+            dueDate: true,
+            totalAmount: true,
+            currency: true,
+            counterpartyName: true,
+          },
+        },
+      },
     });
   }
 
@@ -143,6 +198,44 @@ export class FinanceRepository {
     };
   }
 
+  async listOperationalReceivableDueSnapshots() {
+    return prisma.order.findMany({
+      where: {
+        deleted: false,
+        status: "CONFIRMED",
+        customerAccountId: {
+          not: null,
+        },
+        paymentStatus: {
+          in: ["PENDING", "AUTHORIZED", "FAILED"],
+        },
+      },
+      select: {
+        total: true,
+        currency: true,
+        createdAt: true,
+        customerAccount: {
+          select: {
+            defaultPaymentTermDays: true,
+          },
+        },
+        businessDocuments: {
+          where: {
+            deleted: false,
+          },
+          orderBy: {
+            issueDate: "desc",
+          },
+          take: 1,
+          select: {
+            issueDate: true,
+            dueDate: true,
+          },
+        },
+      },
+    });
+  }
+
   async listCollectionRecords(orderIds?: string[]) {
     return prisma.collectionRecord.findMany({
       where: {
@@ -164,6 +257,8 @@ export class FinanceRepository {
     collectedAt: Date;
     note?: string | null;
     recordedByUserId: string;
+    onlineCollectionProvider?: string | null;
+    onlineCollectionExternalId?: string | null;
   }) {
     return prisma.collectionRecord.create({
       data: {
@@ -174,12 +269,33 @@ export class FinanceRepository {
         collectedAt: args.collectedAt,
         note: args.note ?? null,
         recordedByUserId: args.recordedByUserId,
+        onlineCollectionProvider: args.onlineCollectionProvider ?? null,
+        onlineCollectionExternalId: args.onlineCollectionExternalId ?? null,
       } as any,
+    });
+  }
+
+  async findCollectionRecordByOnlineExternalId(providerCode: string, externalPaymentId: string) {
+    return prisma.collectionRecord.findFirst({
+      where: {
+        deleted: false,
+        onlineCollectionProvider: providerCode,
+        onlineCollectionExternalId: externalPaymentId,
+      },
     });
   }
 
   async findCollectionRecordById(id: string) {
     return prisma.collectionRecord.findFirst({
+      where: {
+        id,
+        deleted: false,
+      },
+    });
+  }
+
+  async findPaymentRecordById(id: string) {
+    return prisma.paymentRecord.findFirst({
       where: {
         id,
         deleted: false,
@@ -230,7 +346,10 @@ export class FinanceRepository {
       },
       select: {
         id: true,
+        slug: true,
         name: true,
+        taxNumber: true,
+        isActive: true,
       },
     });
   }
@@ -255,12 +374,230 @@ export class FinanceRepository {
       },
       select: {
         id: true,
+        slug: true,
         name: true,
+        taxNumber: true,
+        isActive: true,
       },
       orderBy: {
         name: "asc",
       },
     });
+  }
+
+  async searchSuppliers(args: { search?: string; limit?: number }) {
+    const search = args.search?.trim();
+    return prisma.supplier.findMany({
+      where: {
+        deleted: false,
+        ...(search
+          ? {
+              OR: [
+                { name: { contains: search, mode: "insensitive" as const } },
+                { slug: { contains: search, mode: "insensitive" as const } },
+                { taxNumber: { contains: search, mode: "insensitive" as const } },
+              ],
+            }
+          : {}),
+      },
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        taxNumber: true,
+        isActive: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+      take: args.limit ?? 20,
+    });
+  }
+
+  async searchCustomerAccounts(args: { search?: string; limit?: number }) {
+    const search = args.search?.trim();
+    return prisma.customerAccount.findMany({
+      where: {
+        deleted: false,
+        ...(search
+          ? {
+              OR: [
+                { name: { contains: search, mode: "insensitive" as const } },
+                { slug: { contains: search, mode: "insensitive" as const } },
+                { email: { contains: search, mode: "insensitive" as const } },
+                { taxNumber: { contains: search, mode: "insensitive" as const } },
+              ],
+            }
+          : {}),
+      },
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        email: true,
+        taxNumber: true,
+        isActive: true,
+      },
+      orderBy: [
+        { isActive: "desc" },
+        { name: "asc" },
+      ],
+      take: args.limit ?? 20,
+    });
+  }
+
+  async findCustomerAccountBySlug(slug: string) {
+    return prisma.customerAccount.findFirst({
+      where: {
+        slug,
+        deleted: false,
+      },
+    });
+  }
+
+  async findCustomerAccountById(id: string) {
+    return prisma.customerAccount.findFirst({
+      where: {
+        id,
+        deleted: false,
+      },
+    });
+  }
+
+  async findSupplierBySlug(slug: string) {
+    return prisma.supplier.findFirst({
+      where: {
+        slug,
+        deleted: false,
+      },
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        taxNumber: true,
+        isActive: true,
+        defaultPaymentTermDays: true,
+        creditLimit: true,
+      },
+    });
+  }
+
+  async listCashTransactionsForCustomerAccount(customerAccountId: string) {
+    return ((prisma as any).cashTransaction).findMany({
+      where: {
+        deleted: false,
+        status: "RECORDED",
+        customerAccountId,
+      },
+      orderBy: [
+        { transactionAt: "desc" },
+        { createdAt: "desc" },
+      ],
+      take: 200,
+    });
+  }
+
+  async listCashTransactionsForSupplier(supplierId: string) {
+    return ((prisma as any).cashTransaction).findMany({
+      where: {
+        deleted: false,
+        status: "RECORDED",
+        supplierId,
+      },
+      orderBy: [
+        { transactionAt: "desc" },
+        { createdAt: "desc" },
+      ],
+      take: 200,
+    });
+  }
+
+  async listOrdersForCustomerAccount(customerAccountId: string) {
+    return prisma.order.findMany({
+      where: {
+        deleted: false,
+        customerAccountId,
+        status: "CONFIRMED",
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 100,
+      select: {
+        id: true,
+        orderNumber: true,
+        paymentStatus: true,
+        total: true,
+        currency: true,
+        createdAt: true,
+      },
+    });
+  }
+
+  async listCollectionRecordsForOrders(orderIds: string[]) {
+    if (orderIds.length === 0) {
+      return [];
+    }
+
+    return this.listCollectionRecords(orderIds);
+  }
+
+  async listBusinessDocumentsForCustomerAccount(customerAccountId: string) {
+    return prisma.businessDocument.findMany({
+      where: {
+        deleted: false,
+        customerAccountId,
+      },
+      orderBy: {
+        issueDate: "desc",
+      },
+      take: 100,
+      select: {
+        id: true,
+        documentNumber: true,
+        documentType: true,
+        status: true,
+        issueDate: true,
+        totalAmount: true,
+        currency: true,
+      },
+    });
+  }
+
+  async listBusinessDocumentsForSupplier(supplierId: string) {
+    return prisma.businessDocument.findMany({
+      where: {
+        deleted: false,
+        supplierId,
+      },
+      orderBy: {
+        issueDate: "desc",
+      },
+      take: 100,
+      select: {
+        id: true,
+        documentNumber: true,
+        documentType: true,
+        status: true,
+        issueDate: true,
+        totalAmount: true,
+        currency: true,
+      },
+    });
+  }
+
+  async findOrderCustomerAccountId(orderId: string) {
+    const order = await prisma.order.findFirst({
+      where: {
+        id: orderId,
+        deleted: false,
+      },
+      select: {
+        customerAccountId: true,
+      },
+    });
+
+    return order?.customerAccountId ?? null;
   }
 
   async listFinancialAccounts(args: { search?: string; type?: "CASH" | "BANK" }) {
@@ -365,12 +702,47 @@ export class FinanceRepository {
             name: true,
           },
         },
+        customerAccount: {
+          select: {
+            slug: true,
+          },
+        },
+        supplier: {
+          select: {
+            slug: true,
+          },
+        },
       },
       orderBy: [
         { transactionAt: "desc" },
         { createdAt: "desc" },
       ],
       take: 200,
+    });
+  }
+
+  async listCashTransactionsForIncomeExpenseReport(args: { fromDate: Date; toDate: Date; accountId?: string }) {
+    return ((prisma as any).cashTransaction).findMany({
+      where: {
+        deleted: false,
+        status: "RECORDED",
+        ...(args.accountId ? { accountId: args.accountId } : {}),
+        transactionAt: {
+          gte: args.fromDate,
+          lte: args.toDate,
+        },
+      },
+      select: {
+        id: true,
+        direction: true,
+        category: true,
+        sourceType: true,
+        amount: true,
+        currency: true,
+      },
+      orderBy: {
+        transactionAt: "desc",
+      },
     });
   }
 
@@ -386,6 +758,16 @@ export class FinanceRepository {
           select: {
             id: true,
             name: true,
+          },
+        },
+        customerAccount: {
+          select: {
+            slug: true,
+          },
+        },
+        supplier: {
+          select: {
+            slug: true,
           },
         },
       },
@@ -407,6 +789,9 @@ export class FinanceRepository {
     title: string;
     note?: string | null;
     counterpartyName?: string | null;
+    counterpartyKind?: "CUSTOMER" | "SUPPLIER" | "UNREGISTERED";
+    customerAccountId?: string | null;
+    supplierId?: string | null;
     sourceReferenceId?: string | null;
     createdByUserId?: string | null;
   }) {
@@ -421,6 +806,9 @@ export class FinanceRepository {
         transactionAt: args.transactionAt,
         title: args.title,
         note: args.note ?? null,
+        counterpartyKind: args.counterpartyKind ?? "UNREGISTERED",
+        customerAccountId: args.customerAccountId ?? null,
+        supplierId: args.supplierId ?? null,
         counterpartyName: args.counterpartyName ?? null,
         sourceReferenceId: args.sourceReferenceId ?? null,
         createdByUserId: args.createdByUserId ?? null,
@@ -432,7 +820,480 @@ export class FinanceRepository {
             name: true,
           },
         },
+        customerAccount: {
+          select: {
+            slug: true,
+          },
+        },
+        supplier: {
+          select: {
+            slug: true,
+          },
+        },
       },
+    });
+  }
+
+  async listBusinessDocumentsForOrder(orderId: string) {
+    return prisma.businessDocument.findMany({
+      where: {
+        deleted: false,
+        orderId,
+      },
+      orderBy: {
+        issueDate: "asc",
+      },
+      select: {
+        id: true,
+        documentNumber: true,
+        issueDate: true,
+        totalAmount: true,
+        currency: true,
+      },
+    });
+  }
+
+  async createAllocationLinks(
+    links: Array<{
+      collectionRecordId: string | null;
+      paymentRecordId: string | null;
+      targetType: "ORDER" | "BUSINESS_DOCUMENT" | "BUSINESS_DOCUMENT_LINE";
+      orderId: string | null;
+      businessDocumentId: string | null;
+      businessDocumentLineId?: string | null;
+      amount: number;
+      currency: string;
+    }>,
+  ) {
+    if (links.length === 0) {
+      return;
+    }
+
+    await prisma.financeAllocationLink.createMany({
+      data: links.map((link) => ({
+        collectionRecordId: link.collectionRecordId,
+        paymentRecordId: link.paymentRecordId,
+        targetType: link.targetType,
+        orderId: link.orderId,
+        businessDocumentId: link.businessDocumentId,
+        businessDocumentLineId: link.businessDocumentLineId ?? null,
+        amount: link.amount,
+        currency: link.currency,
+      })),
+    });
+  }
+
+  async softDeleteAllocationLinksForCollection(collectionRecordId: string) {
+    await prisma.financeAllocationLink.updateMany({
+      where: {
+        collectionRecordId,
+        deleted: false,
+      },
+      data: {
+        deleted: true,
+        deletedDate: new Date(),
+      },
+    });
+  }
+
+  async softDeleteAllocationLinksForPayment(paymentRecordId: string) {
+    await prisma.financeAllocationLink.updateMany({
+      where: {
+        paymentRecordId,
+        deleted: false,
+      },
+      data: {
+        deleted: true,
+        deletedDate: new Date(),
+      },
+    });
+  }
+
+  async sumAllocatedAmountsByBusinessDocumentLineIds(
+    lineIds: string[],
+    exclude?: { collectionRecordId?: string; paymentRecordId?: string },
+  ) {
+    if (lineIds.length === 0) {
+      return new Map<string, number>();
+    }
+
+    const rows = await prisma.financeAllocationLink.groupBy({
+      by: ["businessDocumentLineId"],
+      where: {
+        deleted: false,
+        businessDocumentLineId: { in: lineIds },
+        ...(exclude?.collectionRecordId
+          ? { NOT: { collectionRecordId: exclude.collectionRecordId } }
+          : {}),
+        ...(exclude?.paymentRecordId
+          ? { NOT: { paymentRecordId: exclude.paymentRecordId } }
+          : {}),
+      },
+      _sum: {
+        amount: true,
+      },
+    });
+
+    const map = new Map<string, number>();
+
+    for (const row of rows) {
+      if (!row.businessDocumentLineId) {
+        continue;
+      }
+
+      map.set(row.businessDocumentLineId, row._sum.amount?.toNumber() ?? 0);
+    }
+
+    return map;
+  }
+
+  async listBusinessDocumentLinesForOrder(orderId: string) {
+    return prisma.businessDocumentLine.findMany({
+      where: {
+        businessDocument: {
+          deleted: false,
+          orderId,
+        },
+      },
+      include: {
+        businessDocument: {
+          select: {
+            id: true,
+            documentNumber: true,
+            issueDate: true,
+            currency: true,
+            orderId: true,
+          },
+        },
+      },
+      orderBy: [
+        { businessDocument: { issueDate: "asc" } },
+        { createdAt: "asc" },
+      ],
+    });
+  }
+
+  async listBusinessDocumentLinesForSupplier(supplierId: string) {
+    return prisma.businessDocumentLine.findMany({
+      where: {
+        businessDocument: {
+          deleted: false,
+          supplierId,
+        },
+      },
+      include: {
+        businessDocument: {
+          select: {
+            id: true,
+            documentNumber: true,
+            issueDate: true,
+            currency: true,
+            orderId: true,
+          },
+        },
+      },
+      orderBy: [
+        { businessDocument: { issueDate: "asc" } },
+        { createdAt: "asc" },
+      ],
+    });
+  }
+
+  async findBusinessDocumentLineById(lineId: string) {
+    return prisma.businessDocumentLine.findFirst({
+      where: {
+        id: lineId,
+      },
+      include: {
+        businessDocument: {
+          select: {
+            id: true,
+            documentNumber: true,
+            orderId: true,
+            supplierId: true,
+            currency: true,
+          },
+        },
+      },
+    });
+  }
+
+  async findBusinessDocumentSummaryById(documentId: string) {
+    return prisma.businessDocument.findFirst({
+      where: {
+        id: documentId,
+        deleted: false,
+      },
+      select: {
+        id: true,
+        documentNumber: true,
+        orderId: true,
+        supplierId: true,
+        totalAmount: true,
+        currency: true,
+        issueDate: true,
+        inventoryTransactionId: true,
+      },
+    });
+  }
+
+  async listAllocationLinksForBusinessDocument(documentId: string) {
+    return prisma.financeAllocationLink.findMany({
+      where: {
+        deleted: false,
+        OR: [
+          { businessDocumentId: documentId },
+          { businessDocumentLine: { businessDocumentId: documentId } },
+        ],
+      },
+      include: {
+        order: {
+          select: {
+            orderNumber: true,
+          },
+        },
+        businessDocument: {
+          select: {
+            documentNumber: true,
+          },
+        },
+        businessDocumentLine: {
+          select: {
+            productName: true,
+            productVariantTitle: true,
+          },
+        },
+        collectionRecord: {
+          select: {
+            id: true,
+            collectedAt: true,
+            amount: true,
+            currency: true,
+          },
+        },
+        paymentRecord: {
+          select: {
+            id: true,
+            paidAt: true,
+            amount: true,
+            currency: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 100,
+    });
+  }
+
+  async listAllocationLinksForCollection(collectionRecordId: string) {
+    return prisma.financeAllocationLink.findMany({
+      where: {
+        deleted: false,
+        collectionRecordId,
+      },
+      include: {
+        order: {
+          select: {
+            orderNumber: true,
+          },
+        },
+        businessDocument: {
+          select: {
+            documentNumber: true,
+          },
+        },
+        businessDocumentLine: {
+          select: {
+            productName: true,
+            productVariantTitle: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+  }
+
+  async listAllocationLinksForPayment(paymentRecordId: string) {
+    return prisma.financeAllocationLink.findMany({
+      where: {
+        deleted: false,
+        paymentRecordId,
+      },
+      include: {
+        order: {
+          select: {
+            orderNumber: true,
+          },
+        },
+        businessDocument: {
+          select: {
+            documentNumber: true,
+          },
+        },
+        businessDocumentLine: {
+          select: {
+            productName: true,
+            productVariantTitle: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+  }
+
+  async listAllocationLinksForOrder(orderId: string) {
+    return prisma.financeAllocationLink.findMany({
+      where: {
+        deleted: false,
+        OR: [
+          { orderId },
+          { collectionRecord: { orderId } },
+        ],
+      },
+      include: {
+        order: {
+          select: {
+            orderNumber: true,
+          },
+        },
+        businessDocument: {
+          select: {
+            documentNumber: true,
+          },
+        },
+        businessDocumentLine: {
+          select: {
+            productName: true,
+            productVariantTitle: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 100,
+    });
+  }
+
+  async listAllocationLinksForSupplier(supplierId: string) {
+    return prisma.financeAllocationLink.findMany({
+      where: {
+        deleted: false,
+        paymentRecord: {
+          supplierId,
+        },
+      },
+      include: {
+        order: {
+          select: {
+            orderNumber: true,
+          },
+        },
+        businessDocument: {
+          select: {
+            documentNumber: true,
+          },
+        },
+        businessDocumentLine: {
+          select: {
+            productName: true,
+            productVariantTitle: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 100,
+    });
+  }
+
+  async findCashTransactionById(id: string) {
+    return ((prisma as any).cashTransaction).findFirst({
+      where: {
+        id,
+        deleted: false,
+      },
+      include: {
+        account: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+          },
+        },
+        customerAccount: {
+          select: {
+            slug: true,
+            name: true,
+          },
+        },
+        supplier: {
+          select: {
+            slug: true,
+            name: true,
+          },
+        },
+      },
+    });
+  }
+
+  async listRecentCollectionRecords(take: number) {
+    return prisma.collectionRecord.findMany({
+      where: { deleted: false },
+      orderBy: [{ collectedAt: "desc" }, { createdAt: "desc" }],
+      take,
+    });
+  }
+
+  async listRecentPaymentRecords(take: number) {
+    return prisma.paymentRecord.findMany({
+      where: { deleted: false },
+      orderBy: [{ paidAt: "desc" }, { createdAt: "desc" }],
+      take,
+    });
+  }
+
+  async listRecentCashTransactionsForLedger(take: number) {
+    return ((prisma as any).cashTransaction).findMany({
+      where: {
+        deleted: false,
+        sourceType: { notIn: ["COLLECTION", "PAYMENT"] },
+      },
+      orderBy: [{ transactionAt: "desc" }, { createdAt: "desc" }],
+      take,
+    });
+  }
+
+  async findBusinessDocumentForLedgerSync(documentId: string) {
+    return prisma.businessDocument.findFirst({
+      where: {
+        id: documentId,
+        deleted: false,
+      },
+      include: {
+        lines: {
+          orderBy: [{ createdAt: "asc" }],
+        },
+      },
+    });
+  }
+
+  async listRecentIssuedBusinessDocumentsForLedger(take: number) {
+    return prisma.businessDocument.findMany({
+      where: {
+        deleted: false,
+        status: { in: ["ISSUED", "LINKED"] },
+      },
+      select: { id: true },
+      orderBy: [{ updatedAt: "desc" }],
+      take,
     });
   }
 

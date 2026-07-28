@@ -754,6 +754,36 @@ export class CommerceService {
 
     await this.repository.softDeleteOrder(parsed.id, deletedUserId);
   }
+
+  async linkCustomerAccountFromOrderDocuments(orderId: string): Promise<string | null> {
+    const order = await this.repository.findOrderById(orderId);
+
+    if (!order) {
+      return null;
+    }
+
+    if (order.customerAccount?.id) {
+      return order.customerAccount.id;
+    }
+
+    const document = await this.repository.findLatestBusinessDocumentForOrder(orderId);
+
+    if (!document?.counterpartyEmail) {
+      return null;
+    }
+
+    const account = await customerAccountService.ensureCustomerAccountFromContact({
+      name: document.counterpartyName,
+      email: document.counterpartyEmail,
+    });
+
+    if (!account) {
+      return null;
+    }
+
+    await this.repository.updateOrderCustomerAccountId(orderId, account.id);
+    return account.id;
+  }
 }
 
 export const commerceService = new CommerceService(new CommerceRepository());

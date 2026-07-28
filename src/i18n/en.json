@@ -1,6 +1,6 @@
 {
 	"common": {
-		"brand": "2BEM",
+		"brand": "BEEMMB",
 		"language": "Language",
 		"favorites": "My Favorites",
 		"adminPanel": "Admin",
@@ -13,7 +13,7 @@
 		"loginTitle": "Sign In To Your Account",
 		"loginSubtitle": "Securely manage your orders, favorites, and account from one place.",
 		"registerTitle": "Create New Account",
-		"registerSubtitle": "Create your account in minutes and start your 2BEM experience.",
+		"registerSubtitle": "Create your account in minutes and start your BEEMMB experience.",
 		"email": "E-mail",
 		"name": "Full Name",
 		"password": "Password",
@@ -38,7 +38,7 @@
 		"backToLogin": "Back to login",
 		"heroEyebrow": "Fast and secure account access",
 		"loginHeroTitle": "Manage your order flow with one secure sign-in.",
-		"loginHeroBody": "Access your favorites, order history, and fast shopping flow instantly with your 2BEM account.",
+		"loginHeroBody": "Access your favorites, order history, and fast shopping flow instantly with your BEEMMB account.",
 		"registerHeroTitle": "Open your new account and speed up the flow.",
 		"registerHeroBody": "Register in minutes and keep product discovery, orders, and favorites together in a single account experience.",
 		"featureFast": "Fast sign-in and fluid mobile experience",
@@ -62,7 +62,7 @@
 		"resetPasswordHeroBody": "Your new password should be at least 6 characters and avoid predictable combinations you used before."
 	},
 	"home": {
-		"title": "2BEM Product Showcase",
+		"title": "BEEMMB Product Showcase",
 		"subtitle": "Phase one focuses on a fast, mobile-friendly and service-driven product discovery experience.",
 		"cta": "Explore Products",
 		"eyebrow": "Next-generation ecommerce storefront experience",
@@ -269,7 +269,7 @@
 		"integrationMarketplacePackageListFailedLabel": "The latest status notification failed. Review the error message in the detail view.",
 		"integrationMarketplaceNextActionTitle": "Recommended next step",
 		"integrationMarketplaceNextActionReviewLines": "First complete or ignore unmatched lines so the package can become ready for order.",
-		"integrationMarketplaceNextActionCreateOrder": "The package looks ready for order. You can create the 2BEM order now.",
+		"integrationMarketplaceNextActionCreateOrder": "The package looks ready for order. You can create the BEEMMB order now.",
 		"integrationMarketplaceNextActionNotifyPicking": "The order has been created. You can now send the Picking notification to N11.",
 		"integrationMarketplaceNextActionSplitPackage": "The package is in Picking status. If needed, you can split the package at this stage.",
 		"integrationMarketplaceNextActionRetryDeadLetter": "The last status job is in dead-letter. Review the error details and retry it.",
@@ -285,7 +285,7 @@
 		"integrationMarketplaceRetryQueued": "The status job has been queued again and sent for processing.",
 		"integrationMarketplaceLineMatchSaved": "Line match has been saved.",
 		"integrationMarketplaceCreateOrder": "Create order",
-		"integrationMarketplaceOrderCreated": "B2BEM order has been created.",
+		"integrationMarketplaceOrderCreated": "BEEMMB order has been created.",
 		"integrationMarketplaceNotifyPicking": "Notify Picking",
 		"integrationMarketplaceNotifyInvoiced": "Notify Invoiced",
 		"integrationMarketplaceInvoiceNumber": "Invoice number",
@@ -795,6 +795,29 @@
 		,"financeAccountsOpenFinanceRoute": "Open finance route"
 		,"financeAccountsOpenSource": "Open source"
 		,"financeAccountsEmpty": "No account entries found."
+		,"financeAccountsOpenCounterpartyLedger": "Open counterparty ledger"
+		,"financeCashTransactionDetailBack": "Back to cash movements"
+		,"financeAllocationTitle": "Open balance allocation"
+		,"financeAllocationEmpty": "No document or order allocation was found for this movement."
+		,"financeAllocationTarget": "Target"
+		,"financeAllocationAmount": "Amount"
+		,"financeAllocationMismatch": "Allocated amount ({allocated}) does not match the record amount ({expected})."
+		,"financeManualAllocationTitle": "Manual allocation"
+		,"financeManualAllocationRecord": "Record"
+		,"financeManualAllocationLine": "Document line"
+		,"financeManualAllocationAddLine": "Add line"
+		,"financeManualAllocationSave": "Save allocation"
+		,"financeManualAllocationSaving": "Saving"
+		,"financeManualAllocationSuccess": "Allocation saved."
+		,"financeManualAllocationFailed": "Allocation could not be saved."
+		,"financeCounterpartyLedgerBack": "Back to account entries"
+		,"financeCounterpartyLedgerCounterparty": "Counterparty"
+		,"financeCounterpartyLedgerOpenBalance": "Open balance summary"
+		,"financeCounterpartyLedgerMovementCount": "Movement count"
+		,"financeCounterpartyLedgerCollectionPaymentCount": "Collections / payments"
+		,"financeCounterpartyLedgerDocumentCount": "Document count"
+		,"financeCounterpartyLedgerOccurredAt": "Transaction date"
+		,"financeCounterpartyLedgerEmpty": "No movements to show for this counterparty."
 		,"financeDetailBackToList": "Back to list"
 		,"financeOpenDocuments": "Open documents"
 		,"financeReportsTitle": "Finance Reports"

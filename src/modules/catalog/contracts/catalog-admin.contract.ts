@@ -245,6 +245,8 @@ export type AdminSupplierItem = {
   taxNumber: string | null;
   email: string | null;
   phone: string | null;
+  defaultPaymentTermDays: number | null;
+  creditLimit: number | null;
   isActive: boolean;
   productCount: number;
 };
@@ -272,6 +274,8 @@ export type AdminCreateSupplierInput = {
   taxNumber?: string | null;
   email?: string | null;
   phone?: string | null;
+  defaultPaymentTermDays?: number | null;
+  creditLimit?: number | null;
   isActive?: boolean;
 };
 
@@ -282,6 +286,8 @@ export type AdminUpdateSupplierInput = {
   taxNumber?: string | null;
   email?: string | null;
   phone?: string | null;
+  defaultPaymentTermDays?: number | null;
+  creditLimit?: number | null;
   isActive?: boolean;
 };
 
@@ -320,8 +326,10 @@ export type AdminProductImportRow = {
 export type AdminProductImportResult = {
   createdCount: number;
   failedCount: number;
+  validatedCount?: number;
   errors: Array<{
     rowNumber: number;
+    sheetName?: string;
     message: string;
   }>;
 };

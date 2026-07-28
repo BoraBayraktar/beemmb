@@ -1,6 +1,6 @@
-# ArventaTrade
+# BEEMMB
 
-ArventaTrade, modular monolith mimarisi ile gelistirilen cok asamali e-ticaret sistemidir.
+BEEMMB, modular monolith mimarisi ile gelistirilen cok asamali e-ticaret sistemidir.
 Bu ilk implementasyon, Faz 1 kapsaminda public urun vitrinini sunar.
 
 ## Gelistirme Kurallari
@@ -123,7 +123,7 @@ Varsayilan kimlik bilgileri:
 - Username: `minioadmin`
 - Password: `minioadmin`
 
-Admin urun yonetimi ekranindaki gorsel yukleme akisi MinIO bucket'ina (`2bem-media`) dosya yukler ve urune otomatik URL atar.
+Admin urun yonetimi ekranindaki gorsel yukleme akisi MinIO bucket'ina (`beemmb-media`) dosya yukler ve urune otomatik URL atar.
 
 ## Notification ve SLA Ortam Degiskenleri
 
@@ -256,12 +256,12 @@ npm run worker:notifications:cron
 
 Seed sonrasi varsayilan admin hesabi:
 
-- E-mail: `admin@arventatrade.local`
+- E-mail: `admin@beemmb.local`
 - Sifre: `Admin123!`
 
 Seed sonrasi varsayilan editor hesabi:
 
-- E-mail: `editor@arventatrade.local`
+- E-mail: `editor@beemmb.local`
 - Sifre: `Editor123!`
 
 RBAC dogrulamasi icin:

@@ -28,6 +28,11 @@ type Labels = {
   providerNone: string;
   notSpecified: string;
   operationFailed: string;
+  adapterRegistered: string;
+  adapterConfigured: string;
+  adapterOperational: string;
+  adapterReady: string;
+  adapterNotReady: string;
 };
 
 export function DocumentProviderManager({
@@ -126,6 +131,17 @@ export function DocumentProviderManager({
                   {item.isActive ? <Badge className="border-emerald-200 bg-emerald-100 text-emerald-700">{labels.providerIsActive}</Badge> : null}
                 </div>
                 <p className="mt-2">{labels.providerCode}: {item.providerCode}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Badge className={item.adapterRegistered ? "border-emerald-200 bg-emerald-100 text-emerald-700" : "border-rose-200 bg-rose-100 text-rose-700"}>
+                    {labels.adapterRegistered}: {item.adapterRegistered ? labels.adapterReady : labels.adapterNotReady}
+                  </Badge>
+                  <Badge className={item.adapterConfigured ? "border-emerald-200 bg-emerald-100 text-emerald-700" : "border-amber-200 bg-amber-100 text-amber-700"}>
+                    {labels.adapterConfigured}: {item.adapterConfigured ? labels.adapterReady : labels.adapterNotReady}
+                  </Badge>
+                  <Badge className={item.adapterOperational ? "border-emerald-200 bg-emerald-100 text-emerald-700" : "border-amber-200 bg-amber-100 text-amber-700"}>
+                    {labels.adapterOperational}: {item.adapterOperational ? labels.adapterReady : labels.adapterNotReady}
+                  </Badge>
+                </div>
                 <p className="mt-1">{labels.providerEndpointUrl}: {item.endpointUrl ?? labels.notSpecified}</p>
                 <p className="mt-1">{labels.providerUsername}: {item.username ?? labels.notSpecified}</p>
               </article>
@@ -139,8 +155,8 @@ export function DocumentProviderManager({
             <Input value={senderLabel} onChange={(event) => setSenderLabel(event.target.value)} placeholder={labels.providerSenderLabel} />
             <Input value={senderVkn} onChange={(event) => setSenderVkn(event.target.value)} placeholder={labels.providerSenderVkn} />
             <Input value={username} onChange={(event) => setUsername(event.target.value)} placeholder={labels.providerUsername} />
-            <Input value={secretKey} onChange={(event) => setSecretKey(event.target.value)} placeholder={labels.providerSecret} />
-            <Input value={webhookSecret} onChange={(event) => setWebhookSecret(event.target.value)} placeholder={labels.providerWebhookSecret} />
+            <Input type="password" autoComplete="new-password" value={secretKey} onChange={(event) => setSecretKey(event.target.value)} placeholder={labels.providerSecret} />
+            <Input type="password" autoComplete="new-password" value={webhookSecret} onChange={(event) => setWebhookSecret(event.target.value)} placeholder={labels.providerWebhookSecret} />
             <Input value={companyName} onChange={(event) => setCompanyName(event.target.value)} placeholder={labels.providerCompanyName} />
             <label className="flex items-center gap-2 text-sm text-neutral-700"><input type="checkbox" checked={supportsStatusSync} onChange={(event) => setSupportsStatusSync(event.target.checked)} />{labels.providerSupportsStatusSync}</label>
             <label className="flex items-center gap-2 text-sm text-neutral-700"><input type="checkbox" checked={isActive} onChange={(event) => setIsActive(event.target.checked)} />{labels.providerIsActive}</label>

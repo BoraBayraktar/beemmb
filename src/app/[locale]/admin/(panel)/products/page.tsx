@@ -225,6 +225,7 @@ export default async function AdminProductsPage({
         supplierEmail: dictionary.admin.supplierEmail,
         supplierPhone: dictionary.admin.supplierPhone,
         importCsv: dictionary.admin.importCsv,
+        importTemplate: dictionary.admin.productImportTemplate,
         exportCsv: dictionary.admin.exportCsv,
         importHint: dictionary.admin.productImportHint,
         importSuccess: dictionary.admin.productImportSuccess,

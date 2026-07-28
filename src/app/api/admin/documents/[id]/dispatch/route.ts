@@ -1,10 +1,18 @@
-import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
+import { buildNoStoreHeaders, noStoreJson } from "@/lib/no-store-json-response";
 import { documentDispatchService } from "@/modules/documents/services/document-dispatch.service";
 import { DocumentAdminError } from "@/modules/documents/services/document.service";
 import { AuthContextError, requirePermission } from "@/modules/identity/services/auth-context.service";
 import { auditLogService } from "@/modules/system/services/audit-log.service";
+
+export function buildDocumentDispatchHeaders() {
+  return buildNoStoreHeaders();
+}
+
+export function documentDispatchJson(body: unknown, init?: ResponseInit) {
+  return noStoreJson(body, init);
+}
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
@@ -14,6 +22,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     const item = await documentDispatchService.queueOutboundDispatch({
       id,
       channel: "EDOCS_MOCK",
+      providerConfigId: typeof payload.providerConfigId === "string" ? payload.providerConfigId : undefined,
       forceFail: payload.forceFail === true,
     });
 
@@ -32,20 +41,20 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       },
     });
 
-    return NextResponse.json({ item }, { status: 201 });
+    return documentDispatchJson({ item }, { status: 201 });
   } catch (error) {
     if (error instanceof AuthContextError) {
-      return NextResponse.json({ message: error.message }, { status: error.status });
+      return documentDispatchJson({ message: error.message }, { status: error.status });
     }
 
     if (error instanceof DocumentAdminError) {
-      return NextResponse.json({ message: error.message }, { status: error.status });
+      return documentDispatchJson({ message: error.message }, { status: error.status });
     }
 
     if (error instanceof ZodError) {
-      return NextResponse.json({ message: error.issues[0]?.message ?? "Doğrulama hatası oluştu." }, { status: 400 });
+      return documentDispatchJson({ message: error.issues[0]?.message ?? "Doğrulama hatası oluştu." }, { status: 400 });
     }
 
-    return NextResponse.json({ message: "Beklenmeyen bir hata oluştu." }, { status: 500 });
+    return documentDispatchJson({ message: "Beklenmeyen bir hata oluştu." }, { status: 500 });
   }
 }

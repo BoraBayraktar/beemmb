@@ -117,8 +117,13 @@ export default async function AdminPanelLayout({
         { href: `/${locale}/admin/finance/collections`, label: dictionary.admin.financeMenuCollections, permissionKey: "finance.manage" },
         { href: `/${locale}/admin/finance/payments`, label: dictionary.admin.financeMenuPayments, permissionKey: "finance.manage" },
         { href: `/${locale}/admin/finance/bank-cash`, label: dictionary.admin.financeMenuBankCash, permissionKey: "finance.manage" },
+        { href: `/${locale}/admin/finance/bank-reconciliation`, label: dictionary.admin.financeMenuBankReconciliation, permissionKey: "finance.manage" },
+        { href: `/${locale}/admin/finance/instruments`, label: dictionary.admin.financeMenuNegotiableInstruments, permissionKey: "finance.manage" },
         { href: `/${locale}/admin/finance/transactions`, label: dictionary.admin.financeMenuTransactions, permissionKey: "finance.manage" },
         { href: `/${locale}/admin/finance/reports`, label: dictionary.admin.financeMenuReports, permissionKey: "finance.read" },
+        { href: `/${locale}/admin/finance/reports/trial-balance`, label: dictionary.admin.financeMenuTrialBalance, permissionKey: "finance.read" },
+        { href: `/${locale}/admin/finance/exports`, label: dictionary.admin.financeMenuAdvisorExports, permissionKey: "finance.audit.read" },
+        { href: `/${locale}/admin/finance/ledger-entries`, label: dictionary.admin.financeMenuLedgerEntries, permissionKey: "finance.read" },
       ],
     },
     {

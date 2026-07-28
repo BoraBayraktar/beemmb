@@ -269,7 +269,7 @@ export class IdentityService {
       60 * 30,
     );
 
-    const subject = locale === "tr" ? "2BEM sifre sifirlama baglantisi" : "2BEM password reset link";
+    const subject = locale === "tr" ? "BEEMMB sifre sifirlama baglantisi" : "BEEMMB password reset link";
     const text = locale === "tr"
       ? `Merhaba ${account.name},\n\nSifrenizi sifirlamak icin asagidaki baglantiyi kullanin:\n${resetUrl}\n\nBu baglanti 30 dakika boyunca gecerlidir.\nEger bu islemi siz baslatmadiysaniz bu e-postayi yok sayabilirsiniz.`
       : `Hello ${account.name},\n\nUse the link below to reset your password:\n${resetUrl}\n\nThis link is valid for 30 minutes.\nIf you did not request this, you can ignore this email.`;

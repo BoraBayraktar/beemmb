@@ -56,6 +56,8 @@ model Supplier {
   taxNumber         String?
   email             String?
   phone             String?
+  defaultPaymentTermDays Int?
+  creditLimit       Decimal?           @db.Decimal(12, 2)
   isActive          Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
@@ -65,6 +67,9 @@ model Supplier {
   paymentRecords    PaymentRecord[]
   primaryProducts   Product[]
   businessDocuments BusinessDocument[]
+  cashTransactions  CashTransaction[]
+  negotiableInstruments NegotiableInstrument[]
+  financeAccountEntries FinanceAccountEntry[]
 
   @@index([deleted, isActive])
   @@index([taxNumber])
@@ -79,6 +84,8 @@ model CustomerAccount {
   taxNumber         String?
   address           String?
   note              String?
+  defaultPaymentTermDays Int?
+  creditLimit       Decimal?           @db.Decimal(12, 2)
   isActive          Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
@@ -87,6 +94,9 @@ model CustomerAccount {
   deletedUserId     String?
   orders            Order[]
   businessDocuments BusinessDocument[]
+  cashTransactions  CashTransaction[]
+  negotiableInstruments NegotiableInstrument[]
+  financeAccountEntries FinanceAccountEntry[]
 
   @@index([deleted, isActive])
   @@index([email])
@@ -109,6 +119,9 @@ model FinancialAccount {
   transactions      CashTransaction[]
   collectionRecords CollectionRecord[]
   paymentRecords    PaymentRecord[]
+  bankStatementImports BankStatementImport[]
+  negotiableInstruments NegotiableInstrument[]
+  financeAccountEntries FinanceAccountEntry[]
 
   @@index([deleted, isActive])
   @@index([type, isActive])
@@ -127,6 +140,9 @@ model CashTransaction {
   title             String
   note              String?
   sourceReferenceId String?
+  counterpartyKind  CashTransactionCounterpartyKind @default(UNREGISTERED)
+  customerAccountId String?
+  supplierId        String?
   counterpartyName  String?
   createdByUserId   String?
   createdAt         DateTime                  @default(now())
@@ -135,11 +151,104 @@ model CashTransaction {
   deletedDate       DateTime?
   deletedUserId     String?
   account           FinancialAccount          @relation(fields: [accountId], references: [id])
+  customerAccount   CustomerAccount?          @relation(fields: [customerAccountId], references: [id])
+  supplier          Supplier?                 @relation(fields: [supplierId], references: [id])
+  reconciliationMatch BankReconciliationMatch?
+  negotiableInstrument NegotiableInstrument?
 
   @@index([accountId, transactionAt])
   @@index([status, transactionAt])
   @@index([deleted, transactionAt])
   @@index([sourceType, sourceReferenceId])
+  @@index([customerAccountId, transactionAt])
+  @@index([supplierId, transactionAt])
+}
+
+model BankStatementImport {
+  id                 String                    @id @default(cuid())
+  financialAccountId String
+  fileName           String?
+  periodStart        DateTime?
+  periodEnd          DateTime?
+  status             BankStatementImportStatus @default(DRAFT)
+  importedByUserId   String?
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+  financialAccount   FinancialAccount          @relation(fields: [financialAccountId], references: [id])
+  lines              BankStatementLine[]
+
+  @@index([financialAccountId, createdAt])
+  @@index([status])
+}
+
+model BankStatementLine {
+  id            String                       @id @default(cuid())
+  importId      String
+  lineIndex     Int
+  transactionAt DateTime
+  description   String
+  amount        Decimal                      @db.Decimal(10, 2)
+  signedAmount  Decimal                      @db.Decimal(10, 2)
+  balanceAfter  Decimal?                     @db.Decimal(10, 2)
+  matchStatus   BankStatementLineMatchStatus @default(UNMATCHED)
+  createdAt     DateTime                     @default(now())
+  updatedAt     DateTime                     @updatedAt
+  import        BankStatementImport          @relation(fields: [importId], references: [id], onDelete: Cascade)
+  match         BankReconciliationMatch?
+
+  @@unique([importId, lineIndex])
+  @@index([importId, matchStatus])
+}
+
+model BankReconciliationMatch {
+  id                String                        @id @default(cuid())
+  statementLineId   String                        @unique
+  cashTransactionId String?                       @unique
+  status            BankReconciliationMatchStatus @default(SUGGESTED)
+  confirmedAt       DateTime?
+  confirmedByUserId String?
+  createdAt         DateTime                      @default(now())
+  updatedAt         DateTime                      @updatedAt
+  statementLine     BankStatementLine             @relation(fields: [statementLineId], references: [id], onDelete: Cascade)
+  cashTransaction   CashTransaction?              @relation(fields: [cashTransactionId], references: [id])
+
+  @@index([status])
+}
+
+model NegotiableInstrument {
+  id                 String                         @id @default(cuid())
+  instrumentNumber   String
+  instrumentType     NegotiableInstrumentType
+  direction          NegotiableInstrumentDirection
+  status             NegotiableInstrumentStatus     @default(PORTFOLIO)
+  amount             Decimal                        @db.Decimal(10, 2)
+  currency           String                         @default("TRY")
+  dueDate            DateTime
+  issueDate          DateTime?
+  counterpartyKind   CashTransactionCounterpartyKind @default(UNREGISTERED)
+  customerAccountId  String?
+  supplierId         String?
+  counterpartyName   String?
+  endorserName       String?
+  note               String?
+  financialAccountId String?
+  cashTransactionId  String?                        @unique
+  createdByUserId    String?
+  createdAt          DateTime                       @default(now())
+  updatedAt          DateTime                       @updatedAt
+  deleted            Boolean                        @default(false)
+  deletedDate        DateTime?
+  deletedUserId      String?
+  customerAccount    CustomerAccount?               @relation(fields: [customerAccountId], references: [id])
+  supplier           Supplier?                      @relation(fields: [supplierId], references: [id])
+  financialAccount   FinancialAccount?              @relation(fields: [financialAccountId], references: [id])
+  cashTransaction    CashTransaction?               @relation(fields: [cashTransactionId], references: [id])
+
+  @@index([status, dueDate])
+  @@index([direction, dueDate])
+  @@index([deleted, dueDate])
+  @@index([customerAccountId])
+  @@index([supplierId])
 }
 
 model ProductAttributeDefinition {
@@ -413,6 +522,7 @@ model Order {
   statusHistory        OrderStatusHistory[]
   businessDocuments    BusinessDocument[]
   marketplacePackages  MarketplaceOrderPackage[]
+  financeAllocationLinks FinanceAllocationLink[]
   customerAccount      CustomerAccount?            @relation(fields: [customerAccountId], references: [id])
 
   @@index([deleted])
@@ -503,6 +613,8 @@ model CollectionRecord {
   collectedAt        DateTime
   note               String?
   recordedByUserId   String?
+  onlineCollectionProvider String?
+  onlineCollectionExternalId String?
   createdAt          DateTime               @default(now())
   updatedAt          DateTime               @updatedAt
   deleted            Boolean                @default(false)
@@ -510,11 +622,13 @@ model CollectionRecord {
   deletedUserId      String?
   order              Order                  @relation(fields: [orderId], references: [id])
   financialAccount   FinancialAccount?      @relation(fields: [financialAccountId], references: [id])
+  allocationLinks    FinanceAllocationLink[]
 
   @@index([orderId, collectedAt])
   @@index([financialAccountId, collectedAt])
   @@index([status, collectedAt])
   @@index([deleted, collectedAt])
+  @@unique([onlineCollectionProvider, onlineCollectionExternalId])
 }
 
 model PaymentRecord {
@@ -534,11 +648,83 @@ model PaymentRecord {
   deletedUserId      String?
   supplier           Supplier            @relation(fields: [supplierId], references: [id])
   financialAccount   FinancialAccount?   @relation(fields: [financialAccountId], references: [id])
+  allocationLinks    FinanceAllocationLink[]
 
   @@index([supplierId, paidAt])
   @@index([financialAccountId, paidAt])
   @@index([status, paidAt])
   @@index([deleted, paidAt])
+}
+
+model FinanceLedgerAccount {
+  id        String                      @id @default(cuid())
+  code      String                      @unique
+  name      String
+  category  FinanceLedgerAccountCategory
+  isActive  Boolean                     @default(true)
+  createdAt DateTime                    @default(now())
+  updatedAt DateTime                    @updatedAt
+  entries   FinanceAccountEntry[]
+
+  @@index([isActive, code])
+}
+
+model FinanceAccountEntry {
+  id                 String                        @id @default(cuid())
+  lineKey            String                        @unique
+  entryAt            DateTime
+  ledgerAccountId    String
+  side               FinanceAccountEntrySide
+  amount             Decimal                       @db.Decimal(10, 2)
+  currency           String                        @default("TRY")
+  sourceType         FinanceAccountEntrySourceType
+  sourceId           String
+  sourceReference    String?
+  title              String
+  note               String?
+  customerAccountId  String?
+  supplierId         String?
+  financialAccountId String?
+  createdAt          DateTime                      @default(now())
+  ledgerAccount      FinanceLedgerAccount          @relation(fields: [ledgerAccountId], references: [id])
+  customerAccount    CustomerAccount?              @relation(fields: [customerAccountId], references: [id])
+  supplier           Supplier?                     @relation(fields: [supplierId], references: [id])
+  financialAccount   FinancialAccount?             @relation(fields: [financialAccountId], references: [id])
+
+  @@index([entryAt])
+  @@index([sourceType, sourceId])
+  @@index([ledgerAccountId, entryAt])
+  @@index([customerAccountId])
+  @@index([supplierId])
+}
+
+model FinanceAllocationLink {
+  id                 String                        @id @default(cuid())
+  collectionRecordId String?
+  paymentRecordId    String?
+  targetType         FinanceAllocationTargetType
+  orderId            String?
+  businessDocumentId String?
+  businessDocumentLineId String?
+  amount             Decimal                       @db.Decimal(10, 2)
+  currency           String                        @default("TRY")
+  createdAt          DateTime                      @default(now())
+  updatedAt          DateTime                      @updatedAt
+  deleted            Boolean                       @default(false)
+  deletedDate        DateTime?
+  deletedUserId      String?
+  collectionRecord   CollectionRecord?             @relation(fields: [collectionRecordId], references: [id])
+  paymentRecord      PaymentRecord?                @relation(fields: [paymentRecordId], references: [id])
+  order              Order?                        @relation(fields: [orderId], references: [id])
+  businessDocument   BusinessDocument?             @relation(fields: [businessDocumentId], references: [id])
+  businessDocumentLine BusinessDocumentLine?       @relation(fields: [businessDocumentLineId], references: [id])
+
+  @@index([collectionRecordId])
+  @@index([paymentRecordId])
+  @@index([orderId])
+  @@index([businessDocumentId])
+  @@index([businessDocumentLineId])
+  @@index([deleted, createdAt])
 }
 
 model BusinessDocument {
@@ -547,6 +733,7 @@ model BusinessDocument {
   documentType           BusinessDocumentType
   status                 BusinessDocumentStatus     @default(DRAFT)
   issueDate              DateTime
+  dueDate                DateTime?
   currency               String                     @default("TRY")
   totalAmount            Decimal?                   @db.Decimal(10, 2)
   externalReference      String?
@@ -568,6 +755,7 @@ model BusinessDocument {
   deletedDate            DateTime?
   deletedUserId          String?
   dispatches             BusinessDocumentDispatch[]
+  xmlArtifacts           BusinessDocumentXmlArtifact[]
   lifecycleEvents        BusinessDocumentLifecycleEvent[]
   integrationMessages    BusinessDocumentIntegrationMessage[]
   lines                  BusinessDocumentLine[]
@@ -576,6 +764,7 @@ model BusinessDocument {
   order                  Order?                     @relation(fields: [orderId], references: [id])
   inventoryTransaction   InventoryTransaction?      @relation(fields: [inventoryTransactionId], references: [id])
   providerConfig         DocumentProviderConfig?    @relation(fields: [providerConfigId], references: [id])
+  financeAllocationLinks FinanceAllocationLink[]
 
   @@index([documentType, issueDate])
   @@index([status, issueDate])
@@ -585,6 +774,45 @@ model BusinessDocument {
   @@index([orderId])
   @@index([inventoryTransactionId])
   @@index([deleted, issueDate])
+  @@index([deleted, dueDate])
+}
+
+model BusinessDocumentXmlArtifact {
+  id                 String                         @id @default(cuid())
+  businessDocumentId String
+  documentRootType   BusinessDocumentXmlRootType
+  schemaVersion      String                         @default("UBL-TR-1.2.1")
+  xsdHash            String?
+  schematronHash     String?
+  xmlContent         String
+  xmlHash            String
+  validationStatus   BusinessDocumentXmlValidationStatus @default(NOT_VALIDATED)
+  validationErrors   Json?
+  supersedesArtifactId String?
+  generatedAt        DateTime                       @default(now())
+  validatedAt        DateTime?
+  createdAt          DateTime                       @default(now())
+  updatedAt          DateTime                       @updatedAt
+  businessDocument   BusinessDocument               @relation(fields: [businessDocumentId], references: [id])
+
+  @@index([businessDocumentId, generatedAt])
+  @@index([supersedesArtifactId])
+  @@index([xmlHash])
+  @@index([validationStatus])
+  @@unique([businessDocumentId, xmlHash])
+}
+
+model EDocumentNumberSequence {
+  id           String               @id @default(cuid())
+  documentType BusinessDocumentType
+  prefix       String
+  year         Int
+  lastNumber   Int                  @default(0)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  @@unique([documentType, prefix, year])
+  @@index([documentType, year])
 }
 
 model BusinessDocumentLine {
@@ -606,6 +834,7 @@ model BusinessDocumentLine {
   businessDocument    BusinessDocument @relation(fields: [businessDocumentId], references: [id])
   product             Product?         @relation(fields: [productId], references: [id])
   productVariant      ProductVariant?  @relation(fields: [productVariantId], references: [id])
+  financeAllocationLinks FinanceAllocationLink[]
 
   @@index([businessDocumentId])
   @@index([productId])
@@ -1457,6 +1686,7 @@ enum IntegrationChannel {
   PAZARAMA
   HEPSIBURADA
   EDOCS_MOCK
+  BANK_SANDBOX
 }
 
 enum IntegrationJobType {
@@ -1467,6 +1697,7 @@ enum IntegrationJobType {
   ORDER_STATUS_SYNC
   DOCUMENT_OUTBOUND
   DOCUMENT_STATUS_SYNC
+  BANK_STATEMENT_SYNC
 }
 
 enum IntegrationEntityType {
@@ -1475,6 +1706,7 @@ enum IntegrationEntityType {
   MARKETPLACE_PACKAGE
   ORDER
   BUSINESS_DOCUMENT
+  FINANCIAL_ACCOUNT
 }
 
 enum IntegrationJobStatus {
@@ -1679,6 +1911,74 @@ enum CashTransactionStatus {
   CANCELLED
 }
 
+enum CashTransactionCounterpartyKind {
+  CUSTOMER
+  SUPPLIER
+  UNREGISTERED
+}
+
+enum BankStatementImportStatus {
+  DRAFT
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+enum BankStatementLineMatchStatus {
+  UNMATCHED
+  SUGGESTED
+  CONFIRMED
+}
+
+enum BankReconciliationMatchStatus {
+  SUGGESTED
+  CONFIRMED
+}
+
+enum FinanceLedgerAccountCategory {
+  ASSET
+  LIABILITY
+  EQUITY
+  INCOME
+  EXPENSE
+}
+
+enum FinanceAccountEntrySide {
+  DEBIT
+  CREDIT
+}
+
+enum FinanceAccountEntrySourceType {
+  CASH_TRANSACTION
+  COLLECTION
+  PAYMENT
+  BUSINESS_DOCUMENT
+}
+
+enum NegotiableInstrumentType {
+  CHECK
+  PROMISSORY_NOTE
+}
+
+enum NegotiableInstrumentDirection {
+  RECEIVABLE
+  PAYABLE
+}
+
+enum NegotiableInstrumentStatus {
+  PORTFOLIO
+  COLLECTED
+  PAID
+  BOUNCED
+  CANCELLED
+}
+
+enum FinanceAllocationTargetType {
+  ORDER
+  BUSINESS_DOCUMENT
+  BUSINESS_DOCUMENT_LINE
+}
+
 enum BusinessDocumentType {
   PURCHASE_DOCUMENT
   DELIVERY_NOTE
@@ -1698,6 +1998,17 @@ enum BusinessDocumentSyncStatus {
   QUEUED
   SENT
   FAILED
+}
+
+enum BusinessDocumentXmlRootType {
+  INVOICE
+  DESPATCH_ADVICE
+}
+
+enum BusinessDocumentXmlValidationStatus {
+  NOT_VALIDATED
+  VALID
+  INVALID
 }
 
 enum UserNotificationType {

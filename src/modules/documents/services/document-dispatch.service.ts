@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { z } from "zod";
 
 import type {
@@ -9,7 +11,10 @@ import { DocumentRepository } from "@/modules/documents/repositories/document.re
 import { documentDispatchLifecycleService } from "@/modules/documents/services/document-dispatch-lifecycle.service";
 import { documentLifecycleService } from "@/modules/documents/services/document-lifecycle.service";
 import { DocumentAdminError } from "@/modules/documents/services/document.service";
+import { EDocumentProviderRegistryError, eDocumentProviderRegistryService } from "@/modules/edocument/services/edocument-provider-registry.service";
+import { eDocumentService } from "@/modules/edocument/services/edocument.service";
 import { integrationService } from "@/modules/integration/services/integration.service";
+import { buildDocumentDueFields } from "@/modules/finance/services/finance-due-date.util";
 
 const queueDispatchSchema = z.object({
   id: z.string().trim().min(1),
@@ -24,17 +29,64 @@ const queueStatusSyncSchema = z.object({
   forceFail: z.boolean().optional(),
 });
 
+const IDEMPOTENCY_SUFFIX_PART_LIMIT = 28;
+
 function toNumber(value: { toNumber: () => number } | null | undefined) {
   return value ? value.toNumber() : null;
 }
 
+export function assertEDocumentProviderAdapter(providerCode: string) {
+  try {
+    eDocumentProviderRegistryService.resolveRequired(providerCode);
+  } catch (error) {
+    if (error instanceof EDocumentProviderRegistryError) {
+      throw new DocumentAdminError(error.message, 400);
+    }
+
+    throw error;
+  }
+}
+
+export function buildDocumentDispatchIdempotencySuffix(args: {
+  providerCode: string;
+  documentId: string;
+  xmlHash: string;
+}) {
+  return buildSafeDocumentIdempotencySuffix("dispatch", [args.providerCode, args.documentId, args.xmlHash]);
+}
+
+export function buildDocumentStatusSyncIdempotencySuffix(args: {
+  providerCode: string;
+  documentId: string;
+  providerReference?: string | null;
+}) {
+  return buildSafeDocumentIdempotencySuffix("status", [args.providerCode, args.documentId, args.providerReference ?? "no-reference"]);
+}
+
+function buildSafeDocumentIdempotencySuffix(prefix: string, parts: string[]) {
+  const normalizedParts = parts.map((part) => part.replace(/[^A-Za-z0-9._-]/g, "_").slice(0, IDEMPOTENCY_SUFFIX_PART_LIMIT) || "none");
+  const digest = createHash("sha256").update([prefix, ...parts].join("|")).digest("hex").slice(0, 16);
+  return [prefix, ...normalizedParts, digest].join("-");
+}
+
 function mapDetail(item: Awaited<ReturnType<DocumentRepository["findBusinessDocumentById"]>> extends infer T ? NonNullable<T> : never): AdminBusinessDocumentDetail {
+  const dueFields = buildDocumentDueFields(
+    item.issueDate.toISOString(),
+    item.dueDate ? item.dueDate.toISOString() : null,
+    new Date(),
+    item.supplier?.defaultPaymentTermDays ?? item.customerAccount?.defaultPaymentTermDays ?? null,
+  );
+
   return {
     id: item.id,
     documentNumber: item.documentNumber,
     documentType: item.documentType,
     status: item.status,
     issueDate: item.issueDate.toISOString(),
+    dueDate: dueFields.dueDate,
+    effectiveDueDate: dueFields.effectiveDueDate,
+    daysUntilDue: dueFields.daysUntilDue,
+    isOverdue: dueFields.isOverdue,
     currency: item.currency,
     totalAmount: toNumber(item.totalAmount),
     externalReference: item.externalReference,
@@ -184,6 +236,12 @@ export class DocumentDispatchService {
     }
 
     const provider = await this.resolveProviderConfig(parsed.providerConfigId ?? document.providerConfigId ?? undefined);
+    assertEDocumentProviderAdapter(provider.providerCode);
+    const xmlArtifact = await eDocumentService.getCurrentValidXmlArtifact(document.id);
+
+    if (!xmlArtifact) {
+      throw new DocumentAdminError("Gönderim öncesi güncel ve geçerli UBL-TR XML üretimi zorunludur.", 400);
+    }
 
     const payload = {
       documentId: document.id,
@@ -202,6 +260,9 @@ export class DocumentDispatchService {
       counterpartyTaxNumber: document.counterpartyTaxNumber,
       currency: document.currency,
       totalAmount: toNumber(document.totalAmount),
+      xmlArtifactId: xmlArtifact.id,
+      xmlHash: xmlArtifact.xmlHash,
+      xmlSchemaVersion: xmlArtifact.schemaVersion,
       lines: document.lines.map((line: {
         id: string;
         productSku: string;
@@ -222,13 +283,19 @@ export class DocumentDispatchService {
       forceFail: parsed.forceFail ?? false,
     };
 
+    const idempotencySuffix = buildDocumentDispatchIdempotencySuffix({
+      providerCode: provider.providerCode,
+      documentId: document.id,
+      xmlHash: xmlArtifact.xmlHash,
+    });
+
     const dispatchResult = await integrationService.dispatchJobs({
       channel: parsed.channel,
       jobType: "DOCUMENT_OUTBOUND",
       entityType: "BUSINESS_DOCUMENT",
       entityIds: [document.id],
       maxAttempts: 3,
-      idempotencySuffix: `dispatch-${provider.providerCode}-${Date.now()}`,
+      idempotencySuffix,
       payload,
     });
 
@@ -263,6 +330,11 @@ export class DocumentDispatchService {
         documentNumber: document.documentNumber,
         documentType: document.documentType,
         jobType: "DOCUMENT_OUTBOUND",
+        idempotencyKey: queuedJob.idempotencyKey,
+        idempotencySuffix,
+        deduplicated: dispatchResult.deduplicated > 0,
+        xmlArtifactId: xmlArtifact.id,
+        xmlHash: xmlArtifact.xmlHash,
       },
       message: {
         direction: "OUTBOUND",
@@ -291,6 +363,7 @@ export class DocumentDispatchService {
     }
 
     const provider = await this.resolveProviderConfig(parsed.providerConfigId ?? document.providerConfigId ?? undefined);
+    assertEDocumentProviderAdapter(provider.providerCode);
     if (!provider.supportsStatusSync) {
       throw new DocumentAdminError("Seçilen sağlayıcı durum senkronunu desteklemiyor.", 400);
     }
@@ -309,13 +382,19 @@ export class DocumentDispatchService {
       forceFail: parsed.forceFail ?? false,
     };
 
+    const idempotencySuffix = buildDocumentStatusSyncIdempotencySuffix({
+      providerCode: provider.providerCode,
+      documentId: document.id,
+      providerReference: document.externalReference,
+    });
+
     const dispatchResult = await integrationService.dispatchJobs({
       channel: provider.channel,
       jobType: "DOCUMENT_STATUS_SYNC",
       entityType: "BUSINESS_DOCUMENT",
       entityIds: [document.id],
       maxAttempts: 3,
-      idempotencySuffix: `status-${provider.providerCode}-${Date.now()}`,
+      idempotencySuffix,
       payload,
     });
 
@@ -333,6 +412,10 @@ export class DocumentDispatchService {
         documentNumber: document.documentNumber,
         documentType: document.documentType,
         jobType: "DOCUMENT_STATUS_SYNC",
+        idempotencyKey: queuedJob?.idempotencyKey ?? null,
+        idempotencySuffix,
+        deduplicated: dispatchResult.deduplicated > 0,
+        providerReference: document.externalReference,
       },
       message: {
         direction: "OUTBOUND",
