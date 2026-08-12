@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { AUTH_COOKIE_NAME, LEGACY_AUTH_COOKIE_NAME } from "@/lib/auth";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { identityService } from "@/modules/identity/services/identity.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 import { AuthForm } from "@/ui/shop/auth-form";
 
 export default async function ShopLoginPage({
@@ -32,7 +33,8 @@ export default async function ShopLoginPage({
     : null;
 
   if (user) {
-    redirect(`/${locale}`);
+    const canAccessAdmin = await rbacService.hasPermission(user, "admin.access");
+    redirect(canAccessAdmin ? `/${locale}/admin` : `/${locale}`);
   }
 
   return (
@@ -72,6 +74,8 @@ export default async function ShopLoginPage({
         featureFast: dictionary.auth.featureFast,
         featureSafe: dictionary.auth.featureSafe,
         featureOrders: dictionary.auth.featureOrders,
+        staffLoginPrompt: dictionary.auth.staffLoginPrompt,
+        staffLoginCta: dictionary.auth.staffLoginCta,
       }}
     />
   );

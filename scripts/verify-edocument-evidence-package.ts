@@ -1,4 +1,5 @@
 import { DocumentEvidencePackageService } from "@/modules/documents/services/document-evidence-package.service";
+import { eDocumentService } from "@/modules/edocument/services/edocument.service";
 import { sha256 } from "@/modules/system/services/audit-integrity.service";
 
 function assert(condition: boolean, message: string) {
@@ -67,41 +68,39 @@ const documentRepository = {
   },
 };
 
-const eDocumentRepository = {
-  async listXmlArtifacts() {
-    return [{
-      id: "xml-current",
-      supersedesArtifactId: "xml-old",
-      documentRootType: "INVOICE",
-      schemaVersion: "UBL-TR-1.2.1",
-      xsdHash: "xsd-hash-current",
-      schematronHash: "schematron-hash-current",
-      xmlHash: "xml-hash-current",
-      validationStatus: "INVALID",
-      validationErrors: ["Resmi XSD eksik"],
-      generatedAt: now,
-      validatedAt: now,
-    }, {
-      id: "xml-old",
-      supersedesArtifactId: null,
-      documentRootType: "INVOICE",
-      schemaVersion: "UBL-TR-1.2.1",
-      xsdHash: null,
-      schematronHash: null,
-      xmlHash: "xml-hash-old",
-      validationStatus: "INVALID",
-      validationErrors: [],
-      generatedAt: new Date("2026-07-24T10:30:00.000Z"),
-      validatedAt: null,
-    }];
-  },
-};
+const mockXmlArtifacts = [{
+  id: "xml-current",
+  businessDocumentId: "document-1",
+  supersedesArtifactId: "xml-old",
+  documentRootType: "INVOICE",
+  schemaVersion: "UBL-TR-1.2.1",
+  xsdHash: "xsd-hash-current",
+  schematronHash: "schematron-hash-current",
+  xmlHash: "xml-hash-current",
+  validationStatus: "INVALID",
+  validationErrors: ["Resmi XSD eksik"],
+  isCurrent: true,
+  generatedAt: now.toISOString(),
+  validatedAt: now.toISOString(),
+}, {
+  id: "xml-old",
+  businessDocumentId: "document-1",
+  supersedesArtifactId: null,
+  documentRootType: "INVOICE",
+  schemaVersion: "UBL-TR-1.2.1",
+  xsdHash: null,
+  schematronHash: null,
+  xmlHash: "xml-hash-old",
+  validationStatus: "INVALID",
+  validationErrors: [],
+  isCurrent: false,
+  generatedAt: new Date("2026-07-24T10:30:00.000Z").toISOString(),
+  validatedAt: null,
+}];
 
 async function main() {
-  const service = new DocumentEvidencePackageService(
-    documentRepository as never,
-    eDocumentRepository as never,
-  );
+  const service = new DocumentEvidencePackageService(documentRepository as never);
+  eDocumentService.listXmlArtifacts = async () => mockXmlArtifacts as never;
 
   const evidencePackage = await service.buildPackage("document-1");
   const packageHash = evidencePackage.packageHash;

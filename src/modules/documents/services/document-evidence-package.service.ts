@@ -1,5 +1,5 @@
 import { DocumentRepository } from "@/modules/documents/repositories/document.repository";
-import { EDocumentRepository } from "@/modules/edocument/repositories/edocument.repository";
+import { eDocumentService } from "@/modules/edocument/services/edocument.service";
 import { sha256 } from "@/modules/system/services/audit-integrity.service";
 
 function toNumber(value: { toNumber: () => number } | null | undefined) {
@@ -7,20 +7,16 @@ function toNumber(value: { toNumber: () => number } | null | undefined) {
 }
 
 export class DocumentEvidencePackageService {
-  constructor(
-    private readonly repository: DocumentRepository,
-    private readonly eDocumentRepository: EDocumentRepository,
-  ) {}
+  constructor(private readonly repository: DocumentRepository) {}
 
   async buildPackage(documentId: string) {
     const [item, xmlArtifacts] = await Promise.all([
       this.repository.findBusinessDocumentById(documentId),
-      this.eDocumentRepository.listXmlArtifacts(documentId),
+      eDocumentService.listXmlArtifacts(documentId),
     ]);
     if (!item) {
       throw new Error("DOCUMENT_NOT_FOUND");
     }
-    const currentXmlArtifactId = xmlArtifacts[0]?.id ?? null;
 
     const evidence = {
       generatedAt: new Date().toISOString(),
@@ -60,26 +56,22 @@ export class DocumentEvidencePackageService {
         queuedAt: dispatch.queuedAt.toISOString(),
         dispatchedAt: dispatch.dispatchedAt?.toISOString() ?? null,
       })),
-      xmlArtifacts: xmlArtifacts.map((artifact) => {
-        return {
-          id: artifact.id,
-          supersedesArtifactId: artifact.supersedesArtifactId,
-          isCurrent: artifact.id === currentXmlArtifactId,
-          documentRootType: artifact.documentRootType,
-          schemaVersion: artifact.schemaVersion,
-          officialSchemaReady: artifact.xsdHash !== null,
-          xsdHash: artifact.xsdHash,
-          officialSchematronReady: artifact.schematronHash !== null,
-          schematronHash: artifact.schematronHash,
-          xmlHash: artifact.xmlHash,
-          validationStatus: artifact.validationStatus,
-          validationErrors: Array.isArray(artifact.validationErrors)
-            ? artifact.validationErrors.filter((error): error is string => typeof error === "string")
-            : [],
-          generatedAt: artifact.generatedAt.toISOString(),
-          validatedAt: artifact.validatedAt?.toISOString() ?? null,
-        };
-      }),
+      xmlArtifacts: xmlArtifacts.map((artifact) => ({
+        id: artifact.id,
+        supersedesArtifactId: artifact.supersedesArtifactId,
+        isCurrent: artifact.isCurrent,
+        documentRootType: artifact.documentRootType,
+        schemaVersion: artifact.schemaVersion,
+        officialSchemaReady: artifact.xsdHash !== null,
+        xsdHash: artifact.xsdHash,
+        officialSchematronReady: artifact.schematronHash !== null,
+        schematronHash: artifact.schematronHash,
+        xmlHash: artifact.xmlHash,
+        validationStatus: artifact.validationStatus,
+        validationErrors: artifact.validationErrors,
+        generatedAt: artifact.generatedAt,
+        validatedAt: artifact.validatedAt,
+      })),
       lifecycleEvents: (item.lifecycleEvents ?? []).map((event: {
         id: string;
         eventType: string;
@@ -134,7 +126,4 @@ export class DocumentEvidencePackageService {
   }
 }
 
-export const documentEvidencePackageService = new DocumentEvidencePackageService(
-  new DocumentRepository(),
-  new EDocumentRepository(),
-);
+export const documentEvidencePackageService = new DocumentEvidencePackageService(new DocumentRepository());

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 export class RbacRepository {
   async listPermissions() {
     return prisma.permission.findMany({
+      where: { deleted: false },
       orderBy: [{ module: "asc" }, { action: "asc" }],
     });
   }
@@ -149,6 +150,17 @@ export class RbacRepository {
         deletedDate: new Date(),
         deletedUserId: input.deletedUserId,
         isActive: false,
+      },
+    });
+  }
+
+  async softDeletePermission(input: { id: string; deletedUserId: string }) {
+    return prisma.permission.update({
+      where: { id: input.id },
+      data: {
+        deleted: true,
+        deletedDate: new Date(),
+        deletedUserId: input.deletedUserId,
       },
     });
   }

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { CommerceRepository } from "@/modules/commerce/repositories/commerce.repository";
+import { commerceService } from "@/modules/commerce/services/commerce.service";
 import type {
   AdminCollectionRecordItem,
   AdminCollectionsResult,
@@ -13,7 +13,7 @@ import { financeOrderCustomerLinkService } from "@/modules/finance/services/fina
 import { financeAccountEntryService } from "@/modules/finance/services/finance-account-entry.service";
 import { resolveFinanceIntegrationActorUserId } from "@/modules/finance/services/finance-integration-actor.util";
 import { buildFinanceMovementReference } from "@/modules/finance/services/finance-movement-reference.service";
-import { cashTransactionsService } from "@/modules/finance/services/cash-transactions.service";
+import { cashTransactionsService, invalidateFinanceCache } from "@/modules/finance/services/cash-transactions.service";
 import { receivablesService } from "@/modules/finance/services/receivables.service";
 import { resolveFinanceServiceMessages } from "@/modules/finance/services/finance-service-messages.resolver";
 
@@ -44,8 +44,6 @@ function mapCollectionRecord(item: Awaited<ReturnType<typeof financeRepository.l
 }
 
 export class CollectionsService {
-  private readonly commerceRepository = new CommerceRepository();
-
   async listCollectionReadiness(locale: string): Promise<AdminCollectionsResult> {
     const result = await receivablesService.listOperationalReceivables({
       page: 1,
@@ -181,10 +179,9 @@ export class CollectionsService {
     const newRemainingAmount = Number((remainingAmount - parsed.amount).toFixed(2));
 
     if (newRemainingAmount <= 0) {
-      await this.commerceRepository.updateOrderPaymentStatus({
+      await commerceService.updateOrderStatus({
         id: parsed.orderId,
-        fromStatus: receivable.paymentStatus,
-        toStatus: "PAID",
+        paymentStatus: "PAID",
         changedByUserId: parsed.recordedByUserId,
         note: parsed.note ?? "Tahsilat tamamlandı ve ödeme durumu PAID olarak işaretlendi.",
       });
@@ -196,6 +193,7 @@ export class CollectionsService {
       console.error("PF8 defter projeksiyonu (tahsilat) başarısız oldu.", error);
     }
 
+    await invalidateFinanceCache();
     return mapCollectionRecord(created);
   }
 

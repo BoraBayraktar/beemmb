@@ -19,7 +19,7 @@ import type {
   SocialAuthProfile,
 } from "@/modules/identity/contracts/identity.contract";
 import { IdentityRepository } from "@/modules/identity/repositories/identity.repository";
-import { NotificationEmailRepository } from "@/modules/system/repositories/notification-email.repository";
+import { notificationService } from "@/modules/system/services/notification.service";
 
 const loginSchema = z.object({
   email: z.string().trim().email(),
@@ -107,10 +107,7 @@ function getApplePrivateKey() {
 }
 
 export class IdentityService {
-  constructor(
-    private readonly repository: IdentityRepository,
-    private readonly emailRepository: NotificationEmailRepository,
-  ) {}
+  constructor(private readonly repository: IdentityRepository) {}
 
   private async createSessionForUser(user: AuthUser): Promise<LoginResult> {
     const sid = randomUUID();
@@ -275,7 +272,7 @@ export class IdentityService {
       : `Hello ${account.name},\n\nUse the link below to reset your password:\n${resetUrl}\n\nThis link is valid for 30 minutes.\nIf you did not request this, you can ignore this email.`;
 
     try {
-      await this.emailRepository.send({
+      await notificationService.sendEmail({
         to: account.email,
         subject,
         text,
@@ -484,7 +481,4 @@ export class IdentityService {
   }
 }
 
-export const identityService = new IdentityService(
-  new IdentityRepository(),
-  new NotificationEmailRepository(),
-);
+export const identityService = new IdentityService(new IdentityRepository());

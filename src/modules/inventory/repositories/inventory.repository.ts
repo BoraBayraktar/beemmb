@@ -824,6 +824,7 @@ export class InventoryRepository {
 
   async listWarehouses() {
     return prisma.warehouse.findMany({
+      where: { deleted: false },
       orderBy: [
         { isDefault: "desc" },
         { priority: "asc" },
@@ -844,12 +845,47 @@ export class InventoryRepository {
       where: {
         id,
         isActive: true,
+        deleted: false,
       },
       select: {
         id: true,
         code: true,
         name: true,
         isDefault: true,
+      },
+    });
+  }
+
+  async softDeleteWarehouse(input: { id: string; deletedUserId: string }) {
+    return prisma.warehouse.update({
+      where: { id: input.id },
+      data: {
+        deleted: true,
+        deletedDate: new Date(),
+        deletedUserId: input.deletedUserId,
+        isActive: false,
+      },
+    });
+  }
+
+  async softDeleteInventoryItem(input: { id: string; deletedUserId: string }) {
+    return prisma.inventoryItem.update({
+      where: { id: input.id },
+      data: {
+        deleted: true,
+        deletedDate: new Date(),
+        deletedUserId: input.deletedUserId,
+      },
+    });
+  }
+
+  async softDeletePurchaseReceipt(input: { id: string; deletedUserId: string }) {
+    return prisma.purchaseReceipt.update({
+      where: { id: input.id },
+      data: {
+        deleted: true,
+        deletedDate: new Date(),
+        deletedUserId: input.deletedUserId,
       },
     });
   }

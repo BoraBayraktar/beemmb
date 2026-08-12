@@ -1,3 +1,4 @@
+import { redisCache } from "@/lib/redis";
 import type { AdminFinanceOverview } from "@/modules/finance/contracts/finance-overview.contract";
 import { resolveFinanceOverviewCopy } from "@/modules/finance/services/finance-overview-copy.resolver";
 import { financialAccountsService } from "@/modules/finance/services/financial-accounts.service";
@@ -6,6 +7,12 @@ import { receivablesService } from "@/modules/finance/services/receivables.servi
 
 export class FinanceOverviewService {
   async getOverview(locale: string): Promise<AdminFinanceOverview> {
+    const cacheKey = `finance:overview:${locale}`;
+    const cached = await redisCache.get<AdminFinanceOverview>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     const copy = resolveFinanceOverviewCopy(locale);
     const [payables, receivablesSummary, accountSummary] = await Promise.all([
       payablesService.listSupplierPayables().then((result) => result.items),
@@ -18,7 +25,7 @@ export class FinanceOverviewService {
     const openOrderCount =
       receivablesSummary.pendingCount + receivablesSummary.authorizedCount + receivablesSummary.failedCount;
 
-    return {
+    const overview: AdminFinanceOverview = {
       metrics: [
         {
           label: copy.metricOpenReceivableLabel,
@@ -115,6 +122,10 @@ export class FinanceOverviewService {
         },
       ],
     };
+
+    await redisCache.set(cacheKey, overview, 120);
+
+    return overview;
   }
 }
 

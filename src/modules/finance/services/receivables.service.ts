@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { redisCache } from "@/lib/redis";
 import type {
   AdminReceivableDetail,
   AdminReceivableListItem,
@@ -117,6 +118,20 @@ function paginateReceivables(items: AdminReceivableListItem[], page: number, pag
 export class ReceivablesService {
   async listOperationalReceivables(query: AdminReceivablesQuery = {}): Promise<AdminReceivablesResult> {
     const parsed = listQuerySchema.parse(query);
+    const cacheKey = [
+      "finance:receivables:list",
+      parsed.search ?? "",
+      parsed.paymentStatus,
+      parsed.overdueOnly,
+      parsed.page,
+      parsed.pageSize,
+      parsed.locale ?? "",
+    ].join(":");
+    const cached = await redisCache.get<AdminReceivablesResult>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     const messages = resolveFinanceServiceMessages(parsed.locale);
     const paymentStatuses = resolveStatuses(parsed.paymentStatus);
 
@@ -140,11 +155,13 @@ export class ReceivablesService {
       );
       const pageResult = paginateReceivables(filtered, parsed.page, parsed.pageSize);
 
-      return {
+      const overdueResult: AdminReceivablesResult = {
         ...pageResult,
         summary,
         dueKpi,
       };
+      await redisCache.set(cacheKey, overdueResult, 120);
+      return overdueResult;
     }
 
     const [items, total, dueSnapshots] = await Promise.all([
@@ -176,7 +193,7 @@ export class ReceivablesService {
       })),
     );
 
-    return {
+    const result: AdminReceivablesResult = {
       items: items.map((item: ReceivableSource) => mapReceivable(item, messages.receivables.unlinkedCustomer)),
       page: parsed.page,
       pageSize: parsed.pageSize,
@@ -185,10 +202,20 @@ export class ReceivablesService {
       summary,
       dueKpi,
     };
+    await redisCache.set(cacheKey, result, 120);
+    return result;
   }
 
   async getReceivablesSummary(): Promise<AdminReceivablesSummary> {
-    return financeRepository.summarizeOperationalReceivables();
+    const cacheKey = "finance:receivables:summary";
+    const cached = await redisCache.get<AdminReceivablesSummary>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const summary = await financeRepository.summarizeOperationalReceivables();
+    await redisCache.set(cacheKey, summary, 300);
+    return summary;
   }
 
   async getReceivableByOrderId(orderId: string, locale?: string): Promise<AdminReceivableDetail | null> {

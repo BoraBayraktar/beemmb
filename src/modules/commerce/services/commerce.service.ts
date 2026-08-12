@@ -26,7 +26,6 @@ import { CommerceRepository } from "@/modules/commerce/repositories/commerce.rep
 import { integrationService } from "@/modules/integration/services/integration.service";
 import { inventoryService } from "@/modules/inventory/services/inventory.service";
 import { cashTransactionsService } from "@/modules/finance/services/cash-transactions.service";
-import { financeRepository } from "@/modules/finance/repositories/finance.repository";
 import { pricingService } from "@/modules/pricing/services/pricing.service";
 
 const lineSchema = z.object({
@@ -664,7 +663,7 @@ export class CommerceService {
     const parsed = orderIdSchema.parse({ id });
     const [order, financialMovements] = await Promise.all([
       this.repository.findOrderById(parsed.id),
-      financeRepository.listCashTransactionsBySourceReferenceId(parsed.id),
+      cashTransactionsService.listTransactionsBySourceReferenceId(parsed.id),
     ]);
 
     if (!order) {

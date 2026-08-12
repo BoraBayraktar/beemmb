@@ -1,3 +1,4 @@
+import { redisCache } from "@/lib/redis";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import type { AdminFinanceReportDateRangeQuery } from "@/modules/finance/contracts/finance-report-date-range.contract";
 import type {
@@ -84,7 +85,22 @@ async function loadReportPeriodTransactions(query: AdminFinanceReportDateRangeQu
 }
 
 export class ReportsService {
+  private async withReportCache<T>(cacheKey: string, ttlSeconds: number, factory: () => Promise<T>): Promise<T> {
+    const cached = await redisCache.get<T>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const result = await factory();
+    await redisCache.set(cacheKey, result, ttlSeconds);
+    return result;
+  }
+
   async getOverview(locale: string): Promise<AdminFinanceReportsOverview> {
+    return this.withReportCache(`finance:reports:overview:${locale}`, 300, () => this.getOverviewInternal(locale));
+  }
+
+  private async getOverviewInternal(locale: string): Promise<AdminFinanceReportsOverview> {
     const copy = resolveFinanceReportsCopy(locale);
     const [, payables, receivables, financialAccounts, transactions] = await Promise.all([
       accountsService.listAccountEntries(locale),
@@ -187,6 +203,17 @@ export class ReportsService {
   }
 
   async getIncomeExpenseReport(
+    locale: string,
+    query: AdminFinanceReportDateRangeQuery = {},
+  ): Promise<AdminFinanceReportDetail> {
+    return this.withReportCache(
+      `finance:reports:income-expense:${locale}:${query.from ?? ""}:${query.to ?? ""}:${query.financialAccountId ?? ""}`,
+      300,
+      () => this.getIncomeExpenseReportInternal(locale, query),
+    );
+  }
+
+  private async getIncomeExpenseReportInternal(
     locale: string,
     query: AdminFinanceReportDateRangeQuery = {},
   ): Promise<AdminFinanceReportDetail> {
@@ -355,6 +382,14 @@ export class ReportsService {
   }
 
   async getCollectionPaymentPerformanceReport(locale: string): Promise<AdminFinanceReportDetail> {
+    return this.withReportCache(
+      `finance:reports:collection-payment-performance:${locale}`,
+      300,
+      () => this.getCollectionPaymentPerformanceReportInternal(locale),
+    );
+  }
+
+  private async getCollectionPaymentPerformanceReportInternal(locale: string): Promise<AdminFinanceReportDetail> {
     const copy = resolveFinanceReportsCopy(locale);
     const [collections, payments] = await Promise.all([
       collectionsService.listCollectionReadiness(locale),
@@ -434,6 +469,17 @@ export class ReportsService {
   }
 
   async getAgingReport(
+    locale: string,
+    query: AdminFinanceReportDateRangeQuery = {},
+  ): Promise<AdminFinanceReportDetail> {
+    return this.withReportCache(
+      `finance:reports:aging:${locale}:${query.from ?? ""}:${query.to ?? ""}:${query.financialAccountId ?? ""}`,
+      300,
+      () => this.getAgingReportInternal(locale, query),
+    );
+  }
+
+  private async getAgingReportInternal(
     locale: string,
     query: AdminFinanceReportDateRangeQuery = {},
   ): Promise<AdminFinanceReportDetail> {
@@ -571,6 +617,17 @@ export class ReportsService {
   }
 
   async getCashflowReport(
+    locale: string,
+    query: AdminFinanceReportDateRangeQuery = {},
+  ): Promise<AdminFinanceReportDetail> {
+    return this.withReportCache(
+      `finance:reports:cashflow:${locale}:${query.from ?? ""}:${query.to ?? ""}:${query.financialAccountId ?? ""}`,
+      300,
+      () => this.getCashflowReportInternal(locale, query),
+    );
+  }
+
+  private async getCashflowReportInternal(
     locale: string,
     query: AdminFinanceReportDateRangeQuery = {},
   ): Promise<AdminFinanceReportDetail> {
@@ -736,6 +793,17 @@ export class ReportsService {
     locale: string,
     query: AdminFinanceReportDateRangeQuery = {},
   ): Promise<AdminFinanceReportDetail> {
+    return this.withReportCache(
+      `finance:reports:bank-cash-movement:${locale}:${query.from ?? ""}:${query.to ?? ""}:${query.financialAccountId ?? ""}`,
+      300,
+      () => this.getBankCashMovementReportInternal(locale, query),
+    );
+  }
+
+  private async getBankCashMovementReportInternal(
+    locale: string,
+    query: AdminFinanceReportDateRangeQuery = {},
+  ): Promise<AdminFinanceReportDetail> {
     const copy = resolveFinanceReportsCopy(locale);
     const { range, transactions } = await loadReportPeriodTransactions(query);
     const financialAccounts = await financialAccountsService.listAccounts();
@@ -856,6 +924,17 @@ export class ReportsService {
     locale: string,
     query: AdminFinanceReportDateRangeQuery = {},
   ): Promise<AdminFinanceReportDetail> {
+    return this.withReportCache(
+      `finance:reports:vat-summary:${locale}:${query.from ?? ""}:${query.to ?? ""}:${query.financialAccountId ?? ""}`,
+      300,
+      () => this.getVatSummaryReportInternal(locale, query),
+    );
+  }
+
+  private async getVatSummaryReportInternal(
+    locale: string,
+    query: AdminFinanceReportDateRangeQuery = {},
+  ): Promise<AdminFinanceReportDetail> {
     const copy = resolveFinanceReportsCopy(locale);
     const range = parseFinanceReportDateRangeQuery(query);
     const summary = await financeVatSummaryService.getSummary({
@@ -957,6 +1036,17 @@ export class ReportsService {
     locale: string,
     query: AdminFinanceReportDateRangeQuery = {},
   ): Promise<AdminFinanceReportDetail> {
+    return this.withReportCache(
+      `finance:reports:trial-balance:${locale}:${query.from ?? ""}:${query.to ?? ""}:${query.financialAccountId ?? ""}`,
+      300,
+      () => this.getTrialBalanceReportInternal(locale, query),
+    );
+  }
+
+  private async getTrialBalanceReportInternal(
+    locale: string,
+    query: AdminFinanceReportDateRangeQuery = {},
+  ): Promise<AdminFinanceReportDetail> {
     const copy = resolveFinanceReportsCopy(locale);
     const range = parseFinanceReportDateRangeQuery(query);
     const summary = await financeTrialBalanceService.getSummary({
@@ -1039,6 +1129,14 @@ export class ReportsService {
   }
 
   async getStockValueReport(locale: string): Promise<AdminFinanceReportDetail> {
+    return this.withReportCache(
+      `finance:reports:stock-value:${locale}`,
+      300,
+      () => this.getStockValueReportInternal(locale),
+    );
+  }
+
+  private async getStockValueReportInternal(locale: string): Promise<AdminFinanceReportDetail> {
     const copy = resolveFinanceReportsCopy(locale);
     const agingBuckets = copy.agingBuckets;
     const products = await catalogAdminService.listProducts({

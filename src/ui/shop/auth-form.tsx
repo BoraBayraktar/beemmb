@@ -41,6 +41,8 @@ type Labels = {
   featureFast: string;
   featureSafe: string;
   featureOrders: string;
+  staffLoginPrompt?: string;
+  staffLoginCta?: string;
 };
 
 type Props = {
@@ -123,7 +125,9 @@ export function AuthForm({
         return;
       }
 
-      router.push(redirectTo);
+      const data = await response.json().catch(() => null);
+      const target = data?.canAccessAdmin ? `/${locale}/admin` : redirectTo;
+      router.push(target);
       router.refresh();
     } catch {
       setError(labels.invalidCredentials);
@@ -326,6 +330,13 @@ export function AuthForm({
               {labels.switchText}{" "}
               <Link href={`/${locale}/${switchHref}`}>{labels.switchCta}</Link>
             </p>
+
+            {mode === "login" && labels.staffLoginPrompt && labels.staffLoginCta ? (
+              <p className={styles.authSwitch}>
+                {labels.staffLoginPrompt}{" "}
+                <Link href={`/${locale}/admin/login`}>{labels.staffLoginCta}</Link>
+              </p>
+            ) : null}
           </form>
         </div>
       </section>

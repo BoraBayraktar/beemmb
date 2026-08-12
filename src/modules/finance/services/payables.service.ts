@@ -1,3 +1,4 @@
+import { redisCache } from "@/lib/redis";
 import { documentService } from "@/modules/documents/services/document.service";
 import { financeRepository } from "@/modules/finance/repositories/finance.repository";
 import type {
@@ -98,6 +99,12 @@ function buildSupplierSummaryFromDocuments(
 
 export class PayablesService {
   async listSupplierPayables(query: AdminSupplierPayablesQuery = {}): Promise<AdminSupplierPayablesListResult> {
+    const cacheKey = `finance:payables:list:${query.search ?? ""}:${query.overdueOnly ?? false}`;
+    const cached = await redisCache.get<AdminSupplierPayablesListResult>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     const documents = await documentService.listOperationalPayableDocuments(query.search);
     const dueKpi = buildFinanceDueKpi(
       documents.map((document) => ({
@@ -125,7 +132,9 @@ export class PayablesService {
       };
     }));
 
-    return { items, dueKpi };
+    const result: AdminSupplierPayablesListResult = { items, dueKpi };
+    await redisCache.set(cacheKey, result, 120);
+    return result;
   }
 
   async getSupplierPayableByKey(supplierKey: string): Promise<AdminSupplierPayableDetail | null> {

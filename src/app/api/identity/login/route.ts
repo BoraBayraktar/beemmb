@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { AUTH_COOKIE_NAME, AUTH_TOKEN_REMEMBER_ME_TTL_SECONDS, AUTH_TOKEN_TTL_SECONDS } from "@/lib/auth";
 import { identityService } from "@/modules/identity/services/identity.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 function maskEmail(value: unknown) {
@@ -43,7 +44,8 @@ export async function POST(request: Request) {
     },
   });
 
-  const response = NextResponse.json({ user: result.user });
+  const canAccessAdmin = await rbacService.hasPermission(result.user, "admin.access");
+  const response = NextResponse.json({ user: result.user, canAccessAdmin });
   response.cookies.set({
     name: AUTH_COOKIE_NAME,
     value: result.token,

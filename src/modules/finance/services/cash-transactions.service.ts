@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { redisCache } from "@/lib/redis";
 import type {
   AdminCashTransactionCategory,
   AdminCashTransactionDetail,
@@ -43,6 +44,15 @@ const createCashTransactionSchema = z.object({
   counterpartyName: z.string().trim().max(160).optional().nullable(),
   recordedByUserId: z.string().trim().min(1).optional().nullable(),
 });
+
+export async function invalidateFinanceCache() {
+  await Promise.all([
+    redisCache.delByPrefix("finance:overview:"),
+    redisCache.delByPrefix("finance:reports:"),
+    redisCache.delByPrefix("finance:receivables:"),
+    redisCache.delByPrefix("finance:payables:"),
+  ]);
+}
 
 function mapTransaction(
   item: Awaited<ReturnType<typeof financeRepository.listCashTransactions>>[number]
@@ -140,6 +150,10 @@ export class CashTransactionsService {
       toDate: range.toDate,
       accountId: parsed.financialAccountId,
     });
+  }
+
+  async listTransactionsBySourceReferenceId(sourceReferenceId: string) {
+    return financeRepository.listCashTransactionsBySourceReferenceId(sourceReferenceId);
   }
 
   async getTransactionDetail(id: string): Promise<AdminCashTransactionDetail | null> {
@@ -245,6 +259,7 @@ export class CashTransactionsService {
         console.error("PF8 defter projeksiyonu (transfer) başarısız oldu.", error);
       }
 
+      await invalidateFinanceCache();
       return mapTransaction(createdTarget);
     }
 
@@ -269,6 +284,7 @@ export class CashTransactionsService {
       console.error("PF8 defter projeksiyonu (nakit hareket) başarısız oldu.", error);
     }
 
+    await invalidateFinanceCache();
     return mapTransaction(created);
   }
 }

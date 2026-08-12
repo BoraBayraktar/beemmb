@@ -109,6 +109,13 @@ export class NotificationService {
     await this.repository.markAllAsRead(userId);
   }
 
+  async sendEmail(
+    input: { to: string; subject: string; text: string },
+    options?: { requireLiveTransport?: boolean },
+  ) {
+    await this.emailRepository.send(input, options);
+  }
+
   async processEmailQueue(input: ProcessNotificationEmailQueueInput): Promise<ProcessNotificationEmailQueueResult> {
     const parsed = processEmailQueueSchema.parse(input);
     const pending = await this.repository.listPendingEmail(parsed.limit);

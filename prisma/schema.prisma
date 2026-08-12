@@ -657,16 +657,20 @@ model PaymentRecord {
 }
 
 model FinanceLedgerAccount {
-  id        String                      @id @default(cuid())
-  code      String                      @unique
-  name      String
-  category  FinanceLedgerAccountCategory
-  isActive  Boolean                     @default(true)
-  createdAt DateTime                    @default(now())
-  updatedAt DateTime                    @updatedAt
-  entries   FinanceAccountEntry[]
+  id            String                      @id @default(cuid())
+  code          String                      @unique
+  name          String
+  category      FinanceLedgerAccountCategory
+  isActive      Boolean                     @default(true)
+  deleted       Boolean                     @default(false)
+  deletedDate   DateTime?
+  deletedUserId String?
+  createdAt     DateTime                    @default(now())
+  updatedAt     DateTime                    @updatedAt
+  entries       FinanceAccountEntry[]
 
   @@index([isActive, code])
+  @@index([deleted])
 }
 
 model FinanceAccountEntry {
@@ -955,6 +959,9 @@ model Warehouse {
   priority                      Int                           @default(100)
   isActive                      Boolean                       @default(true)
   isDefault                     Boolean                       @default(false)
+  deleted                       Boolean                       @default(false)
+  deletedDate                   DateTime?
+  deletedUserId                 String?
   createdAt                     DateTime                      @default(now())
   updatedAt                     DateTime                      @updatedAt
   inventoryLevels               InventoryLevel[]
@@ -974,6 +981,7 @@ model Warehouse {
 
   @@index([isActive, isDefault])
   @@index([priority])
+  @@index([deleted])
 }
 
 model InventoryItem {
@@ -984,6 +992,9 @@ model InventoryItem {
   costingMethod             InventoryCostingMethod     @default(AVERAGE_COST)
   averageUnitCost           Decimal?                   @db.Decimal(10, 2)
   lastPurchaseUnitCost      Decimal?                   @db.Decimal(10, 2)
+  deleted                   Boolean                    @default(false)
+  deletedDate               DateTime?
+  deletedUserId             String?
   createdAt                 DateTime                   @default(now())
   updatedAt                 DateTime                   @updatedAt
   inventoryAlerts           InventoryAlert[]
@@ -998,6 +1009,7 @@ model InventoryItem {
   @@unique([productId])
   @@index([productId])
   @@index([productVariantId])
+  @@index([deleted])
 }
 
 model InventoryLevel {
@@ -1158,6 +1170,9 @@ model PurchaseReceipt {
   note              String?
   warehouseId       String
   transactionId     String                @unique
+  deleted           Boolean               @default(false)
+  deletedDate       DateTime?
+  deletedUserId     String?
   createdAt         DateTime              @default(now())
   updatedAt         DateTime              @updatedAt
   warehouse         Warehouse             @relation(fields: [warehouseId], references: [id])
@@ -1166,6 +1181,7 @@ model PurchaseReceipt {
 
   @@index([warehouseId, receiptDate])
   @@index([supplierName, receiptDate])
+  @@index([deleted])
 }
 
 model PurchaseReceiptLine {
@@ -1486,19 +1502,23 @@ model Role {
 }
 
 model Permission {
-  id          String           @id @default(cuid())
-  key         String           @unique
-  module      String
-  action      String
-  menuKey     String?
-  name        String
-  description String?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  roles       RolePermission[]
+  id            String           @id @default(cuid())
+  key           String           @unique
+  module        String
+  action        String
+  menuKey       String?
+  name          String
+  description   String?
+  deleted       Boolean          @default(false)
+  deletedDate   DateTime?
+  deletedUserId String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  roles         RolePermission[]
 
   @@index([module, action])
   @@index([menuKey])
+  @@index([deleted])
 }
 
 model RolePermission {

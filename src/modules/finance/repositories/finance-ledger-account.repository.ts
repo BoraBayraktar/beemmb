@@ -6,14 +6,27 @@ export class FinanceLedgerAccountRepository {
       where: {
         code,
         isActive: true,
+        deleted: false,
       },
     });
   }
 
   async listActive() {
     return (prisma as any).financeLedgerAccount.findMany({
-      where: { isActive: true },
+      where: { isActive: true, deleted: false },
       orderBy: { code: "asc" },
+    });
+  }
+
+  async softDelete(input: { id: string; deletedUserId: string }) {
+    return (prisma as any).financeLedgerAccount.update({
+      where: { id: input.id },
+      data: {
+        deleted: true,
+        deletedDate: new Date(),
+        deletedUserId: input.deletedUserId,
+        isActive: false,
+      },
     });
   }
 }

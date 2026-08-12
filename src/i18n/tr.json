@@ -25,6 +25,8 @@
     "emailExists": "Bu e-posta zaten kayıtlı.",
     "noAccount": "Hesabın yok mu?",
     "haveAccount": "Zaten hesabın var mı?",
+    "staffLoginPrompt": "Personel misiniz?",
+    "staffLoginCta": "Yönetim paneli girişi",
     "forgotPassword": "Şifremi unuttum",
     "rememberMe": "Beni hatırla",
     "socialDivider": "Veya alternatif giriş yöntemleri",
