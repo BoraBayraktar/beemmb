@@ -11,6 +11,7 @@ import type {
   AdminOrderListItem,
   AdminOrderListQuery,
   AdminOrderListResult,
+  AdminOrderShipmentInfo,
   AdminPaymentStatusHistoryEntry,
   AdminOrderSummary,
   AdminOrderStatusHistoryEntry,
@@ -20,7 +21,9 @@ import type {
   CommerceLineQuote,
   CommerceQuoteInput,
   CommerceQuoteResult,
+  UpdateOrderShipmentInput,
 } from "@/modules/commerce/contracts/commerce.contract";
+import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { customerAccountService } from "@/modules/customers/services/customer-account.service";
 import { CommerceRepository } from "@/modules/commerce/repositories/commerce.repository";
 import { integrationService } from "@/modules/integration/services/integration.service";
@@ -49,6 +52,26 @@ const orderListQuerySchema = z.object({
 
 const orderIdSchema = z.object({
   id: z.string().trim().min(1),
+});
+
+const updateOrderShipmentSchema = z.object({
+  id: z.string().trim().min(1),
+  shipmentStatus: z.enum(["NOT_SHIPPED", "PREPARING", "SHIPPED", "DELIVERED", "RETURNED"]).optional(),
+  shipmentAddressLine: z.string().trim().max(300).optional().nullable(),
+  shipmentCity: z.string().trim().max(120).optional().nullable(),
+  shipmentDistrict: z.string().trim().max(120).optional().nullable(),
+  shipmentPostalCode: z.string().trim().max(20).optional().nullable(),
+  shipmentCountry: z.string().trim().max(2).optional().nullable(),
+  shipmentContactName: z.string().trim().max(160).optional().nullable(),
+  shipmentContactPhone: z.string().trim().max(40).optional().nullable(),
+  invoiceAddressLine: z.string().trim().max(300).optional().nullable(),
+  invoiceCity: z.string().trim().max(120).optional().nullable(),
+  invoiceDistrict: z.string().trim().max(120).optional().nullable(),
+  invoicePostalCode: z.string().trim().max(20).optional().nullable(),
+  carrierCompanyId: z.string().trim().min(1).optional().nullable(),
+  cargoTrackingNumber: z.string().trim().max(120).optional().nullable(),
+  cargoShippedAt: z.string().trim().datetime().optional().nullable(),
+  cargoDeliveredAt: z.string().trim().datetime().optional().nullable(),
 });
 
 const updateOrderStatusSchema = z.object({
@@ -223,6 +246,25 @@ function mapOrderDetail(order: {
     name: string;
     email: string | null;
   } | null;
+  carrierCompany: {
+    id: string;
+    name: string;
+  } | null;
+  shipmentStatus: "NOT_SHIPPED" | "PREPARING" | "SHIPPED" | "DELIVERED" | "RETURNED";
+  shipmentAddressLine: string | null;
+  shipmentCity: string | null;
+  shipmentDistrict: string | null;
+  shipmentPostalCode: string | null;
+  shipmentCountry: string | null;
+  shipmentContactName: string | null;
+  shipmentContactPhone: string | null;
+  invoiceAddressLine: string | null;
+  invoiceCity: string | null;
+  invoiceDistrict: string | null;
+  invoicePostalCode: string | null;
+  cargoTrackingNumber: string | null;
+  cargoShippedAt: Date | null;
+  cargoDeliveredAt: Date | null;
   status: "CONFIRMED" | "CANCELLED";
   paymentStatus: "PENDING" | "AUTHORIZED" | "PAID" | "FAILED" | "REFUNDED";
   subtotal: { toNumber: () => number };
@@ -301,7 +343,7 @@ function mapOrderDetail(order: {
       transactionNumber: string;
     } | null;
   }>;
-  financialMovements: Array<{
+  financialMovements?: Array<{
     id: string;
     account: {
       name: string;
@@ -387,7 +429,7 @@ function mapOrderDetail(order: {
     inventoryTransactionNumber: item.inventoryTransaction?.transactionNumber ?? null,
   }));
 
-  const financialMovements: AdminOrderFinancialMovementEntry[] = order.financialMovements.map((item) => ({
+  const financialMovements: AdminOrderFinancialMovementEntry[] = (order.financialMovements ?? []).map((item) => ({
     id: item.id,
     accountName: item.account.name,
     direction: item.direction,
@@ -400,6 +442,26 @@ function mapOrderDetail(order: {
     counterpartyName: item.counterpartyName,
     transactionAt: item.transactionAt.toISOString(),
   }));
+
+  const shipment: AdminOrderShipmentInfo = {
+    shipmentStatus: order.shipmentStatus,
+    shipmentAddressLine: order.shipmentAddressLine,
+    shipmentCity: order.shipmentCity,
+    shipmentDistrict: order.shipmentDistrict,
+    shipmentPostalCode: order.shipmentPostalCode,
+    shipmentCountry: order.shipmentCountry,
+    shipmentContactName: order.shipmentContactName,
+    shipmentContactPhone: order.shipmentContactPhone,
+    invoiceAddressLine: order.invoiceAddressLine,
+    invoiceCity: order.invoiceCity,
+    invoiceDistrict: order.invoiceDistrict,
+    invoicePostalCode: order.invoicePostalCode,
+    carrierCompanyId: order.carrierCompany?.id ?? null,
+    carrierCompanyName: order.carrierCompany?.name ?? null,
+    cargoTrackingNumber: order.cargoTrackingNumber,
+    cargoShippedAt: order.cargoShippedAt?.toISOString() ?? null,
+    cargoDeliveredAt: order.cargoDeliveredAt?.toISOString() ?? null,
+  };
 
   return {
     id: order.id,
@@ -423,6 +485,7 @@ function mapOrderDetail(order: {
     financialMovements,
     statusHistory,
     paymentStatusHistory,
+    shipment,
   };
 }
 
@@ -752,6 +815,45 @@ export class CommerceService {
     }
 
     await this.repository.softDeleteOrder(parsed.id, deletedUserId);
+  }
+
+  async updateOrderShipmentInfo(input: UpdateOrderShipmentInput): Promise<AdminOrderDetail> {
+    const parsed = updateOrderShipmentSchema.parse(input);
+
+    const existing = await this.repository.findOrderById(parsed.id);
+    if (!existing) {
+      throw new CommerceOrderAdminError("Order not found", 404);
+    }
+
+    if (parsed.carrierCompanyId) {
+      const carrierCompany = await catalogAdminService.getCarrierCompanyById(parsed.carrierCompanyId);
+      if (!carrierCompany) {
+        throw new CommerceOrderAdminError("Kargo firması bulunamadı", 400);
+      }
+    }
+
+    await this.repository.updateOrderShipment({
+      id: parsed.id,
+      shipmentStatus: parsed.shipmentStatus,
+      shipmentAddressLine: parsed.shipmentAddressLine,
+      shipmentCity: parsed.shipmentCity,
+      shipmentDistrict: parsed.shipmentDistrict,
+      shipmentPostalCode: parsed.shipmentPostalCode,
+      shipmentCountry: parsed.shipmentCountry,
+      shipmentContactName: parsed.shipmentContactName,
+      shipmentContactPhone: parsed.shipmentContactPhone,
+      invoiceAddressLine: parsed.invoiceAddressLine,
+      invoiceCity: parsed.invoiceCity,
+      invoiceDistrict: parsed.invoiceDistrict,
+      invoicePostalCode: parsed.invoicePostalCode,
+      carrierCompanyId: parsed.carrierCompanyId,
+      cargoTrackingNumber: parsed.cargoTrackingNumber,
+      cargoShippedAt: parsed.cargoShippedAt !== undefined ? (parsed.cargoShippedAt ? new Date(parsed.cargoShippedAt) : null) : undefined,
+      cargoDeliveredAt: parsed.cargoDeliveredAt !== undefined ? (parsed.cargoDeliveredAt ? new Date(parsed.cargoDeliveredAt) : null) : undefined,
+    });
+
+    const updated = await this.repository.findOrderById(parsed.id);
+    return mapOrderDetail(updated);
   }
 
   async linkCustomerAccountFromOrderDocuments(orderId: string): Promise<string | null> {

@@ -20,6 +20,7 @@
     "verify:crud": "node scripts/verify-product-crud.mjs",
     "verify:storefront": "node scripts/verify-storefront.mjs",
     "verify:categories": "node scripts/verify-categories.mjs",
+    "verify:carriers": "node scripts/verify-carrier-companies.mjs",
     "verify:users": "node scripts/verify-users.mjs",
     "verify:auth": "node scripts/verify-auth.mjs",
     "verify:checkout": "node scripts/verify-checkout.mjs",
@@ -147,5 +148,13 @@
     "tailwindcss": "^4.3.2",
     "tsx": "^4.23.0",
     "typescript": "^5"
+  },
+  "allowScripts": {
+    "@prisma/client@6.18.0": true,
+    "@prisma/engines@6.18.0": true,
+    "esbuild@0.28.1": true,
+    "prisma@6.18.0": true,
+    "sharp@0.34.5": true,
+    "unrs-resolver@1.12.2": true
   }
 }

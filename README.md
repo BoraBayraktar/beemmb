@@ -1,7 +1,8 @@
 # BEEMMB
 
-BEEMMB, modular monolith mimarisi ile gelistirilen cok asamali e-ticaret sistemidir.
-Bu ilk implementasyon, Faz 1 kapsaminda public urun vitrinini sunar.
+BEEMMB, Turkiye pazarina ozgu gereksinimlere (GIB e-belge/UBL-TR, on muhasebe, yerli pazaryerleri) odaklanmis, modular monolith mimarisiyle gelistirilen kurumsal e-ticaret / ERP-lite platformudur.
+
+Sistem su ana omurgalari kapsar: katalog + depo bazli envanter yonetimi, siparis/checkout, musteri cari + kasa/banka/mutabakat/cek-senet finans modulu, GIB uyumlu e-belge (UBL-TR) uretim ve dispatch zinciri, coklu pazaryeri (Trendyol, Hepsiburada, N11, Pazarama) senkronizasyon katmani, ince taneli rol/izin (RBAC v2) yonetimi ve append-only audit kanit zinciri.
 
 ## Gelistirme Kurallari
 
@@ -12,43 +13,58 @@ Tum gelistirmelerde tek referans dosya: [DEVELOPMENT_RULES.md](DEVELOPMENT_RULES
 - UI katmani Prisma veya repository katmanina dogrudan erisemez.
 - API route katmani Prisma veya repository katmanina dogrudan erisemez.
 - API route -> Service -> Repository -> Prisma akisi zorunludur.
+- Her modul Contract -> Repository -> Service uclusuyle tasarlanir; moduller birbiriyle yalnizca service katmani uzerinden konusur.
 - Soft delete zorunludur: `deleted`, `deletedDate`, `deletedUserId`.
-- Lokalizasyon sadece `tr.json` ve `en.json` dosyalariyla yonetilir.
-- Cache katmani merkezi Redis uzerinden calisir.
+- Lokalizasyon sadece `src/i18n/tr.json` uzerinden yonetilir; proje bilincli olarak tek dile (Turkce) indirgenmistir.
+- Cache katmani merkezi Redis uzerinden calisir (read-agirlikli endpointlerde TTL + yazimda invalidation).
+- shadcn/ui + Tailwind CSS kullanilir; ekranlar "ozet -> detay -> teknik detay" katmanlamasiyla tasarlanir.
+
+> **Not:** Bu repo standart bir Next.js kurulumu degildir. Next.js 16 surumunde API'ler, konvansiyonlar ve dosya yapisi egitim verisinden farkli olabilir; kod yazmadan once `node_modules/next/dist/docs/` altindaki ilgili rehberi okuyun.
 
 ## Proje Yapisi
 
 ```text
 src/
-	app/
-		[locale]/...           # Locale tabanli UI
-		api/...                # HTTP adapter katmani
-	modules/
-		catalog/
-			contracts/
-			repositories/
-			services/
-	lib/
-		prisma.ts
-		redis.ts
-		i18n.ts
-	i18n/
-		tr.json
-		en.json
+  app/
+    [locale]/...              # Locale tabanli UI (storefront + admin panel)
+    api/...                   # HTTP adapter katmani (yalnizca parse + response mapping)
+  modules/
+    identity/                 # Auth, oturum, RBAC v2 (rol/izin) yonetimi
+    catalog/                  # Urun/kategori/marka katalogu, CSV import/export
+    inventory/                # Depo bazli stok: hareket, rezervasyon, sayim, transfer
+    commerce/                 # Sepet/checkout/quote, pazaryeri siparis donusumu
+    customers/                # Musteri cari hesap
+    pricing/                  # Promosyon/fiyatlandirma
+    storefront/                # Vitrin/anasayfa bolumleri
+    documents/                 # E-belge yasam dongusu, dispatch, webhook, evidence
+    edocument/                  # GIB UBL-TR fatura/irsaliye uretimi ve validasyonu
+    finance/                    # Cari, kasa/banka, tahsilat/odeme, mutabakat, defter
+    integration/                # Trendyol/Hepsiburada/N11/Pazarama connector + sync
+    system/                     # Audit log/anchor, medya depolama, bildirim
+    <modul>/
+      contracts/
+      repositories/
+      services/
+  lib/
+    prisma.ts
+    redis.ts
+    auth.ts
+    i18n.ts
+    observability.ts          # Yapilandirilmis JSON log + request-id
+  i18n/
+    tr.json                   # Tek lokalizasyon kaynagi
 prisma/
-	schema.prisma
-	seed.ts
+  schema.prisma
+  seed.ts
+docs/                          # Finans/envanter/GIB/operasyon planlama dokumanlari
+scripts/                       # verify-*.mjs|.ts dogrulama betikleri (test stratejisi)
 ```
 
 ## Lokal Gelistirme
 
 1. Ortam degiskenlerini hazirlayin.
 
-```bash
-cp .env.local.example .env.local
-```
-
-Next.js local calismada `.env.local` dosyasini kullanir. Bu repoda onerilen duzen:
+`.env.local` dosyasi olusturun (repoda ornek `.env` dosyasi bulunmaz, asagidaki degiskenleri ihtiyaca gore doldurun):
 
 - Local development: `.env.local` -> local PostgreSQL / Redis / MinIO
 - Vercel production: Vercel Project Settings -> Environment Variables
@@ -57,6 +73,14 @@ Not:
 
 - `.env.local` dosyasini production connection string ile doldurmayin.
 - Vercel uzerindeki production veritabani bilgileri repodaki `.env` veya `.env.local` dosyalarinda tutulmamalidir.
+
+Temel degiskenler:
+
+- `DATABASE_URL` — PostgreSQL baglanti dizesi (Prisma datasource)
+- `REDIS_URL`, `REDIS_CONNECT_TIMEOUT_MS` — merkezi cache
+- `AUTH_SECRET` — oturum/JWT imzalama ve entegrasyon secret turetimi icin ortak sir
+- `APP_URL` (yoksa `VERCEL_PROJECT_PRODUCTION_URL` / `VERCEL_URL` fallback) — OAuth callback taban URL'i
+- `MINIO_ENDPOINT`, `MINIO_PORT`, `MINIO_USE_SSL`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_BUCKET`, `MEDIA_PUBLIC_BASE_URL` — medya depolama
 
 Sosyal girisleri aktif etmek isterseniz su alanlari da doldurun:
 
@@ -80,6 +104,8 @@ Callback URL'leri:
 ```bash
 docker compose up -d
 ```
+
+`docker-compose.yml` uc servis ayaga kaldirir: `postgres` (5432), `redis` (6379), `minio` (9000/9001) + `minio-init` (bucket'i otomatik olusturur).
 
 3. Veritabani istemcisini olusturun ve seeding yapin.
 
@@ -111,7 +137,7 @@ Bu komut:
 npm run dev
 ```
 
-Uygulama varsayilan olarak `http://localhost:3000/tr` adresine yonlenir.
+Uygulama varsayilan olarak `http://localhost:3000/tr` adresine yonlenir (route yapisi `[locale]` dinamik segmentini korur, ancak middleware pratikte yalnizca `tr` locale'ini zorunlu kilar).
 
 MinIO lokal ortamda su adreslerde calisir:
 
@@ -151,108 +177,46 @@ Cron-safe worker tetigi icin:
 npm run worker:notifications:cron
 ```
 
-## Faz 1 Ozellikleri
+## E-Belge (GIB) Ortam Degiskenleri
 
-- ticari alanlar: `sku`, `stock`, `compareAtPrice`
-- is kurali: `compareAtPrice` degeri `price` degerinden buyuk olmali
-- storefront ve urun detayinda stok/indirim bilgisi goruntulenir
-- sepet ve checkout akisi: `/{locale}/cart`
-- commerce endpointleri:
-	- `POST /api/commerce/quote`
-	- `POST /api/commerce/checkout`
+- `EDOCUMENT_SENDER_TAX_NUMBER`, `EDOCUMENT_SENDER_NAME`, `EDOCUMENT_SENDER_TAX_OFFICE`, `EDOCUMENT_SENDER_EMAIL`, `EDOCUMENT_SENDER_ADDRESS` — gonderici (kendi isletme) e-belge kimlik bilgileri.
+- `EDOCUMENT_INVOICE_NUMBER_PREFIX`, `EDOCUMENT_DEFAULT_VAT_RATE` — belge numaralandirma ve varsayilan KDV orani.
+- `EDOCUMENT_SHIPMENT_CARRIER_TAX_NUMBER`, `EDOCUMENT_SHIPMENT_CARRIER_NAME`, `EDOCUMENT_SHIPMENT_VEHICLE_PLATE`, `EDOCUMENT_SHIPMENT_DRIVER_NAME`, `EDOCUMENT_SHIPMENT_DRIVER_TCKN` — e-Irsaliye tasiyici/arac/surucu alanlari.
+- `EDOCUMENT_PROVIDER_MODE` — `mock` veya canli saglayici modu.
+- `EDOCUMENT_LIVE_PROVIDER_ENDPOINT_URL`, `EDOCUMENT_LIVE_PROVIDER_USERNAME`, `EDOCUMENT_LIVE_PROVIDER_SECRET_KEY`, `EDOCUMENT_LIVE_PROVIDER_PROTOCOL`, `EDOCUMENT_LIVE_PROVIDER_TIMEOUT_MS` — canli e-belge saglayici baglanti bilgileri.
+- `EDOCUMENT_XSD_VALIDATOR_COMMAND`/`_ARGS`, `EDOCUMENT_SCHEMATRON_VALIDATOR_COMMAND`/`_ARGS` — resmi UBL-TR XSD/Schematron dogrulama araclari (`src/modules/edocument/schemas/gib/`).
+- `DOCUMENT_PROVIDER_SECRET` — belge saglayici webhook/entegrasyon sir dogrulamasi (yoksa `AUTH_SECRET` fallback).
 
-## Faz 3 Tamamlama Notlari (Siparis + Odeme + Fiyatlandirma)
+## Pazaryeri Entegrasyon Ortam Degiskenleri
 
-- Siparis yasam dongusu ve audit trail:
-	- durum gecmisi + odeme durumu gecmisi kalici olarak tutulur
-	- admin status / payment status guncellemeleri actor bilgisiyle loglanir
-- Odeme durum akisi eklendi:
-	- `PENDING`, `AUTHORIZED`, `PAID`, `FAILED`, `REFUNDED`
-- Promosyon/fiyatlandirma servisi eklendi (Contract -> Repository -> Service):
-	- checkout/quote akisinda `promotionCode` desteklenir
-	- `subtotal`, `discountTotal`, `total` hesaplanir
-- Dashboard raporu genisletildi:
-	- toplam siparis, toplam gelir, toplam indirim, odenen siparis, bekleyen odeme
+- `MARKETPLACE_INTEGRATION_SECRET` — pazaryeri credential sifreleme sirri (yoksa `DOCUMENT_PROVIDER_SECRET` / `AUTH_SECRET` fallback zinciri).
+- `MARKETPLACE_SYNC_SECRET`, `CRON_SECRET` — worker/cron tetikleme endpointlerinin sistem-to-sistem yetkilendirmesi.
 
-## Faz 4 Tamamlama Notlari (Pazaryeri Entegrasyon Katmani)
+## Finans Ortam Degiskenleri
 
-- Integration modulu Contract -> Repository -> Service deseni ile eklendi.
-- Connector mimarisi:
-	- Trendyol ve n11 icin kanal connector siniflari
-	- job type bazli dispatch islemleri (`PRODUCT_SYNC`, `PRICE_SYNC`, `STOCK_SYNC`)
-- Queue + retry + idempotency:
-	- `IntegrationSyncJob` tablosu ile kuyruk
-	- `idempotencyKey` ile tekrar eden job deduplikasyonu
-	- max attempt ve gecikmeli retry davranisi
-- Dead-letter ve manuel yeniden deneme:
-	- `IntegrationDeadLetter` tablosu ile kalici hata kaydi
-	- admin panelde dead-letter listeleme ve `retry` aksiyonu
-- Yeni admin endpointleri:
-	- `GET /api/admin/integrations/jobs`
-	- `POST /api/admin/integrations/jobs` (enqueue)
-	- `POST /api/admin/integrations/worker` (queue process)
-	- `GET /api/admin/integrations/dead-letters`
-	- `POST /api/admin/integrations/dead-letters/{jobId}/retry`
-- Yeni admin ekrani:
-	- `/{locale}/admin/integrations`
+- `FINANCE_BANK_SANDBOX_STATEMENT_JSON` — banka sandbox ekstre simulasyonu icin ornek veri.
+- `FINANCE_ONLINE_COLLECTION_WEBHOOK_SECRET` — online tahsilat webhook dogrulamasi.
+- `FINANCE_INTEGRATION_ACTOR_USER_ID` — otomatik finans hareketlerinde actor olarak kullanilacak sistem kullanicisi.
 
-## Faz 5 Tamamlama Notlari (Olcekleme ve Operasyonel Olgunluk)
+## Audit / WORM Ortam Degiskenleri
 
-- Gozlemlenebilirlik:
-	- request-id propagation (`x-request-id`) middleware katmaninda aktif
-	- sistem endpointleri: `GET /api/system/health`, `GET /api/system/ready`
-	- structured JSON log yardimcilari (`src/lib/observability.ts`)
-- Guvenlik kontrolleri:
-	- CSP, HSTS, Permissions-Policy, nosniff ve frame koruma headerlari
-	- API endpointlerinde `Cache-Control: no-store`
-- Operasyonel olgunluk:
-	- backup/restore + DR runbook: `docs/OPERATIONS.md`
-	- release train ve domain ownership modeli: `docs/RELEASE_TRAIN.md`
-	- CODEOWNERS tanimi: `.github/CODEOWNERS`
+- `AUDIT_WORM_ENDPOINT`, `AUDIT_WORM_PORT`, `AUDIT_WORM_USE_SSL`, `AUDIT_WORM_ACCESS_KEY`, `AUDIT_WORM_SECRET_KEY`, `AUDIT_WORM_BUCKET`, `AUDIT_WORM_PUBLIC_BASE_URL` — audit kanit paketleri icin ayri (veya MinIO ile paylasilan) WORM depolama; tanimlanmazsa `MINIO_*` degiskenlerine duser.
+- `AUDIT_EVIDENCE_LOCAL_DIR` — yerel gelistirmede kanit paketlerinin diske yazilacagi dizin.
 
-	## Faz 6 Tamamlama Notlari (Soru SLA + Bildirim)
+## Ana Modul Ozeti
 
-	- `UserNotification` modeli eklendi (`IN_APP`, `EMAIL`).
-	- Yeni urun sorusu acildiginda backoffice kullanicilarina bildirim fan-out edilir.
-	- Admin ust panelde bildirim rozeti + dropdown listeleme eklendi.
-	- Deep-link destekli soru odaklama aktif: `/admin/product-questions?questionId=...`.
-	- Soru SLA esigi artik ortam degiskeni ile yonetilir: `PRODUCT_QUESTION_SLA_HOURS`.
-	- E-posta kuyruk worker endpointi: `POST /api/admin/notifications/worker`.
+- **Katalog + Envanter**: Urun/kategori/marka/varyant katalogu, depo bazli stok seviyeleri, stok hareketi/rezervasyon/sayim/transfer, kritik stok uyarilari, disaridan gelen stok olaylarinin (external stock events) islenmesi. Detay kurallar: [docs/INVENTORY_STOCK_AUTHORITY.md](docs/INVENTORY_STOCK_AUTHORITY.md), [docs/INVENTORY_COSTING_POLICY.md](docs/INVENTORY_COSTING_POLICY.md), [docs/INVENTORY_CONCURRENCY_RULES.md](docs/INVENTORY_CONCURRENCY_RULES.md).
+- **Siparis + Checkout**: Sepet/quote/checkout akisi, siparis durum + odeme durumu gecmisi (audit trail), promosyon/fiyatlandirma servisi.
+- **Finans**: Musteri cari hesap, kasa/banka islemleri, banka ekstresi import + otomatik mutabakat, cek/senet portfoyu, yevmiye defteri + mizan, gelir-gider/KDV/nakit-akis raporlari, mali musavir (Logo/Luca) CSV export. Paraşüt referans alinarak fazlanmis yol haritasi: [docs/FINANCE_PARASUT_ALIGNMENT_PLAN.md](docs/FINANCE_PARASUT_ALIGNMENT_PLAN.md), [docs/FINANCE_PARASUT_GAP_MATRIX.md](docs/FINANCE_PARASUT_GAP_MATRIX.md), mimari: [docs/FINANCE_MODULE_ARCHITECTURE.md](docs/FINANCE_MODULE_ARCHITECTURE.md).
+- **E-Belge (GIB)**: UBL-TR 1.2.1 uyumlu fatura/irsaliye uretimi, resmi XSD/Schematron dogrulama, dispatch + webhook + yasam dongusu takibi, mock/canli saglayici adaptorleri. Audit kanit zinciri runbook'u: [docs/GIB_AUDIT_HARDENING_RUNBOOK.md](docs/GIB_AUDIT_HARDENING_RUNBOOK.md).
+- **Pazaryeri Entegrasyonlari**: Trendyol, Hepsiburada, N11, Pazarama icin ayri connector + client siniflari; urun/fiyat/stok senkronizasyonu, siparis paketi ice aktarma, job kuyrugu (`IntegrationSyncJob`) + idempotency + dead-letter + manuel retry. Pazarama faz notlari: [docs/PAZARAMA_PHASE_0_5.md](docs/PAZARAMA_PHASE_0_5.md).
+  - Not: Kargo (Yurtici/Aras/MNG/PTT/UPS vb.) firmalarina dogrudan API entegrasyonu yoktur; kargo firma adi ve takip numarasi yalnizca pazaryeri siparis paketlerinden okunur/gosterilir, Pazarama'ya "kargoya verildi" bildirimi manuel girisle geri gonderilir.
+- **RBAC v2 (Rol/Izin Yonetimi)**: `Role` / `Permission` / `RolePermission` / `UserRoleAssignment` modelleriyle ince taneli yetkilendirme; admin panelin tum menu/route erisimleri bu sisteme bagli.
+- **Audit**: Append-only `AuditLog` + donemsel hash sabitleme (`AuditAnchor`), WORM depolamaya kanit paketi yazimi.
 
-## Faz 2 Baslangici (Auth + Rol)
+## Admin Panel Alanlari
 
-- `identity` modulu Contract -> Repository -> Service yapisinda eklendi.
-- API auth endpointleri service layer uzerinden calisir:
-	- `POST /api/identity/login`
-	- `POST /api/identity/logout`
-	- `GET /api/identity/me`
-- Admin urun yonetimi endpointleri:
-	- `GET /api/admin/products` (ADMIN, EDITOR)
-	- `POST /api/admin/products` (ADMIN, EDITOR)
-	- `PATCH /api/admin/products/{id}` (ADMIN, EDITOR)
-	- `DELETE /api/admin/products/{id}` (yalnizca ADMIN, soft delete)
-- Admin kategori yonetimi endpointleri:
-	- `GET /api/admin/categories` (ADMIN, EDITOR)
-	- `POST /api/admin/categories` (ADMIN, EDITOR)
-	- `PATCH /api/admin/categories/{id}` (ADMIN, EDITOR)
-	- `DELETE /api/admin/categories/{id}` (yalnizca ADMIN, soft delete)
-- Admin kullanici yonetimi endpointleri:
-	- `GET /api/admin/users` (yalnizca ADMIN)
-	- `POST /api/admin/users` (yalnizca ADMIN)
-	- `PATCH /api/admin/users/{id}` (yalnizca ADMIN)
-	- `DELETE /api/admin/users/{id}` (yalnizca ADMIN, soft delete)
-- Admin siparis endpointleri:
-	- `GET /api/admin/orders` (ADMIN, EDITOR)
-	- `GET /api/admin/orders/{id}` (ADMIN, EDITOR)
-	- `PATCH /api/admin/orders/{id}` (yalnizca ADMIN, durum + odeme durumu guncelleme)
-	- `DELETE /api/admin/orders/{id}` (yalnizca ADMIN, soft delete)
-- Commerce endpointleri:
-	- `POST /api/commerce/quote`
-	- `POST /api/commerce/checkout`
-- Backoffice giris sayfasi: `/{locale}/admin/login`
-- Backoffice dashboard: `/{locale}/admin`
-- Backoffice urun yonetimi: API tabanli server-side arama, kategori filtreleme, sayfalama ve form validasyon mesajlari
-- Modern UI/UX: atmosferik arka plan, premium kart sistemi, responsive glass header ve gelistirilmis tipografi
+`/{locale}/admin` altinda: dashboard, urunler, kategoriler, markalar, tedarikciler, urun ozellikleri, envanter, siparisler, musteriler + cari hesaplar, finans, belgeler (documents/edocuments), pazaryeri entegrasyonlari, roller, kullanicilar, depolar, vitrin (storefront) yonetimi, urun sorulari, audit loglari, bildirimler, dosya yuklemeleri. Ayri giris sayfasi: `/{locale}/admin/login`.
 
 Seed sonrasi varsayilan admin hesabi:
 
@@ -264,62 +228,67 @@ Seed sonrasi varsayilan editor hesabi:
 - E-mail: `editor@beemmb.local`
 - Sifre: `Editor123!`
 
-RBAC dogrulamasi icin:
+## Dogrulama (Test Stratejisi)
+
+Bu projede klasik birim test dosyasi (`*.test.ts`) yerine `scripts/` altinda canli-uygulama smoke/entegrasyon dogrulama betikleri (`verify-*.mjs` / `.ts`) kullanilir. Her yeni ozellik/faz icin ayri bir verify betigi eklenir; betikler uygulamayi calisir halde bulup gercek HTTP endpointlerine istek atar veya DB'ye dogrudan baglanir.
+
+Kategoriler ve ornek komutlar:
 
 ```bash
-npm run verify:rbac
-```
-
-Admin urun CRUD entegrasyon dogrulamasi icin:
-
-```bash
-npm run verify:crud
-```
-
-Admin kategori yonetimi entegrasyon dogrulamasi icin:
-
-```bash
-npm run verify:categories
-```
-
-Admin kullanici yonetimi entegrasyon dogrulamasi icin:
-
-```bash
-npm run verify:users
-```
-
-Ana sayfa storefront entegrasyon dogrulamasi icin:
-
-```bash
-npm run verify:storefront
-```
-
-Checkout entegrasyon dogrulamasi icin:
-
-```bash
-npm run verify:checkout
-```
-
-Admin siparis entegrasyon dogrulamasi icin:
-
-```bash
-npm run verify:orders
-```
-
-Pazaryeri entegrasyon katmani dogrulamasi icin:
-
-```bash
-npm run verify:integrations
-```
-
-Platform (health/readiness/security headers) dogrulamasi icin:
-
-```bash
+# Platform / auth / RBAC
 npm run verify:platform
+npm run verify:auth
+npm run verify:rbac
+npm run verify:rbac:v2
+
+# Katalog / kullanici / siparis / storefront
+npm run verify:crud
+npm run verify:categories
+npm run verify:users
+npm run verify:storefront
+npm run verify:checkout
+npm run verify:orders
+
+# Envanter (sprint/hafta bazli, sprint1..sprint12 + week1..week3)
+npm run verify:inventory:sprint12
+
+# Pazaryeri entegrasyonlari
+npm run verify:integrations
+
+# Finans (alt betiklerin tumunu zincirler)
+npm run verify:finance
+
+# E-belge / GIB (tum alt betikleri zincirler)
+npm run verify:edocument
+
+# Medya yukleme, audit
+npm run verify:media
+npm run verify:audit:coverage
+npm run verify:audit:integrity
 ```
 
-MinIO tabanli gorsel yukleme entegrasyon dogrulamasi icin:
+Tum Faz 5 kalite kapisini yerelde tek komutla calistirmak icin:
 
 ```bash
-npm run verify:media
+npm run verify:phase5
 ```
+
+Bu zincir CI'da `.github/workflows/phase5-quality-gates.yml` tarafindan PR/push (main) uzerinde Postgres 16 + Redis 7 servis konteynerleriyle otomatik calistirilir (migrate/seed -> lint -> build -> uygulamayi baslat -> verify zinciri). Ayrica soru-cevap akisina ozel dar kapsamli `.github/workflows/verify-questions-phase4.yml` bulunur.
+
+## Planlama Dokumanlari (`docs/`)
+
+- [docs/FINANCE_MODULE_ARCHITECTURE.md](docs/FINANCE_MODULE_ARCHITECTURE.md), [docs/FINANCE_PARASUT_ALIGNMENT_PLAN.md](docs/FINANCE_PARASUT_ALIGNMENT_PLAN.md), [docs/FINANCE_PARASUT_GAP_MATRIX.md](docs/FINANCE_PARASUT_GAP_MATRIX.md) — finans modulunun Paraşüt referansli faz (PF1-PF10) yol haritasi ve boşluk matrisi.
+- [docs/PARASUT_INVENTORY_REVISION_PLAN.md](docs/PARASUT_INVENTORY_REVISION_PLAN.md), [docs/PARASUT_PHASE1_GAP_ANALYSIS.md](docs/PARASUT_PHASE1_GAP_ANALYSIS.md) — envanter tarafinin Paraşüt'e yaklastirma plani.
+- [docs/INVENTORY_STOCK_AUTHORITY.md](docs/INVENTORY_STOCK_AUTHORITY.md), [docs/INVENTORY_COSTING_POLICY.md](docs/INVENTORY_COSTING_POLICY.md), [docs/INVENTORY_CONCURRENCY_RULES.md](docs/INVENTORY_CONCURRENCY_RULES.md), [docs/INVENTORY_EXTERNAL_STOCK_FLOW.md](docs/INVENTORY_EXTERNAL_STOCK_FLOW.md), [docs/INVENTORY_EXTERNAL_EVENT_RUNBOOK.md](docs/INVENTORY_EXTERNAL_EVENT_RUNBOOK.md), [docs/INVENTORY_LEGACY_STOCK_AUDIT.md](docs/INVENTORY_LEGACY_STOCK_AUDIT.md) — envanter is kurallari ve runbook'lari.
+- [docs/GIB_AUDIT_HARDENING_RUNBOOK.md](docs/GIB_AUDIT_HARDENING_RUNBOOK.md) — audit kanit zinciri uretim/saklama/denetime ibraz sureci.
+- [docs/PAZARAMA_PHASE_0_5.md](docs/PAZARAMA_PHASE_0_5.md) — Pazarama entegrasyonu faz kaydi.
+- [docs/OPERATIONS.md](docs/OPERATIONS.md) — gozlemlenebilirlik, yedekleme politikasi, felaket kurtarma.
+- [docs/RELEASE_TRAIN.md](docs/RELEASE_TRAIN.md) — release penceresi, kalite kapilari, domain ownership.
+- [docs/OQLID_STYLE_RECIPE.md](docs/OQLID_STYLE_RECIPE.md) — UI/tasarim stil rehberi.
+
+## Gozlemlenebilirlik ve Guvenlik
+
+- Request-id propagation (`x-request-id`) middleware katmaninda aktif; yapilandirilmis JSON log yardimcilari: `src/lib/observability.ts`.
+- Sistem endpointleri: `GET /api/system/health`, `GET /api/system/ready`.
+- Guvenlik headerlari: CSP, HSTS, Permissions-Policy, nosniff, frame koruma; API endpointlerinde `Cache-Control: no-store`.
+- Backup/restore + DR runbook: [docs/OPERATIONS.md](docs/OPERATIONS.md). Release train ve domain ownership: [docs/RELEASE_TRAIN.md](docs/RELEASE_TRAIN.md), [.github/CODEOWNERS](.github/CODEOWNERS).

@@ -7,10 +7,12 @@ import type {
   AdminUpdateProductAttributeDefinitionInput,
   AdminBrandItem,
   AdminBulkModerateProductQuestionsInput,
+  AdminCarrierCompanyItem,
   AdminCategoryListItem,
   AdminCategoryListQuery,
   AdminCategoryListResult,
   AdminCreateBrandInput,
+  AdminCreateCarrierCompanyInput,
   AdminCreateCategoryInput,
   AdminCreateProductInput,
   AdminCreateSupplierInput,
@@ -29,6 +31,7 @@ import type {
   AdminSupplierItem,
   AdminTopInteractionItem,
   AdminUpdateBrandInput,
+  AdminUpdateCarrierCompanyInput,
   AdminUpdateCategoryInput,
   AdminUpdateProductInput,
   AdminUpdateProductVariantsInput,
@@ -178,6 +181,27 @@ const updateBrandSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
+const createCarrierCompanySchema = z.object({
+  slug: z.string().trim().min(2).max(120),
+  name: z.string().trim().min(2).max(120),
+  taxNumber: z.string().trim().max(64).optional().nullable(),
+  trackingUrlTemplate: z.string().trim().max(500).optional().nullable(),
+  externalCodeTrendyol: z.coerce.number().int().positive().optional().nullable(),
+  externalCodePazarama: z.string().trim().max(120).optional().nullable(),
+  isActive: z.boolean().default(true),
+});
+
+const updateCarrierCompanySchema = z.object({
+  id: z.string().trim().min(1),
+  slug: z.string().trim().min(2).max(120).optional(),
+  name: z.string().trim().min(2).max(120).optional(),
+  taxNumber: z.string().trim().max(64).optional().nullable(),
+  trackingUrlTemplate: z.string().trim().max(500).optional().nullable(),
+  externalCodeTrendyol: z.coerce.number().int().positive().optional().nullable(),
+  externalCodePazarama: z.string().trim().max(120).optional().nullable(),
+  isActive: z.boolean().optional(),
+});
+
 const createSupplierSchema = z.object({
   slug: z.string().trim().min(2).max(120),
   name: z.string().trim().min(2).max(120),
@@ -323,6 +347,30 @@ function mapBrand(item: {
     pazaramaBrandId: item.pazaramaBrandId ?? null,
     isActive: item.isActive,
     productCount: item._count?.products ?? 0,
+  };
+}
+
+function mapCarrierCompany(item: {
+  id: string;
+  slug: string;
+  name: string;
+  taxNumber: string | null;
+  trackingUrlTemplate: string | null;
+  externalCodeTrendyol: number | null;
+  externalCodePazarama: string | null;
+  isActive: boolean;
+  _count?: { orders: number };
+}): AdminCarrierCompanyItem {
+  return {
+    id: item.id,
+    slug: item.slug,
+    name: item.name,
+    taxNumber: item.taxNumber,
+    trackingUrlTemplate: item.trackingUrlTemplate,
+    externalCodeTrendyol: item.externalCodeTrendyol,
+    externalCodePazarama: item.externalCodePazarama,
+    isActive: item.isActive,
+    orderCount: item._count?.orders ?? 0,
   };
 }
 
@@ -1291,6 +1339,44 @@ export class CatalogAdminService {
 
     await this.repository.softDeleteBrand(brandId, deletedUserId);
     await invalidateCatalogCache();
+  }
+
+  async listCarrierCompanies(): Promise<AdminCarrierCompanyItem[]> {
+    const rows = await this.repository.listCarrierCompanies();
+    return rows.map(mapCarrierCompany);
+  }
+
+  async getCarrierCompanyById(id: string): Promise<AdminCarrierCompanyItem | null> {
+    const row = await this.repository.findActiveCarrierCompanyById(id);
+    return row ? mapCarrierCompany(row) : null;
+  }
+
+  async createCarrierCompany(input: AdminCreateCarrierCompanyInput): Promise<AdminCarrierCompanyItem> {
+    const parsed = createCarrierCompanySchema.parse(input);
+    const created = await this.repository.createCarrierCompany(parsed);
+    return mapCarrierCompany(created);
+  }
+
+  async updateCarrierCompany(input: AdminUpdateCarrierCompanyInput): Promise<AdminCarrierCompanyItem> {
+    const parsed = updateCarrierCompanySchema.parse(input);
+    const existing = await this.repository.findActiveCarrierCompanyById(parsed.id);
+
+    if (!existing) {
+      throw new Error("Carrier company not found");
+    }
+
+    const updated = await this.repository.updateCarrierCompany(parsed);
+    return mapCarrierCompany(updated);
+  }
+
+  async softDeleteCarrierCompany(carrierCompanyId: string, deletedUserId: string) {
+    const existing = await this.repository.findActiveCarrierCompanyById(carrierCompanyId);
+
+    if (!existing) {
+      throw new Error("Carrier company not found");
+    }
+
+    await this.repository.softDeleteCarrierCompany(carrierCompanyId, deletedUserId);
   }
 
   async createSupplier(input: AdminCreateSupplierInput): Promise<AdminSupplierItem> {

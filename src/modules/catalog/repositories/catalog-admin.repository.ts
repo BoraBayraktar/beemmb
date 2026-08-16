@@ -5,11 +5,13 @@ import type {
   AdminAnswerProductQuestionInput,
   AdminCreateProductAttributeDefinitionInput,
   AdminCreateBrandInput,
+  AdminCreateCarrierCompanyInput,
   AdminCreateSupplierInput,
   AdminCategoryListQuery,
   AdminProductQuestionListQuery,
   AdminProductListQuery,
   AdminUpdateBrandInput,
+  AdminUpdateCarrierCompanyInput,
   AdminUpdateCategoryInput,
   AdminUpdateProductAttributeDefinitionInput,
   AdminUpsertProductAttributeValueMarketplaceMappingInput,
@@ -884,6 +886,122 @@ export class CatalogAdminRepository {
       },
       orderBy: {
         name: "asc",
+      },
+    });
+  }
+
+  async listCarrierCompanies() {
+    return prisma.carrierCompany.findMany({
+      where: {
+        deleted: false,
+      },
+      include: {
+        _count: {
+          select: {
+            orders: {
+              where: {
+                deleted: false,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+  }
+
+  async createCarrierCompany(input: AdminCreateCarrierCompanyInput) {
+    return prisma.carrierCompany.create({
+      data: {
+        slug: input.slug,
+        name: input.name,
+        taxNumber: input.taxNumber ?? null,
+        trackingUrlTemplate: input.trackingUrlTemplate ?? null,
+        externalCodeTrendyol: input.externalCodeTrendyol ?? null,
+        externalCodePazarama: input.externalCodePazarama ?? null,
+        isActive: input.isActive ?? true,
+      },
+      include: {
+        _count: {
+          select: {
+            orders: {
+              where: {
+                deleted: false,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async updateCarrierCompany(input: AdminUpdateCarrierCompanyInput) {
+    return prisma.carrierCompany.update({
+      where: {
+        id: input.id,
+      },
+      data: {
+        ...(input.slug !== undefined ? { slug: input.slug } : {}),
+        ...(input.name !== undefined ? { name: input.name } : {}),
+        ...(input.taxNumber !== undefined ? { taxNumber: input.taxNumber } : {}),
+        ...(input.trackingUrlTemplate !== undefined ? { trackingUrlTemplate: input.trackingUrlTemplate } : {}),
+        ...(input.externalCodeTrendyol !== undefined ? { externalCodeTrendyol: input.externalCodeTrendyol } : {}),
+        ...(input.externalCodePazarama !== undefined ? { externalCodePazarama: input.externalCodePazarama } : {}),
+        ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
+      },
+      include: {
+        _count: {
+          select: {
+            orders: {
+              where: {
+                deleted: false,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async findActiveCarrierCompanyById(id: string) {
+    return prisma.carrierCompany.findFirst({
+      where: {
+        id,
+        deleted: false,
+      },
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        taxNumber: true,
+        trackingUrlTemplate: true,
+        externalCodeTrendyol: true,
+        externalCodePazarama: true,
+        isActive: true,
+        _count: {
+          select: {
+            orders: {
+              where: {
+                deleted: false,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async softDeleteCarrierCompany(id: string, deletedUserId: string) {
+    return prisma.carrierCompany.update({
+      where: {
+        id,
+      },
+      data: {
+        deleted: true,
+        deletedDate: new Date(),
+        deletedUserId,
       },
     });
   }

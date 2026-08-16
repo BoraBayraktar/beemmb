@@ -712,6 +712,12 @@ export class CommerceRepository {
             email: true,
           },
         },
+        carrierCompany: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         items: {
           where: {
             deleted: false,
@@ -789,6 +795,53 @@ export class CommerceRepository {
             },
           },
         },
+      },
+    });
+  }
+
+  async updateOrderShipment(args: {
+    id: string;
+    shipmentStatus?: "NOT_SHIPPED" | "PREPARING" | "SHIPPED" | "DELIVERED" | "RETURNED";
+    shipmentAddressLine?: string | null;
+    shipmentCity?: string | null;
+    shipmentDistrict?: string | null;
+    shipmentPostalCode?: string | null;
+    shipmentCountry?: string | null;
+    shipmentContactName?: string | null;
+    shipmentContactPhone?: string | null;
+    invoiceAddressLine?: string | null;
+    invoiceCity?: string | null;
+    invoiceDistrict?: string | null;
+    invoicePostalCode?: string | null;
+    carrierCompanyId?: string | null;
+    cargoTrackingNumber?: string | null;
+    cargoShippedAt?: Date | null;
+    cargoDeliveredAt?: Date | null;
+  }) {
+    return prisma.order.update({
+      where: {
+        id: args.id,
+      },
+      data: {
+        ...(args.shipmentStatus !== undefined ? { shipmentStatus: args.shipmentStatus } : {}),
+        ...(args.shipmentAddressLine !== undefined ? { shipmentAddressLine: args.shipmentAddressLine } : {}),
+        ...(args.shipmentCity !== undefined ? { shipmentCity: args.shipmentCity } : {}),
+        ...(args.shipmentDistrict !== undefined ? { shipmentDistrict: args.shipmentDistrict } : {}),
+        ...(args.shipmentPostalCode !== undefined ? { shipmentPostalCode: args.shipmentPostalCode } : {}),
+        ...(args.shipmentCountry !== undefined ? { shipmentCountry: args.shipmentCountry } : {}),
+        ...(args.shipmentContactName !== undefined ? { shipmentContactName: args.shipmentContactName } : {}),
+        ...(args.shipmentContactPhone !== undefined ? { shipmentContactPhone: args.shipmentContactPhone } : {}),
+        ...(args.invoiceAddressLine !== undefined ? { invoiceAddressLine: args.invoiceAddressLine } : {}),
+        ...(args.invoiceCity !== undefined ? { invoiceCity: args.invoiceCity } : {}),
+        ...(args.invoiceDistrict !== undefined ? { invoiceDistrict: args.invoiceDistrict } : {}),
+        ...(args.invoicePostalCode !== undefined ? { invoicePostalCode: args.invoicePostalCode } : {}),
+        ...(args.carrierCompanyId !== undefined ? { carrierCompanyId: args.carrierCompanyId } : {}),
+        ...(args.cargoTrackingNumber !== undefined ? { cargoTrackingNumber: args.cargoTrackingNumber } : {}),
+        ...(args.cargoShippedAt !== undefined ? { cargoShippedAt: args.cargoShippedAt } : {}),
+        ...(args.cargoDeliveredAt !== undefined ? { cargoDeliveredAt: args.cargoDeliveredAt } : {}),
+      },
+      select: {
+        id: true,
       },
     });
   }

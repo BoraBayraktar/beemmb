@@ -55,6 +55,47 @@ export type AdminOrderStatus = "CONFIRMED" | "CANCELLED";
 export type AdminOrderStatusChangeSource = "SYSTEM" | "ADMIN";
 export type AdminPaymentStatus = "PENDING" | "AUTHORIZED" | "PAID" | "FAILED" | "REFUNDED";
 export type AdminPaymentStatusChangeSource = "SYSTEM" | "ADMIN";
+export type AdminOrderShipmentStatus = "NOT_SHIPPED" | "PREPARING" | "SHIPPED" | "DELIVERED" | "RETURNED";
+
+export type AdminOrderShipmentInfo = {
+  shipmentStatus: AdminOrderShipmentStatus;
+  shipmentAddressLine: string | null;
+  shipmentCity: string | null;
+  shipmentDistrict: string | null;
+  shipmentPostalCode: string | null;
+  shipmentCountry: string | null;
+  shipmentContactName: string | null;
+  shipmentContactPhone: string | null;
+  invoiceAddressLine: string | null;
+  invoiceCity: string | null;
+  invoiceDistrict: string | null;
+  invoicePostalCode: string | null;
+  carrierCompanyId: string | null;
+  carrierCompanyName: string | null;
+  cargoTrackingNumber: string | null;
+  cargoShippedAt: string | null;
+  cargoDeliveredAt: string | null;
+};
+
+export type UpdateOrderShipmentInput = {
+  id: string;
+  shipmentStatus?: AdminOrderShipmentStatus;
+  shipmentAddressLine?: string | null;
+  shipmentCity?: string | null;
+  shipmentDistrict?: string | null;
+  shipmentPostalCode?: string | null;
+  shipmentCountry?: string | null;
+  shipmentContactName?: string | null;
+  shipmentContactPhone?: string | null;
+  invoiceAddressLine?: string | null;
+  invoiceCity?: string | null;
+  invoiceDistrict?: string | null;
+  invoicePostalCode?: string | null;
+  carrierCompanyId?: string | null;
+  cargoTrackingNumber?: string | null;
+  cargoShippedAt?: string | null;
+  cargoDeliveredAt?: string | null;
+};
 
 export type AdminOrderListItem = {
   id: string;
@@ -140,6 +181,7 @@ export type AdminOrderDetail = {
   financialMovements: AdminOrderFinancialMovementEntry[];
   statusHistory: AdminOrderStatusHistoryEntry[];
   paymentStatusHistory: AdminPaymentStatusHistoryEntry[];
+  shipment: AdminOrderShipmentInfo;
 };
 
 export type AdminOrderDocumentSummaryItem = {

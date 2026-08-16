@@ -268,6 +268,39 @@ export type AdminUpdateBrandInput = {
   isActive?: boolean;
 };
 
+export type AdminCarrierCompanyItem = {
+  id: string;
+  slug: string;
+  name: string;
+  taxNumber: string | null;
+  trackingUrlTemplate: string | null;
+  externalCodeTrendyol: number | null;
+  externalCodePazarama: string | null;
+  isActive: boolean;
+  orderCount: number;
+};
+
+export type AdminCreateCarrierCompanyInput = {
+  slug: string;
+  name: string;
+  taxNumber?: string | null;
+  trackingUrlTemplate?: string | null;
+  externalCodeTrendyol?: number | null;
+  externalCodePazarama?: string | null;
+  isActive?: boolean;
+};
+
+export type AdminUpdateCarrierCompanyInput = {
+  id: string;
+  slug?: string;
+  name?: string;
+  taxNumber?: string | null;
+  trackingUrlTemplate?: string | null;
+  externalCodeTrendyol?: number | null;
+  externalCodePazarama?: string | null;
+  isActive?: boolean;
+};
+
 export type AdminCreateSupplierInput = {
   slug: string;
   name: string;

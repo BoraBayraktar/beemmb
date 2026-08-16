@@ -49,6 +49,25 @@ model Brand {
   @@index([pazaramaBrandId])
 }
 
+model CarrierCompany {
+  id                    String    @id @default(cuid())
+  slug                  String    @unique
+  name                  String
+  taxNumber             String?
+  trackingUrlTemplate   String?
+  externalCodeTrendyol  Int?
+  externalCodePazarama  String?
+  isActive              Boolean   @default(true)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  deleted               Boolean   @default(false)
+  deletedDate           DateTime?
+  deletedUserId         String?
+  orders                Order[]
+
+  @@index([deleted, isActive])
+}
+
 model Supplier {
   id                String             @id @default(cuid())
   slug              String             @unique
@@ -514,6 +533,24 @@ model Order {
   paymentStatus        PaymentStatus               @default(PENDING)
   promotionCode        String?
   total                Decimal                     @default(0) @db.Decimal(10, 2)
+  shipmentStatus        OrderShipmentStatus         @default(NOT_SHIPPED)
+  shipmentAddressLine    String?
+  shipmentCity           String?
+  shipmentDistrict       String?
+  shipmentPostalCode     String?
+  shipmentCountry        String?                    @default("TR")
+  shipmentContactName    String?
+  shipmentContactPhone   String?
+  invoiceAddressLine     String?
+  invoiceCity            String?
+  invoiceDistrict        String?
+  invoicePostalCode      String?
+  carrierCompanyId       String?
+  cargoTrackingNumber    String?
+  cargoShippedAt         DateTime?
+  cargoDeliveredAt       DateTime?
+  shipmentSourceChannel  String?
+  externalCarrierNameRaw String?
   items                OrderItem[]
   inventoryMovements   InventoryMovement[]
   paymentStatusHistory OrderPaymentStatusHistory[]
@@ -524,12 +561,15 @@ model Order {
   marketplacePackages  MarketplaceOrderPackage[]
   financeAllocationLinks FinanceAllocationLink[]
   customerAccount      CustomerAccount?            @relation(fields: [customerAccountId], references: [id])
+  carrierCompany         CarrierCompany?            @relation(fields: [carrierCompanyId], references: [id])
 
   @@index([deleted])
   @@index([createdAt])
   @@index([paymentStatus])
   @@index([status])
   @@index([customerAccountId])
+  @@index([carrierCompanyId])
+  @@index([shipmentStatus])
 }
 
 model OrderItem {
@@ -1865,6 +1905,14 @@ enum StorefrontTargetType {
 enum OrderStatus {
   CONFIRMED
   CANCELLED
+}
+
+enum OrderShipmentStatus {
+  NOT_SHIPPED
+  PREPARING
+  SHIPPED
+  DELIVERED
+  RETURNED
 }
 
 enum PaymentStatus {

@@ -76,6 +76,7 @@ export default async function AdminPanelLayout({
         { href: `/${locale}/admin/product-attributes`, label: dictionary.admin.productAttributesTitle, permissionKey: "products.manage" },
         { href: `/${locale}/admin/orders`, label: dictionary.admin.orderManager, permissionKey: "orders.read" },
         { href: `/${locale}/admin/brands`, label: dictionary.admin.brandsTitle, permissionKey: "products.manage" },
+        { href: `/${locale}/admin/carriers`, label: dictionary.admin.carriersTitle, permissionKey: "products.manage" },
       ],
     },
     {
