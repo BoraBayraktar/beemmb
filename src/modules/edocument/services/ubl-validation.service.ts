@@ -97,11 +97,11 @@ export class UblValidationService {
 
     if (document.documentType === "E_DISPATCH") {
       if (!document.shipment.carrierName?.trim()) {
-        issues.push({ code: "MISSING_DESPATCH_SHIPMENT_PARTY", severity: "ERROR", message: "E-irsaliye taşıyıcı adı EDOCUMENT_SHIPMENT_CARRIER_NAME ile tanımlanmalıdır.", path: "cac:ShipmentStage/cac:CarrierParty" });
+        issues.push({ code: "MISSING_DESPATCH_SHIPMENT_PARTY", severity: "ERROR", message: "E-irsaliye taşıyıcı adı tanımlanmalıdır (siparişe kargo firması atayın veya EDOCUMENT_SHIPMENT_CARRIER_NAME ile varsayılan tanımlayın).", path: "cac:ShipmentStage/cac:CarrierParty" });
       }
 
       if (!carrierTaxNumber || ![10, 11].includes(carrierTaxNumber.length)) {
-        issues.push({ code: "MISSING_DESPATCH_SHIPMENT_PARTY", severity: "ERROR", message: "E-irsaliye taşıyıcı VKN/TCKN 10 veya 11 haneli olmalıdır.", path: "cac:ShipmentStage/cac:CarrierParty/cac:PartyIdentification/cbc:ID" });
+        issues.push({ code: "MISSING_DESPATCH_SHIPMENT_PARTY", severity: "ERROR", message: "E-irsaliye taşıyıcı VKN/TCKN 10 veya 11 haneli olmalıdır (siparişteki kargo firmasının veya varsayılan taşıyıcının vergi numarasını kontrol edin).", path: "cac:ShipmentStage/cac:CarrierParty/cac:PartyIdentification/cbc:ID" });
       }
 
       if (!document.shipment.vehiclePlate?.trim()) {

@@ -25,6 +25,16 @@ const generateSchema = z.object({
 type BusinessDocumentForXml = Prisma.BusinessDocumentGetPayload<{
   include: {
     lines: true;
+    order: {
+      select: {
+        carrierCompany: {
+          select: {
+            name: true;
+            taxNumber: true;
+          };
+        };
+      };
+    };
   };
 }>;
 
@@ -87,7 +97,10 @@ function mapDocument(item: BusinessDocumentForXml): UblBusinessDocumentInput {
     note: item.note,
     sender: eDocumentSenderConfigService.resolveSender(),
     tax: eDocumentTaxConfigService.resolveTaxConfig(),
-    shipment: eDocumentShipmentConfigService.resolveShipment(),
+    shipment: eDocumentShipmentConfigService.resolveShipment(item.order ? {
+      carrierCompanyName: item.order.carrierCompany?.name ?? null,
+      carrierCompanyTaxNumber: item.order.carrierCompany?.taxNumber ?? null,
+    } : null),
     lines: item.lines.map((line) => ({
       id: line.id,
       productSku: line.productSku,

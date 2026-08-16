@@ -8,6 +8,16 @@ export class EDocumentRepository {
       where: { id, deleted: false },
       include: {
         lines: { orderBy: { createdAt: "asc" } },
+        order: {
+          select: {
+            carrierCompany: {
+              select: {
+                name: true,
+                taxNumber: true,
+              },
+            },
+          },
+        },
       },
     });
   }
