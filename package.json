@@ -22,6 +22,7 @@
     "verify:categories": "node scripts/verify-categories.mjs",
     "verify:carriers": "node scripts/verify-carrier-companies.mjs",
     "verify:order-shipment": "node scripts/verify-order-shipment.mjs",
+    "verify:marketplace-order-shipment-import": "tsx --tsconfig tsconfig.json scripts/verify-marketplace-order-shipment-import.ts",
     "verify:users": "node scripts/verify-users.mjs",
     "verify:auth": "node scripts/verify-auth.mjs",
     "verify:checkout": "node scripts/verify-checkout.mjs",

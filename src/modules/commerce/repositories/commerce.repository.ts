@@ -357,6 +357,20 @@ export class CommerceRepository {
     promotionCode: string | null;
     currency: string;
     customerAccountId?: string | null;
+    shipmentAddressLine?: string | null;
+    shipmentCity?: string | null;
+    shipmentDistrict?: string | null;
+    shipmentPostalCode?: string | null;
+    shipmentContactName?: string | null;
+    shipmentContactPhone?: string | null;
+    invoiceAddressLine?: string | null;
+    invoiceCity?: string | null;
+    invoiceDistrict?: string | null;
+    invoicePostalCode?: string | null;
+    carrierCompanyId?: string | null;
+    cargoTrackingNumber?: string | null;
+    shipmentSourceChannel?: string | null;
+    externalCarrierNameRaw?: string | null;
   }) {
     return this.runSerializableTransaction(async (tx) => {
       const holds: Array<{
@@ -474,6 +488,20 @@ export class CommerceRepository {
           total: args.total,
           promotionCode: args.promotionCode,
           currency: args.currency,
+          shipmentAddressLine: args.shipmentAddressLine ?? null,
+          shipmentCity: args.shipmentCity ?? null,
+          shipmentDistrict: args.shipmentDistrict ?? null,
+          shipmentPostalCode: args.shipmentPostalCode ?? null,
+          shipmentContactName: args.shipmentContactName ?? null,
+          shipmentContactPhone: args.shipmentContactPhone ?? null,
+          invoiceAddressLine: args.invoiceAddressLine ?? null,
+          invoiceCity: args.invoiceCity ?? null,
+          invoiceDistrict: args.invoiceDistrict ?? null,
+          invoicePostalCode: args.invoicePostalCode ?? null,
+          carrierCompanyId: args.carrierCompanyId ?? null,
+          cargoTrackingNumber: args.cargoTrackingNumber ?? null,
+          shipmentSourceChannel: args.shipmentSourceChannel ?? null,
+          externalCarrierNameRaw: args.externalCarrierNameRaw ?? null,
           statusHistory: {
             create: {
               fromStatus: null,

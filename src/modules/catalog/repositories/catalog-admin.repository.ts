@@ -1006,6 +1006,23 @@ export class CatalogAdminRepository {
     });
   }
 
+  async findActiveCarrierCompanyByName(name: string) {
+    return prisma.carrierCompany.findFirst({
+      where: {
+        name: {
+          equals: name,
+          mode: "insensitive",
+        },
+        deleted: false,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+  }
+
   async listSuppliers() {
     return prisma.supplier.findMany({
       where: {

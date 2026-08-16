@@ -1,6 +1,7 @@
 import { redisCache } from "@/lib/redis";
 import type { CommerceLineQuote } from "@/modules/commerce/contracts/commerce.contract";
 import { CommerceRepository } from "@/modules/commerce/repositories/commerce.repository";
+import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { customerAccountService } from "@/modules/customers/services/customer-account.service";
 
 export type MarketplaceOrderLineInput = {
@@ -19,11 +20,81 @@ export type CreateMarketplaceOrderInput = {
   customerName?: string | null;
   customerEmail?: string | null;
   lines: MarketplaceOrderLineInput[];
+  shipmentAddress?: Record<string, unknown> | null;
+  invoiceAddress?: Record<string, unknown> | null;
+  cargoProviderName?: string | null;
+  cargoTrackingNumber?: string | null;
 };
 
 export type CreateMarketplaceOrderResult = {
   orderNumber: string;
 };
+
+type NormalizedAddress = {
+  addressLine: string | null;
+  city: string | null;
+  district: string | null;
+  postalCode: string | null;
+  contactName: string | null;
+  contactPhone: string | null;
+};
+
+const ADDRESS_LINE_KEYS = ["fullAddress", "address1", "address", "addressLine", "addressLine1", "openAddress", "street"];
+const CITY_KEYS = ["city", "cityName", "il"];
+const DISTRICT_KEYS = ["district", "districtName", "town", "ilce"];
+const POSTAL_CODE_KEYS = ["postalCode", "postCode", "zipCode", "zip"];
+const CONTACT_NAME_KEYS = ["fullName", "contactName", "recipientName", "name"];
+const CONTACT_PHONE_KEYS = ["phone", "phoneNumber", "gsm", "gsmNumber", "mobilePhone"];
+
+function pickString(source: Record<string, unknown>, candidateKeys: string[]): string | null {
+  const lowerCasedKeys = new Map(Object.keys(source).map((key) => [key.toLowerCase(), key] as const));
+
+  for (const candidate of candidateKeys) {
+    const actualKey = lowerCasedKeys.get(candidate.toLowerCase());
+    if (!actualKey) {
+      continue;
+    }
+
+    const value = source[actualKey];
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value.trim();
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Pazaryeri kanallarının adres JSON şeması resmi olarak dokümante/doğrulanmamış olduğundan
+ * (bkz. docs/PARASUT_CARGO_ALIGNMENT_PLAN.md Faz 3 risk notu), en yaygın Türkçe e-ticaret
+ * pazaryeri alan adı takma isimleri denenir. Eşleşme bulunamazsa alan null kalır; ham veri
+ * kaynağı olan MarketplaceOrderPackage kaydı değişmeden korunur, bilgi kaybolmaz.
+ */
+function normalizeMarketplaceAddress(raw: Record<string, unknown> | null | undefined): NormalizedAddress {
+  if (!raw) {
+    return {
+      addressLine: null,
+      city: null,
+      district: null,
+      postalCode: null,
+      contactName: null,
+      contactPhone: null,
+    };
+  }
+
+  const firstName = pickString(raw, ["firstName"]);
+  const lastName = pickString(raw, ["lastName"]);
+  const combinedName = [firstName, lastName].filter(Boolean).join(" ").trim() || null;
+
+  return {
+    addressLine: pickString(raw, ADDRESS_LINE_KEYS),
+    city: pickString(raw, CITY_KEYS),
+    district: pickString(raw, DISTRICT_KEYS),
+    postalCode: pickString(raw, POSTAL_CODE_KEYS),
+    contactName: pickString(raw, CONTACT_NAME_KEYS) ?? combinedName,
+    contactPhone: pickString(raw, CONTACT_PHONE_KEYS),
+  };
+}
 
 export class MarketplaceOrderCreationError extends Error {
   constructor(message: string, public readonly status = 409) {
@@ -104,6 +175,13 @@ export class MarketplaceOrderService {
         })
       : null;
 
+    const shipment = normalizeMarketplaceAddress(input.shipmentAddress);
+    const invoice = normalizeMarketplaceAddress(input.invoiceAddress);
+    const cargoProviderName = input.cargoProviderName?.trim() || null;
+    const matchedCarrier = cargoProviderName
+      ? await catalogAdminService.findCarrierCompanyByName(cargoProviderName)
+      : null;
+
     try {
       const created = await this.repository.createOrderAndCommitInventory({
         orderNumber,
@@ -114,6 +192,20 @@ export class MarketplaceOrderService {
         promotionCode: null,
         currency: quoteLines[0]?.currency ?? "TRY",
         customerAccountId: customerAccount?.id ?? null,
+        shipmentAddressLine: shipment.addressLine,
+        shipmentCity: shipment.city,
+        shipmentDistrict: shipment.district,
+        shipmentPostalCode: shipment.postalCode,
+        shipmentContactName: shipment.contactName,
+        shipmentContactPhone: shipment.contactPhone,
+        invoiceAddressLine: invoice.addressLine,
+        invoiceCity: invoice.city,
+        invoiceDistrict: invoice.district,
+        invoicePostalCode: invoice.postalCode,
+        carrierCompanyId: matchedCarrier?.id ?? null,
+        cargoTrackingNumber: input.cargoTrackingNumber?.trim() || null,
+        shipmentSourceChannel: input.channel,
+        externalCarrierNameRaw: matchedCarrier ? null : cargoProviderName,
       });
       await invalidateCatalogCache();
       return created;

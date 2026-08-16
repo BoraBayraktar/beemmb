@@ -212,6 +212,12 @@ function maskSecret(value: string | null | undefined) {
   return "********";
 }
 
+function asJsonRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : null;
+}
+
 function mapConfig(item: Awaited<ReturnType<MarketplaceIntegrationRepository["listConfigs"]>>[number]) {
   return {
     id: item.id,
@@ -981,6 +987,10 @@ export class MarketplaceIntegrationService {
         externalOrderNumber: item.externalOrderNumber,
         customerName: item.customerName,
         customerEmail: item.customerEmail,
+        shipmentAddress: asJsonRecord(item.shipmentAddress),
+        invoiceAddress: asJsonRecord(item.invoiceAddress),
+        cargoProviderName: item.cargoProviderName,
+        cargoTrackingNumber: item.cargoTrackingNumber,
         lines: orderLines.map((line) => ({
           productId: line.productId!,
           productVariantId: line.productVariantId,

@@ -1351,6 +1351,10 @@ export class CatalogAdminService {
     return row ? mapCarrierCompany(row) : null;
   }
 
+  async findCarrierCompanyByName(name: string): Promise<{ id: string; name: string } | null> {
+    return this.repository.findActiveCarrierCompanyByName(name);
+  }
+
   async createCarrierCompany(input: AdminCreateCarrierCompanyInput): Promise<AdminCarrierCompanyItem> {
     const parsed = createCarrierCompanySchema.parse(input);
     const created = await this.repository.createCarrierCompany(parsed);
