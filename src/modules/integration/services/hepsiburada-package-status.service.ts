@@ -3,6 +3,7 @@ import { z } from "zod";
 import { HepsiburadaClient } from "@/modules/integration/connectors/hepsiburada.client";
 import { MarketplaceIntegrationRepository } from "@/modules/integration/repositories/marketplace-integration.repository";
 import { integrationSecretCryptoService } from "@/modules/integration/services/integration-secret-crypto.service";
+import { syncOrderShipmentFromPackageStatus } from "@/modules/integration/services/marketplace-package-shipment-sync.service";
 
 const connectorStatusSyncPayloadSchema = z.discriminatedUnion("status", [
   z.object({
@@ -83,6 +84,11 @@ export class HepsiburadaPackageStatusService {
         packageStatus: parsed.status,
       });
 
+      await syncOrderShipmentFromPackageStatus({
+        matchedOrderId: item.matchedOrderId,
+        targetStatus: parsed.status,
+      });
+
       return {
         providerKey: "hepsiburada",
         externalReference: item.externalPackageId,
@@ -122,6 +128,11 @@ export class HepsiburadaPackageStatusService {
     await this.repository.updatePackageExternalStatus({
       packageId: item.id,
       packageStatus: parsed.status,
+    });
+
+    await syncOrderShipmentFromPackageStatus({
+      matchedOrderId: item.matchedOrderId,
+      targetStatus: parsed.status,
     });
 
     return {

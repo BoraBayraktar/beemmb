@@ -3,6 +3,7 @@ import { z } from "zod";
 import { PazaramaClient } from "@/modules/integration/connectors/pazarama.client";
 import { MarketplaceIntegrationRepository } from "@/modules/integration/repositories/marketplace-integration.repository";
 import { integrationSecretCryptoService } from "@/modules/integration/services/integration-secret-crypto.service";
+import { syncOrderShipmentFromPackageStatus } from "@/modules/integration/services/marketplace-package-shipment-sync.service";
 
 const PAZARAMA_STATUS_PREPARING = 12;
 const PAZARAMA_STATUS_SHIPPED = 5;
@@ -17,6 +18,10 @@ const connectorStatusSyncPayloadSchema = z.discriminatedUnion("status", [
     shippingTrackingNumber: z.string().trim().min(1).max(120),
     trackingUrl: z.string().trim().url().optional(),
     shipmentNumber: z.string().trim().min(1).max(120).optional(),
+    // Pazarama'nın kendi kargo firma ID sistemi (yukarıdaki cargoCompanyId) ile beemmb'nin
+    // dahili CarrierCompany kaydı farklı kimlik alanlarıdır; bu alan yalnızca bildirim
+    // başarılı olduktan sonra eşleşen Order kaydına doğru kargo firmasını yazmak için kullanılır.
+    carrierCompanyId: z.string().trim().min(1).optional(),
   }),
 ]);
 
@@ -85,6 +90,13 @@ export class PazaramaPackageStatusService {
         packageStatus: parsed.status,
       });
 
+      await syncOrderShipmentFromPackageStatus({
+        matchedOrderId: item.matchedOrderId,
+        targetStatus: "Invoiced",
+        carrierCompanyId: parsed.carrierCompanyId,
+        cargoTrackingNumber: parsed.shippingTrackingNumber,
+      });
+
       return {
         providerKey: "pazarama",
         externalReference: item.externalPackageId,
@@ -109,6 +121,11 @@ export class PazaramaPackageStatusService {
     await this.repository.updatePackageExternalStatus({
       packageId: item.id,
       packageStatus: parsed.status,
+    });
+
+    await syncOrderShipmentFromPackageStatus({
+      matchedOrderId: item.matchedOrderId,
+      targetStatus: "Picking",
     });
 
     return {

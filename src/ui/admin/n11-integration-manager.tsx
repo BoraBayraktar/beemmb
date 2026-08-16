@@ -99,6 +99,12 @@ type ProductOption = {
   productVariantId: string | null;
 };
 
+type CarrierCompanyOption = {
+  id: string;
+  name: string;
+  externalCodePazarama: string | null;
+};
+
 type Labels = {
   title: string;
   subtitle: string;
@@ -192,6 +198,15 @@ type Labels = {
   queued: string;
   operationFailed: string;
   loading: string;
+  invoicedFormTitle: string;
+  invoicedCarrierLabel: string;
+  invoicedCarrierPlaceholder: string;
+  invoicedTrackingNumberLabel: string;
+  invoicedSubmit: string;
+  invoicedCarrierMissingCode: string;
+  invoicedTrackingNumberRequired: string;
+  invoicedNotSupported: string;
+  nextActionNotifyInvoiced: string;
 };
 
 type DashboardResult = {
@@ -255,7 +270,7 @@ function getCapabilityItems(capabilities: MarketplaceCapabilitySet, labels: Labe
   ];
 }
 
-function resolveNextActionSummary(item: MarketplacePackageDetail, labels: Labels) {
+function resolveNextActionSummary(item: MarketplacePackageDetail, labels: Labels, capabilities: MarketplaceCapabilitySet) {
   const latestStatusJob = item.statusHistory[0] ?? null;
 
   if (item.needsReviewLineCount > 0) {
@@ -293,7 +308,14 @@ function resolveNextActionSummary(item: MarketplacePackageDetail, labels: Labels
     };
   }
 
-  if (item.packageStatus === "Picking") {
+  if (item.packageStatus === "Picking" && capabilities.supportsStatusInvoiced) {
+    return {
+      tone: "cyan" as const,
+      text: labels.nextActionNotifyInvoiced,
+    };
+  }
+
+  if (item.packageStatus === "Picking" && capabilities.supportsPackageSplit) {
     return {
       tone: "cyan" as const,
       text: labels.nextActionSplitPackage,
@@ -306,7 +328,7 @@ function resolveNextActionSummary(item: MarketplacePackageDetail, labels: Labels
   };
 }
 
-function resolvePackageListHint(item: MarketplacePackage, labels: Labels) {
+function resolvePackageListHint(item: MarketplacePackage, labels: Labels, capabilities: MarketplaceCapabilitySet) {
   if (item.needsReviewLineCount > 0) {
     return {
       tone: "amber" as const,
@@ -328,7 +350,14 @@ function resolvePackageListHint(item: MarketplacePackage, labels: Labels) {
     };
   }
 
-  if (item.packageStatus === "Picking") {
+  if (item.packageStatus === "Picking" && capabilities.supportsStatusInvoiced) {
+    return {
+      tone: "cyan" as const,
+      text: labels.nextActionNotifyInvoiced,
+    };
+  }
+
+  if (item.packageStatus === "Picking" && capabilities.supportsPackageSplit) {
     return {
       tone: "cyan" as const,
       text: labels.nextActionSplitPackage,
@@ -370,6 +399,7 @@ export function N11IntegrationManager({
   initialPackages,
   capabilities,
   productOptions,
+  carrierCompanies,
   summary,
 }: {
   labels: Labels;
@@ -380,6 +410,7 @@ export function N11IntegrationManager({
   initialPackages: MarketplacePackage[];
   capabilities: MarketplaceCapabilitySet;
   productOptions: ProductOption[];
+  carrierCompanies: CarrierCompanyOption[];
   summary: DashboardResult["summary"];
 }) {
   const [configs, setConfigs] = useState(initialConfigs);
@@ -398,11 +429,14 @@ export function N11IntegrationManager({
   const [selectedPackage, setSelectedPackage] = useState<MarketplacePackageDetail | null>(null);
   const [selectedTargets, setSelectedTargets] = useState<Record<string, string>>({});
   const [splitQuantities, setSplitQuantities] = useState<Record<string, string>>({});
+  const [invoicedCarrierCompanyId, setInvoicedCarrierCompanyId] = useState("");
+  const [invoicedTrackingNumber, setInvoicedTrackingNumber] = useState("");
   const capabilityItems = getCapabilityItems(capabilities, labels);
 
   const activeConfig = configs[0] ?? null;
   const canNotifyPicking = selectedPackage ? selectedPackage.packageStatus !== "Picking" && selectedPackage.packageStatus !== "Invoiced" : false;
-  const nextActionSummary = selectedPackage ? resolveNextActionSummary(selectedPackage, labels) : null;
+  const canNotifyInvoiced = capabilities.supportsStatusInvoiced && (selectedPackage ? selectedPackage.packageStatus === "Picking" : false);
+  const nextActionSummary = selectedPackage ? resolveNextActionSummary(selectedPackage, labels, capabilities) : null;
   const latestStatusJob = selectedPackage?.statusHistory[0] ?? null;
 
   async function refreshDashboard() {
@@ -759,6 +793,67 @@ export function N11IntegrationManager({
     }
   }
 
+  async function queueInvoicedSync() {
+    if (!selectedPackage) {
+      return;
+    }
+
+    const carrier = carrierCompanies.find((item) => item.id === invoicedCarrierCompanyId);
+
+    if (!carrier || !carrier.externalCodePazarama) {
+      setError(labels.invoicedCarrierMissingCode);
+      return;
+    }
+
+    if (!invoicedTrackingNumber.trim()) {
+      setError(labels.invoicedTrackingNumberRequired);
+      return;
+    }
+
+    setDetailBusy(true);
+    setError(null);
+    setNotice(null);
+
+    try {
+      const response = await fetch(`/api/admin/integrations/marketplaces/packages/${selectedPackage.id}/status-sync`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          channel,
+          status: "Invoiced",
+          cargoCompanyId: carrier.externalCodePazarama,
+          shippingTrackingNumber: invoicedTrackingNumber.trim(),
+          carrierCompanyId: carrier.id,
+        }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+        throw new Error(payload?.message ?? labels.operationFailed);
+      }
+
+      const workerResponse = await fetch("/api/admin/integrations/worker", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ limit: 10 }),
+      });
+
+      if (!workerResponse.ok) {
+        throw new Error(labels.operationFailed);
+      }
+
+      await openPackageDetail(selectedPackage.id);
+      await refreshDashboard();
+      setInvoicedCarrierCompanyId("");
+      setInvoicedTrackingNumber("");
+      setNotice(labels.statusSyncQueued);
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : labels.operationFailed);
+    } finally {
+      setDetailBusy(false);
+    }
+  }
+
   async function retryStatusJob(jobId: string) {
     if (!selectedPackage) {
       return;
@@ -884,7 +979,7 @@ export function N11IntegrationManager({
           {packages.length === 0 ? (
             <p className="p-5 text-sm text-neutral-500">{labels.emptyPackages}</p>
           ) : packages.map((item) => {
-            const packageHint = resolvePackageListHint(item, labels);
+            const packageHint = resolvePackageListHint(item, labels, capabilities);
 
             return (
             <article key={item.id} className="grid gap-3 p-5 lg:grid-cols-[1fr_150px_180px_220px_110px] lg:items-center">
@@ -1005,6 +1100,47 @@ export function N11IntegrationManager({
                 <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{labels.nextActionTitle}</p>
                 <p className="mt-2 text-sm font-medium text-neutral-900">{nextActionSummary?.text}</p>
               </div>
+
+              {capabilities.supportsStatusInvoiced && selectedPackage.packageStatus === "Picking" ? (
+                <div className="rounded-lg border border-neutral-200 bg-white px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{labels.invoicedFormTitle}</p>
+                  <div className="mt-3 grid gap-3 md:grid-cols-[1fr_1fr_auto]">
+                    <div className="grid gap-1">
+                      <label className="text-xs font-medium text-neutral-600">{labels.invoicedCarrierLabel}</label>
+                      <select
+                        value={invoicedCarrierCompanyId}
+                        onChange={(event) => setInvoicedCarrierCompanyId(event.target.value)}
+                        className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                        disabled={!canManage || detailBusy}
+                      >
+                        <option value="">{labels.invoicedCarrierPlaceholder}</option>
+                        {carrierCompanies.map((carrier) => (
+                          <option key={carrier.id} value={carrier.id}>{carrier.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="grid gap-1">
+                      <label className="text-xs font-medium text-neutral-600">{labels.invoicedTrackingNumberLabel}</label>
+                      <input
+                        value={invoicedTrackingNumber}
+                        onChange={(event) => setInvoicedTrackingNumber(event.target.value)}
+                        className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                        disabled={!canManage || detailBusy}
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <Button type="button" onClick={queueInvoicedSync} disabled={!canManage || detailBusy || !canNotifyInvoiced} size="sm">
+                        {labels.invoicedSubmit}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : !capabilities.supportsStatusInvoiced && selectedPackage.packageStatus === "Picking" ? (
+                <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{labels.invoicedFormTitle}</p>
+                  <p className="mt-2 text-sm text-neutral-600">{labels.invoicedNotSupported}</p>
+                </div>
+              ) : null}
 
               <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">

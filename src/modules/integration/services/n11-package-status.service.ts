@@ -3,6 +3,7 @@ import { z } from "zod";
 import { N11Client } from "@/modules/integration/connectors/n11.client";
 import { MarketplaceIntegrationRepository } from "@/modules/integration/repositories/marketplace-integration.repository";
 import { integrationSecretCryptoService } from "@/modules/integration/services/integration-secret-crypto.service";
+import { syncOrderShipmentFromPackageStatus } from "@/modules/integration/services/marketplace-package-shipment-sync.service";
 
 const connectorStatusSyncPayloadSchema = z.object({
   status: z.literal("Picking"),
@@ -42,6 +43,11 @@ export class N11PackageStatusService {
     await this.repository.updatePackageExternalStatus({
       packageId: item.id,
       packageStatus: parsed.status,
+    });
+
+    await syncOrderShipmentFromPackageStatus({
+      matchedOrderId: item.matchedOrderId,
+      targetStatus: parsed.status,
     });
 
     return {

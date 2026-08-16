@@ -25,9 +25,10 @@ export default async function AdminPazaramaIntegrationPage({
     redirect(`/${locale}/admin/login`);
   }
 
-  const [dashboard, productResult] = await Promise.all([
+  const [dashboard, productResult, carrierCompanies] = await Promise.all([
     marketplaceIntegrationService.getDashboard({ channel: "PAZARAMA" }),
     catalogAdminService.listProducts({ page: 1, pageSize: 50, status: "ACTIVE" }),
+    catalogAdminService.listCarrierCompanies(),
   ]);
 
   const productOptions = productResult.items.flatMap((product) => {
@@ -58,6 +59,9 @@ export default async function AdminPazaramaIntegrationPage({
       initialPackages={dashboard.packages}
       capabilities={dashboard.capabilities}
       productOptions={productOptions}
+      carrierCompanies={carrierCompanies
+        .filter((carrier) => carrier.isActive)
+        .map((carrier) => ({ id: carrier.id, name: carrier.name, externalCodePazarama: carrier.externalCodePazarama }))}
       summary={dashboard.summary}
       labels={{
         title: dictionary.admin.integrationMarketplacePazarama,
@@ -116,6 +120,7 @@ export default async function AdminPazaramaIntegrationPage({
         nextActionCreateOrder: dictionary.admin.integrationMarketplaceNextActionCreateOrder,
         nextActionNotifyPicking: dictionary.admin.integrationMarketplaceNextActionNotifyPicking,
         nextActionSplitPackage: dictionary.admin.integrationMarketplaceNextActionSplitPackage,
+        nextActionNotifyInvoiced: dictionary.admin.integrationMarketplaceNextActionNotifyInvoiced,
         nextActionRetryDeadLetter: dictionary.admin.integrationMarketplaceNextActionRetryDeadLetter,
         nextActionReviewFailure: dictionary.admin.integrationMarketplaceNextActionReviewFailure,
         nextActionHealthy: dictionary.admin.integrationMarketplaceNextActionHealthy,
@@ -152,6 +157,14 @@ export default async function AdminPazaramaIntegrationPage({
         queued: dictionary.admin.integrationMarketplacePazaramaQueued,
         operationFailed: dictionary.admin.operationFailed,
         loading: dictionary.common.loading,
+        invoicedFormTitle: dictionary.admin.integrationMarketplaceInvoicedFormTitle,
+        invoicedCarrierLabel: dictionary.admin.integrationMarketplaceInvoicedCarrierLabel,
+        invoicedCarrierPlaceholder: dictionary.admin.integrationMarketplaceInvoicedCarrierPlaceholder,
+        invoicedTrackingNumberLabel: dictionary.admin.integrationMarketplaceInvoicedTrackingNumberLabel,
+        invoicedSubmit: dictionary.admin.integrationMarketplaceInvoicedSubmit,
+        invoicedCarrierMissingCode: dictionary.admin.integrationMarketplaceInvoicedCarrierMissingCode,
+        invoicedTrackingNumberRequired: dictionary.admin.integrationMarketplaceInvoicedTrackingNumberRequired,
+        invoicedNotSupported: dictionary.admin.integrationMarketplaceInvoicedNotSupported,
       }}
     />
   );

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { TrendyolClient } from "@/modules/integration/connectors/trendyol.client";
 import { MarketplaceIntegrationRepository } from "@/modules/integration/repositories/marketplace-integration.repository";
 import { integrationSecretCryptoService } from "@/modules/integration/services/integration-secret-crypto.service";
+import { syncOrderShipmentFromPackageStatus } from "@/modules/integration/services/marketplace-package-shipment-sync.service";
 
 const connectorStatusSyncPayloadSchema = z.object({
   status: z.enum(["Picking", "Invoiced"]),
@@ -54,6 +55,11 @@ export class TrendyolPackageStatusService {
     await this.repository.updatePackageExternalStatus({
       packageId: item.id,
       packageStatus: parsed.status,
+    });
+
+    await syncOrderShipmentFromPackageStatus({
+      matchedOrderId: item.matchedOrderId,
+      targetStatus: parsed.status,
     });
 
     return {

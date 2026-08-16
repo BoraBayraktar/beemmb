@@ -139,6 +139,9 @@ const queueStatusSyncSchema = z.object({
   shippingTrackingNumber: z.string().trim().min(1).max(120).optional(),
   trackingUrl: z.string().trim().url().optional(),
   shipmentNumber: z.string().trim().min(1).max(120).optional(),
+  // beemmb'nin dahili CarrierCompany kaydı - pazaryerinin kendi cargoCompanyId'sinden farklı;
+  // yalnızca bildirim başarılı olduktan sonra eşleşen Order'a doğru kargo firmasını yazmak icin.
+  carrierCompanyId: z.string().trim().min(1).optional(),
 }).superRefine((value, context) => {
   const channel = value.channel ?? "TRENDYOL";
   if (channel === "TRENDYOL" && value.status === "Invoiced" && !value.invoiceNumber) {
@@ -321,7 +324,7 @@ function getMarketplaceCapabilities(channel: "TRENDYOL" | "N11" | "PAZARAMA" | "
       supportsPriceSync: true,
       supportsStockSync: true,
       supportsStatusPicking: true,
-      supportsStatusInvoiced: false,
+      supportsStatusInvoiced: true,
       supportsPackageSplit: false,
       requiresBrandMapping: true,
       requiresCategoryMapping: true,
@@ -741,6 +744,7 @@ export class MarketplaceIntegrationService {
         ...(parsed.shippingTrackingNumber ? { shippingTrackingNumber: parsed.shippingTrackingNumber } : {}),
         ...(parsed.trackingUrl ? { trackingUrl: parsed.trackingUrl } : {}),
         ...(parsed.shipmentNumber ? { shipmentNumber: parsed.shipmentNumber } : {}),
+        ...(parsed.carrierCompanyId ? { carrierCompanyId: parsed.carrierCompanyId } : {}),
       },
       idempotencySuffix: [
         parsed.status,
