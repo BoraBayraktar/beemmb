@@ -8,6 +8,33 @@ import { Button } from "@/components/ui/button";
 
 type OrderStatus = "CONFIRMED" | "CANCELLED";
 type PaymentStatus = "PENDING" | "AUTHORIZED" | "PAID" | "FAILED" | "REFUNDED";
+type ShipmentStatus = "NOT_SHIPPED" | "PREPARING" | "SHIPPED" | "DELIVERED" | "RETURNED";
+
+type ShipmentInfo = {
+  shipmentStatus: ShipmentStatus;
+  shipmentAddressLine: string | null;
+  shipmentCity: string | null;
+  shipmentDistrict: string | null;
+  shipmentPostalCode: string | null;
+  shipmentCountry: string | null;
+  shipmentContactName: string | null;
+  shipmentContactPhone: string | null;
+  invoiceAddressLine: string | null;
+  invoiceCity: string | null;
+  invoiceDistrict: string | null;
+  invoicePostalCode: string | null;
+  carrierCompanyId: string | null;
+  carrierCompanyName: string | null;
+  cargoTrackingNumber: string | null;
+  cargoShippedAt: string | null;
+  cargoDeliveredAt: string | null;
+};
+
+type CarrierCompanyOption = {
+  id: string;
+  name: string;
+  trackingUrlTemplate: string | null;
+};
 
 type Item = {
   id: string;
@@ -104,6 +131,7 @@ type OrderDetail = {
     note: string | null;
     createdAt: string;
   }[];
+  shipment: ShipmentInfo;
 };
 
 type Labels = {
@@ -177,6 +205,29 @@ type Labels = {
   refundFinancialAccount: string;
   refundFinancialAccountRequired: string;
   notSpecified: string;
+  shipmentTitle: string;
+  shipmentSummaryEmpty: string;
+  shipmentSummaryEmptyAction: string;
+  shipmentEdit: string;
+  shipmentStatusLabel: string;
+  shipmentStatusNotShipped: string;
+  shipmentStatusPreparing: string;
+  shipmentStatusShipped: string;
+  shipmentStatusDelivered: string;
+  shipmentStatusReturned: string;
+  shipmentCarrier: string;
+  shipmentCarrierPlaceholder: string;
+  shipmentTrackingNumber: string;
+  shipmentTrackingLink: string;
+  shipmentAddressLine: string;
+  shipmentCity: string;
+  shipmentDistrict: string;
+  shipmentPostalCode: string;
+  shipmentContactName: string;
+  shipmentContactPhone: string;
+  shipmentSave: string;
+  shipmentSaveSuccess: string;
+  shipmentClose: string;
 };
 
 type AccountOption = {
@@ -319,6 +370,46 @@ function formatOrderStatus(value: OrderStatus, labels: Labels) {
   return value === "CONFIRMED" ? labels.orderStatusConfirmed : labels.orderStatusCancelled;
 }
 
+function formatShipmentStatus(value: ShipmentStatus, labels: Labels) {
+  switch (value) {
+    case "PREPARING":
+      return labels.shipmentStatusPreparing;
+    case "SHIPPED":
+      return labels.shipmentStatusShipped;
+    case "DELIVERED":
+      return labels.shipmentStatusDelivered;
+    case "RETURNED":
+      return labels.shipmentStatusReturned;
+    case "NOT_SHIPPED":
+    default:
+      return labels.shipmentStatusNotShipped;
+  }
+}
+
+function shipmentStatusBadgeClass(value: ShipmentStatus) {
+  switch (value) {
+    case "SHIPPED":
+      return "bg-blue-100 text-blue-700";
+    case "DELIVERED":
+      return "bg-emerald-100 text-emerald-700";
+    case "RETURNED":
+      return "bg-rose-100 text-rose-700";
+    case "PREPARING":
+      return "bg-amber-100 text-amber-700";
+    case "NOT_SHIPPED":
+    default:
+      return "bg-neutral-200 text-neutral-700";
+  }
+}
+
+function buildTrackingUrl(template: string | null, trackingNumber: string | null) {
+  if (!template || !trackingNumber) {
+    return null;
+  }
+
+  return template.replaceAll("{trackingNumber}", encodeURIComponent(trackingNumber));
+}
+
 function formatSystemNote(value: string | null, orderNumber: string, labels: Labels) {
   if (!value) {
     return labels.notSpecified;
@@ -341,7 +432,7 @@ function formatSystemNote(value: string | null, orderNumber: string, labels: Lab
   return formatted.replace(orderNumber, orderNumber);
 }
 
-export function OrderDetailManager({ locale, order, labels, canManage, accountOptions }: { locale: string; order: OrderDetail; labels: Labels; canManage: boolean; accountOptions: AccountOption[] }) {
+export function OrderDetailManager({ locale, order, labels, canManage, accountOptions, carrierCompanies }: { locale: string; order: OrderDetail; labels: Labels; canManage: boolean; accountOptions: AccountOption[]; carrierCompanies: CarrierCompanyOption[] }) {
   const router = useRouter();
   const [status, setStatus] = useState<OrderStatus>(order.status);
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(order.paymentStatus);
@@ -349,6 +440,85 @@ export function OrderDetailManager({ locale, order, labels, canManage, accountOp
   const [collectionFinancialAccountId, setCollectionFinancialAccountId] = useState(accountOptions[0]?.id ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [shipmentPanelOpen, setShipmentPanelOpen] = useState(false);
+  const [shipmentSaving, setShipmentSaving] = useState(false);
+  const [shipmentError, setShipmentError] = useState<string | null>(null);
+  const [shipmentSuccess, setShipmentSuccess] = useState(false);
+  const [shipmentForm, setShipmentForm] = useState({
+    shipmentStatus: order.shipment.shipmentStatus,
+    carrierCompanyId: order.shipment.carrierCompanyId ?? "",
+    cargoTrackingNumber: order.shipment.cargoTrackingNumber ?? "",
+    shipmentAddressLine: order.shipment.shipmentAddressLine ?? "",
+    shipmentCity: order.shipment.shipmentCity ?? "",
+    shipmentDistrict: order.shipment.shipmentDistrict ?? "",
+    shipmentPostalCode: order.shipment.shipmentPostalCode ?? "",
+    shipmentContactName: order.shipment.shipmentContactName ?? "",
+    shipmentContactPhone: order.shipment.shipmentContactPhone ?? "",
+  });
+
+  const selectedCarrier = carrierCompanies.find((carrier) => carrier.id === order.shipment.carrierCompanyId) ?? null;
+  const trackingUrl = buildTrackingUrl(selectedCarrier?.trackingUrlTemplate ?? null, order.shipment.cargoTrackingNumber);
+  const hasShipmentInfo = Boolean(order.shipment.carrierCompanyId || order.shipment.cargoTrackingNumber || order.shipment.shipmentAddressLine);
+
+  function patchShipmentField(field: keyof typeof shipmentForm, value: string) {
+    setShipmentForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function openShipmentPanel() {
+    setShipmentError(null);
+    setShipmentSuccess(false);
+    setShipmentForm({
+      shipmentStatus: order.shipment.shipmentStatus,
+      carrierCompanyId: order.shipment.carrierCompanyId ?? "",
+      cargoTrackingNumber: order.shipment.cargoTrackingNumber ?? "",
+      shipmentAddressLine: order.shipment.shipmentAddressLine ?? "",
+      shipmentCity: order.shipment.shipmentCity ?? "",
+      shipmentDistrict: order.shipment.shipmentDistrict ?? "",
+      shipmentPostalCode: order.shipment.shipmentPostalCode ?? "",
+      shipmentContactName: order.shipment.shipmentContactName ?? "",
+      shipmentContactPhone: order.shipment.shipmentContactPhone ?? "",
+    });
+    setShipmentPanelOpen(true);
+  }
+
+  async function saveShipment() {
+    setShipmentSaving(true);
+    setShipmentError(null);
+    setShipmentSuccess(false);
+
+    try {
+      const response = await fetch(`/api/admin/orders/${order.id}/shipment`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          shipmentStatus: shipmentForm.shipmentStatus,
+          carrierCompanyId: shipmentForm.carrierCompanyId || null,
+          cargoTrackingNumber: shipmentForm.cargoTrackingNumber.trim() || null,
+          shipmentAddressLine: shipmentForm.shipmentAddressLine.trim() || null,
+          shipmentCity: shipmentForm.shipmentCity.trim() || null,
+          shipmentDistrict: shipmentForm.shipmentDistrict.trim() || null,
+          shipmentPostalCode: shipmentForm.shipmentPostalCode.trim() || null,
+          shipmentContactName: shipmentForm.shipmentContactName.trim() || null,
+          shipmentContactPhone: shipmentForm.shipmentContactPhone.trim() || null,
+        }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+        setShipmentError(payload?.message ?? labels.operationFailed);
+        return;
+      }
+
+      setShipmentSuccess(true);
+      router.refresh();
+    } catch {
+      setShipmentError(labels.operationFailed);
+    } finally {
+      setShipmentSaving(false);
+    }
+  }
 
   const recordedCollectionAmount = order.financialMovements
     .filter((movement) => movement.sourceType === "COLLECTION" && movement.direction === "IN")
@@ -478,6 +648,40 @@ export function OrderDetailManager({ locale, order, labels, canManage, accountOp
           <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.paymentStatus}</p>
           <p className="mt-2 text-sm font-semibold text-neutral-950">{formatPaymentStatus(paymentStatus)}</p>
         </article>
+        <article className="rounded-xl border border-neutral-200 p-4 md:col-span-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.shipmentTitle}</p>
+          {hasShipmentInfo ? (
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${shipmentStatusBadgeClass(order.shipment.shipmentStatus)}`}>
+                {formatShipmentStatus(order.shipment.shipmentStatus, labels)}
+              </span>
+              {selectedCarrier ? <span className="text-sm font-medium text-neutral-800">{selectedCarrier.name}</span> : null}
+              {order.shipment.cargoTrackingNumber ? (
+                trackingUrl ? (
+                  <a href={trackingUrl} target="_blank" rel="noreferrer" className="text-sm text-neutral-600 underline underline-offset-4 hover:text-neutral-900">
+                    {order.shipment.cargoTrackingNumber}
+                  </a>
+                ) : (
+                  <span className="text-sm text-neutral-600">{order.shipment.cargoTrackingNumber}</span>
+                )
+              ) : null}
+              {canManage ? (
+                <button type="button" onClick={openShipmentPanel} className="text-xs font-medium text-neutral-600 underline decoration-neutral-300 underline-offset-4">
+                  {labels.shipmentEdit}
+                </button>
+              ) : null}
+            </div>
+          ) : (
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <p className="text-sm text-neutral-500">{labels.shipmentSummaryEmpty}</p>
+              {canManage ? (
+                <button type="button" onClick={openShipmentPanel} className="text-xs font-medium text-neutral-600 underline decoration-neutral-300 underline-offset-4">
+                  {labels.shipmentSummaryEmptyAction}
+                </button>
+              ) : null}
+            </div>
+          )}
+        </article>
         <article className="rounded-xl border border-neutral-200 p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.orderSubtotal}</p>
           <p className="mt-2 text-sm font-semibold text-neutral-950">{formatMoney(order.subtotal, order.currency, locale)}</p>
@@ -535,6 +739,121 @@ export function OrderDetailManager({ locale, order, labels, canManage, accountOp
           </div>
         </div>
       </div>
+
+      {canManage && shipmentPanelOpen ? (
+        <div className="border-t border-neutral-200 bg-neutral-50 p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-lg font-semibold tracking-tight text-neutral-950">{labels.shipmentTitle}</h3>
+            <button type="button" onClick={() => setShipmentPanelOpen(false)} className="text-xs font-medium text-neutral-600 underline decoration-neutral-300 underline-offset-4">
+              {labels.shipmentClose}
+            </button>
+          </div>
+
+          {shipmentError ? <p className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{shipmentError}</p> : null}
+          {shipmentSuccess ? <p className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{labels.shipmentSaveSuccess}</p> : null}
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid gap-1">
+              <label className="text-xs font-medium text-neutral-600">{labels.shipmentStatusLabel}</label>
+              <select
+                value={shipmentForm.shipmentStatus}
+                onChange={(event) => patchShipmentField("shipmentStatus", event.target.value)}
+                className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                disabled={shipmentSaving}
+              >
+                <option value="NOT_SHIPPED">{labels.shipmentStatusNotShipped}</option>
+                <option value="PREPARING">{labels.shipmentStatusPreparing}</option>
+                <option value="SHIPPED">{labels.shipmentStatusShipped}</option>
+                <option value="DELIVERED">{labels.shipmentStatusDelivered}</option>
+                <option value="RETURNED">{labels.shipmentStatusReturned}</option>
+              </select>
+            </div>
+            <div className="grid gap-1">
+              <label className="text-xs font-medium text-neutral-600">{labels.shipmentCarrier}</label>
+              <select
+                value={shipmentForm.carrierCompanyId}
+                onChange={(event) => patchShipmentField("carrierCompanyId", event.target.value)}
+                className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                disabled={shipmentSaving}
+              >
+                <option value="">{labels.shipmentCarrierPlaceholder}</option>
+                {carrierCompanies.map((carrier) => (
+                  <option key={carrier.id} value={carrier.id}>{carrier.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="grid gap-1">
+              <label className="text-xs font-medium text-neutral-600">{labels.shipmentTrackingNumber}</label>
+              <input
+                value={shipmentForm.cargoTrackingNumber}
+                onChange={(event) => patchShipmentField("cargoTrackingNumber", event.target.value)}
+                className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                disabled={shipmentSaving}
+              />
+            </div>
+            <div className="grid gap-1">
+              <label className="text-xs font-medium text-neutral-600">{labels.shipmentContactName}</label>
+              <input
+                value={shipmentForm.shipmentContactName}
+                onChange={(event) => patchShipmentField("shipmentContactName", event.target.value)}
+                className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                disabled={shipmentSaving}
+              />
+            </div>
+            <div className="grid gap-1">
+              <label className="text-xs font-medium text-neutral-600">{labels.shipmentContactPhone}</label>
+              <input
+                value={shipmentForm.shipmentContactPhone}
+                onChange={(event) => patchShipmentField("shipmentContactPhone", event.target.value)}
+                className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                disabled={shipmentSaving}
+              />
+            </div>
+            <div className="grid gap-1 md:col-span-2">
+              <label className="text-xs font-medium text-neutral-600">{labels.shipmentAddressLine}</label>
+              <input
+                value={shipmentForm.shipmentAddressLine}
+                onChange={(event) => patchShipmentField("shipmentAddressLine", event.target.value)}
+                className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                disabled={shipmentSaving}
+              />
+            </div>
+            <div className="grid gap-1">
+              <label className="text-xs font-medium text-neutral-600">{labels.shipmentCity}</label>
+              <input
+                value={shipmentForm.shipmentCity}
+                onChange={(event) => patchShipmentField("shipmentCity", event.target.value)}
+                className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                disabled={shipmentSaving}
+              />
+            </div>
+            <div className="grid gap-1">
+              <label className="text-xs font-medium text-neutral-600">{labels.shipmentDistrict}</label>
+              <input
+                value={shipmentForm.shipmentDistrict}
+                onChange={(event) => patchShipmentField("shipmentDistrict", event.target.value)}
+                className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                disabled={shipmentSaving}
+              />
+            </div>
+            <div className="grid gap-1">
+              <label className="text-xs font-medium text-neutral-600">{labels.shipmentPostalCode}</label>
+              <input
+                value={shipmentForm.shipmentPostalCode}
+                onChange={(event) => patchShipmentField("shipmentPostalCode", event.target.value)}
+                className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                disabled={shipmentSaving}
+              />
+            </div>
+          </div>
+
+          <div className="mt-4 flex justify-end">
+            <Button type="button" variant="secondary" onClick={saveShipment} disabled={shipmentSaving}>
+              {shipmentSaving ? labels.loading : labels.shipmentSave}
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       <div className="border-t border-neutral-200 p-5">
         <h3 className="mb-3 text-lg font-semibold tracking-tight text-neutral-950">{labels.orderDocumentsTitle}</h3>

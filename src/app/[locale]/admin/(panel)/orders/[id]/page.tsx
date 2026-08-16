@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { CommerceOrderAdminError, commerceService } from "@/modules/commerce/services/commerce.service";
 import { financialAccountsService } from "@/modules/finance/services/financial-accounts.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
@@ -27,6 +28,7 @@ export default async function AdminOrderDetailPage({
 
   let order;
   const accountOptions = await financialAccountsService.listAccountOptions();
+  const carrierCompanies = await catalogAdminService.listCarrierCompanies();
 
   try {
     order = await commerceService.getOrderById(id);
@@ -44,7 +46,33 @@ export default async function AdminOrderDetailPage({
       order={order}
       canManage={await rbacService.hasPermission(user, "orders.manage")}
       accountOptions={accountOptions}
+      carrierCompanies={carrierCompanies
+        .filter((carrier) => carrier.isActive)
+        .map((carrier) => ({ id: carrier.id, name: carrier.name, trackingUrlTemplate: carrier.trackingUrlTemplate }))}
       labels={{
+        shipmentTitle: dictionary.admin.orderShipmentTitle,
+        shipmentSummaryEmpty: dictionary.admin.orderShipmentSummaryEmpty,
+        shipmentSummaryEmptyAction: dictionary.admin.orderShipmentSummaryEmptyAction,
+        shipmentEdit: dictionary.admin.orderShipmentEdit,
+        shipmentStatusLabel: dictionary.admin.orderShipmentStatusLabel,
+        shipmentStatusNotShipped: dictionary.admin.orderShipmentStatusNotShipped,
+        shipmentStatusPreparing: dictionary.admin.orderShipmentStatusPreparing,
+        shipmentStatusShipped: dictionary.admin.orderShipmentStatusShipped,
+        shipmentStatusDelivered: dictionary.admin.orderShipmentStatusDelivered,
+        shipmentStatusReturned: dictionary.admin.orderShipmentStatusReturned,
+        shipmentCarrier: dictionary.admin.orderShipmentCarrier,
+        shipmentCarrierPlaceholder: dictionary.admin.orderShipmentCarrierPlaceholder,
+        shipmentTrackingNumber: dictionary.admin.orderShipmentTrackingNumber,
+        shipmentTrackingLink: dictionary.admin.orderShipmentTrackingLink,
+        shipmentAddressLine: dictionary.admin.orderShipmentAddressLine,
+        shipmentCity: dictionary.admin.orderShipmentCity,
+        shipmentDistrict: dictionary.admin.orderShipmentDistrict,
+        shipmentPostalCode: dictionary.admin.orderShipmentPostalCode,
+        shipmentContactName: dictionary.admin.orderShipmentContactName,
+        shipmentContactPhone: dictionary.admin.orderShipmentContactPhone,
+        shipmentSave: dictionary.admin.orderShipmentSave,
+        shipmentSaveSuccess: dictionary.admin.orderShipmentSaveSuccess,
+        shipmentClose: dictionary.admin.orderShipmentClose,
         back: dictionary.admin.backToOrders,
         orderNumber: dictionary.admin.orderNumber,
         orderStatus: dictionary.admin.orderStatus,
