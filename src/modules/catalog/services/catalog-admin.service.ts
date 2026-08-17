@@ -188,6 +188,7 @@ const createCarrierCompanySchema = z.object({
   trackingUrlTemplate: z.string().trim().max(500).optional().nullable(),
   externalCodeTrendyol: z.coerce.number().int().positive().optional().nullable(),
   externalCodePazarama: z.string().trim().max(120).optional().nullable(),
+  externalCodeHepsiburada: z.string().trim().max(120).optional().nullable(),
   isActive: z.boolean().default(true),
 });
 
@@ -199,6 +200,7 @@ const updateCarrierCompanySchema = z.object({
   trackingUrlTemplate: z.string().trim().max(500).optional().nullable(),
   externalCodeTrendyol: z.coerce.number().int().positive().optional().nullable(),
   externalCodePazarama: z.string().trim().max(120).optional().nullable(),
+  externalCodeHepsiburada: z.string().trim().max(120).optional().nullable(),
   isActive: z.boolean().optional(),
 });
 
@@ -358,6 +360,7 @@ function mapCarrierCompany(item: {
   trackingUrlTemplate: string | null;
   externalCodeTrendyol: number | null;
   externalCodePazarama: string | null;
+  externalCodeHepsiburada: string | null;
   isActive: boolean;
   _count?: { orders: number };
 }): AdminCarrierCompanyItem {
@@ -369,6 +372,7 @@ function mapCarrierCompany(item: {
     trackingUrlTemplate: item.trackingUrlTemplate,
     externalCodeTrendyol: item.externalCodeTrendyol,
     externalCodePazarama: item.externalCodePazarama,
+    externalCodeHepsiburada: item.externalCodeHepsiburada,
     isActive: item.isActive,
     orderCount: item._count?.orders ?? 0,
   };

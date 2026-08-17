@@ -29,6 +29,7 @@ type Labels = {
   trackingUrlTemplateHint: string;
   trendyolId: string;
   pazaramaId: string;
+  hepsiburadaId: string;
   orderCount: string;
   create: string;
   edit: string;
@@ -56,6 +57,7 @@ type CarrierForm = {
   trackingUrlTemplate: string;
   externalCodeTrendyol: string;
   externalCodePazarama: string;
+  externalCodeHepsiburada: string;
 };
 
 const emptyForm: CarrierForm = {
@@ -65,6 +67,7 @@ const emptyForm: CarrierForm = {
   trackingUrlTemplate: "",
   externalCodeTrendyol: "",
   externalCodePazarama: "",
+  externalCodeHepsiburada: "",
 };
 
 export function CarrierDirectoryManager({ items, labels, canDelete }: Props) {
@@ -134,6 +137,7 @@ export function CarrierDirectoryManager({ items, labels, canDelete }: Props) {
       trackingUrlTemplate: item.trackingUrlTemplate ?? "",
       externalCodeTrendyol: item.externalCodeTrendyol ? String(item.externalCodeTrendyol) : "",
       externalCodePazarama: item.externalCodePazarama ?? "",
+      externalCodeHepsiburada: item.externalCodeHepsiburada ?? "",
     });
     setDrawerMode("edit");
   }
@@ -184,6 +188,7 @@ export function CarrierDirectoryManager({ items, labels, canDelete }: Props) {
           trackingUrlTemplate: form.trackingUrlTemplate.trim() || null,
           externalCodeTrendyol: form.externalCodeTrendyol.trim() ? Number(form.externalCodeTrendyol) : null,
           externalCodePazarama: form.externalCodePazarama.trim() || null,
+          externalCodeHepsiburada: form.externalCodeHepsiburada.trim() || null,
         }),
       });
 
@@ -267,11 +272,12 @@ export function CarrierDirectoryManager({ items, labels, canDelete }: Props) {
         </div>
 
         <div className="overflow-hidden rounded-xl border border-neutral-200">
-          <div className="hidden grid-cols-[1fr_1fr_140px_140px_120px_190px] gap-4 border-b border-neutral-200 bg-neutral-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 lg:grid">
+          <div className="hidden grid-cols-[1fr_1fr_110px_110px_110px_120px_190px] gap-4 border-b border-neutral-200 bg-neutral-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 lg:grid">
             <span>{labels.name}</span>
             <span>{labels.slug}</span>
             <span>{labels.trendyolId}</span>
             <span>{labels.pazaramaId}</span>
+            <span>{labels.hepsiburadaId}</span>
             <span>{labels.orderCount}</span>
             <span className="text-right">İşlem</span>
           </div>
@@ -281,7 +287,7 @@ export function CarrierDirectoryManager({ items, labels, canDelete }: Props) {
           ) : (
             <div className="divide-y divide-neutral-200">
               {filteredItems.map((item) => (
-                <article key={item.id} className="grid gap-4 p-4 lg:grid-cols-[1fr_1fr_140px_140px_120px_190px] lg:items-center">
+                <article key={item.id} className="grid gap-4 p-4 lg:grid-cols-[1fr_1fr_110px_110px_110px_120px_190px] lg:items-center">
                   <div>
                     <h3 className="font-medium text-neutral-950">{item.name}</h3>
                     {!item.isActive ? (
@@ -293,6 +299,7 @@ export function CarrierDirectoryManager({ items, labels, canDelete }: Props) {
                   <p className="text-sm text-neutral-500">{item.slug}</p>
                   <p className="text-sm text-neutral-500">{item.externalCodeTrendyol ?? "-"}</p>
                   <p className="text-sm text-neutral-500">{item.externalCodePazarama ?? "-"}</p>
+                  <p className="text-sm text-neutral-500">{item.externalCodeHepsiburada ?? "-"}</p>
                   <p className="text-sm font-semibold text-neutral-950">{item.orderCount}</p>
                   <div className="flex flex-wrap gap-2 lg:justify-end">
                     <Button type="button" size="sm" variant="secondary" disabled={loading} onClick={() => openEditDrawer(item)}>{labels.edit}</Button>
@@ -346,6 +353,10 @@ export function CarrierDirectoryManager({ items, labels, canDelete }: Props) {
               <div className="grid gap-2">
                 <Label>{labels.pazaramaId}</Label>
                 <Input value={activeForm.externalCodePazarama} onChange={(event) => patchActiveField("externalCodePazarama", event.target.value)} />
+              </div>
+              <div className="grid gap-2">
+                <Label>{labels.hepsiburadaId}</Label>
+                <Input value={activeForm.externalCodeHepsiburada} onChange={(event) => patchActiveField("externalCodeHepsiburada", event.target.value)} />
               </div>
               <div className="mt-2 flex items-center justify-end gap-2">
                 <Button type="button" variant="secondary" onClick={closeDrawer} disabled={loading}>

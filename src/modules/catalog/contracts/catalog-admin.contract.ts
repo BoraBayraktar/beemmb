@@ -276,6 +276,7 @@ export type AdminCarrierCompanyItem = {
   trackingUrlTemplate: string | null;
   externalCodeTrendyol: number | null;
   externalCodePazarama: string | null;
+  externalCodeHepsiburada: string | null;
   isActive: boolean;
   orderCount: number;
 };
@@ -287,6 +288,7 @@ export type AdminCreateCarrierCompanyInput = {
   trackingUrlTemplate?: string | null;
   externalCodeTrendyol?: number | null;
   externalCodePazarama?: string | null;
+  externalCodeHepsiburada?: string | null;
   isActive?: boolean;
 };
 
@@ -298,6 +300,7 @@ export type AdminUpdateCarrierCompanyInput = {
   trackingUrlTemplate?: string | null;
   externalCodeTrendyol?: number | null;
   externalCodePazarama?: string | null;
+  externalCodeHepsiburada?: string | null;
   isActive?: boolean;
 };
 

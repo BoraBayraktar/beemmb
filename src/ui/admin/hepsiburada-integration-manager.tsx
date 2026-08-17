@@ -101,6 +101,12 @@ type ProductOption = {
   productVariantId: string | null;
 };
 
+type CarrierCompanyOption = {
+  id: string;
+  name: string;
+  externalCodeHepsiburada: string | null;
+};
+
 type Labels = {
   title: string;
   subtitle: string;
@@ -193,6 +199,14 @@ type Labels = {
   queued: string;
   operationFailed: string;
   loading: string;
+  cargoCompanyChangeTitle: string;
+  cargoCompanyChangeLabel: string;
+  cargoCompanyChangePlaceholder: string;
+  cargoCompanyChangeSubmit: string;
+  cargoCompanyChangeMissingCode: string;
+  cargoInfoRefreshTitle: string;
+  cargoInfoRefreshSubmit: string;
+  cargoInfoRefreshHint: string;
 };
 
 type DashboardResult = {
@@ -388,6 +402,7 @@ export function HepsiburadaIntegrationManager({
   initialPackages,
   capabilities,
   productOptions,
+  carrierCompanies,
   summary,
 }: {
   labels: Labels;
@@ -397,6 +412,7 @@ export function HepsiburadaIntegrationManager({
   initialPackages: MarketplacePackage[];
   capabilities: MarketplaceCapabilitySet;
   productOptions: ProductOption[];
+  carrierCompanies: CarrierCompanyOption[];
   summary: DashboardResult["summary"];
 }) {
   const [configs, setConfigs] = useState(initialConfigs);
@@ -419,6 +435,7 @@ export function HepsiburadaIntegrationManager({
   const [notice, setNotice] = useState<string | null>(null);
   const [selectedPackage, setSelectedPackage] = useState<MarketplacePackageDetail | null>(null);
   const [selectedTargets, setSelectedTargets] = useState<Record<string, string>>({});
+  const [selectedCarrierCompanyId, setSelectedCarrierCompanyId] = useState("");
   const capabilityItems = getCapabilityItems(capabilities, labels);
 
   const activeConfig = configs[0] ?? null;
@@ -765,6 +782,73 @@ export function HepsiburadaIntegrationManager({
     }
   }
 
+  async function changeCargoCompany() {
+    if (!selectedPackage) {
+      return;
+    }
+
+    const carrier = carrierCompanies.find((item) => item.id === selectedCarrierCompanyId);
+
+    if (!carrier || !carrier.externalCodeHepsiburada) {
+      setError(labels.cargoCompanyChangeMissingCode);
+      return;
+    }
+
+    setDetailBusy(true);
+    setError(null);
+    setNotice(null);
+
+    try {
+      const response = await fetch(`/api/admin/integrations/marketplaces/packages/${selectedPackage.id}/hepsiburada-cargo-company`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ carrierCompanyId: carrier.id }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+        throw new Error(payload?.message ?? labels.operationFailed);
+      }
+
+      await openPackageDetail(selectedPackage.id);
+      setSelectedCarrierCompanyId("");
+      setNotice(labels.statusSyncQueued);
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : labels.operationFailed);
+    } finally {
+      setDetailBusy(false);
+    }
+  }
+
+  async function refreshCargoInfo() {
+    if (!selectedPackage) {
+      return;
+    }
+
+    setDetailBusy(true);
+    setError(null);
+    setNotice(null);
+
+    try {
+      const response = await fetch(`/api/admin/integrations/marketplaces/packages/${selectedPackage.id}/hepsiburada-shipping-info`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+        throw new Error(payload?.message ?? labels.operationFailed);
+      }
+
+      await openPackageDetail(selectedPackage.id);
+      setNotice(labels.statusSyncQueued);
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : labels.operationFailed);
+    } finally {
+      setDetailBusy(false);
+    }
+  }
+
   async function retryStatusJob(jobId: string) {
     if (!selectedPackage) {
       return;
@@ -1044,6 +1128,43 @@ export function HepsiburadaIntegrationManager({
                   <p className="mt-1 text-xs text-neutral-500">{selectedPackage.importStatus}</p>
                 </article>
               </div>
+
+              {selectedPackage.packageStatus === "Picking" || selectedPackage.packageStatus === "Invoiced" ? (
+                <div className="rounded-lg border border-neutral-200 bg-white px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{labels.cargoCompanyChangeTitle}</p>
+                  <div className="mt-3 grid gap-3 md:grid-cols-[1fr_auto]">
+                    <div className="grid gap-1">
+                      <label className="text-xs font-medium text-neutral-600">{labels.cargoCompanyChangeLabel}</label>
+                      <select
+                        value={selectedCarrierCompanyId}
+                        onChange={(event) => setSelectedCarrierCompanyId(event.target.value)}
+                        className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                        disabled={!canManage || detailBusy}
+                      >
+                        <option value="">{labels.cargoCompanyChangePlaceholder}</option>
+                        {carrierCompanies.map((carrier) => (
+                          <option key={carrier.id} value={carrier.id}>{carrier.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex items-end">
+                      <Button type="button" variant="secondary" onClick={changeCargoCompany} disabled={!canManage || detailBusy || !selectedCarrierCompanyId} size="sm">
+                        {labels.cargoCompanyChangeSubmit}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex flex-col gap-2 border-t border-neutral-200 pt-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{labels.cargoInfoRefreshTitle}</p>
+                      <p className="mt-1 text-xs text-neutral-500">{labels.cargoInfoRefreshHint}</p>
+                    </div>
+                    <Button type="button" variant="secondary" onClick={refreshCargoInfo} disabled={!canManage || detailBusy} size="sm">
+                      {labels.cargoInfoRefreshSubmit}
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
 
               <div className="grid gap-3 md:grid-cols-3">
                 <article className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">

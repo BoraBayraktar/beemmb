@@ -49,6 +49,7 @@ export default async function AdminCarriersPage({
         trackingUrlTemplateHint: dictionary.admin.carrierTrackingUrlTemplateHint,
         trendyolId: dictionary.admin.carrierTrendyolId,
         pazaramaId: dictionary.admin.carrierPazaramaId,
+        hepsiburadaId: dictionary.admin.carrierHepsiburadaId,
         orderCount: dictionary.admin.carrierOrderCount,
         create: dictionary.admin.create,
         edit: dictionary.admin.edit,

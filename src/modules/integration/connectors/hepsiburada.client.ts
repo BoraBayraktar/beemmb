@@ -377,6 +377,50 @@ export class HepsiburadaClient {
     return this.readJsonResponse(response, "HEPSIBURADA_CREATE_PACKAGE_FAILED");
   }
 
+  /**
+   * Paketlenmiş bir siparişin kargo firmasını değiştirir. Hepsiburada'nın kendi kargo firması
+   * kısa adı (ShortName) kullanılır — bu, beemmb'nin dahili CarrierCompany kaydından farklı bir
+   * kimlik alanıdır (bkz. CarrierCompany.externalCodeHepsiburada).
+   * Kaynak: "Paketli Siparişin Kargo Firmasının Değiştirilmesi",
+   * PUT /packages/merchantid/{merchantId}/packagenumber/{packageNumber}/changecargocompany
+   */
+  async changePackageCargoCompany(packageNumber: string, cargoCompanyShortName: string) {
+    const url = new URL(`${this.baseUrl}/packages/merchantid/${encodeURIComponent(this.args.merchantId)}/packagenumber/${encodeURIComponent(packageNumber)}/changecargocompany`);
+
+    const response = await fetch(url, {
+      method: "PUT",
+      headers: {
+        ...this.buildHeaders(),
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ CargoCompanyShortName: cargoCompanyShortName }),
+      cache: "no-store",
+    });
+
+    return this.readJsonResponse(response, "HEPSIBURADA_CHANGE_PACKAGE_CARGO_COMPANY_FAILED");
+  }
+
+  /**
+   * Belirli bir paketin güncel kargo/takip bilgisini okur. Takip numarası Hepsiburada/entegre
+   * kargo firması tarafından üretilir — merchant tarafından girilmez, yalnızca geri okunur.
+   * Kaynak: "Paket İçin Kargo Bilgilerini Listeleme",
+   * GET /packages/merchantid/{merchantId}/packagenumber/{packagenumber}
+   */
+  async getPackageShippingInfo(packageNumber: string) {
+    const url = new URL(`${this.baseUrl}/packages/merchantid/${encodeURIComponent(this.args.merchantId)}/packagenumber/${encodeURIComponent(packageNumber)}`);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        ...this.buildHeaders(),
+        Accept: "application/json",
+      },
+      cache: "no-store",
+    });
+
+    return this.readJsonResponse(response, "HEPSIBURADA_GET_PACKAGE_SHIPPING_INFO_FAILED");
+  }
+
   async sendInvoiceLink(input: HepsiburadaInvoiceInput) {
     const url = new URL(`${this.baseUrl}/packages/merchantid/${encodeURIComponent(this.args.merchantId)}/packagenumber/${encodeURIComponent(input.packageNumber)}/invoice`);
     const payload = {

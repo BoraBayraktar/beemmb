@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { HepsiburadaClient } from "@/modules/integration/connectors/hepsiburada.client";
+import { hepsiburadaPackageStatusService } from "@/modules/integration/services/hepsiburada-package-status.service";
 import { marketplaceOrderService, MarketplaceOrderCreationError } from "@/modules/commerce/services/marketplace-order.service";
 import { N11Client } from "@/modules/integration/connectors/n11.client";
 import { PazaramaClient } from "@/modules/integration/connectors/pazarama.client";
@@ -192,6 +193,15 @@ const retryStatusJobSchema = z.object({
   packageId: z.string().trim().min(1),
   jobId: z.string().trim().min(1),
   resolvedByUserId: z.string().trim().min(1),
+});
+
+const hepsiburadaChangeCargoCompanySchema = z.object({
+  packageId: z.string().trim().min(1),
+  carrierCompanyId: z.string().trim().min(1),
+});
+
+const hepsiburadaRefreshShippingInfoSchema = z.object({
+  packageId: z.string().trim().min(1),
 });
 
 const catalogLookupSchema = z.object({
@@ -772,6 +782,16 @@ export class MarketplaceIntegrationService {
       jobId: parsed.jobId,
       resolvedByUserId: parsed.resolvedByUserId,
     });
+  }
+
+  async changeHepsiburadaPackageCargoCompany(input: unknown) {
+    const parsed = hepsiburadaChangeCargoCompanySchema.parse(input);
+    return hepsiburadaPackageStatusService.changeCargoCompany(parsed);
+  }
+
+  async refreshHepsiburadaPackageShippingInfo(input: unknown) {
+    const parsed = hepsiburadaRefreshShippingInfoSchema.parse(input);
+    return hepsiburadaPackageStatusService.refreshShippingInfo(parsed);
   }
 
   async scheduleActiveTrendyolImports(input: unknown) {

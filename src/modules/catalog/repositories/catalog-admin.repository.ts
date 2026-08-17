@@ -921,6 +921,7 @@ export class CatalogAdminRepository {
         trackingUrlTemplate: input.trackingUrlTemplate ?? null,
         externalCodeTrendyol: input.externalCodeTrendyol ?? null,
         externalCodePazarama: input.externalCodePazarama ?? null,
+        externalCodeHepsiburada: input.externalCodeHepsiburada ?? null,
         isActive: input.isActive ?? true,
       },
       include: {
@@ -949,6 +950,7 @@ export class CatalogAdminRepository {
         ...(input.trackingUrlTemplate !== undefined ? { trackingUrlTemplate: input.trackingUrlTemplate } : {}),
         ...(input.externalCodeTrendyol !== undefined ? { externalCodeTrendyol: input.externalCodeTrendyol } : {}),
         ...(input.externalCodePazarama !== undefined ? { externalCodePazarama: input.externalCodePazarama } : {}),
+        ...(input.externalCodeHepsiburada !== undefined ? { externalCodeHepsiburada: input.externalCodeHepsiburada } : {}),
         ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
       },
       include: {
@@ -979,6 +981,7 @@ export class CatalogAdminRepository {
         trackingUrlTemplate: true,
         externalCodeTrendyol: true,
         externalCodePazarama: true,
+        externalCodeHepsiburada: true,
         isActive: true,
         _count: {
           select: {

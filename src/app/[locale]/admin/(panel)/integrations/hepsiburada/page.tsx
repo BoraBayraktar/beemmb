@@ -25,9 +25,10 @@ export default async function AdminHepsiburadaIntegrationPage({
     redirect(`/${locale}/admin/login`);
   }
 
-  const [dashboard, productResult] = await Promise.all([
+  const [dashboard, productResult, carrierCompanies] = await Promise.all([
     marketplaceIntegrationService.getDashboard({ channel: "HEPSIBURADA" }),
     catalogAdminService.listProducts({ page: 1, pageSize: 50, status: "ACTIVE" }),
+    catalogAdminService.listCarrierCompanies(),
   ]);
 
   const productOptions = productResult.items.flatMap((product) => {
@@ -57,6 +58,9 @@ export default async function AdminHepsiburadaIntegrationPage({
       initialPackages={dashboard.packages}
       capabilities={dashboard.capabilities}
       productOptions={productOptions}
+      carrierCompanies={carrierCompanies
+        .filter((carrier) => carrier.isActive)
+        .map((carrier) => ({ id: carrier.id, name: carrier.name, externalCodeHepsiburada: carrier.externalCodeHepsiburada }))}
       summary={dashboard.summary}
       labels={{
         title: dictionary.admin.integrationMarketplaceHepsiburada,
@@ -150,6 +154,14 @@ export default async function AdminHepsiburadaIntegrationPage({
         queued: dictionary.admin.integrationMarketplaceHepsiburadaQueued,
         operationFailed: dictionary.admin.operationFailed,
         loading: dictionary.common.loading,
+        cargoCompanyChangeTitle: dictionary.admin.integrationMarketplaceHepsiburadaCargoCompanyChangeTitle,
+        cargoCompanyChangeLabel: dictionary.admin.integrationMarketplaceHepsiburadaCargoCompanyChangeLabel,
+        cargoCompanyChangePlaceholder: dictionary.admin.integrationMarketplaceHepsiburadaCargoCompanyChangePlaceholder,
+        cargoCompanyChangeSubmit: dictionary.admin.integrationMarketplaceHepsiburadaCargoCompanyChangeSubmit,
+        cargoCompanyChangeMissingCode: dictionary.admin.integrationMarketplaceHepsiburadaCargoCompanyChangeMissingCode,
+        cargoInfoRefreshTitle: dictionary.admin.integrationMarketplaceHepsiburadaCargoInfoRefreshTitle,
+        cargoInfoRefreshSubmit: dictionary.admin.integrationMarketplaceHepsiburadaCargoInfoRefreshSubmit,
+        cargoInfoRefreshHint: dictionary.admin.integrationMarketplaceHepsiburadaCargoInfoRefreshHint,
       }}
     />
   );

@@ -57,6 +57,7 @@ model CarrierCompany {
   trackingUrlTemplate   String?
   externalCodeTrendyol  Int?
   externalCodePazarama  String?
+  externalCodeHepsiburada String?
   isActive              Boolean   @default(true)
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt

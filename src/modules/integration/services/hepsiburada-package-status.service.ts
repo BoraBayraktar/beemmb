@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { HepsiburadaClient } from "@/modules/integration/connectors/hepsiburada.client";
 import { MarketplaceIntegrationRepository } from "@/modules/integration/repositories/marketplace-integration.repository";
 import { integrationSecretCryptoService } from "@/modules/integration/services/integration-secret-crypto.service";
@@ -145,6 +146,106 @@ export class HepsiburadaPackageStatusService {
         lineItemCount: lineItemIds.length,
         packageableWith,
         result,
+      },
+    };
+  }
+
+  private async buildClient(item: NonNullable<Awaited<ReturnType<MarketplaceIntegrationRepository["findPackageForOutbound"]>>>) {
+    if (item.channel !== "HEPSIBURADA") {
+      throw new Error("MARKETPLACE_PACKAGE_UNSUPPORTED_CHANNEL");
+    }
+
+    const apiKey = integrationSecretCryptoService.decrypt(item.config.apiKeyEncrypted);
+    const apiSecret = integrationSecretCryptoService.decrypt(item.config.apiSecretEncrypted);
+
+    if (!apiKey || !apiSecret || !item.config.userAgent) {
+      throw new Error("HEPSIBURADA_CONFIG_INCOMPLETE");
+    }
+
+    return new HepsiburadaClient({
+      merchantId: item.config.sellerId,
+      apiKey,
+      apiSecret,
+      userAgent: item.config.userAgent,
+      endpointUrl: item.config.endpointUrl,
+    });
+  }
+
+  /**
+   * Paketlenmiş bir Hepsiburada siparişinin kargo firmasını değiştirir. Takip numarası bu
+   * çağrıda gönderilmez — Hepsiburada'da takip numarası merchant tarafından girilmez, yalnızca
+   * kargo firması/entegre sistem tarafından üretilip geri okunur (bkz. refreshShippingInfo).
+   */
+  async changeCargoCompany(input: { packageId: string; carrierCompanyId: string }) {
+    const item = await this.repository.findPackageForOutbound(input.packageId);
+
+    if (!item) {
+      throw new Error("MARKETPLACE_PACKAGE_NOT_FOUND");
+    }
+
+    const carrier = await catalogAdminService.getCarrierCompanyById(input.carrierCompanyId);
+
+    if (!carrier?.externalCodeHepsiburada) {
+      throw new Error("HEPSIBURADA_CARRIER_SHORTNAME_MISSING");
+    }
+
+    const client = await this.buildClient(item);
+    const result = await client.changePackageCargoCompany(item.externalPackageId, carrier.externalCodeHepsiburada);
+
+    await syncOrderShipmentFromPackageStatus({
+      matchedOrderId: item.matchedOrderId,
+      carrierCompanyId: carrier.id,
+    });
+
+    return {
+      providerKey: "hepsiburada",
+      externalReference: item.externalPackageId,
+      responsePayload: {
+        documentStatus: "SENT",
+        cargoCompanyShortName: carrier.externalCodeHepsiburada,
+        result,
+      },
+    };
+  }
+
+  /**
+   * Paketin güncel kargo/takip bilgisini Hepsiburada'dan okuyup eşleşen Order kaydına yazar.
+   * Kaynak: "Paket İçin Kargo Bilgilerini Listeleme" — status alanı Intransit/Delivered
+   * değerlerini alabilir, trackingInfoCode Hepsiburada/kargo firması tarafından üretilir.
+   */
+  async refreshShippingInfo(input: { packageId: string }) {
+    const item = await this.repository.findPackageForOutbound(input.packageId);
+
+    if (!item) {
+      throw new Error("MARKETPLACE_PACKAGE_NOT_FOUND");
+    }
+
+    const client = await this.buildClient(item);
+    const info = await client.getPackageShippingInfo(item.externalPackageId);
+
+    const trackingNumber = readString(info.trackingInfoCode) ?? readString(info.trackingNumber);
+    const rawStatus = readString(info.status)?.toLowerCase() ?? null;
+    const shipmentStatus = rawStatus === "delivered"
+      ? "DELIVERED" as const
+      : rawStatus === "intransit"
+        ? "SHIPPED" as const
+        : undefined;
+
+    await syncOrderShipmentFromPackageStatus({
+      matchedOrderId: item.matchedOrderId,
+      shipmentStatus,
+      cargoTrackingNumber: trackingNumber,
+      cargoDeliveredAt: shipmentStatus === "DELIVERED" ? new Date() : null,
+    });
+
+    return {
+      providerKey: "hepsiburada",
+      externalReference: item.externalPackageId,
+      responsePayload: {
+        documentStatus: "SENT",
+        trackingNumber,
+        status: rawStatus,
+        info,
       },
     };
   }
