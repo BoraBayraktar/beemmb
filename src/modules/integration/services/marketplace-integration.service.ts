@@ -3,13 +3,14 @@ import { z } from "zod";
 import { HepsiburadaClient } from "@/modules/integration/connectors/hepsiburada.client";
 import { hepsiburadaPackageStatusService } from "@/modules/integration/services/hepsiburada-package-status.service";
 import { marketplaceOrderService, MarketplaceOrderCreationError } from "@/modules/commerce/services/marketplace-order.service";
-import { N11Client } from "@/modules/integration/connectors/n11.client";
+import { N11_CANCEL_REASON_IDS, N11_COLLECTION_REQUEST_SHIPMENT_COMPANIES, N11Client } from "@/modules/integration/connectors/n11.client";
 import { PazaramaClient } from "@/modules/integration/connectors/pazarama.client";
 import { TrendyolClient } from "@/modules/integration/connectors/trendyol.client";
 import type { MarketplaceCapabilitySet } from "@/modules/integration/contracts/integration.contract";
 import { MarketplaceIntegrationRepository } from "@/modules/integration/repositories/marketplace-integration.repository";
 import { integrationService } from "@/modules/integration/services/integration.service";
 import { integrationSecretCryptoService } from "@/modules/integration/services/integration-secret-crypto.service";
+import { n11CollectionRequestService } from "@/modules/integration/services/n11-collection-request.service";
 import { n11OrderImportService } from "@/modules/integration/services/n11-order-import.service";
 import { n11PackageStatusService } from "@/modules/integration/services/n11-package-status.service";
 import { n11PackageSplitService } from "@/modules/integration/services/n11-package-split.service";
@@ -17,6 +18,7 @@ import { n11StockSyncService } from "@/modules/integration/services/n11-stock-sy
 import { pazaramaOrderImportService } from "@/modules/integration/services/pazarama-order-import.service";
 import { trendyolPackageSplitService } from "@/modules/integration/services/trendyol-package-split.service";
 import { trendyolStockSyncService } from "@/modules/integration/services/trendyol-stock-sync.service";
+import { trendyolUnsuppliedService } from "@/modules/integration/services/trendyol-unsupplied.service";
 
 const upsertConfigSchema = z.object({
   id: z.string().trim().min(1).optional(),
@@ -125,6 +127,27 @@ const splitPackageSchema = z.object({
     lineId: z.string().trim().min(1),
     quantity: z.coerce.number().int().positive(),
   })).min(1),
+  cancellations: z.array(z.object({
+    lineId: z.string().trim().min(1),
+    quantity: z.coerce.number().int().positive(),
+    cancelReasonId: z.coerce.number().int().refine((value) => (N11_CANCEL_REASON_IDS as readonly number[]).includes(value)),
+  })).optional(),
+});
+
+const createCollectionRequestSchema = z.object({
+  packageId: z.string().trim().min(1),
+  shipmentCompany: z.enum(N11_COLLECTION_REQUEST_SHIPMENT_COMPANIES),
+  boxQuantity: z.coerce.number().int().positive(),
+  desi: z.coerce.number().positive(),
+});
+
+const cancelUnsuppliedItemsSchema = z.object({
+  packageId: z.string().trim().min(1),
+  lines: z.array(z.object({
+    lineId: z.string().trim().min(1),
+    quantity: z.coerce.number().int().positive(),
+  })).min(1),
+  reasonId: z.coerce.number().int(),
 });
 
 const queueStatusSyncSchema = z.object({
@@ -276,6 +299,10 @@ function mapPackage(item: Awaited<ReturnType<MarketplaceIntegrationRepository["l
     customerName: item.customerName,
     cargoProviderName: item.cargoProviderName,
     cargoTrackingNumber: item.cargoTrackingNumber,
+    externalCargoCompanyId: item.externalCargoCompanyId,
+    cargoSenderNumber: item.cargoSenderNumber,
+    cargoTrackingLink: item.cargoTrackingLink,
+    shipmentMethod: item.shipmentMethod,
     lineCount: item.lines.length,
     matchedLineCount,
     needsReviewLineCount,
@@ -336,6 +363,8 @@ function getMarketplaceCapabilities(channel: "TRENDYOL" | "N11" | "PAZARAMA" | "
       supportsStatusPicking: true,
       supportsStatusInvoiced: true,
       supportsPackageSplit: false,
+      supportsUnsuppliedCancel: false,
+      supportsCollectionRequest: false,
       requiresBrandMapping: true,
       requiresCategoryMapping: true,
       requiresAttributeMapping: true,
@@ -352,6 +381,8 @@ function getMarketplaceCapabilities(channel: "TRENDYOL" | "N11" | "PAZARAMA" | "
       supportsStatusPicking: true,
       supportsStatusInvoiced: true,
       supportsPackageSplit: false,
+      supportsUnsuppliedCancel: false,
+      supportsCollectionRequest: false,
       requiresBrandMapping: false,
       requiresCategoryMapping: false,
       requiresAttributeMapping: false,
@@ -368,6 +399,8 @@ function getMarketplaceCapabilities(channel: "TRENDYOL" | "N11" | "PAZARAMA" | "
       supportsStatusPicking: true,
       supportsStatusInvoiced: false,
       supportsPackageSplit: true,
+      supportsUnsuppliedCancel: false,
+      supportsCollectionRequest: true,
       requiresBrandMapping: false,
       requiresCategoryMapping: false,
       requiresAttributeMapping: false,
@@ -383,6 +416,8 @@ function getMarketplaceCapabilities(channel: "TRENDYOL" | "N11" | "PAZARAMA" | "
     supportsStatusPicking: true,
     supportsStatusInvoiced: true,
     supportsPackageSplit: true,
+    supportsUnsuppliedCancel: true,
+    supportsCollectionRequest: false,
     requiresBrandMapping: true,
     requiresCategoryMapping: true,
     requiresAttributeMapping: true,
@@ -1058,6 +1093,36 @@ export class MarketplaceIntegrationService {
 
     if (targetPackage.channel === "N11") {
       return n11PackageSplitService.splitPackage(parsed);
+    }
+
+    throw new Error("MARKETPLACE_PACKAGE_UNSUPPORTED_CHANNEL");
+  }
+
+  async cancelUnsuppliedItems(input: unknown) {
+    const parsed = cancelUnsuppliedItemsSchema.parse(input);
+    const targetPackage = await this.repository.findPackageForSplit(parsed.packageId);
+
+    if (!targetPackage) {
+      throw new Error("MARKETPLACE_PACKAGE_NOT_FOUND");
+    }
+
+    if (targetPackage.channel === "TRENDYOL") {
+      return trendyolUnsuppliedService.cancelUnsuppliedItems(parsed);
+    }
+
+    throw new Error("MARKETPLACE_PACKAGE_UNSUPPORTED_CHANNEL");
+  }
+
+  async createN11CollectionRequest(input: unknown) {
+    const parsed = createCollectionRequestSchema.parse(input);
+    const targetPackage = await this.repository.findPackageForSplit(parsed.packageId);
+
+    if (!targetPackage) {
+      throw new Error("MARKETPLACE_PACKAGE_NOT_FOUND");
+    }
+
+    if (targetPackage.channel === "N11") {
+      return n11CollectionRequestService.createCollectionRequest(parsed);
     }
 
     throw new Error("MARKETPLACE_PACKAGE_UNSUPPORTED_CHANNEL");

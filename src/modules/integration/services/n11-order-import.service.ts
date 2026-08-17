@@ -67,6 +67,10 @@ function normalizePackage(configId: string, item: N11ShipmentPackage) {
     invoiceAddress: normalizeRawObject(item.billingAddress),
     cargoProviderName: readString(item.cargoProviderName),
     cargoTrackingNumber: readString(item.cargoTrackingNumber),
+    externalCargoCompanyId: item.shipmentCompanyId == null ? null : String(item.shipmentCompanyId),
+    cargoSenderNumber: item.cargoSenderNumber == null ? null : String(item.cargoSenderNumber),
+    cargoTrackingLink: readString(item.cargoTrackingLink),
+    shipmentMethod: item.shipmentMethod == null ? null : String(item.shipmentMethod),
     rawPayload: item,
     lines: (item.lines ?? []).map(normalizeLine),
   };

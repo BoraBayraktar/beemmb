@@ -21,6 +21,10 @@ export type N11ShipmentPackage = {
   billingAddress?: Record<string, unknown>;
   cargoProviderName?: string;
   cargoTrackingNumber?: string;
+  shipmentCompanyId?: number | string;
+  cargoSenderNumber?: string | number;
+  cargoTrackingLink?: string;
+  shipmentMethod?: number | string;
   lines?: N11ShipmentPackageLine[];
   [key: string]: unknown;
 };
@@ -59,6 +63,18 @@ type N11SplitPackageResponse = {
     quantity?: number;
   }>;
 };
+
+type N11CollectionRequestResponse = {
+  code?: number;
+  message?: string;
+};
+
+/** Toplama Talebi'nde (CollectionRequest) kabul edilen sabit lojistik firma kısa kodları. */
+export const N11_COLLECTION_REQUEST_SHIPMENT_COMPANIES = ["HLZ", "CEVA", "BL"] as const;
+export type N11CollectionRequestShipmentCompany = (typeof N11_COLLECTION_REQUEST_SHIPMENT_COMPANIES)[number];
+
+/** cancelReasonId degerleri (splitPackageByQuantity > cancelledItems). */
+export const N11_CANCEL_REASON_IDS = [61, 62, 63, 64, 65] as const;
 
 type N11PriceStockTaskResponse = {
   id?: number | string;
@@ -165,6 +181,10 @@ export class N11Client {
       orderLineId: string;
       quantities: number;
     }>;
+  }>, cancelledItems?: Array<{
+    orderLineId: string;
+    quantity: number;
+    cancelReasonId: number;
   }>) {
     const response = await fetch(`${this.baseUrl}/rest/delivery/v1/splitPackageByQuantity`, {
       method: "POST",
@@ -177,6 +197,13 @@ export class N11Client {
             quantities: detail.quantities,
           })),
         })),
+        ...(cancelledItems && cancelledItems.length > 0 ? {
+          cancelledItems: cancelledItems.map((item) => ({
+            orderLineId: Number(item.orderLineId) || item.orderLineId,
+            quantity: item.quantity,
+            cancelReasonId: item.cancelReasonId,
+          })),
+        } : {}),
       }),
     });
 
@@ -186,6 +213,37 @@ export class N11Client {
     }
 
     return response.json() as Promise<N11SplitPackageResponse>;
+  }
+
+  /** Toplama Talebi (CollectionRequest) - Picking statusundeki paket icin kargo firmasina teslim/toplama talebi olusturur. */
+  async createCollectionRequest(details: Array<{
+    id: string;
+    orderLineId: string;
+    boxQuantity: number;
+    desi: number;
+    shipmentCompany: N11CollectionRequestShipmentCompany;
+  }>) {
+    const response = await fetch(`${this.baseUrl}/rest/delivery/v1/collectionRequest`, {
+      method: "PUT",
+      headers: this.buildHeaders(),
+      cache: "no-store",
+      body: JSON.stringify({
+        collectionRequestDetails: details.map((detail) => ({
+          id: detail.id,
+          orderLineId: Number(detail.orderLineId) || detail.orderLineId,
+          boxQuantity: detail.boxQuantity,
+          desi: detail.desi,
+          shipmentCompany: detail.shipmentCompany,
+        })),
+      }),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => "");
+      throw new Error(`N11_COLLECTION_REQUEST_FAILED:${response.status}:${errorBody.slice(0, 240)}`);
+    }
+
+    return response.json() as Promise<N11CollectionRequestResponse>;
   }
 
   async updateProductPriceAndStock(input: {

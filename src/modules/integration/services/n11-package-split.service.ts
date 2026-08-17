@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { N11Client } from "@/modules/integration/connectors/n11.client";
+import { N11_CANCEL_REASON_IDS, N11Client } from "@/modules/integration/connectors/n11.client";
 import { MarketplaceIntegrationRepository } from "@/modules/integration/repositories/marketplace-integration.repository";
 import { integrationSecretCryptoService } from "@/modules/integration/services/integration-secret-crypto.service";
 import { n11OrderImportService } from "@/modules/integration/services/n11-order-import.service";
@@ -11,6 +11,13 @@ const splitPackageSchema = z.object({
     lineId: z.string().trim().min(1),
     quantity: z.coerce.number().int().positive(),
   })).min(1),
+  cancellations: z.array(z.object({
+    lineId: z.string().trim().min(1),
+    quantity: z.coerce.number().int().positive(),
+    cancelReasonId: z.coerce.number().int().refine((value) => (N11_CANCEL_REASON_IDS as readonly number[]).includes(value), {
+      message: "Gecersiz iptal nedeni",
+    }),
+  })).optional(),
 });
 
 export class N11PackageSplitService {
@@ -40,22 +47,37 @@ export class N11PackageSplitService {
     }
 
     const lineMap = new Map(targetPackage.lines.map((line) => [line.id, line]));
-    const packageDetails = parsed.splits.map((split) => {
-      const line = lineMap.get(split.lineId);
+    const cancellations = parsed.cancellations ?? [];
+
+    const combinedQuantityByLineId = new Map<string, number>();
+    for (const split of parsed.splits) {
+      combinedQuantityByLineId.set(split.lineId, (combinedQuantityByLineId.get(split.lineId) ?? 0) + split.quantity);
+    }
+    for (const cancellation of cancellations) {
+      combinedQuantityByLineId.set(cancellation.lineId, (combinedQuantityByLineId.get(cancellation.lineId) ?? 0) + cancellation.quantity);
+    }
+
+    for (const [lineId, combinedQuantity] of combinedQuantityByLineId) {
+      const line = lineMap.get(lineId);
 
       if (!line) {
         throw new Error("MARKETPLACE_LINE_NOT_FOUND");
       }
 
-      if (split.quantity > line.quantity) {
+      if (combinedQuantity > line.quantity) {
         throw new Error("N11_PACKAGE_SPLIT_QUANTITY_INVALID");
       }
+    }
 
-      return {
-        orderLineId: line.externalLineId,
-        quantities: split.quantity,
-      };
-    });
+    const packageDetails = parsed.splits.map((split) => ({
+      orderLineId: lineMap.get(split.lineId)!.externalLineId,
+      quantities: split.quantity,
+    }));
+    const cancelledItems = cancellations.map((cancellation) => ({
+      orderLineId: lineMap.get(cancellation.lineId)!.externalLineId,
+      quantity: cancellation.quantity,
+      cancelReasonId: cancellation.cancelReasonId,
+    }));
 
     const client = new N11Client({
       sellerId: targetPackage.config.sellerId,
@@ -68,7 +90,7 @@ export class N11PackageSplitService {
       {
         packageDetails,
       },
-    ]);
+    ], cancelledItems);
 
     await n11OrderImportService.importShipmentPackages({
       configId: targetPackage.configId,

@@ -127,6 +127,8 @@ export type MarketplaceCapabilitySet = {
   supportsStatusPicking: boolean;
   supportsStatusInvoiced: boolean;
   supportsPackageSplit: boolean;
+  supportsUnsuppliedCancel: boolean;
+  supportsCollectionRequest: boolean;
   requiresBrandMapping: boolean;
   requiresCategoryMapping: boolean;
   requiresAttributeMapping: boolean;

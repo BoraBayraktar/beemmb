@@ -32,6 +32,10 @@ type MarketplacePackage = {
   customerName: string | null;
   cargoProviderName: string | null;
   cargoTrackingNumber: string | null;
+  externalCargoCompanyId: string | null;
+  cargoSenderNumber: string | null;
+  cargoTrackingLink: string | null;
+  shipmentMethod: string | null;
   lineCount: number;
   matchedLineCount: number;
   needsReviewLineCount: number;
@@ -191,6 +195,7 @@ type Labels = {
   capabilityPickingStatus: string;
   capabilityInvoicedStatus: string;
   capabilityPackageSplit: string;
+  capabilityCollectionRequest: string;
   capabilityBrandMapping: string;
   capabilityCategoryMapping: string;
   capabilityAttributeMapping: string;
@@ -207,6 +212,25 @@ type Labels = {
   invoicedTrackingNumberRequired: string;
   invoicedNotSupported: string;
   nextActionNotifyInvoiced: string;
+  collectionRequestTitle: string;
+  collectionRequestHint: string;
+  collectionRequestShipmentCompanyLabel: string;
+  collectionRequestShipmentCompanyPlaceholder: string;
+  collectionRequestBoxQuantityLabel: string;
+  collectionRequestDesiLabel: string;
+  collectionRequestSubmit: string;
+  collectionRequestSuccess: string;
+  collectionRequestInvalid: string;
+  cancelQuantityLabel: string;
+  cancelReasonPlaceholder: string;
+  cancelReasonStockOut: string;
+  cancelReasonDefective: string;
+  cancelReasonWrongPrice: string;
+  cancelReasonForceMajeure: string;
+  cancelReasonOther: string;
+  cancelReasonRequired: string;
+  cargoSenderNumberLabel: string;
+  cargoTrackingLinkLabel: string;
 };
 
 type DashboardResult = {
@@ -263,10 +287,23 @@ function getCapabilityItems(capabilities: MarketplaceCapabilitySet, labels: Labe
     { label: labels.capabilityPickingStatus, enabled: capabilities.supportsStatusPicking },
     { label: labels.capabilityInvoicedStatus, enabled: capabilities.supportsStatusInvoiced },
     { label: labels.capabilityPackageSplit, enabled: capabilities.supportsPackageSplit },
+    { label: labels.capabilityCollectionRequest, enabled: capabilities.supportsCollectionRequest },
     { label: labels.capabilityBrandMapping, enabled: capabilities.requiresBrandMapping },
     { label: labels.capabilityCategoryMapping, enabled: capabilities.requiresCategoryMapping },
     { label: labels.capabilityAttributeMapping, enabled: capabilities.requiresAttributeMapping },
     { label: labels.capabilityAdvancedPreflight, enabled: capabilities.preflightLevel === "ADVANCED" },
+  ];
+}
+
+const N11_COLLECTION_REQUEST_SHIPMENT_COMPANIES = ["HLZ", "CEVA", "BL"] as const;
+
+function getCancelReasonOptions(labels: Labels) {
+  return [
+    { id: 61, label: labels.cancelReasonStockOut },
+    { id: 62, label: labels.cancelReasonDefective },
+    { id: 63, label: labels.cancelReasonWrongPrice },
+    { id: 64, label: labels.cancelReasonForceMajeure },
+    { id: 65, label: labels.cancelReasonOther },
   ];
 }
 
@@ -429,9 +466,15 @@ export function N11IntegrationManager({
   const [selectedPackage, setSelectedPackage] = useState<MarketplacePackageDetail | null>(null);
   const [selectedTargets, setSelectedTargets] = useState<Record<string, string>>({});
   const [splitQuantities, setSplitQuantities] = useState<Record<string, string>>({});
+  const [cancelQuantities, setCancelQuantities] = useState<Record<string, string>>({});
+  const [cancelReasons, setCancelReasons] = useState<Record<string, string>>({});
   const [invoicedCarrierCompanyId, setInvoicedCarrierCompanyId] = useState("");
   const [invoicedTrackingNumber, setInvoicedTrackingNumber] = useState("");
+  const [collectionRequestShipmentCompany, setCollectionRequestShipmentCompany] = useState("");
+  const [collectionRequestBoxQuantity, setCollectionRequestBoxQuantity] = useState("1");
+  const [collectionRequestDesi, setCollectionRequestDesi] = useState("");
   const capabilityItems = getCapabilityItems(capabilities, labels);
+  const cancelReasonOptions = getCancelReasonOptions(labels);
 
   const activeConfig = configs[0] ?? null;
   const canNotifyPicking = selectedPackage ? selectedPackage.packageStatus !== "Picking" && selectedPackage.packageStatus !== "Invoiced" : false;
@@ -583,6 +626,11 @@ export function N11IntegrationManager({
         line.productId ? `${line.productId}:${line.productVariantId ?? ""}` : "",
       ])));
       setSplitQuantities(Object.fromEntries(result.lines.map((line) => [line.id, ""])));
+      setCancelQuantities(Object.fromEntries(result.lines.map((line) => [line.id, ""])));
+      setCancelReasons(Object.fromEntries(result.lines.map((line) => [line.id, ""])));
+      setCollectionRequestShipmentCompany("");
+      setCollectionRequestBoxQuantity("1");
+      setCollectionRequestDesi("");
     } catch {
       setError(labels.operationFailed);
     } finally {
@@ -696,6 +744,44 @@ export function N11IntegrationManager({
       return;
     }
 
+    const rawCancellations = selectedPackage.lines.map((line) => ({
+      lineId: line.id,
+      quantity: Number(cancelQuantities[line.id] ?? 0),
+      reasonId: cancelReasons[line.id] || null,
+    }));
+
+    const invalidCancelQuantity = rawCancellations.find((item) => (
+      Number.isNaN(item.quantity) || !Number.isInteger(item.quantity) || item.quantity < 0
+    ));
+
+    if (invalidCancelQuantity) {
+      setError(labels.splitQuantityInvalid);
+      setNotice(null);
+      return;
+    }
+
+    const missingCancelReason = rawCancellations.find((item) => item.quantity > 0 && !item.reasonId);
+
+    if (missingCancelReason) {
+      setError(labels.cancelReasonRequired);
+      setNotice(null);
+      return;
+    }
+
+    const combinedQuantityExceeded = selectedPackage.lines.some((line) => (
+      (Number(splitQuantities[line.id] ?? 0) + Number(cancelQuantities[line.id] ?? 0)) > line.quantity
+    ));
+
+    if (combinedQuantityExceeded) {
+      setError(labels.splitQuantityInvalid);
+      setNotice(null);
+      return;
+    }
+
+    const cancellations = rawCancellations
+      .filter((item) => item.quantity > 0)
+      .map(({ lineId, quantity, reasonId }) => ({ lineId, quantity, cancelReasonId: Number(reasonId) }));
+
     setDetailBusy(true);
     setError(null);
     setNotice(null);
@@ -704,7 +790,7 @@ export function N11IntegrationManager({
       const response = await fetch(`/api/admin/integrations/marketplaces/packages/${selectedPackage.id}/split`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ splits }),
+        body: JSON.stringify({ splits, ...(cancellations.length > 0 ? { cancellations } : {}) }),
       });
 
       if (!response.ok) {
@@ -714,6 +800,53 @@ export function N11IntegrationManager({
       await openPackageDetail(selectedPackage.id);
       await refreshDashboard();
       setNotice(labels.splitCreated);
+    } catch {
+      setError(labels.operationFailed);
+    } finally {
+      setDetailBusy(false);
+    }
+  }
+
+  async function createCollectionRequest() {
+    if (!selectedPackage || !collectionRequestShipmentCompany) {
+      setError(labels.collectionRequestInvalid);
+      setNotice(null);
+      return;
+    }
+
+    const boxQuantity = Number(collectionRequestBoxQuantity);
+    const desi = Number(collectionRequestDesi);
+
+    if (!Number.isInteger(boxQuantity) || boxQuantity <= 0 || !Number.isFinite(desi) || desi <= 0) {
+      setError(labels.collectionRequestInvalid);
+      setNotice(null);
+      return;
+    }
+
+    setDetailBusy(true);
+    setError(null);
+    setNotice(null);
+
+    try {
+      const response = await fetch(`/api/admin/integrations/marketplaces/packages/${selectedPackage.id}/collection-request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          shipmentCompany: collectionRequestShipmentCompany,
+          boxQuantity,
+          desi,
+        }),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null) as { message?: string } | null;
+        setError(payload?.message ?? labels.operationFailed);
+        return;
+      }
+
+      await openPackageDetail(selectedPackage.id);
+      await refreshDashboard();
+      setNotice(labels.collectionRequestSuccess);
     } catch {
       setError(labels.operationFailed);
     } finally {
@@ -1142,6 +1275,54 @@ export function N11IntegrationManager({
                 </div>
               ) : null}
 
+              {channel === "N11" && capabilities.supportsCollectionRequest && selectedPackage.packageStatus === "Picking" ? (
+                <div className="rounded-lg border border-neutral-200 bg-white px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{labels.collectionRequestTitle}</p>
+                  <p className="mt-1 text-xs text-neutral-500">{labels.collectionRequestHint}</p>
+                  <div className="mt-3 grid gap-3 md:grid-cols-[1fr_120px_120px_auto]">
+                    <div className="grid gap-1">
+                      <label className="text-xs font-medium text-neutral-600">{labels.collectionRequestShipmentCompanyLabel}</label>
+                      <select
+                        value={collectionRequestShipmentCompany}
+                        onChange={(event) => setCollectionRequestShipmentCompany(event.target.value)}
+                        className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                        disabled={!canManage || detailBusy}
+                      >
+                        <option value="">{labels.collectionRequestShipmentCompanyPlaceholder}</option>
+                        {N11_COLLECTION_REQUEST_SHIPMENT_COMPANIES.map((code) => (
+                          <option key={code} value={code}>{code}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="grid gap-1">
+                      <label className="text-xs font-medium text-neutral-600">{labels.collectionRequestBoxQuantityLabel}</label>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={collectionRequestBoxQuantity}
+                        onChange={(event) => setCollectionRequestBoxQuantity(event.target.value)}
+                        disabled={!canManage || detailBusy}
+                      />
+                    </div>
+                    <div className="grid gap-1">
+                      <label className="text-xs font-medium text-neutral-600">{labels.collectionRequestDesiLabel}</label>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={collectionRequestDesi}
+                        onChange={(event) => setCollectionRequestDesi(event.target.value)}
+                        disabled={!canManage || detailBusy}
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <Button type="button" onClick={() => void createCollectionRequest()} disabled={!canManage || detailBusy} size="sm">
+                        {labels.collectionRequestSubmit}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
               <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div>
@@ -1176,6 +1357,14 @@ export function N11IntegrationManager({
                   <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.cargoLabel}</p>
                   <p className="mt-2 text-sm font-semibold text-neutral-950">{selectedPackage.cargoProviderName ?? "-"}</p>
                   <p className="mt-1 text-xs text-neutral-500">{selectedPackage.cargoTrackingNumber ?? "-"}</p>
+                  {selectedPackage.cargoSenderNumber ? (
+                    <p className="mt-1 text-xs text-neutral-500">{labels.cargoSenderNumberLabel}: {selectedPackage.cargoSenderNumber}</p>
+                  ) : null}
+                  {selectedPackage.cargoTrackingLink ? (
+                    <a href={selectedPackage.cargoTrackingLink} target="_blank" rel="noreferrer" className="mt-1 block break-all text-xs text-cyan-700 underline">
+                      {labels.cargoTrackingLinkLabel}
+                    </a>
+                  ) : null}
                 </article>
                 <article className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
                   <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.lastSync}</p>
@@ -1205,7 +1394,7 @@ export function N11IntegrationManager({
                   <p className="mt-1 text-xs text-neutral-500">{labels.splitPackageHint}</p>
                   <div className="mt-3 grid gap-3">
                     {selectedPackage.lines.map((line) => (
-                      <div key={`${line.id}-split`} className="grid gap-2 md:grid-cols-[1fr_140px] md:items-center">
+                      <div key={`${line.id}-split`} className={`grid gap-2 md:items-center ${channel === "N11" ? "md:grid-cols-[1fr_140px_140px_1fr]" : "md:grid-cols-[1fr_140px]"}`}>
                         <div className="text-sm text-neutral-700">
                           {line.productName}
                           <span className="ml-2 text-neutral-500">Mevcut: {line.quantity}</span>
@@ -1219,6 +1408,30 @@ export function N11IntegrationManager({
                           min={0}
                           max={line.quantity}
                         />
+                        {channel === "N11" ? (
+                          <>
+                            <Input
+                              value={cancelQuantities[line.id] ?? ""}
+                              onChange={(event) => setCancelQuantities((current) => ({ ...current, [line.id]: event.target.value }))}
+                              placeholder={labels.cancelQuantityLabel}
+                              disabled={!canManage || detailBusy || selectedPackage.packageStatus !== "Picking"}
+                              type="number"
+                              min={0}
+                              max={line.quantity}
+                            />
+                            <select
+                              value={cancelReasons[line.id] ?? ""}
+                              onChange={(event) => setCancelReasons((current) => ({ ...current, [line.id]: event.target.value }))}
+                              className="h-9 rounded-md border border-neutral-300 px-3 text-sm"
+                              disabled={!canManage || detailBusy || selectedPackage.packageStatus !== "Picking"}
+                            >
+                              <option value="">{labels.cancelReasonPlaceholder}</option>
+                              {cancelReasonOptions.map((option) => (
+                                <option key={option.id} value={option.id}>{option.label}</option>
+                              ))}
+                            </select>
+                          </>
+                        ) : null}
                       </div>
                     ))}
                   </div>

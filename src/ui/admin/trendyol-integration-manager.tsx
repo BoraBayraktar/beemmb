@@ -141,6 +141,19 @@ type Labels = {
   splitPackageQuantity: string;
   splitPackageSuccess: string;
   splitPackageInvalid: string;
+  unsuppliedTitle: string;
+  unsuppliedHint: string;
+  unsuppliedQuantity: string;
+  unsuppliedReasonPlaceholder: string;
+  unsuppliedSubmit: string;
+  unsuppliedSuccess: string;
+  unsuppliedInvalid: string;
+  unsuppliedReasonStockOut: string;
+  unsuppliedReasonDefective: string;
+  unsuppliedReasonWrongPrice: string;
+  unsuppliedReasonIntegrationError: string;
+  unsuppliedReasonBulkPurchase: string;
+  unsuppliedReasonForceMajeure: string;
   createOrder: string;
   orderCreated: string;
   notifyPicking: string;
@@ -170,6 +183,7 @@ type Labels = {
   capabilityPickingStatus: string;
   capabilityInvoicedStatus: string;
   capabilityPackageSplit: string;
+  capabilityUnsuppliedCancel: string;
   capabilityBrandMapping: string;
   capabilityCategoryMapping: string;
   capabilityAttributeMapping: string;
@@ -233,10 +247,22 @@ function getCapabilityItems(capabilities: MarketplaceCapabilitySet, labels: Labe
     { label: labels.capabilityPickingStatus, enabled: capabilities.supportsStatusPicking },
     { label: labels.capabilityInvoicedStatus, enabled: capabilities.supportsStatusInvoiced },
     { label: labels.capabilityPackageSplit, enabled: capabilities.supportsPackageSplit },
+    { label: labels.capabilityUnsuppliedCancel, enabled: capabilities.supportsUnsuppliedCancel },
     { label: labels.capabilityBrandMapping, enabled: capabilities.requiresBrandMapping },
     { label: labels.capabilityCategoryMapping, enabled: capabilities.requiresCategoryMapping },
     { label: labels.capabilityAttributeMapping, enabled: capabilities.requiresAttributeMapping },
     { label: labels.capabilityAdvancedPreflight, enabled: capabilities.preflightLevel === "ADVANCED" },
+  ];
+}
+
+function getUnsuppliedReasonOptions(labels: Labels) {
+  return [
+    { id: 500, label: labels.unsuppliedReasonStockOut },
+    { id: 501, label: labels.unsuppliedReasonDefective },
+    { id: 502, label: labels.unsuppliedReasonWrongPrice },
+    { id: 504, label: labels.unsuppliedReasonIntegrationError },
+    { id: 505, label: labels.unsuppliedReasonBulkPurchase },
+    { id: 506, label: labels.unsuppliedReasonForceMajeure },
   ];
 }
 
@@ -289,7 +315,11 @@ export function TrendyolIntegrationManager({
   const [selectedTargets, setSelectedTargets] = useState<Record<string, string>>({});
   const [splitLineIds, setSplitLineIds] = useState<string[]>([]);
   const [splitQuantities, setSplitQuantities] = useState<Record<string, string>>({});
+  const [unsuppliedLineIds, setUnsuppliedLineIds] = useState<string[]>([]);
+  const [unsuppliedQuantities, setUnsuppliedQuantities] = useState<Record<string, string>>({});
+  const [unsuppliedReasonId, setUnsuppliedReasonId] = useState("");
   const capabilityItems = getCapabilityItems(capabilities, labels);
+  const unsuppliedReasonOptions = getUnsuppliedReasonOptions(labels);
 
   const activeConfig = configs[0] ?? null;
   const canNotifyPicking = selectedPackage ? selectedPackage.packageStatus !== "Picking" && selectedPackage.packageStatus !== "Invoiced" : false;
@@ -305,6 +335,14 @@ export function TrendyolIntegrationManager({
   const splitSelectsWholePackage = Boolean(selectedPackage && selectedPackage.lines.every((line) => (
     splitLineIds.includes(line.id) && Number(splitQuantities[line.id] ?? "1") >= line.quantity
   )));
+  const canCancelUnsuppliedSelectedPackage = Boolean(
+    selectedPackage
+      && capabilities.supportsUnsuppliedCancel
+      && selectedPackage.packageStatus !== "Invoiced"
+      && selectedPackage.packageStatus !== "Shipped"
+      && selectedPackage.packageStatus !== "Delivered"
+      && selectedPackage.packageStatus !== "Cancelled",
+  );
 
   async function saveConfig() {
     setBusy(true);
@@ -473,6 +511,9 @@ export function TrendyolIntegrationManager({
       ])));
       setSplitLineIds([]);
       setSplitQuantities(Object.fromEntries(result.lines.map((line) => [line.id, String(Math.min(line.quantity, 1))])));
+      setUnsuppliedLineIds([]);
+      setUnsuppliedQuantities(Object.fromEntries(result.lines.map((line) => [line.id, String(Math.min(line.quantity, 1))])));
+      setUnsuppliedReasonId("");
     } catch {
       setError(labels.operationFailed);
     } finally {
@@ -530,6 +571,63 @@ export function TrendyolIntegrationManager({
       await openPackageDetail(selectedPackage.id);
       await refreshDashboard();
       setNotice(labels.splitPackageSuccess);
+    } catch {
+      setError(labels.operationFailed);
+    } finally {
+      setDetailBusy(false);
+    }
+  }
+
+  function toggleUnsuppliedLine(line: MarketplacePackageLine) {
+    setUnsuppliedLineIds((current) => (
+      current.includes(line.id)
+        ? current.filter((item) => item !== line.id)
+        : [...current, line.id]
+    ));
+    setUnsuppliedQuantities((current) => ({
+      ...current,
+      [line.id]: current[line.id] ?? String(Math.min(line.quantity, 1)),
+    }));
+  }
+
+  async function cancelUnsuppliedItems() {
+    if (!selectedPackage || unsuppliedLineIds.length === 0 || !unsuppliedReasonId) {
+      setError(labels.unsuppliedInvalid);
+      return;
+    }
+
+    const lines = unsuppliedLineIds.map((lineId) => ({
+      lineId,
+      quantity: Number(unsuppliedQuantities[lineId] ?? "1"),
+    }));
+
+    if (lines.some((item) => !Number.isInteger(item.quantity) || item.quantity <= 0)) {
+      setError(labels.unsuppliedInvalid);
+      return;
+    }
+
+    setDetailBusy(true);
+    setError(null);
+    setNotice(null);
+
+    try {
+      const response = await fetch(`/api/admin/integrations/marketplaces/packages/${selectedPackage.id}/unsupplied`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ lines, reasonId: Number(unsuppliedReasonId) }),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null) as { message?: string } | null;
+        setError(payload?.message ?? labels.operationFailed);
+        return;
+      }
+
+      await openPackageDetail(selectedPackage.id);
+      await refreshDashboard();
+      setNotice(labels.unsuppliedSuccess);
     } catch {
       setError(labels.operationFailed);
     } finally {
@@ -975,6 +1073,70 @@ export function TrendyolIntegrationManager({
                         </label>
                       );
                     })}
+                  </div>
+                </div>
+              ) : null}
+
+              {capabilities.supportsUnsuppliedCancel ? (
+                <div className="rounded-lg border border-rose-200 bg-rose-50/60 p-4">
+                  <div className="flex flex-col gap-3">
+                    <div>
+                      <h4 className="text-sm font-semibold text-neutral-950">{labels.unsuppliedTitle}</h4>
+                      <p className="mt-1 text-sm text-neutral-600">{labels.unsuppliedHint}</p>
+                    </div>
+                    <div className="grid gap-2">
+                      {selectedPackage.lines.map((line) => {
+                        const checked = unsuppliedLineIds.includes(line.id);
+
+                        return (
+                          <label key={line.id} className="grid gap-2 rounded-lg border border-rose-100 bg-white px-3 py-2 text-sm sm:grid-cols-[1fr_120px] sm:items-center">
+                            <span className="flex items-start gap-2">
+                              <input
+                                type="checkbox"
+                                className="mt-1"
+                                checked={checked}
+                                disabled={!canManage || detailBusy || !canCancelUnsuppliedSelectedPackage}
+                                onChange={() => toggleUnsuppliedLine(line)}
+                              />
+                              <span>
+                                <span className="block font-medium text-neutral-900">{line.productName}</span>
+                                <span className="block text-xs text-neutral-500">{line.quantity} adet - {line.externalLineId}</span>
+                              </span>
+                            </span>
+                            <Input
+                              type="number"
+                              min={1}
+                              max={line.quantity}
+                              value={unsuppliedQuantities[line.id] ?? "1"}
+                              onChange={(event) => setUnsuppliedQuantities((current) => ({ ...current, [line.id]: event.target.value }))}
+                              placeholder={labels.unsuppliedQuantity}
+                              disabled={!checked || !canManage || detailBusy || !canCancelUnsuppliedSelectedPackage}
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
+                      <select
+                        className="h-9 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                        value={unsuppliedReasonId}
+                        onChange={(event) => setUnsuppliedReasonId(event.target.value)}
+                        disabled={!canManage || detailBusy || !canCancelUnsuppliedSelectedPackage}
+                      >
+                        <option value="">{labels.unsuppliedReasonPlaceholder}</option>
+                        {unsuppliedReasonOptions.map((option) => (
+                          <option key={option.id} value={option.id}>{option.label}</option>
+                        ))}
+                      </select>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        disabled={!canManage || detailBusy || !canCancelUnsuppliedSelectedPackage || unsuppliedLineIds.length === 0 || !unsuppliedReasonId}
+                        onClick={() => void cancelUnsuppliedItems()}
+                      >
+                        {labels.unsuppliedSubmit}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ) : null}

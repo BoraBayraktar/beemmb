@@ -35,6 +35,10 @@ export type MarketplacePackageInput = {
   invoiceAddress: Record<string, unknown> | null;
   cargoProviderName: string | null;
   cargoTrackingNumber: string | null;
+  externalCargoCompanyId?: string | null;
+  cargoSenderNumber?: string | null;
+  cargoTrackingLink?: string | null;
+  shipmentMethod?: string | null;
   rawPayload: Record<string, unknown>;
   lines: MarketplacePackageLineInput[];
 };
@@ -729,6 +733,10 @@ export class MarketplaceIntegrationRepository {
         invoiceAddress: toJsonInput(input.invoiceAddress),
         cargoProviderName: input.cargoProviderName,
         cargoTrackingNumber: input.cargoTrackingNumber,
+        externalCargoCompanyId: input.externalCargoCompanyId ?? null,
+        cargoSenderNumber: input.cargoSenderNumber ?? null,
+        cargoTrackingLink: input.cargoTrackingLink ?? null,
+        shipmentMethod: input.shipmentMethod ?? null,
         rawPayload: toJsonInput(input.rawPayload),
         deleted: false,
         deletedDate: null,
@@ -749,6 +757,10 @@ export class MarketplaceIntegrationRepository {
         invoiceAddress: toJsonInput(input.invoiceAddress),
         cargoProviderName: input.cargoProviderName,
         cargoTrackingNumber: input.cargoTrackingNumber,
+        externalCargoCompanyId: input.externalCargoCompanyId ?? null,
+        cargoSenderNumber: input.cargoSenderNumber ?? null,
+        cargoTrackingLink: input.cargoTrackingLink ?? null,
+        shipmentMethod: input.shipmentMethod ?? null,
         rawPayload: toJsonInput(input.rawPayload),
       },
       select: {

@@ -36,6 +36,15 @@ export type TrendyolShipmentPackageQuery = {
   maxPages?: number;
 };
 
+export type TrendyolCancelUnsuppliedItemsInput = {
+  packageId: string;
+  lines: Array<{
+    lineId: string;
+    quantity: number;
+  }>;
+  reasonId: number;
+};
+
 export type TrendyolUpdatePackageStatusInput = {
   packageId: string;
   status: "Picking" | "Invoiced";
@@ -84,10 +93,21 @@ export type TrendyolProductV2CreateItem = {
 
 type TrendyolShipmentPackageResponse = {
   content?: TrendyolShipmentPackage[];
+  totalElements?: number;
   totalPages?: number;
   page?: number;
   size?: number;
 };
+
+type TrendyolShipmentPackageStreamResponse = {
+  content?: TrendyolShipmentPackage[];
+  hasMore?: boolean;
+  nextCursor?: string;
+  size?: number;
+};
+
+/** Trendyol'un v2/orders "maxQueryWindowResult" kısıtı: tek bir filtreli sorguda page*size 10.000'i geçemez (page=0..49, size<=200). */
+const TRENDYOL_MAX_QUERY_WINDOW_RESULT = 10000;
 
 type TrendyolBrandItem = {
   id?: number;
@@ -159,14 +179,16 @@ export class TrendyolClient {
     };
   }
 
+  /** Trendyol'un 15 Ekim 2026'da zorunlu kılacağı v2/orders endpoint'i - maksimum erişilebilir pencere 10.000 kayıt (page 0-49, size<=200). */
   async getShipmentPackages(query: TrendyolShipmentPackageQuery) {
     const pageSize = Math.min(Math.max(query.pageSize ?? 50, 1), 200);
-    const maxPages = Math.min(Math.max(query.maxPages ?? 20, 1), 100);
+    const maxSafePages = Math.floor(TRENDYOL_MAX_QUERY_WINDOW_RESULT / pageSize);
+    const maxPages = Math.min(Math.max(query.maxPages ?? 20, 1), 100, maxSafePages);
     const packages: TrendyolShipmentPackage[] = [];
     let totalPages = 1;
 
     for (let page = 0; page < totalPages && page < maxPages; page += 1) {
-      const url = new URL(`${this.baseUrl}/integration/order/sellers/${this.args.sellerId}/orders`);
+      const url = new URL(`${this.baseUrl}/integration/order/sellers/${this.args.sellerId}/v2/orders`);
       url.searchParams.set("startDate", String(query.startDate.getTime()));
       url.searchParams.set("endDate", String(query.endDate.getTime()));
       url.searchParams.set("page", String(page));
@@ -192,6 +214,59 @@ export class TrendyolClient {
       const payload = await response.json() as TrendyolShipmentPackageResponse;
       packages.push(...(payload.content ?? []));
       totalPages = Math.max(payload.totalPages ?? 1, 1);
+
+      if ((payload.totalElements ?? 0) > TRENDYOL_MAX_QUERY_WINDOW_RESULT) {
+        console.warn(`TRENDYOL_QUERY_WINDOW_EXCEEDED: totalElements=${payload.totalElements}, bu filtreyle en fazla ilk ${TRENDYOL_MAX_QUERY_WINDOW_RESULT} kayda erişilebilir. Büyük veri taraması için getShipmentPackagesStream kullanılmalı.`);
+      }
+    }
+
+    return packages;
+  }
+
+  /**
+   * Cursor tabanlı akış endpoint'i (getShipmentPackagesStream) - büyük veri taraması ve periyodik senkronizasyon
+   * için Trendyol'un önerdiği yöntem; 10.000 kayıt penceresi kısıtına tabi değildir.
+   */
+  async getShipmentPackagesStream(query: TrendyolShipmentPackageQuery & { maxIterations?: number }) {
+    const size = Math.min(Math.max(query.pageSize ?? 50, 1), 200);
+    const maxIterations = Math.min(Math.max(query.maxIterations ?? query.maxPages ?? 20, 1), 100);
+    const packages: TrendyolShipmentPackage[] = [];
+    let nextCursor: string | undefined;
+    let hasMore = true;
+
+    for (let iteration = 0; iteration < maxIterations && hasMore; iteration += 1) {
+      const url = new URL(`${this.baseUrl}/integration/order/sellers/${this.args.sellerId}/orders/stream`);
+      url.searchParams.set("lastModifiedStartDate", String(query.startDate.getTime()));
+      url.searchParams.set("lastModifiedEndDate", String(query.endDate.getTime()));
+      url.searchParams.set("size", String(size));
+
+      if (query.status) {
+        url.searchParams.set("packageItemStatuses", query.status);
+      }
+
+      if (nextCursor) {
+        url.searchParams.set("nextCursor", nextCursor);
+      }
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers: this.buildHeaders(),
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text().catch(() => "");
+        throw new Error(`TRENDYOL_GET_SHIPMENT_PACKAGES_STREAM_FAILED:${response.status}:${errorBody.slice(0, 240)}`);
+      }
+
+      const payload = await response.json() as TrendyolShipmentPackageStreamResponse;
+      packages.push(...(payload.content ?? []));
+      hasMore = Boolean(payload.hasMore);
+      nextCursor = payload.nextCursor;
+
+      if (hasMore && iteration + 1 < maxIterations) {
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+      }
     }
 
     return packages;
@@ -383,6 +458,40 @@ export class TrendyolClient {
     if (!response.ok) {
       const errorBody = await response.text().catch(() => "");
       throw new Error(`TRENDYOL_UPDATE_PACKAGE_STATUS_FAILED:${response.status}:${errorBody.slice(0, 240)}`);
+    }
+
+    const text = await response.text().catch(() => "");
+    return {
+      requestPayload: body,
+      responsePayload: text ? { body: text } : { ok: true },
+    };
+  }
+
+  /** Tedarik Edememe Bildirimi - paket içindeki bir/birden fazla kalemi tedarik edilemedi diye iptal eder; sonucunda yeni bir shipmentPackageId oluşur. */
+  async cancelUnsuppliedItems(input: TrendyolCancelUnsuppliedItemsInput) {
+    const url = new URL(`${this.baseUrl}/integration/order/sellers/${this.args.sellerId}/shipment-packages/${input.packageId}/items/unsupplied`);
+    const body = {
+      lines: input.lines.map((line) => ({
+        lineId: Number(line.lineId),
+        quantity: line.quantity,
+      })),
+      reasonId: input.reasonId,
+    };
+    const headers = {
+      ...this.buildHeaders(),
+      ...(this.args.storeFrontCode ? { storeFrontCode: this.args.storeFrontCode } : {}),
+    };
+
+    const response = await fetch(url, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify(body),
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => "");
+      throw new Error(`TRENDYOL_CANCEL_UNSUPPLIED_ITEMS_FAILED:${response.status}:${errorBody.slice(0, 240)}`);
     }
 
     const text = await response.text().catch(() => "");

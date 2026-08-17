@@ -129,7 +129,9 @@ export class TrendyolOrderImportService {
       endpointUrl: config.endpointUrl,
     });
 
-    const packages = await client.getShipmentPackages({
+    // Periyodik senkronizasyon (cron/manuel "şimdi senkronize et") tam bir zaman penceresini taradığından,
+    // Trendyol'un 10.000 kayıtlık page/size penceresine takılmamak için cursor tabanlı stream endpoint'i kullanılır.
+    const packages = await client.getShipmentPackagesStream({
       startDate,
       endDate,
       status: payload.status,
