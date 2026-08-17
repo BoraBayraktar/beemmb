@@ -2,12 +2,28 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { commerceService } from "@/modules/commerce/services/commerce.service";
+
+type OrderStatusFilter = "CONFIRMED" | "CANCELLED";
+type PaymentStatusFilter = "PENDING" | "AUTHORIZED" | "PAID" | "FAILED" | "REFUNDED";
+type ShipmentStatusFilter = "NOT_SHIPPED" | "PREPARING" | "SHIPPED" | "DELIVERED" | "RETURNED";
 
 type OrdersPageProps = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ search?: string; status?: string; paymentStatus?: string; page?: string }>;
+  searchParams: Promise<{
+    search?: string;
+    status?: string;
+    paymentStatus?: string;
+    shipmentStatus?: string;
+    carrierCompanyId?: string;
+    page?: string;
+  }>;
 };
+
+const ORDER_STATUS_VALUES: OrderStatusFilter[] = ["CONFIRMED", "CANCELLED"];
+const PAYMENT_STATUS_VALUES: PaymentStatusFilter[] = ["PENDING", "AUTHORIZED", "PAID", "FAILED", "REFUNDED"];
+const SHIPMENT_STATUS_VALUES: ShipmentStatusFilter[] = ["NOT_SHIPPED", "PREPARING", "SHIPPED", "DELIVERED", "RETURNED"];
 
 function formatMoney(value: number, currency: string, locale: Locale) {
   return new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "tr-TR", {
@@ -43,7 +59,7 @@ function formatLastRestockedAt(value: string | null, locale: Locale, dictionary:
   return formatDate(value, locale);
 }
 
-function formatPaymentStatus(value: "PENDING" | "AUTHORIZED" | "PAID" | "FAILED" | "REFUNDED") {
+function formatPaymentStatus(value: PaymentStatusFilter) {
   if (value === "AUTHORIZED") {
     return "Provizyonlu";
   }
@@ -63,6 +79,44 @@ function formatPaymentStatus(value: "PENDING" | "AUTHORIZED" | "PAID" | "FAILED"
   return "Bekleyen ödeme";
 }
 
+function formatShipmentStatus(value: ShipmentStatusFilter, dictionary: ReturnType<typeof getDictionary>) {
+  switch (value) {
+    case "PREPARING":
+      return dictionary.admin.orderShipmentStatusPreparing;
+    case "SHIPPED":
+      return dictionary.admin.orderShipmentStatusShipped;
+    case "DELIVERED":
+      return dictionary.admin.orderShipmentStatusDelivered;
+    case "RETURNED":
+      return dictionary.admin.orderShipmentStatusReturned;
+    default:
+      return dictionary.admin.orderShipmentStatusNotShipped;
+  }
+}
+
+function buildTrackingUrl(template: string | null, trackingNumber: string | null) {
+  if (!template || !trackingNumber) {
+    return null;
+  }
+
+  return template.replaceAll("{trackingNumber}", encodeURIComponent(trackingNumber));
+}
+
+function shipmentStatusBadgeClass(value: ShipmentStatusFilter) {
+  switch (value) {
+    case "SHIPPED":
+      return "bg-blue-100 text-blue-700";
+    case "DELIVERED":
+      return "bg-emerald-100 text-emerald-700";
+    case "RETURNED":
+      return "bg-rose-100 text-rose-700";
+    case "PREPARING":
+      return "bg-amber-100 text-amber-700";
+    default:
+      return "bg-neutral-200 text-neutral-700";
+  }
+}
+
 export default async function AdminOrdersPage({ params, searchParams }: OrdersPageProps) {
   const { locale } = await params;
 
@@ -72,13 +126,24 @@ export default async function AdminOrdersPage({ params, searchParams }: OrdersPa
 
   const dictionary = getDictionary(locale as Locale);
   const query = await searchParams;
-  const result = await commerceService.listOrders({
-    search: query.search,
-    status: query.status === "CONFIRMED" || query.status === "CANCELLED" ? query.status : undefined,
-    paymentStatus: query.paymentStatus === "PENDING" || query.paymentStatus === "AUTHORIZED" || query.paymentStatus === "PAID" || query.paymentStatus === "FAILED" || query.paymentStatus === "REFUNDED" ? query.paymentStatus : undefined,
-    page: query.page ? Number(query.page) : 1,
-    pageSize: 10,
-  });
+  const statusFilter = ORDER_STATUS_VALUES.includes(query.status as OrderStatusFilter) ? (query.status as OrderStatusFilter) : undefined;
+  const paymentStatusFilter = PAYMENT_STATUS_VALUES.includes(query.paymentStatus as PaymentStatusFilter) ? (query.paymentStatus as PaymentStatusFilter) : undefined;
+  const shipmentStatusFilter = SHIPMENT_STATUS_VALUES.includes(query.shipmentStatus as ShipmentStatusFilter) ? (query.shipmentStatus as ShipmentStatusFilter) : undefined;
+  const carrierCompanyIdFilter = query.carrierCompanyId?.trim() || undefined;
+  const hasActiveFilters = Boolean(statusFilter || paymentStatusFilter || shipmentStatusFilter || carrierCompanyIdFilter);
+
+  const [result, carrierCompanies] = await Promise.all([
+    commerceService.listOrders({
+      search: query.search,
+      status: statusFilter,
+      paymentStatus: paymentStatusFilter,
+      shipmentStatus: shipmentStatusFilter,
+      carrierCompanyId: carrierCompanyIdFilter,
+      page: query.page ? Number(query.page) : 1,
+      pageSize: 10,
+    }),
+    catalogAdminService.listCarrierCompanies(),
+  ]);
 
   const prevPage = result.page > 1 ? result.page - 1 : null;
   const nextPage = result.page < result.totalPages ? result.page + 1 : null;
@@ -94,6 +159,12 @@ export default async function AdminOrdersPage({ params, searchParams }: OrdersPa
     if (query.paymentStatus) {
       params.set("paymentStatus", query.paymentStatus);
     }
+    if (query.shipmentStatus) {
+      params.set("shipmentStatus", query.shipmentStatus);
+    }
+    if (query.carrierCompanyId) {
+      params.set("carrierCompanyId", query.carrierCompanyId);
+    }
     if (page > 1) {
       params.set("page", String(page));
     }
@@ -104,17 +175,76 @@ export default async function AdminOrdersPage({ params, searchParams }: OrdersPa
   return (
     <section className="min-w-0 overflow-hidden rounded-2xl border border-neutral-200 bg-white">
       <div className="flex flex-col gap-2 border-b border-neutral-200 p-5">
-        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{dictionary.admin.orderManager}</p>
-        <h2 className="text-2xl font-semibold tracking-tight text-neutral-950">{dictionary.admin.orderList}</h2>
-        <p className="text-sm text-neutral-500">{result.total} {dictionary.admin.orderCountLabel}</p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{dictionary.admin.orderManager}</p>
+            <h2 className="text-2xl font-semibold tracking-tight text-neutral-950">{dictionary.admin.orderList}</h2>
+            <p className="text-sm text-neutral-500">{result.total} {dictionary.admin.orderCountLabel}</p>
+          </div>
+          <Link
+            href={`/${locale}/admin/orders/shipping-report`}
+            className="inline-flex h-9 items-center justify-center rounded-md border border-neutral-300 px-3 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100"
+          >
+            {dictionary.admin.shippingReportTitle}
+          </Link>
+        </div>
+
+        <details className="mt-2 rounded-xl border border-neutral-200" open={hasActiveFilters}>
+          <summary className="cursor-pointer select-none rounded-xl px-4 py-3 text-sm font-medium text-neutral-700">
+            {dictionary.admin.orderListAdvancedFilters}
+          </summary>
+          <form method="GET" className="grid gap-3 border-t border-neutral-200 p-4 md:grid-cols-2 xl:grid-cols-5">
+            <input
+              type="text"
+              name="search"
+              defaultValue={query.search ?? ""}
+              placeholder={dictionary.admin.orderListSearchPlaceholder}
+              className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+            />
+            <select name="status" defaultValue={statusFilter ?? ""} className="h-10 rounded-md border border-neutral-300 px-3 text-sm">
+              <option value="">{dictionary.admin.orderListFilterStatus}: {dictionary.admin.orderListFilterAll}</option>
+              <option value="CONFIRMED">{dictionary.admin.orderStatusConfirmed}</option>
+              <option value="CANCELLED">{dictionary.admin.orderStatusCancelled}</option>
+            </select>
+            <select name="paymentStatus" defaultValue={paymentStatusFilter ?? ""} className="h-10 rounded-md border border-neutral-300 px-3 text-sm">
+              <option value="">{dictionary.admin.orderListFilterPaymentStatus}: {dictionary.admin.orderListFilterAll}</option>
+              {PAYMENT_STATUS_VALUES.map((value) => (
+                <option key={value} value={value}>{formatPaymentStatus(value)}</option>
+              ))}
+            </select>
+            <select name="shipmentStatus" defaultValue={shipmentStatusFilter ?? ""} className="h-10 rounded-md border border-neutral-300 px-3 text-sm">
+              <option value="">{dictionary.admin.orderListFilterShipmentStatus}: {dictionary.admin.orderListFilterAll}</option>
+              {SHIPMENT_STATUS_VALUES.map((value) => (
+                <option key={value} value={value}>{formatShipmentStatus(value, dictionary)}</option>
+              ))}
+            </select>
+            <select name="carrierCompanyId" defaultValue={carrierCompanyIdFilter ?? ""} className="h-10 rounded-md border border-neutral-300 px-3 text-sm">
+              <option value="">{dictionary.admin.orderListFilterCarrier}: {dictionary.admin.orderListFilterAll}</option>
+              {carrierCompanies.map((carrier) => (
+                <option key={carrier.id} value={carrier.id}>{carrier.name}</option>
+              ))}
+            </select>
+            <div className="flex items-center gap-2 xl:col-span-5">
+              <button type="submit" className="inline-flex h-10 items-center justify-center rounded-md bg-neutral-900 px-4 text-sm font-medium text-white transition hover:bg-neutral-800">
+                {dictionary.admin.orderListApplyFilters}
+              </button>
+              {hasActiveFilters ? (
+                <Link href={`/${locale}/admin/orders`} className="inline-flex h-10 items-center justify-center rounded-md border border-neutral-300 px-4 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100">
+                  {dictionary.admin.orderListClearFilters}
+                </Link>
+              ) : null}
+            </div>
+          </form>
+        </details>
       </div>
 
       <div className="rounded-b-2xl">
-        <div className="hidden grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)_minmax(0,0.7fr)_minmax(0,0.75fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.4fr)_minmax(0,0.75fr)_minmax(0,0.75fr)_minmax(0,0.95fr)_minmax(0,0.55fr)] gap-3 border-b border-neutral-200 bg-neutral-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 lg:grid">
+        <div className="hidden grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)_minmax(0,0.7fr)_minmax(0,0.75fr)_minmax(0,0.95fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.4fr)_minmax(0,0.75fr)_minmax(0,0.75fr)_minmax(0,0.95fr)_minmax(0,0.55fr)] gap-3 border-b border-neutral-200 bg-neutral-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 lg:grid">
           <span className="min-w-0 break-words">{dictionary.admin.orderNumber}</span>
           <span className="min-w-0 break-words">{dictionary.admin.customerAccountsTitle}</span>
           <span className="min-w-0 break-words">{dictionary.admin.orderStatus}</span>
           <span className="min-w-0 break-words">{dictionary.admin.paymentStatus}</span>
+          <span className="min-w-0 break-words">{dictionary.admin.orderListCarrierColumn}</span>
           <span className="min-w-0 break-words">{dictionary.admin.inventoryRestockStatus}</span>
           <span className="min-w-0 break-words">{dictionary.admin.inventoryLastRestockedAt}</span>
           <span className="min-w-0 break-words">{dictionary.admin.orderItems}</span>
@@ -130,7 +260,7 @@ export default async function AdminOrdersPage({ params, searchParams }: OrdersPa
           <div>
             <div className="divide-y divide-neutral-200">
               {result.items.map((item) => (
-                <article key={item.id} className="grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)_minmax(0,0.7fr)_minmax(0,0.75fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.4fr)_minmax(0,0.75fr)_minmax(0,0.75fr)_minmax(0,0.95fr)_minmax(0,0.55fr)] lg:items-center lg:gap-3">
+                <article key={item.id} className="grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)_minmax(0,0.7fr)_minmax(0,0.75fr)_minmax(0,0.95fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.4fr)_minmax(0,0.75fr)_minmax(0,0.75fr)_minmax(0,0.95fr)_minmax(0,0.55fr)] lg:items-center lg:gap-3">
                   <p className="min-w-0 font-medium text-neutral-950">
                     <Link href={`/${locale}/admin/orders/${item.id}`} className="break-words underline-offset-4 hover:underline">
                       {item.orderNumber}
@@ -147,6 +277,22 @@ export default async function AdminOrdersPage({ params, searchParams }: OrdersPa
                       {formatPaymentStatus(item.paymentStatus)}
                     </span>
                   </p>
+                  <div className="min-w-0">
+                    <span className={`inline-flex max-w-full whitespace-normal break-words rounded-full px-2 py-1 text-xs font-semibold ${shipmentStatusBadgeClass(item.shipmentStatus)}`}>
+                      {formatShipmentStatus(item.shipmentStatus, dictionary)}
+                    </span>
+                    {item.carrierCompanyName ? (
+                      <p className="mt-1 truncate text-xs text-neutral-500">{item.carrierCompanyName}</p>
+                    ) : null}
+                    {(() => {
+                      const trackingUrl = buildTrackingUrl(item.carrierTrackingUrlTemplate, item.cargoTrackingNumber);
+                      return trackingUrl ? (
+                        <a href={trackingUrl} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs text-neutral-600 underline underline-offset-4 hover:text-neutral-900">
+                          {dictionary.admin.orderListTrackingLink}
+                        </a>
+                      ) : null;
+                    })()}
+                  </div>
                   <p className="min-w-0">
                     <span className={`inline-flex max-w-full whitespace-normal break-words rounded-full px-2 py-1 text-xs font-semibold ${item.restockStatus === "RESTOCKED" ? "bg-emerald-100 text-emerald-700" : item.restockStatus === "PARTIALLY_RESTOCKED" ? "bg-amber-100 text-amber-700" : "bg-neutral-200 text-neutral-700"}`}>
                       {formatRestockStatus(item.restockStatus, dictionary)}

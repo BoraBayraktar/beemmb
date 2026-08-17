@@ -13,6 +13,8 @@ export async function GET(request: Request) {
       search: searchParams.get("search") ?? undefined,
       status: (searchParams.get("status") as "CONFIRMED" | "CANCELLED" | null) ?? undefined,
       paymentStatus: (searchParams.get("paymentStatus") as "PENDING" | "AUTHORIZED" | "PAID" | "FAILED" | "REFUNDED" | null) ?? undefined,
+      shipmentStatus: (searchParams.get("shipmentStatus") as "NOT_SHIPPED" | "PREPARING" | "SHIPPED" | "DELIVERED" | "RETURNED" | null) ?? undefined,
+      carrierCompanyId: searchParams.get("carrierCompanyId") ?? undefined,
       page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
       pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : 10,
     });

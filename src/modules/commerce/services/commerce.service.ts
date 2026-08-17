@@ -14,6 +14,7 @@ import type {
   AdminOrderShipmentInfo,
   AdminPaymentStatusHistoryEntry,
   AdminOrderSummary,
+  AdminShipmentCarrierReportItem,
   AdminOrderStatusHistoryEntry,
   AdminUpdateOrderStatusInput,
   CommerceCheckoutInput,
@@ -46,6 +47,8 @@ const orderListQuerySchema = z.object({
   search: z.string().trim().optional(),
   status: z.enum(["CONFIRMED", "CANCELLED"]).optional(),
   paymentStatus: z.enum(["PENDING", "AUTHORIZED", "PAID", "FAILED", "REFUNDED"]).optional(),
+  shipmentStatus: z.enum(["NOT_SHIPPED", "PREPARING", "SHIPPED", "DELIVERED", "RETURNED"]).optional(),
+  carrierCompanyId: z.string().trim().min(1).optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(50).default(10),
 });
@@ -646,7 +649,7 @@ export class CommerceService {
     const parsed = orderListQuerySchema.parse(query);
     const [orders, total] = await Promise.all([
       this.repository.listOrders(parsed),
-      this.repository.countOrders({ search: parsed.search, status: parsed.status, paymentStatus: parsed.paymentStatus }),
+      this.repository.countOrders({ search: parsed.search, status: parsed.status, paymentStatus: parsed.paymentStatus, shipmentStatus: parsed.shipmentStatus, carrierCompanyId: parsed.carrierCompanyId }),
     ]);
 
     const items: AdminOrderListItem[] = orders.map((order: {
@@ -657,8 +660,15 @@ export class CommerceService {
         name: string;
         email: string | null;
       } | null;
+      carrierCompany?: {
+        id: string;
+        name: string;
+        trackingUrlTemplate: string | null;
+      } | null;
       status: AdminOrderListItem["status"];
       paymentStatus: AdminOrderListItem["paymentStatus"];
+      shipmentStatus: AdminOrderListItem["shipmentStatus"];
+      cargoTrackingNumber: string | null;
       stockReservations: Array<{
         inventoryMovements: Array<{
           createdAt: Date;
@@ -680,6 +690,11 @@ export class CommerceService {
       customerAccountName: order.customerAccount?.name ?? null,
       status: order.status,
       paymentStatus: order.paymentStatus,
+      shipmentStatus: order.shipmentStatus,
+      carrierCompanyId: order.carrierCompany?.id ?? null,
+      carrierCompanyName: order.carrierCompany?.name ?? null,
+      carrierTrackingUrlTemplate: order.carrierCompany?.trackingUrlTemplate ?? null,
+      cargoTrackingNumber: order.cargoTrackingNumber,
       restockStatus: mapRestockStatus({
         reservationCount: order.stockReservations.length,
         restockMovementCount: order.stockReservations.reduce(
@@ -720,6 +735,62 @@ export class CommerceService {
       pendingPayments: aggregated.pendingPayments,
       currency: "TRY",
     };
+  }
+
+  async getShipmentCarrierReport(): Promise<AdminShipmentCarrierReportItem[]> {
+    const rows = await this.repository.getShipmentCarrierReportRows();
+    const groups = new Map<string, {
+      carrierCompanyId: string | null;
+      carrierCompanyName: string | null;
+      orderCount: number;
+      shippedCount: number;
+      deliveredCount: number;
+      totalDeliveryHours: number;
+      deliveryDurationSampleCount: number;
+    }>();
+
+    for (const row of rows) {
+      const key = row.carrierCompanyId ?? "__unassigned__";
+      const group = groups.get(key) ?? {
+        carrierCompanyId: row.carrierCompanyId,
+        carrierCompanyName: row.carrierCompany?.name ?? null,
+        orderCount: 0,
+        shippedCount: 0,
+        deliveredCount: 0,
+        totalDeliveryHours: 0,
+        deliveryDurationSampleCount: 0,
+      };
+
+      group.orderCount += 1;
+      if (row.shipmentStatus === "SHIPPED" || row.shipmentStatus === "DELIVERED") {
+        group.shippedCount += 1;
+      }
+      if (row.shipmentStatus === "DELIVERED") {
+        group.deliveredCount += 1;
+      }
+      if (row.cargoShippedAt && row.cargoDeliveredAt) {
+        const hours = (row.cargoDeliveredAt.getTime() - row.cargoShippedAt.getTime()) / (1000 * 60 * 60);
+        if (hours >= 0) {
+          group.totalDeliveryHours += hours;
+          group.deliveryDurationSampleCount += 1;
+        }
+      }
+
+      groups.set(key, group);
+    }
+
+    return Array.from(groups.values())
+      .map((group) => ({
+        carrierCompanyId: group.carrierCompanyId,
+        carrierCompanyName: group.carrierCompanyName,
+        orderCount: group.orderCount,
+        shippedCount: group.shippedCount,
+        deliveredCount: group.deliveredCount,
+        averageDeliveryHours: group.deliveryDurationSampleCount > 0
+          ? Math.round((group.totalDeliveryHours / group.deliveryDurationSampleCount) * 10) / 10
+          : null,
+      }))
+      .sort((left, right) => right.orderCount - left.orderCount);
   }
 
   async getOrderById(id: string): Promise<AdminOrderDetail> {

@@ -617,7 +617,7 @@ export class CommerceRepository {
     });
   }
 
-  async listOrders(args: Required<Pick<AdminOrderListQuery, "page" | "pageSize">> & Pick<AdminOrderListQuery, "search" | "status" | "paymentStatus">) {
+  async listOrders(args: Required<Pick<AdminOrderListQuery, "page" | "pageSize">> & Pick<AdminOrderListQuery, "search" | "status" | "paymentStatus" | "shipmentStatus" | "carrierCompanyId">) {
     return (prisma.order as any).findMany({
       where: {
         deleted: false,
@@ -631,6 +631,8 @@ export class CommerceRepository {
           : {}),
         ...(args.status ? { status: args.status } : {}),
         ...(args.paymentStatus ? { paymentStatus: args.paymentStatus } : {}),
+        ...(args.shipmentStatus ? { shipmentStatus: args.shipmentStatus } : {}),
+        ...(args.carrierCompanyId ? { carrierCompanyId: args.carrierCompanyId } : {}),
       },
       include: {
         customerAccount: {
@@ -638,6 +640,13 @@ export class CommerceRepository {
             id: true,
             name: true,
             email: true,
+          },
+        },
+        carrierCompany: {
+          select: {
+            id: true,
+            name: true,
+            trackingUrlTemplate: true,
           },
         },
         items: {
@@ -670,7 +679,7 @@ export class CommerceRepository {
     });
   }
 
-  async countOrders(args: Pick<AdminOrderListQuery, "search" | "status" | "paymentStatus">) {
+  async countOrders(args: Pick<AdminOrderListQuery, "search" | "status" | "paymentStatus" | "shipmentStatus" | "carrierCompanyId">) {
     return prisma.order.count({
       where: {
         deleted: false,
@@ -684,6 +693,27 @@ export class CommerceRepository {
           : {}),
         ...(args.status ? { status: args.status } : {}),
         ...(args.paymentStatus ? { paymentStatus: args.paymentStatus } : {}),
+        ...(args.shipmentStatus ? { shipmentStatus: args.shipmentStatus } : {}),
+        ...(args.carrierCompanyId ? { carrierCompanyId: args.carrierCompanyId } : {}),
+      },
+    });
+  }
+
+  async getShipmentCarrierReportRows() {
+    return prisma.order.findMany({
+      where: {
+        deleted: false,
+      },
+      select: {
+        carrierCompanyId: true,
+        carrierCompany: {
+          select: {
+            name: true,
+          },
+        },
+        shipmentStatus: true,
+        cargoShippedAt: true,
+        cargoDeliveredAt: true,
       },
     });
   }

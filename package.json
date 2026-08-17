@@ -25,6 +25,7 @@
     "verify:marketplace-order-shipment-import": "tsx --tsconfig tsconfig.json scripts/verify-marketplace-order-shipment-import.ts",
     "verify:marketplace-package-shipment-sync": "tsx --tsconfig tsconfig.json scripts/verify-marketplace-package-shipment-sync.ts",
     "verify:edocument:order-carrier-shipment": "tsx --tsconfig tsconfig.json scripts/verify-edocument-order-carrier-shipment.ts",
+    "verify:order-shipping-report": "tsx --tsconfig tsconfig.json scripts/verify-order-shipping-report.ts",
     "verify:users": "node scripts/verify-users.mjs",
     "verify:auth": "node scripts/verify-auth.mjs",
     "verify:checkout": "node scripts/verify-checkout.mjs",

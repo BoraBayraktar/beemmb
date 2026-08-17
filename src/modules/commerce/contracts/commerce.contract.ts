@@ -77,6 +77,15 @@ export type AdminOrderShipmentInfo = {
   cargoDeliveredAt: string | null;
 };
 
+export type AdminShipmentCarrierReportItem = {
+  carrierCompanyId: string | null;
+  carrierCompanyName: string | null;
+  orderCount: number;
+  shippedCount: number;
+  deliveredCount: number;
+  averageDeliveryHours: number | null;
+};
+
 export type UpdateOrderShipmentInput = {
   id: string;
   shipmentStatus?: AdminOrderShipmentStatus;
@@ -113,12 +122,19 @@ export type AdminOrderListItem = {
   currency: string;
   itemCount: number;
   createdAt: string;
+  shipmentStatus: AdminOrderShipmentStatus;
+  carrierCompanyId: string | null;
+  carrierCompanyName: string | null;
+  carrierTrackingUrlTemplate: string | null;
+  cargoTrackingNumber: string | null;
 };
 
 export type AdminOrderListQuery = {
   search?: string;
   status?: AdminOrderStatus;
   paymentStatus?: AdminPaymentStatus;
+  shipmentStatus?: AdminOrderShipmentStatus;
+  carrierCompanyId?: string;
   page?: number;
   pageSize?: number;
 };
