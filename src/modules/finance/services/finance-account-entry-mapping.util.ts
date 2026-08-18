@@ -213,6 +213,41 @@ export function buildBusinessDocumentEntryLines(args: {
   return planned;
 }
 
+export function buildIncomingInvoiceEntryLines(args: {
+  incomingInvoiceId: string;
+  documentNumber: string;
+  lines: Array<{ id: string; productName: string; lineTotal: number }>;
+}) {
+  const planned: PlannedFinanceAccountEntryLine[] = [];
+
+  for (const line of args.lines) {
+    if (line.lineTotal <= 0) {
+      continue;
+    }
+
+    const label = line.productName.slice(0, 80);
+
+    planned.push(
+      {
+        lineKey: `incoming-invoice-line:${line.id}:debit:770`,
+        ledgerAccountCode: "770",
+        side: "DEBIT",
+        amount: line.lineTotal,
+        title: `Gelen fatura ${args.documentNumber} — ${label}`,
+      },
+      {
+        lineKey: `incoming-invoice-line:${line.id}:credit:320`,
+        ledgerAccountCode: "320",
+        side: "CREDIT",
+        amount: line.lineTotal,
+        title: `Gelen fatura ${args.documentNumber} — ${label}`,
+      },
+    );
+  }
+
+  return planned;
+}
+
 export function assertBalancedEntryLines(lines: PlannedFinanceAccountEntryLine[]) {
   const debit = lines.filter((line) => line.side === "DEBIT").reduce((sum, line) => sum + line.amount, 0);
   const credit = lines.filter((line) => line.side === "CREDIT").reduce((sum, line) => sum + line.amount, 0);

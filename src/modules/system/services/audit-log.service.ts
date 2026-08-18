@@ -27,6 +27,7 @@ export const auditLogEntityLabels: Record<AuditLogEntityType, string> = {
   CATEGORY: "Kategori",
   ORDER: "Sipariş",
   BUSINESS_DOCUMENT: "Belge",
+  INCOMING_INVOICE: "Gelen Fatura",
   FINANCE_COLLECTION: "Tahsilat",
   FINANCE_PAYMENT: "Ödeme",
   WAREHOUSE: "Depo",

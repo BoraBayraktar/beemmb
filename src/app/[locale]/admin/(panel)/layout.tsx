@@ -107,6 +107,15 @@ export default async function AdminPanelLayout({
       ],
     },
     {
+      href: `/${locale}/admin/incoming-invoices`,
+      label: "Gelen Faturalar",
+      permissionKey: "incomingInvoices.read",
+      children: [
+        { href: `/${locale}/admin/incoming-invoices`, label: "Genel Bakış", permissionKey: "incomingInvoices.read" },
+        { href: `/${locale}/admin/incoming-invoices/providers`, label: "Entegratörler", permissionKey: "incomingInvoices.manage" },
+      ],
+    },
+    {
       href: `/${locale}/admin/finance`,
       label: dictionary.admin.financeManager,
       permissionKey: "finance.read",

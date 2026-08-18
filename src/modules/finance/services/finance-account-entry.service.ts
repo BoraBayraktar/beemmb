@@ -14,18 +14,20 @@ import {
   assertBalancedEntryLines,
   buildCollectionEntryLines,
   buildManualCashEntryLines,
+  buildIncomingInvoiceEntryLines,
   buildPaymentEntryLines,
   buildBusinessDocumentEntryLines,
   buildTransferCashEntryLines,
   type PlannedFinanceAccountEntryLine,
 } from "@/modules/finance/services/finance-account-entry-mapping.util";
+import { incomingInvoiceRepository } from "@/modules/incoming-invoices/repositories/incoming-invoice.repository";
 import { parseFinanceReportDateRangeQuery } from "@/modules/finance/services/finance-report-date-range.util";
 
 const listQuerySchema = z.object({
   from: z.string().trim().optional(),
   to: z.string().trim().optional(),
   search: z.string().trim().optional(),
-  sourceType: z.enum(["all", "CASH_TRANSACTION", "COLLECTION", "PAYMENT", "BUSINESS_DOCUMENT"]).default("all"),
+  sourceType: z.enum(["all", "CASH_TRANSACTION", "COLLECTION", "PAYMENT", "BUSINESS_DOCUMENT", "INCOMING_INVOICE"]).default("all"),
 });
 
 function toNumber(value: { toNumber(): number } | number) {
@@ -282,6 +284,50 @@ export class FinanceAccountEntryService {
       note: document.note,
       customerAccountId: document.customerAccountId,
       supplierId: document.supplierId,
+    });
+
+    return { created: result.created, skipped: result.created === 0 };
+  }
+
+  async syncFromIncomingInvoice(incomingInvoiceId: string) {
+    const invoice = await incomingInvoiceRepository.findIncomingInvoiceForLedgerSync(incomingInvoiceId);
+    if (!invoice || invoice.status === "CANCELLED") {
+      return { created: 0, skipped: true };
+    }
+
+    const lineTotals = invoice.lines
+      .map((line) => {
+        const explicit = line.lineTotal ? toNumber(line.lineTotal) : 0;
+        if (explicit > 0) {
+          return { id: line.id, productName: line.productName, lineTotal: explicit };
+        }
+
+        const unit = line.unitPrice ? toNumber(line.unitPrice) : 0;
+        const quantity = toNumber(line.quantity);
+        const computed = Number((unit * quantity).toFixed(2));
+        return { id: line.id, productName: line.productName, lineTotal: computed };
+      })
+      .filter((line) => line.lineTotal > 0);
+
+    const lines = buildIncomingInvoiceEntryLines({
+      incomingInvoiceId: invoice.id,
+      documentNumber: invoice.documentNumber,
+      lines: lineTotals,
+    });
+
+    if (lines.length === 0) {
+      return { created: 0, skipped: true };
+    }
+
+    const result = await this.persistPlannedLines({
+      lines,
+      entryAt: invoice.issueDate,
+      currency: invoice.currency,
+      sourceType: "INCOMING_INVOICE",
+      sourceId: invoice.id,
+      sourceReference: `incoming-invoice:${invoice.documentNumber}`,
+      note: invoice.note,
+      supplierId: invoice.supplierId,
     });
 
     return { created: result.created, skipped: result.created === 0 };

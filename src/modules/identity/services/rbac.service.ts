@@ -46,7 +46,7 @@ function getLegacyEffectivePermissions(user: { role: "ADMIN" | "EDITOR" | "CUSTO
     return {
       roleKeys: ["legacy-editor"],
       roleNames: ["Editör"],
-      permissionKeys: ["admin.access", "products.read", "products.manage", "orders.read", "orders.manage", "inventory.read", "inventory.manage", "documents.read", "documents.manage", "integrations.read"],
+      permissionKeys: ["admin.access", "products.read", "products.manage", "orders.read", "orders.manage", "inventory.read", "inventory.manage", "documents.read", "documents.manage", "incomingInvoices.read", "incomingInvoices.manage", "integrations.read"],
     };
   }
 
