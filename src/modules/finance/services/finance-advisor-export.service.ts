@@ -38,8 +38,8 @@ function buildCounterpartySummaryCsv(locale: string) {
   const copy = resolveFinanceAdvisorExportCopy(locale);
 
   return receivablesService
-    .listOperationalReceivables({ page: 1, pageSize: 5000, locale })
-    .then(async (receivables) => {
+    .listAllOperationalReceivablesForExport(locale)
+    .then(async (receivableItems) => {
       const payables = await payablesService.listSupplierPayables({});
       const header = [
         copy.colCounterpartyType,
@@ -51,7 +51,7 @@ function buildCounterpartySummaryCsv(locale: string) {
         .map(escapeCsvValue)
         .join(",");
 
-      const receivableRows = receivables.items.map((item) =>
+      const receivableRows = receivableItems.map((item) =>
         [
           copy.counterpartyTypeCustomer,
           item.counterpartyName,

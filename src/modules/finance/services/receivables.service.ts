@@ -206,6 +206,18 @@ export class ReceivablesService {
     return result;
   }
 
+  /** Sayfalama olmadan tüm açık alacakları döner - mali müşavir export'u gibi tam liste gereken akışlar için. */
+  async listAllOperationalReceivablesForExport(locale?: string): Promise<AdminReceivableListItem[]> {
+    const messages = resolveFinanceServiceMessages(locale);
+    const items = await financeRepository.listOperationalReceivables({
+      paymentStatuses: resolveStatuses("all"),
+      page: 1,
+      pageSize: 5000,
+    });
+
+    return items.map((item: ReceivableSource) => mapReceivable(item, messages.receivables.unlinkedCustomer));
+  }
+
   async getReceivablesSummary(): Promise<AdminReceivablesSummary> {
     const cacheKey = "finance:receivables:summary";
     const cached = await redisCache.get<AdminReceivablesSummary>(cacheKey);

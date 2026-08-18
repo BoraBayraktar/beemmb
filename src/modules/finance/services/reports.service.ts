@@ -486,15 +486,15 @@ export class ReportsService {
     const copy = resolveFinanceReportsCopy(locale);
     const range = parseFinanceReportDateRangeQuery(query);
     const agingBuckets = copy.agingBuckets;
-    const [payableSummaries, receivables] = await Promise.all([
+    const [payableSummaries, receivableItems] = await Promise.all([
       payablesService.listSupplierPayables().then((result) => result.items),
-      receivablesService.listOperationalReceivables({ page: 1, pageSize: 5000, locale }),
+      receivablesService.listAllOperationalReceivablesForExport(locale),
     ]);
     const payables = (await Promise.all(
       payableSummaries.map((item) => payablesService.getSupplierPayableByKey(item.supplierKey)),
     )).filter((item): item is NonNullable<typeof item> => Boolean(item));
 
-    const filteredReceivables = receivables.items.filter((item) =>
+    const filteredReceivables = receivableItems.filter((item) =>
       isInstantInFinanceReportRange(item.latestDocument?.issueDate ?? item.createdAt, range),
     );
 
