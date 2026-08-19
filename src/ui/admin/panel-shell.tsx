@@ -28,6 +28,8 @@ import {
   Menu,
   Package,
   PackageSearch,
+  PanelLeftClose,
+  PanelLeftOpen,
   PlugZap,
   PieChart,
   ReceiptText,
@@ -51,8 +53,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 import { LogoutButton } from "@/ui/admin/logout-button";
+
+const SIDEBAR_COLLAPSED_STORAGE_KEY = "beemmb-admin-sidebar-collapsed";
 
 export type MenuItem = {
   href: string;
@@ -900,11 +906,23 @@ export function AdminPanelShell({
   const [helpOpen, setHelpOpen] = useState(false);
   const [openMenuGroups, setOpenMenuGroups] = useState<Record<string, boolean>>({});
   const [menuSearch, setMenuSearch] = useState("");
+  const [collapsed, setCollapsed] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const notificationRef = useRef<HTMLDivElement | null>(null);
   const loadingNotificationsRef = useRef(false);
+
+  useEffect(() => {
+    if (window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === "true") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- must read the collapse preference after mount so SSR/hydration output stays identical (always expanded on first paint); a pre-hydration blocking script was ruled out as unnecessary complexity here.
+      setCollapsed(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, String(collapsed));
+  }, [collapsed]);
 
   async function loadNotifications() {
     if (loadingNotificationsRef.current) {
@@ -1128,18 +1146,18 @@ export function AdminPanelShell({
               compact ? "h-10 px-2.5 text-[14px]" : "h-11 px-3 text-[15px]",
               depth > 0 && (compact ? "pl-9" : "pl-10"),
               active
-                ? "bg-blue-50 text-blue-700 shadow-none"
+                ? "bg-[color:var(--color-brand)]/10 text-[color:var(--color-brand)] shadow-none"
                 : isOpen
-                  ? "bg-slate-50 text-slate-900"
-                  : "text-slate-700 hover:bg-slate-50/80",
+                  ? "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)]"
+                  : "text-[color:var(--color-text-muted)] hover:bg-[color:var(--color-bg-soft)]/80",
             )}
             aria-expanded={isOpen}
           >
-            <MenuIcon className={cn("mr-3 shrink-0 text-slate-500", compact ? "h-4 w-4" : "h-4 w-4")} aria-hidden="true" />
+            <MenuIcon className={cn("mr-3 shrink-0 text-[color:var(--color-text-muted)]", compact ? "h-4 w-4" : "h-4 w-4")} aria-hidden="true" />
             <span className="min-w-0 flex-1 truncate">{item.label}</span>
             <ChevronRight
               className={cn(
-                "h-4 w-4 shrink-0 text-slate-500 transition-transform duration-200",
+                "h-4 w-4 shrink-0 text-[color:var(--color-text-muted)] transition-transform duration-200",
                 isOpen ? "rotate-90" : "rotate-0",
               )}
               aria-hidden="true"
@@ -1164,13 +1182,51 @@ export function AdminPanelShell({
           compact ? "h-10 px-2.5 text-[14px]" : "h-11 px-3 text-[15px]",
           depth > 0 && (compact ? "h-10 pl-9" : "h-10 pl-10 text-[14px]"),
           active
-            ? "bg-blue-50 font-medium text-blue-700 shadow-none"
-            : "text-slate-700 hover:bg-slate-50/80 hover:text-slate-950",
+            ? "bg-[color:var(--color-brand)]/10 font-medium text-[color:var(--color-brand)] shadow-none"
+            : "text-[color:var(--color-text-muted)] hover:bg-[color:var(--color-bg-soft)]/80 hover:text-[color:var(--color-text)]",
         )}
       >
-        <MenuIcon className={cn("mr-3 shrink-0 text-slate-500", compact ? "h-4 w-4" : "h-4 w-4")} aria-hidden="true" />
+        <MenuIcon className={cn("mr-3 shrink-0 text-[color:var(--color-text-muted)]", compact ? "h-4 w-4" : "h-4 w-4")} aria-hidden="true" />
         <span className="min-w-0 flex-1 truncate">{item.label}</span>
       </Link>
+    );
+  }
+
+  function renderCollapsedMenuItem(item: MenuItem): ReactElement {
+    const active = isMenuItemActive(item);
+    const hasChildren = Boolean(item.children?.length);
+    const MenuIcon = resolveMenuIcon(item.href);
+
+    const iconButtonClassName = cn(
+      "mx-auto flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
+      active
+        ? "bg-[color:var(--color-brand)]/10 text-[color:var(--color-brand)]"
+        : "text-[color:var(--color-text-muted)] hover:bg-[color:var(--color-bg-soft)] hover:text-[color:var(--color-text)]",
+    );
+
+    const trigger = hasChildren ? (
+      <button
+        type="button"
+        aria-label={item.label}
+        onClick={() => {
+          setCollapsed(false);
+          setOpenMenuGroups((current) => ({ ...current, [item.href]: true }));
+        }}
+        className={iconButtonClassName}
+      >
+        <MenuIcon className="h-4 w-4" aria-hidden="true" />
+      </button>
+    ) : (
+      <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={iconButtonClassName}>
+        <MenuIcon className="h-4 w-4" aria-hidden="true" />
+      </Link>
+    );
+
+    return (
+      <Tooltip key={item.href}>
+        <TooltipTrigger asChild>{trigger}</TooltipTrigger>
+        <TooltipContent side="right">{item.label}</TooltipContent>
+      </Tooltip>
     );
   }
 
@@ -1209,8 +1265,8 @@ export function AdminPanelShell({
   const activeGuide = getActiveAdminGuide(pathname, searchParams);
 
   return (
-    <main className="min-h-screen bg-[#f5f7fb]">
-      <div className="mx-auto grid min-h-screen max-w-screen-2xl items-start gap-3 px-2 py-2 lg:grid-cols-[280px_1fr]">
+    <main className="min-h-screen bg-[color:var(--color-bg-soft)]">
+      <div className="mx-auto flex min-h-screen max-w-screen-2xl items-start gap-3 px-2 py-2">
         {mobileMenuOpen ? (
           <div className="fixed inset-0 z-50 lg:hidden">
             <button
@@ -1219,17 +1275,17 @@ export function AdminPanelShell({
               className="absolute inset-0 bg-black/35 backdrop-blur-[1px]"
               onClick={() => setMobileMenuOpen(false)}
             />
-            <aside className="absolute left-0 top-0 flex h-full w-[min(88vw,332px)] flex-col overflow-hidden rounded-r-[24px] border-r border-slate-200 bg-white shadow-2xl">
+            <aside className="absolute left-0 top-0 flex h-full w-[min(88vw,332px)] flex-col overflow-hidden rounded-r-[24px] border-r border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-2xl">
               <Card className="flex h-full flex-col rounded-none border-0 shadow-none">
-                <CardHeader className="space-y-3 border-b border-slate-200 px-4 py-4">
+                <CardHeader className="space-y-3 border-b border-[color:var(--color-border)] px-4 py-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50">
-                        <Store className="h-4 w-4 text-slate-500" />
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]">
+                        <Store className="h-4 w-4 text-[color:var(--color-text-muted)]" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Backoffice</p>
-                        <CardTitle className="truncate text-base text-slate-900">{title}</CardTitle>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--color-text-muted)]">Backoffice</p>
+                        <CardTitle className="truncate text-base text-[color:var(--color-text)]">{title}</CardTitle>
                       </div>
                     </div>
                     <Button type="button" variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)} aria-label="Kapat">
@@ -1237,21 +1293,21 @@ export function AdminPanelShell({
                     </Button>
                   </div>
                   <div className="relative">
-                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[color:var(--color-text-muted)]" />
                     <Input
                       value={menuSearch}
                       onChange={(event) => setMenuSearch(event.target.value)}
                       placeholder="Ara"
-                      className="h-10 rounded-xl border-slate-200 bg-slate-50 pl-9 text-sm shadow-none focus-visible:ring-slate-300"
+                      className="h-10 rounded-xl border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] pl-9 text-sm shadow-none focus-visible:ring-[color:var(--color-border)]"
                     />
                   </div>
                 </CardHeader>
                 <CardContent className="flex min-h-0 flex-1 flex-col px-0 pb-4 pt-0">
-                  <div className="shrink-0 border-b border-slate-100 px-4 py-3">
-                    <p className="truncate text-sm font-semibold text-slate-900">{userName}</p>
-                    <div className="mt-1 flex min-w-0 items-center gap-2 text-[11px] text-slate-500">
+                  <div className="shrink-0 border-b border-[color:var(--color-border)] px-4 py-3">
+                    <p className="truncate text-sm font-semibold text-[color:var(--color-text)]">{userName}</p>
+                    <div className="mt-1 flex min-w-0 items-center gap-2 text-[11px] text-[color:var(--color-text-muted)]">
                       <p className="truncate">{userEmail}</p>
-                      <Badge variant="secondary" className="shrink-0 rounded-md bg-slate-100 uppercase text-slate-600">{userRole}</Badge>
+                      <Badge variant="secondary" className="shrink-0 rounded-md bg-[color:var(--color-bg-soft)] uppercase text-[color:var(--color-text-muted)]">{userRole}</Badge>
                     </div>
                   </div>
 
@@ -1260,9 +1316,9 @@ export function AdminPanelShell({
                   </nav>
 
                   <div className="shrink-0 px-4">
-                    <Separator className="mb-3 bg-slate-200" />
+                    <Separator className="mb-3 bg-[color:var(--color-border)]" />
                     <div className="grid gap-2">
-                      <Button asChild variant="secondary" className="h-10 justify-between rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200">
+                      <Button asChild variant="secondary" className="h-10 justify-between rounded-xl">
                         <Link href={`/${locale}`} onClick={() => setMobileMenuOpen(false)}>
                           {storeLabel}
                           <ChevronRight className="h-4 w-4" />
@@ -1277,38 +1333,86 @@ export function AdminPanelShell({
           </div>
         ) : null}
 
-        <aside className="hidden lg:sticky lg:top-0 lg:block lg:h-screen lg:min-h-0">
-          <Card className="flex h-full min-h-0 flex-col overflow-hidden rounded-none border-y-0 border-l-0 border-r border-slate-200 bg-white shadow-none">
-            <CardHeader className="space-y-3 border-b border-slate-200 px-4 py-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50">
-                  <Store className="h-4 w-4 text-slate-500" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Backoffice</p>
-                  <CardTitle className="truncate text-base text-slate-900">{title}</CardTitle>
-                </div>
-              </div>
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <Input
-                  value={menuSearch}
-                  onChange={(event) => setMenuSearch(event.target.value)}
-                  placeholder="Ara"
-                  className="h-10 rounded-xl border-slate-200 bg-slate-50 pl-9 text-sm shadow-none focus-visible:ring-slate-300"
-                />
-              </div>
-            </CardHeader>
-            <CardContent className="flex min-h-0 flex-1 px-0 pb-4 pt-0">
-              <nav className="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-3 py-3 [scrollbar-width:thin]">
-                {visibleMenuItems.map((item) => renderMenuItem(item))}
-              </nav>
-            </CardContent>
-          </Card>
-        </aside>
+        <TooltipProvider delayDuration={200}>
+          <aside
+            className={cn(
+              "hidden shrink-0 transition-[width] duration-300 ease-in-out lg:sticky lg:top-0 lg:block lg:h-screen lg:min-h-0",
+              collapsed ? "lg:w-[76px]" : "lg:w-[280px]",
+            )}
+          >
+            <Card className="flex h-full min-h-0 flex-col overflow-hidden rounded-none border-y-0 border-l-0 border-r border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-none">
+              <CardHeader
+                className={cn(
+                  "border-b border-[color:var(--color-border)] px-4 py-4",
+                  collapsed ? "flex flex-col items-center gap-2" : "space-y-3",
+                )}
+              >
+                {collapsed ? (
+                  <>
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]">
+                      <Store className="h-4 w-4 text-[color:var(--color-text-muted)]" />
+                    </div>
+                    <ThemeToggle />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Menüyü genişlet"
+                      title="Menüyü genişlet"
+                      onClick={() => setCollapsed(false)}
+                    >
+                      <PanelLeftOpen className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]">
+                        <Store className="h-4 w-4 text-[color:var(--color-text-muted)]" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--color-text-muted)]">Backoffice</p>
+                        <CardTitle className="truncate text-base text-[color:var(--color-text)]">{title}</CardTitle>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <ThemeToggle />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Menüyü daralt"
+                          title="Menüyü daralt"
+                          onClick={() => setCollapsed(true)}
+                        >
+                          <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[color:var(--color-text-muted)]" />
+                      <Input
+                        value={menuSearch}
+                        onChange={(event) => setMenuSearch(event.target.value)}
+                        placeholder="Ara"
+                        className="h-10 rounded-xl border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] pl-9 text-sm shadow-none focus-visible:ring-[color:var(--color-border)]"
+                      />
+                    </div>
+                  </>
+                )}
+              </CardHeader>
+              <CardContent className="flex min-h-0 flex-1 px-0 pb-4 pt-0">
+                <nav className="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-3 py-3 [scrollbar-width:thin]">
+                  {collapsed
+                    ? visibleMenuItems.map((item) => renderCollapsedMenuItem(item))
+                    : visibleMenuItems.map((item) => renderMenuItem(item))}
+                </nav>
+              </CardContent>
+            </Card>
+          </aside>
+        </TooltipProvider>
 
-        <section className="grid min-h-0 min-w-0 content-start gap-4">
-          <header className="flex h-[72px] items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white px-3 py-2">
+        <section className="grid min-h-0 min-w-0 flex-1 content-start gap-4">
+          <header className="flex h-[72px] items-center justify-between gap-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2">
             <div className="min-w-0 flex flex-1 items-center gap-2">
               <div className="flex items-center gap-2 lg:hidden">
                 <Button
@@ -1320,14 +1424,14 @@ export function AdminPanelShell({
                 >
                   <Menu className="h-4 w-4" />
                 </Button>
-                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400">Menü</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Menü</span>
               </div>
               <div className="hidden min-w-0 lg:block">
-                <p className="truncate text-sm font-semibold leading-5 text-neutral-950">{userName}</p>
-                <div className="flex min-w-0 items-center gap-2 text-xs leading-4 text-neutral-500">
+                <p className="truncate text-sm font-semibold leading-5 text-[color:var(--color-text)]">{userName}</p>
+                <div className="flex min-w-0 items-center gap-2 text-xs leading-4 text-[color:var(--color-text-muted)]">
                 <p className="truncate">{userEmail}</p>
-                <span aria-hidden="true" className="text-neutral-300">•</span>
-                <p className="shrink-0 rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-600">
+                <span aria-hidden="true" className="text-[color:var(--color-text-muted)]">•</span>
+                <p className="shrink-0 rounded-full bg-[color:var(--color-bg-soft)] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">
                   {userRole}
                 </p>
                 </div>
