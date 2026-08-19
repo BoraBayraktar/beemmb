@@ -42,7 +42,7 @@ function resolveToneClass(tone: "neutral" | "success" | "warning") {
     return "border-amber-200 bg-amber-50 text-amber-900";
   }
 
-  return "border-neutral-200 bg-white text-neutral-950";
+  return "border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[color:var(--color-text)]";
 }
 
 export function FinanceReportDetailManager({ report, labels, serverExportHref, exportCsvLabel }: Props) {
@@ -244,10 +244,10 @@ export function FinanceReportDetailManager({ report, labels, serverExportHref, e
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
         <div className="max-w-3xl space-y-2">
-          <h1 className="text-2xl font-semibold text-neutral-950">{report.title}</h1>
-          <p className="text-sm text-neutral-600">{report.description}</p>
+          <h1 className="text-2xl font-semibold text-[color:var(--color-text)]">{report.title}</h1>
+          <p className="text-sm text-[color:var(--color-text-muted)]">{report.description}</p>
         </div>
       </section>
 
@@ -261,21 +261,21 @@ export function FinanceReportDetailManager({ report, labels, serverExportHref, e
         ))}
       </section>
 
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
         <div className="space-y-3">
           {report.rows.map((row) => {
             const content = (
-              <div className="flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-neutral-50 p-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-col gap-4 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4 md:flex-row md:items-center md:justify-between">
                 <div className="space-y-1">
-                  <h2 className="text-base font-semibold text-neutral-950">{row.label}</h2>
-                  <p className="text-sm text-neutral-600">{row.supportingText}</p>
+                  <h2 className="text-base font-semibold text-[color:var(--color-text)]">{row.label}</h2>
+                  <p className="text-sm text-[color:var(--color-text-muted)]">{row.supportingText}</p>
                 </div>
                 <div className="flex flex-col gap-2 text-sm md:items-end">
-                  <span className="font-medium text-neutral-950">
+                  <span className="font-medium text-[color:var(--color-text)]">
                     {labels.primaryValue}: {formatMetricValue(row.primaryValue, row.primaryCurrency)}
                   </span>
                   {row.secondaryValue !== undefined ? (
-                    <span className="text-neutral-600">
+                    <span className="text-[color:var(--color-text-muted)]">
                       {labels.secondaryValue}: {formatMetricValue(row.secondaryValue, row.secondaryCurrency)}
                     </span>
                   ) : null}
@@ -297,18 +297,18 @@ export function FinanceReportDetailManager({ report, labels, serverExportHref, e
       </section>
 
       {reportTable && reportTable.rows.length > 0 ? (
-        <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+        <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
           <div className="space-y-4">
             <div className="space-y-2">
-              <h2 className="text-lg font-semibold text-neutral-950">{reportTable.title}</h2>
-              <p className="text-sm text-neutral-600">{reportTable.description}</p>
+              <h2 className="text-lg font-semibold text-[color:var(--color-text)]">{reportTable.title}</h2>
+              <p className="text-sm text-[color:var(--color-text-muted)]">{reportTable.description}</p>
             </div>
             <div className="grid gap-4 xl:grid-cols-[1.2fr_1fr_auto]">
-              <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">Metin Arama</p>
+              <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-text-muted)]">Metin Arama</p>
                 <div className="mt-3 grid gap-3 lg:grid-cols-[220px_1fr]">
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-neutral-600">Aranacak alan</label>
+                    <label className="text-xs font-medium text-[color:var(--color-text-muted)]">Aranacak alan</label>
                     <Select value={activeColumnKey} onValueChange={setActiveColumnKey}>
                       <SelectTrigger>
                         <SelectValue placeholder="Arama alanı" />
@@ -324,7 +324,7 @@ export function FinanceReportDetailManager({ report, labels, serverExportHref, e
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-neutral-600">Arama metni</label>
+                    <label className="text-xs font-medium text-[color:var(--color-text-muted)]">Arama metni</label>
                     <Input
                       type="search"
                       value={tableQuery}
@@ -335,11 +335,11 @@ export function FinanceReportDetailManager({ report, labels, serverExportHref, e
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">Kesin Filtre</p>
+              <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-text-muted)]">Kesin Filtre</p>
                 <div className="mt-3 grid gap-3 lg:grid-cols-2">
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-neutral-600">Filtre uygulanacak alan</label>
+                    <label className="text-xs font-medium text-[color:var(--color-text-muted)]">Filtre uygulanacak alan</label>
                     <Select
                       value={exactFilterColumnKey}
                       onValueChange={(value) => {
@@ -361,7 +361,7 @@ export function FinanceReportDetailManager({ report, labels, serverExportHref, e
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-neutral-600">
+                    <label className="text-xs font-medium text-[color:var(--color-text-muted)]">
                       {exactFilterColumnKey === "all"
                         ? "Önce filtre alanı seç"
                         : `"${reportTable.columns.find((column) => column.key === exactFilterColumnKey)?.label ?? "Alan"}" değeri`}
@@ -387,11 +387,11 @@ export function FinanceReportDetailManager({ report, labels, serverExportHref, e
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">Sıralama</p>
+              <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-text-muted)]">Sıralama</p>
                 <div className="mt-3 grid gap-3">
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-neutral-600">Sıralanacak alan</label>
+                    <label className="text-xs font-medium text-[color:var(--color-text-muted)]">Sıralanacak alan</label>
                     <Select value={sortKey} onValueChange={setSortKey}>
                       <SelectTrigger>
                         <SelectValue placeholder="Sıralama kolonu" />
@@ -407,7 +407,7 @@ export function FinanceReportDetailManager({ report, labels, serverExportHref, e
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-neutral-600">Sıra yönü</label>
+                    <label className="text-xs font-medium text-[color:var(--color-text-muted)]">Sıra yönü</label>
                     <Select value={sortDirection} onValueChange={(value) => setSortDirection(value as "asc" | "desc")}>
                       <SelectTrigger>
                         <SelectValue placeholder="Sıra yönü" />
@@ -421,11 +421,11 @@ export function FinanceReportDetailManager({ report, labels, serverExportHref, e
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 xl:col-span-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">Aralık Filtresi</p>
+              <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4 xl:col-span-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-text-muted)]">Aralık Filtresi</p>
                 <div className="mt-3 grid gap-3 lg:grid-cols-[220px_1fr]">
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-neutral-600">Aralık uygulanacak alan</label>
+                    <label className="text-xs font-medium text-[color:var(--color-text-muted)]">Aralık uygulanacak alan</label>
                     <Select
                       value={rangeFilterColumnKey}
                       onValueChange={(value) => {
@@ -453,13 +453,13 @@ export function FinanceReportDetailManager({ report, labels, serverExportHref, e
                   {rangeFilterMode === "date" ? (
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="space-y-2">
-                        <label className="text-xs font-medium text-neutral-600">
+                        <label className="text-xs font-medium text-[color:var(--color-text-muted)]">
                           {rangeFilterColumn?.label ?? "Tarih"} başlangıcı
                         </label>
                         <Input type="date" value={dateStartValue} onChange={(event) => setDateStartValue(event.target.value)} />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-medium text-neutral-600">
+                        <label className="text-xs font-medium text-[color:var(--color-text-muted)]">
                           {rangeFilterColumn?.label ?? "Tarih"} bitişi
                         </label>
                         <Input type="date" value={dateEndValue} onChange={(event) => setDateEndValue(event.target.value)} />
@@ -468,20 +468,20 @@ export function FinanceReportDetailManager({ report, labels, serverExportHref, e
                   ) : rangeFilterMode === "number" ? (
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="space-y-2">
-                        <label className="text-xs font-medium text-neutral-600">
+                        <label className="text-xs font-medium text-[color:var(--color-text-muted)]">
                           {rangeFilterColumn?.label ?? "Tutar"} minimum
                         </label>
                         <Input type="number" inputMode="decimal" value={rangeMinValue} onChange={(event) => setRangeMinValue(event.target.value)} placeholder="0" />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-medium text-neutral-600">
+                        <label className="text-xs font-medium text-[color:var(--color-text-muted)]">
                           {rangeFilterColumn?.label ?? "Tutar"} maksimum
                         </label>
                         <Input type="number" inputMode="decimal" value={rangeMaxValue} onChange={(event) => setRangeMaxValue(event.target.value)} placeholder="0" />
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center rounded-xl border border-dashed border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-500">
+                    <div className="flex items-center rounded-xl border border-dashed border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 text-sm text-[color:var(--color-text-muted)]">
                       Önce tarih veya sayısal bir kolon seç.
                     </div>
                   )}
@@ -489,7 +489,7 @@ export function FinanceReportDetailManager({ report, labels, serverExportHref, e
               </div>
 
               <div className="xl:col-span-3 flex flex-wrap items-center justify-between gap-3">
-                <p className="text-xs text-neutral-500">
+                <p className="text-xs text-[color:var(--color-text-muted)]">
                   Görünen satır: {filteredTableRows.length}/{reportTable.rows.length}
                 </p>
                 {serverExportHref ? (
@@ -510,8 +510,8 @@ export function FinanceReportDetailManager({ report, labels, serverExportHref, e
           </div>
 
           <div className="mt-4 hidden overflow-x-auto lg:block">
-            <table className="min-w-full divide-y divide-neutral-200 text-sm">
-              <thead className="bg-neutral-50 text-left text-neutral-500">
+            <table className="min-w-full divide-y divide-[color:var(--color-border)] text-sm">
+              <thead className="bg-[color:var(--color-bg-soft)] text-left text-[color:var(--color-text-muted)]">
                 <tr>
                   {reportTable.columns.map((column) => (
                     <th
@@ -523,12 +523,12 @@ export function FinanceReportDetailManager({ report, labels, serverExportHref, e
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-200">
+              <tbody className="divide-y divide-[color:var(--color-border)]">
                 {filteredTableRows.map((row) => {
                   const content = reportTable.columns.map((column) => (
                     <td
                       key={`${row.id}-${column.key}`}
-                      className={`px-4 py-3 text-neutral-700 ${column.align === "right" ? "text-right" : "text-left"}`}
+                      className={`px-4 py-3 text-[color:var(--color-text)] ${column.align === "right" ? "text-right" : "text-left"}`}
                     >
                       {row.cells[column.key] ?? "-"}
                     </td>
@@ -539,13 +539,13 @@ export function FinanceReportDetailManager({ report, labels, serverExportHref, e
                   }
 
                   return (
-                    <tr key={row.id} className="transition hover:bg-neutral-50">
+                    <tr key={row.id} className="transition hover:bg-[color:var(--color-bg-soft)]">
                       {reportTable.columns.map((column) => (
                         <td
                           key={`${row.id}-${column.key}`}
                           className={`px-4 py-3 ${column.align === "right" ? "text-right" : "text-left"}`}
                         >
-                          <Link href={row.href as string} className="block text-neutral-700 no-underline">
+                          <Link href={row.href as string} className="block text-[color:var(--color-text)] no-underline">
                             {row.cells[column.key] ?? "-"}
                           </Link>
                         </td>
@@ -559,17 +559,17 @@ export function FinanceReportDetailManager({ report, labels, serverExportHref, e
 
           <div className="mt-4 grid gap-3 lg:hidden">
             {filteredTableRows.map((row) => (
-              <article key={row.id} className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+              <article key={row.id} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
                 <div className="grid gap-2">
                   {reportTable.columns.map((column) => (
                     <div key={`${row.id}-mobile-${column.key}`} className="flex items-start justify-between gap-3 text-sm">
-                      <span className="text-neutral-500">{column.label}</span>
+                      <span className="text-[color:var(--color-text-muted)]">{column.label}</span>
                       {row.href ? (
-                        <Link href={row.href} className="text-right font-medium text-neutral-900 no-underline">
+                        <Link href={row.href} className="text-right font-medium text-[color:var(--color-text)] no-underline">
                           {row.cells[column.key] ?? "-"}
                         </Link>
                       ) : (
-                        <span className="text-right font-medium text-neutral-900">{row.cells[column.key] ?? "-"}</span>
+                        <span className="text-right font-medium text-[color:var(--color-text)]">{row.cells[column.key] ?? "-"}</span>
                       )}
                     </div>
                   ))}
@@ -578,7 +578,7 @@ export function FinanceReportDetailManager({ report, labels, serverExportHref, e
             ))}
           </div>
           {filteredTableRows.length === 0 ? (
-            <div className="mt-4 rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-5 text-sm text-neutral-500">
+            <div className="mt-4 rounded-2xl border border-dashed border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-5 text-sm text-[color:var(--color-text-muted)]">
               Aramaya uygun satır bulunamadı.
             </div>
           ) : null}

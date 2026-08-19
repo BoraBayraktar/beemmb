@@ -174,12 +174,12 @@ export function CustomerReceivablesManager({
   const dueWithinLabel = labels.dueWithinDaysKpi.replace("{days}", String(result.dueKpi.dueWithinDaysThreshold));
 
   return (
-    <section className="rounded-2xl border border-neutral-200 bg-white">
-      <div className="flex flex-col gap-4 border-b border-neutral-200 p-5 lg:flex-row lg:items-center lg:justify-between">
+    <section className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
+      <div className="flex flex-col gap-4 border-b border-[color:var(--color-border)] p-5 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.title}</p>
-          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-neutral-950">{labels.title}</h2>
-          <p className="mt-1 text-sm text-neutral-500">{labels.description}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.title}</p>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[color:var(--color-text)]">{labels.title}</h2>
+          <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{labels.description}</p>
         </div>
       </div>
 
@@ -199,12 +199,12 @@ export function CustomerReceivablesManager({
         </form>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          <Link href={buildStatusHref(locale, "all", initialSearch, overdueOnly)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialPaymentStatus === "all" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-neutral-100 text-neutral-700 hover:text-neutral-950"}`}>{labels.allStatuses}</Link>
-          <Link href={buildStatusHref(locale, "PENDING", initialSearch, overdueOnly)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialPaymentStatus === "PENDING" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-neutral-100 text-neutral-700 hover:text-neutral-950"}`}>{labels.pending}</Link>
-          <Link href={buildStatusHref(locale, "AUTHORIZED", initialSearch, overdueOnly)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialPaymentStatus === "AUTHORIZED" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-neutral-100 text-neutral-700 hover:text-neutral-950"}`}>{labels.authorized}</Link>
-          <Link href={buildStatusHref(locale, "FAILED", initialSearch, overdueOnly)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialPaymentStatus === "FAILED" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-neutral-100 text-neutral-700 hover:text-neutral-950"}`}>{labels.failed}</Link>
-          <Link href={buildStatusHref(locale, initialPaymentStatus, initialSearch, false)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${!overdueOnly ? "bg-neutral-950 !text-white hover:!text-white" : "bg-neutral-100 text-neutral-700 hover:text-neutral-950"}`}>{labels.allOpenFilter}</Link>
-          <Link href={buildStatusHref(locale, initialPaymentStatus, initialSearch, true)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${overdueOnly ? "bg-neutral-950 !text-white hover:!text-white" : "bg-neutral-100 text-neutral-700 hover:text-neutral-950"}`}>{labels.overdueFilter}</Link>
+          <Link href={buildStatusHref(locale, "all", initialSearch, overdueOnly)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialPaymentStatus === "all" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)] hover:text-[color:var(--color-text)]"}`}>{labels.allStatuses}</Link>
+          <Link href={buildStatusHref(locale, "PENDING", initialSearch, overdueOnly)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialPaymentStatus === "PENDING" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)] hover:text-[color:var(--color-text)]"}`}>{labels.pending}</Link>
+          <Link href={buildStatusHref(locale, "AUTHORIZED", initialSearch, overdueOnly)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialPaymentStatus === "AUTHORIZED" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)] hover:text-[color:var(--color-text)]"}`}>{labels.authorized}</Link>
+          <Link href={buildStatusHref(locale, "FAILED", initialSearch, overdueOnly)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialPaymentStatus === "FAILED" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)] hover:text-[color:var(--color-text)]"}`}>{labels.failed}</Link>
+          <Link href={buildStatusHref(locale, initialPaymentStatus, initialSearch, false)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${!overdueOnly ? "bg-neutral-950 !text-white hover:!text-white" : "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)] hover:text-[color:var(--color-text)]"}`}>{labels.allOpenFilter}</Link>
+          <Link href={buildStatusHref(locale, initialPaymentStatus, initialSearch, true)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${overdueOnly ? "bg-neutral-950 !text-white hover:!text-white" : "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)] hover:text-[color:var(--color-text)]"}`}>{labels.overdueFilter}</Link>
         </div>
 
         <div className="mt-5 grid gap-3 md:grid-cols-3 xl:grid-cols-7">
@@ -216,9 +216,9 @@ export function CustomerReceivablesManager({
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">{dueWithinLabel}</p>
             <p className="mt-3 text-2xl font-semibold text-amber-950">{formatMoney(result.dueKpi.dueWithinDaysAmount, result.dueKpi.currency)}</p>
           </article>
-          <article className="rounded-3xl border border-neutral-200 bg-neutral-50 p-5 shadow-sm md:col-span-1 xl:col-span-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.nearestDueDateKpi}</p>
-            <p className="mt-3 text-lg font-semibold text-neutral-950">
+          <article className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-5 shadow-sm md:col-span-1 xl:col-span-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.nearestDueDateKpi}</p>
+            <p className="mt-3 text-lg font-semibold text-[color:var(--color-text)]">
               {result.dueKpi.nearestDueDate ? formatDate(result.dueKpi.nearestDueDate) : labels.notSpecified}
             </p>
           </article>
@@ -243,8 +243,8 @@ export function CustomerReceivablesManager({
           </article>
         </div>
 
-        <div className="mt-5 overflow-hidden rounded-xl border border-neutral-200">
-          <div className="hidden grid-cols-[1.2fr_1.2fr_160px_180px_180px_200px_88px] gap-4 border-b border-neutral-200 bg-neutral-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 lg:grid">
+        <div className="mt-5 overflow-hidden rounded-xl border border-[color:var(--color-border)]">
+          <div className="hidden grid-cols-[1.2fr_1.2fr_160px_180px_180px_200px_88px] gap-4 border-b border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)] lg:grid">
             <span>{labels.orderNumber}</span>
             <span>{labels.counterparty}</span>
             <span>{labels.paymentStatus}</span>
@@ -255,24 +255,24 @@ export function CustomerReceivablesManager({
           </div>
 
           {result.items.length === 0 ? (
-            <p className="p-6 text-sm text-neutral-500">{labels.noResults}</p>
+            <p className="p-6 text-sm text-[color:var(--color-text-muted)]">{labels.noResults}</p>
           ) : (
-            <div className="divide-y divide-neutral-200">
+            <div className="divide-y divide-[color:var(--color-border)]">
               {result.items.map((item) => (
                 <article key={item.orderId} className="grid gap-4 p-4 lg:grid-cols-[1.2fr_1.2fr_160px_180px_180px_200px_88px] lg:items-center">
                   <div>
-                    <p className="font-medium text-neutral-950">{item.orderNumber}</p>
-                    <p className="mt-1 text-sm text-neutral-500">{labels.itemCount}: {item.itemCount}</p>
+                    <p className="font-medium text-[color:var(--color-text)]">{item.orderNumber}</p>
+                    <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{labels.itemCount}: {item.itemCount}</p>
                   </div>
-                  <p className="text-sm text-neutral-500">{item.counterpartyName}</p>
+                  <p className="text-sm text-[color:var(--color-text-muted)]">{item.counterpartyName}</p>
                   <div>
                     <Badge className={resolveStatusBadge(item.paymentStatus)}>
                       {formatStatusLabel(item.paymentStatus, labels)}
                     </Badge>
                   </div>
-                  <p className="text-sm font-medium text-neutral-950">{formatMoney(item.totalAmount, item.currency)}</p>
-                  <p className="text-sm text-neutral-500">{formatDate(item.createdAt)}</p>
-                  <p className={`text-sm ${item.isOverdue ? "font-medium text-rose-700" : "text-neutral-600"}`}>{resolveDueHint(item, labels)}</p>
+                  <p className="text-sm font-medium text-[color:var(--color-text)]">{formatMoney(item.totalAmount, item.currency)}</p>
+                  <p className="text-sm text-[color:var(--color-text-muted)]">{formatDate(item.createdAt)}</p>
+                  <p className={`text-sm ${item.isOverdue ? "font-medium text-rose-700" : "text-[color:var(--color-text-muted)]"}`}>{resolveDueHint(item, labels)}</p>
                   <div ref={openActionMenuId === item.orderId ? actionMenuRef : null} className="relative flex justify-start lg:justify-end">
                     <Button
                       type="button"
@@ -283,20 +283,20 @@ export function CustomerReceivablesManager({
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                     {openActionMenuId === item.orderId ? (
-                      <div className="absolute right-0 top-11 z-10 min-w-44 rounded-xl border border-neutral-200 bg-white p-2 shadow-xl">
+                      <div className="absolute right-0 top-11 z-10 min-w-44 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-2 shadow-xl">
                         <button
                           type="button"
                           onClick={() => {
                             setSelectedOrderId(item.orderId);
                             setOpenActionMenuId(null);
                           }}
-                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100"
+                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)]"
                         >
                           {labels.openDetail}
                         </button>
                         <Link
                           href={`/${locale}/admin/orders/${item.orderId}`}
-                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100"
+                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)]"
                           onClick={() => setOpenActionMenuId(null)}
                         >
                           {labels.openOrder}
@@ -314,10 +314,10 @@ export function CustomerReceivablesManager({
       {selectedItem ? (
         <div className="fixed inset-0 z-50">
           <button type="button" aria-label={labels.cancel} className="absolute inset-0 bg-black/30" onClick={() => setSelectedOrderId(null)} />
-          <aside className="absolute right-0 top-0 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-neutral-200 bg-white shadow-2xl">
-            <div className="flex items-start justify-between border-b border-neutral-200 p-5">
+          <aside className="absolute right-0 top-0 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-2xl">
+            <div className="flex items-start justify-between border-b border-[color:var(--color-border)] p-5">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.title}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.title}</p>
                 <h3 className="mt-1 text-xl font-semibold tracking-tight">{selectedItem.orderNumber}</h3>
               </div>
               <Button type="button" size="icon" variant="ghost" onClick={() => setSelectedOrderId(null)}>
@@ -331,18 +331,18 @@ export function CustomerReceivablesManager({
                   {formatStatusLabel(selectedItem.paymentStatus, labels)}
                 </Badge>
               </div>
-              <div className="grid gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-                <p className="text-sm text-neutral-700">{labels.counterparty}: <span className="font-medium text-neutral-950">{selectedItem.counterpartyName}</span></p>
-                <p className="text-sm text-neutral-700">{labels.totalAmount}: <span className="font-medium text-neutral-950">{formatMoney(selectedItem.totalAmount, selectedItem.currency)}</span></p>
-                <p className="text-sm text-neutral-700">{labels.itemCount}: <span className="font-medium text-neutral-950">{selectedItem.itemCount}</span></p>
-                <p className="text-sm text-neutral-700">{labels.orderDate}: <span className="font-medium text-neutral-950">{formatDate(selectedItem.createdAt)}</span></p>
-                <p className="text-sm text-neutral-700">{labels.latestDocument}: <span className="font-medium text-neutral-950">{selectedItem.latestDocument?.documentNumber ?? labels.notSpecified}</span></p>
+              <div className="grid gap-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+                <p className="text-sm text-[color:var(--color-text)]">{labels.counterparty}: <span className="font-medium text-[color:var(--color-text)]">{selectedItem.counterpartyName}</span></p>
+                <p className="text-sm text-[color:var(--color-text)]">{labels.totalAmount}: <span className="font-medium text-[color:var(--color-text)]">{formatMoney(selectedItem.totalAmount, selectedItem.currency)}</span></p>
+                <p className="text-sm text-[color:var(--color-text)]">{labels.itemCount}: <span className="font-medium text-[color:var(--color-text)]">{selectedItem.itemCount}</span></p>
+                <p className="text-sm text-[color:var(--color-text)]">{labels.orderDate}: <span className="font-medium text-[color:var(--color-text)]">{formatDate(selectedItem.createdAt)}</span></p>
+                <p className="text-sm text-[color:var(--color-text)]">{labels.latestDocument}: <span className="font-medium text-[color:var(--color-text)]">{selectedItem.latestDocument?.documentNumber ?? labels.notSpecified}</span></p>
               </div>
               <div className="flex flex-wrap justify-end gap-2">
-                <Link href={`/${locale}/admin/finance/receivables/${selectedItem.orderId}`} className="inline-flex h-10 items-center rounded-xl border border-neutral-300 px-4 text-sm font-medium text-neutral-700">
+                <Link href={`/${locale}/admin/finance/receivables/${selectedItem.orderId}`} className="inline-flex h-10 items-center rounded-xl border border-[color:var(--color-border)] px-4 text-sm font-medium text-[color:var(--color-text)]">
                   {labels.latestDocument}
                 </Link>
-                <Link href={`/${locale}/admin/orders/${selectedItem.orderId}`} className="inline-flex h-10 items-center rounded-xl border border-neutral-300 px-4 text-sm font-medium text-neutral-700">
+                <Link href={`/${locale}/admin/orders/${selectedItem.orderId}`} className="inline-flex h-10 items-center rounded-xl border border-[color:var(--color-border)] px-4 text-sm font-medium text-[color:var(--color-text)]">
                   {labels.openOrder}
                 </Link>
               </div>

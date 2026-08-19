@@ -33,16 +33,16 @@ function resolveToneClass(tone: "neutral" | "success" | "warning") {
     return "border-amber-200 bg-amber-50 text-amber-900";
   }
 
-  return "border-neutral-200 bg-white text-neutral-950";
+  return "border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[color:var(--color-text)]";
 }
 
 export function FinanceReportsManager({ overview, labels }: Props) {
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
         <div className="max-w-3xl space-y-2">
-          <h1 className="text-2xl font-semibold text-neutral-950">{labels.title}</h1>
-          <p className="text-sm text-neutral-600">{labels.description}</p>
+          <h1 className="text-2xl font-semibold text-[color:var(--color-text)]">{labels.title}</h1>
+          <p className="text-sm text-[color:var(--color-text-muted)]">{labels.description}</p>
         </div>
       </section>
 
@@ -62,10 +62,10 @@ export function FinanceReportsManager({ overview, labels }: Props) {
 
       <section className="grid gap-3 lg:grid-cols-3">
         {overview.cards.map((card) => (
-          <article key={card.href} className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-neutral-950">{card.title}</h2>
-            <p className="mt-2 text-sm text-neutral-600">{card.description}</p>
-            <Link href={card.href} className="mt-4 inline-flex text-sm font-medium text-neutral-950 underline underline-offset-4">
+          <article key={card.href} className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
+            <h2 className="text-lg font-semibold text-[color:var(--color-text)]">{card.title}</h2>
+            <p className="mt-2 text-sm text-[color:var(--color-text-muted)]">{card.description}</p>
+            <Link href={card.href} className="mt-4 inline-flex text-sm font-medium text-[color:var(--color-text)] underline underline-offset-4">
               {card.ctaLabel}
             </Link>
           </article>

@@ -113,18 +113,18 @@ export function DocumentProviderManager({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-        <h1 className="text-2xl font-semibold text-neutral-950">{labels.title}</h1>
-        <p className="mt-2 text-sm text-neutral-600">{labels.description}</p>
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
+        <h1 className="text-2xl font-semibold text-[color:var(--color-text)]">{labels.title}</h1>
+        <p className="mt-2 text-sm text-[color:var(--color-text-muted)]">{labels.description}</p>
       </section>
 
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
         <div className="grid gap-3 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-3">
             {items.length === 0 ? (
-              <article className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-4 text-sm text-neutral-600">{labels.providerNone}</article>
+              <article className="rounded-2xl border border-dashed border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4 text-sm text-[color:var(--color-text-muted)]">{labels.providerNone}</article>
             ) : items.map((item) => (
-              <article key={item.id} className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700">
+              <article key={item.id} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4 text-sm text-[color:var(--color-text)]">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge>{item.displayName}</Badge>
                   {item.isDefault ? <Badge className="border-sky-200 bg-sky-100 text-sky-700">{labels.providerIsDefault}</Badge> : null}
@@ -148,7 +148,7 @@ export function DocumentProviderManager({
             ))}
           </div>
 
-          <div className="grid gap-3 rounded-2xl border border-neutral-200 p-4">
+          <div className="grid gap-3 rounded-2xl border border-[color:var(--color-border)] p-4">
             <Input value={providerCode} onChange={(event) => setProviderCode(event.target.value)} placeholder={labels.providerCode} />
             <Input value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder={labels.providerDisplayName} />
             <Input value={endpointUrl} onChange={(event) => setEndpointUrl(event.target.value)} placeholder={labels.providerEndpointUrl} />
@@ -158,9 +158,9 @@ export function DocumentProviderManager({
             <Input type="password" autoComplete="new-password" value={secretKey} onChange={(event) => setSecretKey(event.target.value)} placeholder={labels.providerSecret} />
             <Input type="password" autoComplete="new-password" value={webhookSecret} onChange={(event) => setWebhookSecret(event.target.value)} placeholder={labels.providerWebhookSecret} />
             <Input value={companyName} onChange={(event) => setCompanyName(event.target.value)} placeholder={labels.providerCompanyName} />
-            <label className="flex items-center gap-2 text-sm text-neutral-700"><input type="checkbox" checked={supportsStatusSync} onChange={(event) => setSupportsStatusSync(event.target.checked)} />{labels.providerSupportsStatusSync}</label>
-            <label className="flex items-center gap-2 text-sm text-neutral-700"><input type="checkbox" checked={isActive} onChange={(event) => setIsActive(event.target.checked)} />{labels.providerIsActive}</label>
-            <label className="flex items-center gap-2 text-sm text-neutral-700"><input type="checkbox" checked={isDefault} onChange={(event) => setIsDefault(event.target.checked)} />{labels.providerIsDefault}</label>
+            <label className="flex items-center gap-2 text-sm text-[color:var(--color-text)]"><input type="checkbox" checked={supportsStatusSync} onChange={(event) => setSupportsStatusSync(event.target.checked)} />{labels.providerSupportsStatusSync}</label>
+            <label className="flex items-center gap-2 text-sm text-[color:var(--color-text)]"><input type="checkbox" checked={isActive} onChange={(event) => setIsActive(event.target.checked)} />{labels.providerIsActive}</label>
+            <label className="flex items-center gap-2 text-sm text-[color:var(--color-text)]"><input type="checkbox" checked={isDefault} onChange={(event) => setIsDefault(event.target.checked)} />{labels.providerIsDefault}</label>
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
             <Button type="button" onClick={() => void saveProvider()} disabled={pending}>
               {pending ? labels.saving : labels.providerSave}

@@ -465,33 +465,33 @@ export function ProductQuestionsManager({
   }
 
   return (
-    <section className="rounded-2xl border border-neutral-200 bg-white">
-      <div className="flex flex-col gap-4 border-b border-neutral-200 p-5 lg:flex-row lg:items-center lg:justify-between">
+    <section className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
+      <div className="flex flex-col gap-4 border-b border-[color:var(--color-border)] p-5 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.title}</p>
-          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-neutral-950">{labels.questionManager}</h2>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.title}</p>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[color:var(--color-text)]">{labels.questionManager}</h2>
         </div>
       </div>
 
       <div className="p-5">
         {error ? <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{error}</p> : null}
 
-        <div className="rounded-xl border border-neutral-200">
-          <div className="border-b border-neutral-200 bg-neutral-50 px-4 py-4">
+        <div className="rounded-xl border border-[color:var(--color-border)]">
+          <div className="border-b border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-4">
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-neutral-900">{labels.questionManager}</h3>
-                <p className="mt-1 text-sm text-neutral-500">{labels.summaryTitle}</p>
+                <h3 className="text-lg font-semibold text-[color:var(--color-text)]">{labels.questionManager}</h3>
+                <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{labels.summaryTitle}</p>
               </div>
 
               <div className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-neutral-700">
+                <span className="rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-1 text-[color:var(--color-text)]">
                   {labels.summaryCurrent}: {questions.length}
                 </span>
-                <span className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-neutral-700">
+                <span className="rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-1 text-[color:var(--color-text)]">
                   {labels.summaryPending}: {pendingCount}
                 </span>
-                <span className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-neutral-700">
+                <span className="rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-1 text-[color:var(--color-text)]">
                   {labels.summaryAnswered}: {answeredCount}
                 </span>
                 <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 font-medium text-red-700">
@@ -502,7 +502,7 @@ export function ProductQuestionsManager({
 
             <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_auto_auto] lg:items-center">
               <div className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="text-neutral-500">{labels.status}</span>
+                <span className="text-[color:var(--color-text-muted)]">{labels.status}</span>
                 <Select
                   value={questionStatus}
                   onValueChange={(value: "all" | "pending" | "answered") => {
@@ -530,7 +530,7 @@ export function ProductQuestionsManager({
               </div>
 
               <div className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="text-neutral-500">{labels.sort}</span>
+                <span className="text-[color:var(--color-text-muted)]">{labels.sort}</span>
                 <Select
                   value={questionSort}
                   onValueChange={(value: "priority" | "latest" | "oldest") => {
@@ -565,7 +565,7 @@ export function ProductQuestionsManager({
             </div>
           </div>
 
-          <form className="border-b border-neutral-200 px-4 py-3" onSubmit={applyQuestionFilters}>
+          <form className="border-b border-[color:var(--color-border)] px-4 py-3" onSubmit={applyQuestionFilters}>
             <div className="grid gap-2 md:grid-cols-[1fr_auto]">
               <Input
                 value={questionSearch}
@@ -580,7 +580,7 @@ export function ProductQuestionsManager({
               </Button>
             </div>
             {searchHistory.length > 0 ? (
-              <div className="mt-3 flex flex-wrap gap-2 text-xs text-neutral-500">
+              <div className="mt-3 flex flex-wrap gap-2 text-xs text-[color:var(--color-text-muted)]">
                 <span className="py-1">{labels.searchHistory}:</span>
                 {searchHistory.map((term) => (
                   <Button
@@ -600,16 +600,16 @@ export function ProductQuestionsManager({
             ) : null}
           </form>
 
-          <div className="border-b border-neutral-200 bg-neutral-50/70 px-4 py-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{labels.operationsTitle}</p>
+          <div className="border-b border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]/70 px-4 py-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.operationsTitle}</p>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
-              <span className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-neutral-700">
+              <span className="rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-1 text-[color:var(--color-text)]">
                 {labels.summaryCurrent}: {stats?.total ?? "-"}
               </span>
-              <span className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-neutral-700">
+              <span className="rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-1 text-[color:var(--color-text)]">
                 {labels.summaryPending}: {stats?.pending ?? "-"}
               </span>
-              <span className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-neutral-700">
+              <span className="rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-1 text-[color:var(--color-text)]">
                 {labels.summaryAnswered}: {stats?.answered ?? "-"}
               </span>
               <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 font-medium text-red-700">
@@ -618,10 +618,10 @@ export function ProductQuestionsManager({
             </div>
           </div>
 
-          <div className="border-b border-neutral-200 px-4 py-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{labels.bulkActions}</p>
+          <div className="border-b border-[color:var(--color-border)] px-4 py-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.bulkActions}</p>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
-              <span className="rounded-full border border-neutral-200 px-3 py-1 text-neutral-700">
+              <span className="rounded-full border border-[color:var(--color-border)] px-3 py-1 text-[color:var(--color-text)]">
                 {labels.selectedCount}: {selectedQuestionIds.length}
               </span>
               <Button type="button" variant="secondary" size="sm" disabled={questionLoading || questions.length === 0} onClick={selectAllOnPage}>
@@ -657,32 +657,32 @@ export function ProductQuestionsManager({
             </div>
           </div>
 
-          <div className="divide-y divide-neutral-200">
+          <div className="divide-y divide-[color:var(--color-border)]">
             {questions.length === 0 ? (
-              <p className="p-4 text-sm text-neutral-500">{labels.emptyQuestions}</p>
+              <p className="p-4 text-sm text-[color:var(--color-text-muted)]">{labels.emptyQuestions}</p>
             ) : (
               questions.map((item) => (
                 <article
                   key={item.id}
                   id={`question-${item.id}`}
-                  className={`grid gap-4 p-4 transition-colors ${pinnedQuestionId === item.id ? "bg-amber-50/60 ring-1 ring-amber-300" : ""}`}
+                  className={`grid gap-4 p-4 transition-colors ${pinnedQuestionId === item.id ? "bg-amber-50 ring-1 ring-amber-300" : ""}`}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="flex items-start gap-2">
                       <input
                         type="checkbox"
-                        className="mt-1 h-4 w-4 rounded border-neutral-300"
+                        className="mt-1 h-4 w-4 rounded border-[color:var(--color-border)]"
                         checked={selectedQuestionIds.includes(item.id)}
                         onChange={() => toggleQuestionSelection(item.id)}
                         aria-label={`${labels.selectedCount}: ${item.productName}`}
                       />
                       <div>
-                        <p className="font-semibold text-neutral-950">{item.productName}</p>
-                        <p className="mt-1 text-xs text-neutral-500">
+                        <p className="font-semibold text-[color:var(--color-text)]">{item.productName}</p>
+                        <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">
                           {item.productSlug} • {item.askedBy}
                         </p>
-                        <div className="mt-2 flex flex-wrap gap-2 text-xs text-neutral-500">
-                          <span className="rounded-full bg-neutral-100 px-2 py-1">
+                        <div className="mt-2 flex flex-wrap gap-2 text-xs text-[color:var(--color-text-muted)]">
+                          <span className="rounded-full bg-[color:var(--color-bg-soft)] px-2 py-1">
                             {labels.askedAt}: {formatQuestionDate(item.askedAt)}
                           </span>
                           {item.isAnswered ? (
@@ -705,16 +705,16 @@ export function ProductQuestionsManager({
                           {labels.overdue}
                         </span>
                       ) : null}
-                      <span className="rounded-full border border-neutral-200 px-2 py-1 text-xs text-neutral-600">
+                      <span className="rounded-full border border-[color:var(--color-border)] px-2 py-1 text-xs text-[color:var(--color-text-muted)]">
                         {item.isAnswered ? labels.statusAnswered : labels.statusPending}
                       </span>
                     </div>
                   </div>
 
-                  <p className="rounded-xl bg-neutral-50 p-4 text-sm leading-6 text-neutral-800">{item.question}</p>
+                  <p className="rounded-xl bg-[color:var(--color-bg-soft)] p-4 text-sm leading-6 text-[color:var(--color-text)]">{item.question}</p>
 
                   {item.answer ? (
-                    <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
                       <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">{labels.statusAnswered}</p>
                       <p className="mt-2 text-sm leading-6 text-emerald-950">{item.answer}</p>
                     </div>
@@ -742,7 +742,7 @@ export function ProductQuestionsManager({
             )}
           </div>
 
-          <div className="flex items-center justify-between border-t border-neutral-200 px-4 py-3">
+          <div className="flex items-center justify-between border-t border-[color:var(--color-border)] px-4 py-3">
             <Button
               type="button"
               variant="secondary"
@@ -751,7 +751,7 @@ export function ProductQuestionsManager({
             >
               {labels.prev}
             </Button>
-            <span className="text-sm text-neutral-500">
+            <span className="text-sm text-[color:var(--color-text-muted)]">
               {labels.page} {questionPage}/{Math.max(1, questionTotalPages)}
             </span>
             <Button

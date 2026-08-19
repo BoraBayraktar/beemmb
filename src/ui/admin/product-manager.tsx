@@ -15,7 +15,7 @@ import type { Locale } from "@/lib/i18n";
 import type { ProductFeature } from "@/modules/catalog/contracts/catalog.contract";
 import type { AdminWarehouseItem } from "@/modules/inventory/contracts/inventory.contract";
 
-const checkboxClassName = "h-4 w-4 rounded border-neutral-300 text-neutral-950 focus:ring-2 focus:ring-neutral-300";
+const checkboxClassName = "h-4 w-4 rounded border-[color:var(--color-border)] text-[color:var(--color-text)] focus:ring-2 focus:ring-[color:var(--color-border)]";
 
 type Category = {
   id: string;
@@ -590,13 +590,13 @@ function renderSyncTrackingCard(data: SyncTrackingCardData, loadingLabel: string
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className={`text-xs font-semibold uppercase tracking-wide ${labelClass}`}>{data.label}</p>
-          <h3 className="mt-1 text-base font-semibold text-neutral-950">{data.title}</h3>
-          <p className="mt-1 text-sm text-neutral-700">
+          <h3 className="mt-1 text-base font-semibold text-[color:var(--color-text)]">{data.title}</h3>
+          <p className="mt-1 text-sm text-[color:var(--color-text)]">
             SKU: {data.sku} • {data.statusLabel}: {data.status}
             {data.jobId ? ` • Job: ${data.jobId}` : ""}
           </p>
           {data.detailStatus || data.recommendedAction || data.lastCheckedAt ? (
-            <div className="mt-2 space-y-1 text-xs text-neutral-700">
+            <div className="mt-2 space-y-1 text-xs text-[color:var(--color-text)]">
               {data.detailStatus ? <p>Task durumu: {data.detailStatus}</p> : null}
               {data.recommendedAction ? <p>Önerilen aksiyon: {data.recommendedAction}</p> : null}
               {data.lastCheckedAt ? <p>Son kontrol: {data.lastCheckedAt}</p> : null}
@@ -621,9 +621,9 @@ function renderPreflightCard(data: PreflightCardData, loadingLabel: string, canc
     <div className={`mb-4 rounded-2xl border p-4 ${data.ready ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{data.label}</p>
-          <h3 className="mt-1 text-base font-semibold text-neutral-950">{data.title}</h3>
-          <p className="mt-1 text-sm text-neutral-600">{data.summary}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{data.label}</p>
+          <h3 className="mt-1 text-base font-semibold text-[color:var(--color-text)]">{data.title}</h3>
+          <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{data.summary}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {data.canQueue ? (
@@ -648,8 +648,8 @@ function renderPreflightCard(data: PreflightCardData, loadingLabel: string, canc
       ) : null}
       {data.warnings.length > 0 ? (
         <div className="mt-3">
-          <p className="text-sm font-semibold text-neutral-800">{data.warningsLabel}</p>
-          <ul className="mt-2 grid gap-1 text-sm text-neutral-700">
+          <p className="text-sm font-semibold text-[color:var(--color-text)]">{data.warningsLabel}</p>
+          <ul className="mt-2 grid gap-1 text-sm text-[color:var(--color-text)]">
             {data.warnings.map((item) => (
               <li key={item}>- {item}</li>
             ))}
@@ -657,8 +657,8 @@ function renderPreflightCard(data: PreflightCardData, loadingLabel: string, canc
         </div>
       ) : null}
       {data.draftPayload ? (
-        <details className="mt-3 rounded-xl border border-neutral-200 bg-white/80 p-3">
-          <summary className="cursor-pointer text-sm font-semibold text-neutral-800">{data.draftLabel}</summary>
+        <details className="mt-3 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]/80 p-3">
+          <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-text)]">{data.draftLabel}</summary>
           <pre className="mt-3 max-h-96 overflow-auto rounded-lg bg-neutral-950 p-3 text-xs text-neutral-50">
             {JSON.stringify(data.draftPayload, null, 2)}
           </pre>
@@ -2460,12 +2460,12 @@ export function ProductManager({
   }
 
   return (
-    <section className="rounded-2xl border border-neutral-200 bg-white">
-      <div className="flex flex-col gap-4 border-b border-neutral-200 p-5 lg:flex-row lg:items-center lg:justify-between">
+    <section className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
+      <div className="flex flex-col gap-4 border-b border-[color:var(--color-border)] p-5 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.title}</p>
-          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-neutral-950">{labels.listTitle}</h2>
-          <p className="mt-1 text-sm text-neutral-500">{initialResult.total} ürün listeleniyor</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.title}</p>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[color:var(--color-text)]">{labels.listTitle}</h2>
+          <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{initialResult.total} ürün listeleniyor</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <input
@@ -2629,7 +2629,7 @@ export function ProductManager({
           onQueue: () => void queueHepsiburadaProductSync(hepsiburadaPreflightResult),
           onClose: () => setHepsiburadaPreflightResult(null),
         }, labels.loading, labels.cancel) : null}
-        <p className="mb-4 text-sm text-neutral-500">{labels.importHint}</p>
+        <p className="mb-4 text-sm text-[color:var(--color-text-muted)]">{labels.importHint}</p>
         <form className="mb-5 grid gap-3 md:grid-cols-2 xl:grid-cols-[1.4fr_220px_220px_220px_220px_auto]" onSubmit={applyFilters}>
           <Input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder={labels.search} />
           <Select value={categoryFilter || NONE_VALUE} onValueChange={(value) => setCategoryFilter(value === NONE_VALUE ? "" : value)}>
@@ -2687,8 +2687,8 @@ export function ProductManager({
           </Button>
         </form>
 
-        <div className="overflow-hidden rounded-xl border border-neutral-200">
-          <div className="hidden grid-cols-[80px_1.15fr_1fr_1fr_150px_160px_180px_140px_80px] gap-4 border-b border-neutral-200 bg-neutral-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 lg:grid">
+        <div className="overflow-hidden rounded-xl border border-[color:var(--color-border)]">
+          <div className="hidden grid-cols-[80px_1.15fr_1fr_1fr_150px_160px_180px_140px_80px] gap-4 border-b border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)] lg:grid">
             <span>Görsel</span>
             <span>{labels.name}</span>
             <span>{labels.brand}</span>
@@ -2701,37 +2701,37 @@ export function ProductManager({
           </div>
 
           {initialResult.items.length === 0 ? (
-            <p className="p-6 text-sm text-neutral-500">{labels.empty}</p>
+            <p className="p-6 text-sm text-[color:var(--color-text-muted)]">{labels.empty}</p>
           ) : (
-            <div className="divide-y divide-neutral-200">
+            <div className="divide-y divide-[color:var(--color-border)]">
               {initialResult.items.map((product) => (
                 <article key={product.id} className="grid gap-4 p-4 lg:grid-cols-[80px_1.15fr_1fr_1fr_150px_160px_180px_140px_80px] lg:items-center">
-                  <div className="h-20 w-20 overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50">
+                  <div className="h-20 w-20 overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-neutral-950">{product.name}</h3>
-                    <p className="mt-1 text-sm text-neutral-500">{product.slug} • {product.sku}</p>
-                    <p className="mt-1 text-xs text-neutral-500">{labels.barcode}: {product.barcode ?? labels.notSpecified}</p>
-                    <p className="mt-2 line-clamp-2 text-sm text-neutral-500 lg:hidden">{product.description}</p>
+                    <h3 className="font-medium text-[color:var(--color-text)]">{product.name}</h3>
+                    <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{product.slug} • {product.sku}</p>
+                    <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{labels.barcode}: {product.barcode ?? labels.notSpecified}</p>
+                    <p className="mt-2 line-clamp-2 text-sm text-[color:var(--color-text-muted)] lg:hidden">{product.description}</p>
                   </div>
-                  <div className="text-sm text-neutral-600">
+                  <div className="text-sm text-[color:var(--color-text-muted)]">
                     <p>{product.brandName ?? labels.notSpecified}</p>
-                    <p className="mt-1 text-xs text-neutral-500">{product.primarySupplierName ?? labels.notSpecified}</p>
+                    <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{product.primarySupplierName ?? labels.notSpecified}</p>
                   </div>
-                  <p className="text-sm text-neutral-600">{product.categoryName ?? labels.notSpecified}</p>
+                  <p className="text-sm text-[color:var(--color-text-muted)]">{product.categoryName ?? labels.notSpecified}</p>
                   <div className="text-sm">
-                    <p className="font-semibold text-neutral-950">{formatPrice(product.price, product.currency, locale)}</p>
+                    <p className="font-semibold text-[color:var(--color-text)]">{formatPrice(product.price, product.currency, locale)}</p>
                     {product.compareAtPrice ? (
-                      <p className="text-xs text-neutral-500 line-through">{formatPrice(product.compareAtPrice, product.currency, locale)}</p>
+                      <p className="text-xs text-[color:var(--color-text-muted)] line-through">{formatPrice(product.compareAtPrice, product.currency, locale)}</p>
                     ) : null}
                   </div>
-                  <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-sm">
-                    <p className={`font-medium ${product.variantCount > 0 ? "text-neutral-950" : "text-amber-700"}`}>
+                  <div className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-3 text-sm">
+                    <p className={`font-medium ${product.variantCount > 0 ? "text-[color:var(--color-text)]" : "text-amber-700"}`}>
                       {product.variantCount > 0 ? `${product.variantCount} varyant` : "Varyant yok"}
                     </p>
-                    <p className="mt-1 text-xs text-neutral-500">{product.variantAxisCount} eksen</p>
+                    <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{product.variantAxisCount} eksen</p>
                     <Button
                       type="button"
                       size="sm"
@@ -2743,30 +2743,30 @@ export function ProductManager({
                       {product.variantCount > 0 ? "Yönet" : "Tanımla"}
                     </Button>
                   </div>
-                  <p className="text-sm font-medium text-neutral-700">
+                  <p className="text-sm font-medium text-[color:var(--color-text)]">
                     {product.status === "DRAFT" ? labels.statusDraft : product.status === "ARCHIVED" ? labels.statusArchived : labels.statusActive}
                   </p>
                   <div className="text-sm">
                     <p className={`font-medium ${product.inStock ? "text-emerald-700" : "text-red-600"}`}>
                       {product.inStock ? labels.inStock : labels.outOfStock} ({product.stock})
                     </p>
-                    <p className="mt-1 text-xs text-neutral-500">
+                    <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">
                       {labels.orderCount}: {product.orderCount} • {labels.soldQuantity}: {product.soldQuantity}
                     </p>
-                    <p className="mt-1 text-xs text-neutral-500">
+                    <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">
                       {labels.grossRevenue}: {formatPrice(product.grossRevenue, product.currency, locale)}
                     </p>
-                    <p className="mt-1 text-xs text-neutral-500">
+                    <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">
                       {labels.averageUnitCost}: {product.averageUnitCost != null ? formatPrice(product.averageUnitCost, product.currency, locale) : labels.notSpecified}
                     </p>
-                    <p className="mt-1 text-xs text-neutral-500">
+                    <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">
                       {labels.stockValue}: {formatPrice(product.stockValue, product.currency, locale)}
                     </p>
-                    <p className="mt-1 text-xs text-neutral-500">
+                    <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">
                       {labels.grossProfit}: {formatPrice(product.grossProfit, product.currency, locale)}
                       {product.grossMarginRate != null ? ` • ${labels.grossMarginRate}: %${product.grossMarginRate}` : ""}
                     </p>
-                    <p className="mt-1 text-xs text-neutral-500">
+                    <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">
                       {labels.lastOrderedAt}: {product.lastOrderedAt ? formatDate(product.lastOrderedAt, locale) : labels.notSpecified}
                     </p>
                   </div>
@@ -2783,7 +2783,7 @@ export function ProductManager({
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                     {openProductActionMenuId === product.id ? (
-                      <div className="absolute right-auto top-11 z-10 min-w-48 rounded-xl border border-neutral-200 bg-white p-2 shadow-xl lg:right-0">
+                      <div className="absolute right-auto top-11 z-10 min-w-48 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-2 shadow-xl lg:right-0">
                         <button
                           type="button"
                           disabled={trendyolPreflightBusyId === product.id}
@@ -2791,7 +2791,7 @@ export function ProductManager({
                             setOpenProductActionMenuId(null);
                             void checkTrendyolPreflight(product.id);
                           }}
-                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)] disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           {trendyolPreflightBusyId === product.id ? labels.loading : labels.trendyolPreflight}
                         </button>
@@ -2802,7 +2802,7 @@ export function ProductManager({
                             setOpenProductActionMenuId(null);
                             void checkPazaramaPreflight(product.id);
                           }}
-                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)] disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           {pazaramaPreflightBusyId === product.id ? labels.loading : labels.pazaramaPreflight}
                         </button>
@@ -2813,7 +2813,7 @@ export function ProductManager({
                             setOpenProductActionMenuId(null);
                             void checkN11Preflight(product.id);
                           }}
-                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)] disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           {n11PreflightBusyId === product.id ? labels.loading : labels.n11Preflight}
                         </button>
@@ -2824,7 +2824,7 @@ export function ProductManager({
                             setOpenProductActionMenuId(null);
                             void checkHepsiburadaPreflight(product.id);
                           }}
-                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)] disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           {hepsiburadaPreflightBusyId === product.id ? labels.loading : labels.hepsiburadaPreflight}
                         </button>
@@ -2835,7 +2835,7 @@ export function ProductManager({
                             setOpenProductActionMenuId(null);
                             openEditDrawer(product);
                           }}
-                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)] disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           {labels.edit}
                         </button>
@@ -2846,7 +2846,7 @@ export function ProductManager({
                             setOpenProductActionMenuId(null);
                             openVariantDrawer(product);
                           }}
-                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)] disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           {labels.variantsTitle}
                         </button>
@@ -2876,7 +2876,7 @@ export function ProductManager({
           <Button type="button" variant="secondary" disabled={initialResult.page <= 1} onClick={() => goToPage(Math.max(1, initialResult.page - 1))}>
             {labels.prev}
           </Button>
-          <span className="text-sm text-neutral-500">
+          <span className="text-sm text-[color:var(--color-text-muted)]">
             {labels.page} {initialResult.page}/{initialResult.totalPages}
           </span>
           <Button type="button" variant="secondary" disabled={initialResult.page >= initialResult.totalPages} onClick={() => goToPage(Math.min(initialResult.totalPages, initialResult.page + 1))}>
@@ -2889,10 +2889,10 @@ export function ProductManager({
         <div className="fixed inset-0 z-50">
           <button type="button" aria-label={labels.cancel} className="absolute inset-0 bg-black/30" onClick={closeDrawer} />
           {drawerMode !== "variants" ? (
-          <aside className={`absolute right-0 top-0 flex h-full w-full flex-col overflow-y-auto border-l border-neutral-200 bg-white shadow-2xl ${drawerFullscreen ? "max-w-none" : "max-w-xl"}`}>
-            <div className="flex items-start justify-between border-b border-neutral-200 p-5">
+          <aside className={`absolute right-0 top-0 flex h-full w-full flex-col overflow-y-auto border-l border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-2xl ${drawerFullscreen ? "max-w-none" : "max-w-xl"}`}>
+            <div className="flex items-start justify-between border-b border-[color:var(--color-border)] p-5">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.title}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.title}</p>
                 <h3 className="mt-1 text-xl font-semibold tracking-tight">{activeTitle}</h3>
               </div>
               <div className="flex items-center gap-1">
@@ -2914,11 +2914,11 @@ export function ProductManager({
             </div>
 
             <form className="grid gap-5 p-5" onSubmit={submitProduct}>
-              <section className="grid gap-4 rounded-2xl border border-neutral-200 bg-white p-4">
+              <section className="grid gap-4 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">Ürün Kartı</p>
-                  <h4 className="mt-1 text-base font-semibold text-neutral-950">Temel ürün bilgileri</h4>
-                  <p className="mt-1 text-sm text-neutral-500">Ürünün kimlik, tür ve vitrin bilgisini bu alandan yönetin.</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-text-muted)]">Ürün Kartı</p>
+                  <h4 className="mt-1 text-base font-semibold text-[color:var(--color-text)]">Temel ürün bilgileri</h4>
+                  <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">Ürünün kimlik, tür ve vitrin bilgisini bu alandan yönetin.</p>
                 </div>
 
                 <div className="grid gap-2">
@@ -3019,7 +3019,7 @@ export function ProductManager({
                         searchPlaceholder={labels.searchBrand}
                         emptyLabel={labels.noBrandResults}
                       />
-                      <Link href={`/${locale}/admin/brands`} className="text-xs font-medium text-neutral-600 underline underline-offset-4">
+                      <Link href={`/${locale}/admin/brands`} className="text-xs font-medium text-[color:var(--color-text-muted)] underline underline-offset-4">
                         {labels.manageBrands}
                       </Link>
                     </div>
@@ -3032,7 +3032,7 @@ export function ProductManager({
                 <div className="grid gap-2">
                   <Label>{labels.searchKeywords}</Label>
                   <Input value={activeForm.searchKeywords} onChange={(event) => patchActiveField("searchKeywords", event.target.value)} placeholder="anahtar1, anahtar2" />
-                  <p className="text-xs text-neutral-500">{labels.searchKeywordsHint}</p>
+                  <p className="text-xs text-[color:var(--color-text-muted)]">{labels.searchKeywordsHint}</p>
                 </div>
               </section>
 
@@ -3040,11 +3040,11 @@ export function ProductManager({
                 <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Stok Kartı</p>
-                    <h4 className="mt-1 text-base font-semibold text-neutral-950">Stok ve satın alma ayarları</h4>
-                    <p className="mt-1 text-sm text-neutral-600">Paraşüt benzeri stok takibi, depo tercihi ve maliyet alanlarını birlikte yönetin.</p>
+                    <h4 className="mt-1 text-base font-semibold text-[color:var(--color-text)]">Stok ve satın alma ayarları</h4>
+                    <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">Paraşüt benzeri stok takibi, depo tercihi ve maliyet alanlarını birlikte yönetin.</p>
                   </div>
-                  <div className="rounded-xl border border-emerald-200 bg-white/80 px-3 py-2 text-xs text-neutral-600 shadow-sm">
-                    <p className="font-semibold text-neutral-900">Stok durumu</p>
+                  <div className="rounded-xl border border-emerald-200 bg-[color:var(--color-surface)]/80 px-3 py-2 text-xs text-[color:var(--color-text-muted)] shadow-sm">
+                    <p className="font-semibold text-[color:var(--color-text)]">Stok durumu</p>
                     <p className="mt-1">{isStockManaged ? "Takip aktif" : "Takip kapalı"}</p>
                   </div>
                 </div>
@@ -3052,42 +3052,42 @@ export function ProductManager({
                 {drawerMode === "edit" && currentEditingProduct ? (
                   <div className="grid gap-3">
                     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                      <article className="rounded-xl border border-emerald-200 bg-white/90 p-3 shadow-sm">
+                      <article className="rounded-xl border border-emerald-200 bg-[color:var(--color-surface)]/90 p-3 shadow-sm">
                         <p className="text-xs font-medium uppercase tracking-wide text-emerald-700">{labels.grossProfit}</p>
-                        <p className="mt-2 text-lg font-semibold text-neutral-950">
+                        <p className="mt-2 text-lg font-semibold text-[color:var(--color-text)]">
                           {formatPrice(currentEditingProduct.grossProfit, currentEditingProduct.currency, locale)}
                         </p>
-                        <p className="mt-1 text-xs text-neutral-500">
+                        <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">
                           {currentEditingProduct.grossMarginRate != null ? `${labels.grossMarginRate}: %${currentEditingProduct.grossMarginRate}` : labels.notSpecified}
                         </p>
                       </article>
-                      <article className="rounded-xl border border-cyan-200 bg-white/90 p-3 shadow-sm">
+                      <article className="rounded-xl border border-cyan-200 bg-[color:var(--color-surface)]/90 p-3 shadow-sm">
                         <p className="text-xs font-medium uppercase tracking-wide text-cyan-700">{labels.stockValue}</p>
-                        <p className="mt-2 text-lg font-semibold text-neutral-950">
+                        <p className="mt-2 text-lg font-semibold text-[color:var(--color-text)]">
                           {formatPrice(currentEditingProduct.stockValue, currentEditingProduct.currency, locale)}
                         </p>
-                        <p className="mt-1 text-xs text-neutral-500">
+                        <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">
                           {labels.averageUnitCost}: {currentEditingProduct.averageUnitCost != null ? formatPrice(currentEditingProduct.averageUnitCost, currentEditingProduct.currency, locale) : labels.notSpecified}
                         </p>
                       </article>
-                      <article className="rounded-xl border border-amber-200 bg-white/90 p-3 shadow-sm">
+                      <article className="rounded-xl border border-amber-200 bg-[color:var(--color-surface)]/90 p-3 shadow-sm">
                         <p className="text-xs font-medium uppercase tracking-wide text-amber-700">{labels.soldQuantity}</p>
-                        <p className="mt-2 text-lg font-semibold text-neutral-950">{currentEditingProduct.soldQuantity}</p>
-                        <p className="mt-1 text-xs text-neutral-500">{labels.orderCount}: {currentEditingProduct.orderCount}</p>
+                        <p className="mt-2 text-lg font-semibold text-[color:var(--color-text)]">{currentEditingProduct.soldQuantity}</p>
+                        <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{labels.orderCount}: {currentEditingProduct.orderCount}</p>
                       </article>
-                      <article className="rounded-xl border border-neutral-200 bg-white/90 p-3 shadow-sm">
-                        <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">{labels.grossRevenue}</p>
-                        <p className="mt-2 text-lg font-semibold text-neutral-950">
+                      <article className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]/90 p-3 shadow-sm">
+                        <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.grossRevenue}</p>
+                        <p className="mt-2 text-lg font-semibold text-[color:var(--color-text)]">
                           {formatPrice(currentEditingProduct.grossRevenue, currentEditingProduct.currency, locale)}
                         </p>
-                        <p className="mt-1 text-xs text-neutral-500">
+                        <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">
                           {labels.lastOrderedAt}: {currentEditingProduct.lastOrderedAt ? formatDate(currentEditingProduct.lastOrderedAt, locale) : labels.notSpecified}
                         </p>
                       </article>
                     </div>
 
-                    <div className="rounded-xl border border-neutral-200 bg-white/90 p-3 shadow-sm">
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">{labels.decisionAlerts}</p>
+                    <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]/90 p-3 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-text-muted)]">{labels.decisionAlerts}</p>
                       <div className="mt-3 grid gap-2">
                         {currentDecisionAlerts.map((alert) => (
                           <div
@@ -3117,7 +3117,7 @@ export function ProductManager({
                   </div>
                 ) : null}
 
-                <label className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-white/80 p-3 text-sm text-neutral-700">
+                <label className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-[color:var(--color-surface)]/80 p-3 text-sm text-[color:var(--color-text)]">
                   <input
                     type="checkbox"
                     checked={activeForm.productType === "SERVICE" ? false : activeForm.stockTrackingEnabled}
@@ -3128,7 +3128,7 @@ export function ProductManager({
                   <span>{labels.stockTrackingEnabled}</span>
                 </label>
                 <div className="grid gap-3 md:grid-cols-2">
-                  <label className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white/80 p-3 text-sm text-neutral-700">
+                  <label className="flex items-center gap-2 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]/80 p-3 text-sm text-[color:var(--color-text)]">
                     <input
                       type="checkbox"
                       checked={activeForm.salesEnabled}
@@ -3137,7 +3137,7 @@ export function ProductManager({
                     />
                     <span>{labels.salesEnabled}</span>
                   </label>
-                  <label className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white/80 p-3 text-sm text-neutral-700">
+                  <label className="flex items-center gap-2 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]/80 p-3 text-sm text-[color:var(--color-text)]">
                     <input
                       type="checkbox"
                       checked={activeForm.purchaseEnabled}
@@ -3149,8 +3149,8 @@ export function ProductManager({
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                  <div className="rounded-xl border border-neutral-200 bg-white p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">{labels.stock}</p>
+                  <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
+                    <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.stock}</p>
                     <div className="mt-2 grid gap-2">
                       <Label>{labels.stock}</Label>
                       <Input
@@ -3164,22 +3164,22 @@ export function ProductManager({
                       />
                     </div>
                   </div>
-                  <div className="rounded-xl border border-neutral-200 bg-white p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">{labels.purchasePrice}</p>
+                  <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
+                    <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.purchasePrice}</p>
                     <div className="mt-2 grid gap-2">
                       <Label>{labels.purchasePrice}</Label>
                       <Input type="number" min="0" step="0.01" value={activeForm.purchasePrice} onChange={(event) => patchActiveField("purchasePrice", event.target.value)} />
                     </div>
                   </div>
-                  <div className="rounded-xl border border-neutral-200 bg-white p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">{labels.vatRate}</p>
+                  <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
+                    <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.vatRate}</p>
                     <div className="mt-2 grid gap-2">
                       <Label>{labels.vatRate}</Label>
                       <Input type="number" min="0" max="100" step="1" value={activeForm.vatRate} onChange={(event) => patchActiveField("vatRate", event.target.value)} required />
                     </div>
                   </div>
-                  <div className="rounded-xl border border-neutral-200 bg-white p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">{labels.compareAtPrice}</p>
+                  <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
+                    <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.compareAtPrice}</p>
                     <div className="mt-2 grid gap-2">
                       <Label>{labels.compareAtPrice}</Label>
                       <Input type="number" min="0" step="0.01" value={activeForm.compareAtPrice} onChange={(event) => patchActiveField("compareAtPrice", event.target.value)} />
@@ -3188,8 +3188,8 @@ export function ProductManager({
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2">
-                  <div className="rounded-xl border border-neutral-200 bg-white p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">{labels.supplier}</p>
+                  <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
+                    <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.supplier}</p>
                     <div className="mt-2 grid gap-2">
                       <Label>{labels.supplier}</Label>
                       <div className="grid gap-2">
@@ -3210,14 +3210,14 @@ export function ProductManager({
                           searchPlaceholder={labels.searchSupplier}
                           emptyLabel={labels.noSupplierResults}
                         />
-                        <Link href={`/${locale}/admin/suppliers`} className="text-xs font-medium text-neutral-600 underline underline-offset-4">
+                        <Link href={`/${locale}/admin/suppliers`} className="text-xs font-medium text-[color:var(--color-text-muted)] underline underline-offset-4">
                           {labels.manageSuppliers}
                         </Link>
                       </div>
                     </div>
                   </div>
-                  <div className="rounded-xl border border-neutral-200 bg-white p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">Satın alma deposu</p>
+                  <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
+                    <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">Satın alma deposu</p>
                     <div className="mt-2 grid gap-2">
                       <Label>{labels.preferredPurchaseWarehouse}</Label>
                       <Select
@@ -3241,8 +3241,8 @@ export function ProductManager({
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2">
-                  <div className="rounded-xl border border-neutral-200 bg-white p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">Satış deposu</p>
+                  <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
+                    <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">Satış deposu</p>
                     <div className="mt-2 grid gap-2">
                       <Label>{labels.preferredSalesWarehouse}</Label>
                       <Select
@@ -3264,8 +3264,8 @@ export function ProductManager({
                       </Select>
                     </div>
                   </div>
-                  <div className="rounded-xl border border-neutral-200 bg-white p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">{labels.internalNote}</p>
+                  <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
+                    <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.internalNote}</p>
                     <div className="mt-2 grid gap-2">
                       <Label>{labels.internalNote}</Label>
                       <Textarea value={activeForm.internalNote} onChange={(event) => patchActiveField("internalNote", event.target.value)} />
@@ -3276,15 +3276,15 @@ export function ProductManager({
 
               <div className="grid gap-2">
                 <Label>{labels.features}</Label>
-                <div className="grid gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+                <div className="grid gap-2 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-3">
                   {activeForm.features.length === 0 ? (
-                    <p className="text-xs text-neutral-500">{labels.featuresHint}</p>
+                    <p className="text-xs text-[color:var(--color-text-muted)]">{labels.featuresHint}</p>
                   ) : null}
 
                   {activeForm.features.length > 0 ? (
-                    <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white">
-                      <table className="min-w-full divide-y divide-neutral-200 text-sm">
-                        <thead className="bg-neutral-50 text-left text-xs uppercase tracking-wide text-neutral-500">
+                    <div className="overflow-x-auto rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
+                      <table className="min-w-full divide-y divide-[color:var(--color-border)] text-sm">
+                        <thead className="bg-[color:var(--color-bg-soft)] text-left text-xs uppercase tracking-wide text-[color:var(--color-text-muted)]">
                           <tr>
                             <th className="px-3 py-2 font-medium">{labels.featureKey}</th>
                             <th className="px-3 py-2 font-medium">{labels.featureValue}</th>
@@ -3294,7 +3294,7 @@ export function ProductManager({
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-neutral-200">
+                        <tbody className="divide-y divide-[color:var(--color-border)]">
                           {activeForm.features.map((feature, index) => (
                             <tr key={`feature-${index}`}>
                               <td className="px-3 py-2">
@@ -3312,7 +3312,7 @@ export function ProductManager({
                                 />
                               </td>
                               <td className="px-3 py-2">
-                                <label className="flex items-center gap-2 text-xs font-medium text-neutral-700">
+                                <label className="flex items-center gap-2 text-xs font-medium text-[color:var(--color-text)]">
                                   <input
                                     type="checkbox"
                                     checked={feature.highlighted}
@@ -3340,7 +3340,7 @@ export function ProductManager({
                     </Button>
                   </div>
                 </div>
-                <p className="text-xs text-neutral-500">{labels.featuresHint}</p>
+                <p className="text-xs text-[color:var(--color-text-muted)]">{labels.featuresHint}</p>
               </div>
               <div className="grid gap-2 md:grid-cols-2">
                 <div className="grid gap-2">
@@ -3353,8 +3353,8 @@ export function ProductManager({
                 </div>
               </div>
               <div className="grid gap-2">
-                <p className="text-xs text-neutral-500">{`Toplam görsel adedi: ${getGalleryImages(activeForm).length}/${MAX_PRODUCT_IMAGES}`}</p>
-                <div className="grid gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3 md:grid-cols-[1fr_auto] md:items-end">
+                <p className="text-xs text-[color:var(--color-text-muted)]">{`Toplam görsel adedi: ${getGalleryImages(activeForm).length}/${MAX_PRODUCT_IMAGES}`}</p>
+                <div className="grid gap-2 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-3 md:grid-cols-[1fr_auto] md:items-end">
                   <div className="grid gap-1">
                     <Label>{labels.uploadImages}</Label>
                     <Input
@@ -3364,7 +3364,7 @@ export function ProductManager({
                       accept="image/png,image/jpeg,image/webp,image/avif,image/gif"
                       onChange={(event) => handleImageFileChange(event.target.files)}
                     />
-                    <p className="text-xs text-neutral-500">{labels.imageUploadHint}</p>
+                    <p className="text-xs text-[color:var(--color-text-muted)]">{labels.imageUploadHint}</p>
                   </div>
                   <Button
                     type="button"
@@ -3377,15 +3377,15 @@ export function ProductManager({
                 </div>
 
                 {getGalleryImages(activeForm).length > 0 ? (
-                  <div className="grid gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
-                    <p className="text-xs text-neutral-500">Bir görseli ana görsel olarak seçin.</p>
-                    <p className="text-xs text-neutral-400">Ana görsel, ürün listesi ve detay sayfasında öne çıkan görsel olarak kullanılır.</p>
+                  <div className="grid gap-2 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-3">
+                    <p className="text-xs text-[color:var(--color-text-muted)]">Bir görseli ana görsel olarak seçin.</p>
+                    <p className="text-xs text-[color:var(--color-text-muted)]">Ana görsel, ürün listesi ve detay sayfasında öne çıkan görsel olarak kullanılır.</p>
                     <div className="grid gap-3 sm:grid-cols-2">
                       {getGalleryImages(activeForm).map((url) => {
                         const isMain = url === activeForm.imageUrl;
 
                         return (
-                          <div key={url} className={`overflow-hidden rounded-lg border ${isMain ? "border-emerald-500" : "border-neutral-200"} bg-white`}>
+                          <div key={url} className={`overflow-hidden rounded-lg border ${isMain ? "border-emerald-500" : "border-[color:var(--color-border)]"} bg-[color:var(--color-surface)]`}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={url} alt="" className="h-32 w-full object-cover" />
                             <div className="flex items-center justify-between gap-2 p-2">
@@ -3404,7 +3404,7 @@ export function ProductManager({
                 ) : null}
               </div>
 
-              <div className="mt-2 flex justify-end gap-2 border-t border-neutral-200 pt-5">
+              <div className="mt-2 flex justify-end gap-2 border-t border-[color:var(--color-border)] pt-5">
                 <Button type="button" variant="secondary" onClick={closeDrawer} disabled={loading}>
                   {labels.cancel}
                 </Button>
@@ -3415,12 +3415,12 @@ export function ProductManager({
             </form>
           </aside>
           ) : (
-            <aside className={`absolute right-0 top-0 flex h-full w-full flex-col overflow-y-auto border-l border-neutral-200 bg-white shadow-2xl ${drawerFullscreen ? "max-w-none" : "max-w-5xl"}`}>
-              <div className="flex items-start justify-between border-b border-neutral-200 p-5">
+            <aside className={`absolute right-0 top-0 flex h-full w-full flex-col overflow-y-auto border-l border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-2xl ${drawerFullscreen ? "max-w-none" : "max-w-5xl"}`}>
+              <div className="flex items-start justify-between border-b border-[color:var(--color-border)] p-5">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.variantsTitle}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.variantsTitle}</p>
                   <h3 className="mt-1 text-xl font-semibold tracking-tight">{variantDrawerProduct?.name ?? labels.variantsTitle}</h3>
-                  <p className="mt-1 text-sm text-neutral-500">{labels.variantsHint}</p>
+                  <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{labels.variantsHint}</p>
                 </div>
                 <div className="flex items-center gap-1">
                   <Button
@@ -3441,18 +3441,18 @@ export function ProductManager({
               </div>
 
               <form className="grid gap-5 p-5" onSubmit={submitVariants}>
-                <section className="grid gap-4 rounded-2xl border border-neutral-200 bg-white p-4">
+                <section className="grid gap-4 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">Varyant Tanımı</p>
-                      <h4 className="mt-1 text-base font-semibold text-neutral-950">{labels.attributesTitle}</h4>
-                      <p className="mt-1 text-sm text-neutral-500">{labels.variantAxesHint}</p>
-                      <Link href={`/${locale}/admin/product-attributes`} className="mt-2 inline-flex text-sm font-medium text-neutral-700 underline underline-offset-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-text-muted)]">Varyant Tanımı</p>
+                      <h4 className="mt-1 text-base font-semibold text-[color:var(--color-text)]">{labels.attributesTitle}</h4>
+                      <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{labels.variantAxesHint}</p>
+                      <Link href={`/${locale}/admin/product-attributes`} className="mt-2 inline-flex text-sm font-medium text-[color:var(--color-text)] underline underline-offset-4">
                         {labels.manageAttributeDefinitions}
                       </Link>
                     </div>
-                    <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-600">
-                      <p className="font-semibold text-neutral-950">{variantDrawerProduct?.sku ?? activeForm.sku}</p>
+                    <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-2 text-sm text-[color:var(--color-text-muted)]">
+                      <p className="font-semibold text-[color:var(--color-text)]">{variantDrawerProduct?.sku ?? activeForm.sku}</p>
                       <p className="mt-1 text-xs">{activeForm.variants.length} varyant • {selectedVariantAxisDefinitions.length} eksen</p>
                     </div>
                   </div>
@@ -3463,14 +3463,14 @@ export function ProductManager({
                       <button
                         type="button"
                         onClick={() => setVariantAxisPickerOpen((current) => !current)}
-                        className="flex min-h-11 w-full items-center justify-between rounded-2xl border border-neutral-300 bg-white px-3 py-2 text-left text-sm"
+                        className="flex min-h-11 w-full items-center justify-between rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2 text-left text-sm"
                       >
-                        <span className={selectedVariantAxisDefinitions.length > 0 ? "text-neutral-950" : "text-neutral-400"}>
+                        <span className={selectedVariantAxisDefinitions.length > 0 ? "text-[color:var(--color-text)]" : "text-[color:var(--color-text-muted)]"}>
                           {selectedVariantAxisDefinitions.length > 0
                             ? `${selectedVariantAxisDefinitions.map((item) => item.name).join(", ")}`
                             : labels.variantAxesHint}
                         </span>
-                        <span className="text-xs font-medium text-neutral-500">
+                        <span className="text-xs font-medium text-[color:var(--color-text-muted)]">
                           {selectedVariantAxisDefinitions.length > 0 ? `${selectedVariantAxisDefinitions.length}` : "Sec"}
                         </span>
                       </button>
@@ -3492,7 +3492,7 @@ export function ProductManager({
                       ) : null}
 
                       {variantAxisPickerOpen ? (
-                        <div className="rounded-2xl border border-neutral-200 bg-white p-3 shadow-xl">
+                        <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3 shadow-xl">
                           <Input
                             value={variantAxisQuery}
                             onChange={(event) => setVariantAxisQuery(event.target.value)}
@@ -3501,13 +3501,13 @@ export function ProductManager({
                           />
                           <div className="mt-3 max-h-64 space-y-1 overflow-y-auto">
                             {filteredVariantAxisOptions.length === 0 ? (
-                              <p className="px-2 py-3 text-sm text-neutral-500">{labels.empty}</p>
+                              <p className="px-2 py-3 text-sm text-[color:var(--color-text-muted)]">{labels.empty}</p>
                             ) : filteredVariantAxisOptions.map((definition) => {
                               const active = activeForm.attributeLinks.some((item) => item.attributeDefinitionId === definition.id);
                               return (
                                 <label
                                   key={definition.id}
-                                  className={`flex items-start gap-3 rounded-xl border px-3 py-2 text-sm ${active ? "border-emerald-300 bg-emerald-50 text-emerald-900" : "border-neutral-200 bg-neutral-50 text-neutral-700"}`}
+                                  className={`flex items-start gap-3 rounded-xl border px-3 py-2 text-sm ${active ? "border-emerald-300 bg-emerald-50 text-emerald-900" : "border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)]"}`}
                                 >
                                   <input
                                     type="checkbox"
@@ -3517,7 +3517,7 @@ export function ProductManager({
                                   />
                                   <span className="min-w-0">
                                     <span className="block font-medium">{definition.name}</span>
-                                    <span className="block text-xs text-neutral-500">{definition.slug}</span>
+                                    <span className="block text-xs text-[color:var(--color-text-muted)]">{definition.slug}</span>
                                   </span>
                                 </label>
                               );
@@ -3532,7 +3532,7 @@ export function ProductManager({
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <Label>{labels.variantsTitle}</Label>
-                        <p className="text-xs text-neutral-500">{labels.variantsHint}</p>
+                        <p className="text-xs text-[color:var(--color-text-muted)]">{labels.variantsHint}</p>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
                         <Button type="button" size="sm" variant="outline" onClick={openVariantGenerationModal}>
@@ -3545,13 +3545,13 @@ export function ProductManager({
                     </div>
 
                     {activeForm.variants.length === 0 ? (
-                      <p className="rounded-xl border border-dashed border-neutral-200 bg-neutral-50 px-3 py-4 text-sm text-neutral-500">{labels.variantEmptyState}</p>
+                      <p className="rounded-xl border border-dashed border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-4 text-sm text-[color:var(--color-text-muted)]">{labels.variantEmptyState}</p>
                     ) : null}
 
                     {activeForm.variants.length > 0 ? (
-                      <div className={`rounded-2xl border border-neutral-200 ${openVariantActionMenuIndex === null ? "overflow-x-auto" : "overflow-visible"}`}>
-                        <table className="min-w-full divide-y divide-neutral-200 bg-white text-sm">
-                          <thead className="bg-neutral-50 text-left text-xs uppercase tracking-wide text-neutral-500">
+                      <div className={`rounded-2xl border border-[color:var(--color-border)] ${openVariantActionMenuIndex === null ? "overflow-x-auto" : "overflow-visible"}`}>
+                        <table className="min-w-full divide-y divide-[color:var(--color-border)] bg-[color:var(--color-surface)] text-sm">
+                          <thead className="bg-[color:var(--color-bg-soft)] text-left text-xs uppercase tracking-wide text-[color:var(--color-text-muted)]">
                             <tr>
                               <th className="px-3 py-2 font-medium">{labels.variantTitle}</th>
                               <th className="px-3 py-2 font-medium">{labels.sku}</th>
@@ -3562,24 +3562,24 @@ export function ProductManager({
                               </th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-neutral-200">
+                          <tbody className="divide-y divide-[color:var(--color-border)]">
                             {activeForm.variants.map((variant, index) => (
                               <tr key={`variant-${index}`} className="align-top">
                                 <td className="px-3 py-3">
                                   <div className="space-y-1">
-                                    <p className="font-medium text-neutral-950">
+                                    <p className="font-medium text-[color:var(--color-text)]">
                                       {variant.title || `${labels.variantTitle} ${index + 1}`}
                                     </p>
-                                    <p className="text-xs text-neutral-500">
+                                    <p className="text-xs text-[color:var(--color-text-muted)]">
                                       {variant.optionSummary || labels.variantsHint}
                                     </p>
                                   </div>
                                 </td>
-                                <td className="px-3 py-3 text-neutral-600">
+                                <td className="px-3 py-3 text-[color:var(--color-text-muted)]">
                                   <div>{variant.sku || labels.sku}</div>
-                                  <div className="text-xs text-neutral-400">{variant.slug || labels.slug}</div>
+                                  <div className="text-xs text-[color:var(--color-text-muted)]">{variant.slug || labels.slug}</div>
                                 </td>
-                                <td className="px-3 py-3 text-neutral-600">
+                                <td className="px-3 py-3 text-[color:var(--color-text-muted)]">
                                   {variant.priceOverride.trim()
                                     ? formatPrice(Number(variant.priceOverride), activeCurrency, locale)
                                     : labels.notSpecified}
@@ -3595,10 +3595,10 @@ export function ProductManager({
                                       </span>
                                     ) : null}
                                     {!variant.salesEnabled ? (
-                                      <span className="rounded-full bg-neutral-200 px-2 py-1 text-xs font-medium text-neutral-700">{labels.outOfStock}</span>
+                                      <span className="rounded-full bg-neutral-200 px-2 py-1 text-xs font-medium text-neutral-900">{labels.outOfStock}</span>
                                     ) : null}
                                     {variant.salesEnabled && !variant.isDefault ? (
-                                      <span className="rounded-full bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-700">{labels.statusActive}</span>
+                                      <span className="rounded-full bg-[color:var(--color-bg-soft)] px-2 py-1 text-xs font-medium text-[color:var(--color-text)]">{labels.statusActive}</span>
                                     ) : null}
                                   </div>
                                 </td>
@@ -3613,14 +3613,14 @@ export function ProductManager({
                                       <MoreHorizontal className="h-4 w-4" />
                                     </Button>
                                     {openVariantActionMenuIndex === index ? (
-                                      <div className="absolute right-0 top-11 z-50 min-w-40 rounded-xl border border-neutral-200 bg-white p-2 shadow-xl">
+                                      <div className="absolute right-0 top-11 z-50 min-w-40 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-2 shadow-xl">
                                         <button
                                           type="button"
                                           onClick={() => {
                                             openVariantEditor(index);
                                             setOpenVariantActionMenuIndex(null);
                                           }}
-                                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100"
+                                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)]"
                                         >
                                           {labels.variantDetails}
                                         </button>
@@ -3647,7 +3647,7 @@ export function ProductManager({
                   </div>
                 </section>
 
-                <div className="mt-2 flex justify-end gap-2 border-t border-neutral-200 pt-5">
+                <div className="mt-2 flex justify-end gap-2 border-t border-[color:var(--color-border)] pt-5">
                   <Button type="button" variant="secondary" onClick={closeDrawer} disabled={loading}>
                     {labels.cancel}
                   </Button>
@@ -3662,12 +3662,12 @@ export function ProductManager({
           {activeVariantEditor ? (
             <div className="absolute inset-0 z-10">
               <button type="button" aria-label={labels.cancel} className="absolute inset-0 bg-black/30" onClick={closeVariantEditor} />
-              <aside className="absolute bottom-0 right-0 top-0 flex h-full w-full max-w-3xl flex-col overflow-y-auto border-l border-neutral-200 bg-white shadow-2xl">
-                <div className="flex items-start justify-between border-b border-neutral-200 p-5">
+              <aside className="absolute bottom-0 right-0 top-0 flex h-full w-full max-w-3xl flex-col overflow-y-auto border-l border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-2xl">
+                <div className="flex items-start justify-between border-b border-[color:var(--color-border)] p-5">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.variantsTitle}</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.variantsTitle}</p>
                     <h3 className="mt-1 text-xl font-semibold tracking-tight">{activeVariantEditor.title || labels.variantTitle}</h3>
-                    <p className="mt-1 text-sm text-neutral-500">{activeVariantEditor.optionSummary || labels.variantsHint}</p>
+                    <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{activeVariantEditor.optionSummary || labels.variantsHint}</p>
                   </div>
                   <Button type="button" size="icon" variant="ghost" onClick={closeVariantEditor} disabled={loading}>
                     <X className="h-5 w-5" />
@@ -3749,7 +3749,7 @@ export function ProductManager({
                     </div>
                     <div className="grid gap-2">
                       <Label>{labels.stockStatus}</Label>
-                      <div className="flex flex-wrap gap-3 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm">
+                      <div className="flex flex-wrap gap-3 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2 text-sm">
                         <label className="flex items-center gap-2">
                           <input type="checkbox" checked={activeVariantEditor.isDefault} onChange={(event) => patchVariant(variantEditorIndex as number, { isDefault: event.target.checked })} className={checkboxClassName} />
                           <span>{labels.variantDefault}</span>
@@ -3770,12 +3770,12 @@ export function ProductManager({
           {variantGenerationOpen ? (
             <div className="absolute inset-0 z-10">
               <button type="button" aria-label={labels.cancel} className="absolute inset-0 bg-black/20" onClick={closeVariantGenerationModal} />
-              <aside className="absolute right-0 top-0 flex h-full w-full max-w-lg flex-col overflow-y-auto border-l border-neutral-200 bg-white shadow-2xl">
-                <div className="flex items-start justify-between border-b border-neutral-200 p-5">
+              <aside className="absolute right-0 top-0 flex h-full w-full max-w-lg flex-col overflow-y-auto border-l border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-2xl">
+                <div className="flex items-start justify-between border-b border-[color:var(--color-border)] p-5">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.variantsTitle}</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.variantsTitle}</p>
                     <h3 className="mt-1 text-xl font-semibold tracking-tight">{labels.generateVariantsTitle}</h3>
-                    <p className="mt-1 text-sm text-neutral-500">{labels.generateVariantsHint}</p>
+                    <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{labels.generateVariantsHint}</p>
                   </div>
                   <Button type="button" size="icon" variant="ghost" onClick={closeVariantGenerationModal} disabled={loading}>
                     <X className="h-5 w-5" />
@@ -3800,12 +3800,12 @@ export function ProductManager({
                       />
                       {variantGenerationSuggestions[definition.id]?.length ? (
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-xs text-neutral-500">{labels.generateVariantsSuggestions}</span>
+                          <span className="text-xs text-[color:var(--color-text-muted)]">{labels.generateVariantsSuggestions}</span>
                           {variantGenerationSuggestions[definition.id].map((suggestion) => (
                             <button
                               key={`${definition.id}-${suggestion}`}
                               type="button"
-                              className="rounded-full border border-neutral-200 bg-neutral-50 px-2 py-1 text-xs text-neutral-700 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-900"
+                              className="rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-2 py-1 text-xs text-[color:var(--color-text)] transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-900"
                               onClick={() => applyVariantGenerationSuggestion(definition.id, suggestion)}
                             >
                               {suggestion}
@@ -3817,7 +3817,7 @@ export function ProductManager({
                   ))}
                 </div>
 
-                <div className="mt-auto flex justify-end gap-2 border-t border-neutral-200 p-5">
+                <div className="mt-auto flex justify-end gap-2 border-t border-[color:var(--color-border)] p-5">
                   <Button type="button" variant="secondary" disabled={loading} onClick={closeVariantGenerationModal}>{labels.cancel}</Button>
                   <Button type="button" disabled={loading} onClick={generateVariantRows}>{labels.generateVariantsApply}</Button>
                 </div>

@@ -319,11 +319,11 @@ export function IncomingInvoiceManager({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-semibold text-neutral-950">Gelen Faturalar</h1>
-            <p className="mt-2 text-sm text-neutral-600">
+            <h1 className="text-2xl font-semibold text-[color:var(--color-text)]">Gelen Faturalar</h1>
+            <p className="mt-2 text-sm text-[color:var(--color-text-muted)]">
               Tedarikçilerden gelen faturaları manuel girin, XML olarak içe aktarın veya (ileride) bir e-fatura
               entegratöründen otomatik alın.
             </p>
@@ -335,7 +335,7 @@ export function IncomingInvoiceManager({
         </div>
       </section>
 
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
         <div className="grid gap-3 md:grid-cols-4">
           <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Fatura no, unvan veya VKN ara" />
           <Select value={sourceFilter} onValueChange={(value) => setSourceFilter(value as typeof sourceFilter)}>
@@ -363,10 +363,10 @@ export function IncomingInvoiceManager({
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
-      <section className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm">
+      <section className="overflow-hidden rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-sm">
         <div className="hidden overflow-x-auto lg:block">
           <table className="w-full text-left text-sm">
-            <thead className="bg-neutral-50 text-xs uppercase text-neutral-500">
+            <thead className="bg-[color:var(--color-bg-soft)] text-xs uppercase text-[color:var(--color-text-muted)]">
               <tr>
                 <th className="px-4 py-3">Fatura No</th>
                 <th className="px-4 py-3">Kaynak</th>
@@ -380,11 +380,11 @@ export function IncomingInvoiceManager({
             <tbody>
               {filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-6 text-center text-neutral-500">Kayıt bulunamadı.</td>
+                  <td colSpan={7} className="px-4 py-6 text-center text-[color:var(--color-text-muted)]">Kayıt bulunamadı.</td>
                 </tr>
               ) : filteredItems.map((item) => (
-                <tr key={item.id} className="border-t border-neutral-100">
-                  <td className="px-4 py-3 font-medium text-neutral-900">{item.documentNumber}</td>
+                <tr key={item.id} className="border-t border-[color:var(--color-border)]">
+                  <td className="px-4 py-3 font-medium text-[color:var(--color-text)]">{item.documentNumber}</td>
                   <td className="px-4 py-3">{sourceLabel(item.source)}</td>
                   <td className="px-4 py-3"><Badge className={statusBadgeClass(item.status)}>{statusLabel(item.status)}</Badge></td>
                   <td className="px-4 py-3">{item.supplierName ?? item.counterpartyName}</td>
@@ -401,16 +401,16 @@ export function IncomingInvoiceManager({
 
         <div className="space-y-3 p-4 lg:hidden">
           {filteredItems.length === 0 ? (
-            <p className="text-center text-sm text-neutral-500">Kayıt bulunamadı.</p>
+            <p className="text-center text-sm text-[color:var(--color-text-muted)]">Kayıt bulunamadı.</p>
           ) : filteredItems.map((item) => (
-            <article key={item.id} className="rounded-2xl border border-neutral-200 p-4 text-sm">
+            <article key={item.id} className="rounded-2xl border border-[color:var(--color-border)] p-4 text-sm">
               <div className="flex items-center justify-between">
-                <span className="font-medium text-neutral-900">{item.documentNumber}</span>
+                <span className="font-medium text-[color:var(--color-text)]">{item.documentNumber}</span>
                 <Badge className={statusBadgeClass(item.status)}>{statusLabel(item.status)}</Badge>
               </div>
-              <p className="mt-1 text-neutral-600">{item.supplierName ?? item.counterpartyName}</p>
-              <p className="mt-1 text-neutral-600">{sourceLabel(item.source)} • {formatDate(item.issueDate)}</p>
-              <p className="mt-1 font-medium text-neutral-900">{formatCurrency(item.totalAmount, item.currency)}</p>
+              <p className="mt-1 text-[color:var(--color-text-muted)]">{item.supplierName ?? item.counterpartyName}</p>
+              <p className="mt-1 text-[color:var(--color-text-muted)]">{sourceLabel(item.source)} • {formatDate(item.issueDate)}</p>
+              <p className="mt-1 font-medium text-[color:var(--color-text)]">{formatCurrency(item.totalAmount, item.currency)}</p>
               <Button type="button" variant="outline" className="mt-3 w-full" onClick={() => void openDetail(item.id)}>Detay</Button>
             </article>
           ))}
@@ -419,9 +419,9 @@ export function IncomingInvoiceManager({
 
       {createOpen ? (
         <div className="fixed inset-0 z-30 flex justify-end bg-black/30" onClick={() => setCreateOpen(false)}>
-          <div className="h-full w-full max-w-xl overflow-y-auto bg-white p-6 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+          <div className="h-full w-full max-w-xl overflow-y-auto bg-[color:var(--color-surface)] p-6 shadow-2xl" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-neutral-950">Yeni Gelen Fatura</h2>
+              <h2 className="text-lg font-semibold text-[color:var(--color-text)]">Yeni Gelen Fatura</h2>
               <Button type="button" variant="ghost" onClick={() => setCreateOpen(false)}>Kapat</Button>
             </div>
 
@@ -493,7 +493,7 @@ export function IncomingInvoiceManager({
                 </div>
                 <div className="mt-2 space-y-2">
                   {lines.map((line, index) => (
-                    <div key={index} className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-2 rounded-xl border border-neutral-200 p-2">
+                    <div key={index} className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-2 rounded-xl border border-[color:var(--color-border)] p-2">
                       <Input placeholder="Ürün/hizmet adı" value={line.productName} onChange={(event) => updateLine(index, { productName: event.target.value })} />
                       <Input placeholder="Miktar" value={line.quantity} onChange={(event) => updateLine(index, { quantity: event.target.value })} />
                       <Input placeholder="Birim fiyat" value={line.unitPrice} onChange={(event) => updateLine(index, { unitPrice: event.target.value })} />
@@ -527,9 +527,9 @@ export function IncomingInvoiceManager({
 
       {importOpen ? (
         <div className="fixed inset-0 z-30 flex justify-end bg-black/30" onClick={() => setImportOpen(false)}>
-          <div className="h-full w-full max-w-xl overflow-y-auto bg-white p-6 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+          <div className="h-full w-full max-w-xl overflow-y-auto bg-[color:var(--color-surface)] p-6 shadow-2xl" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-neutral-950">XML İçe Aktar</h2>
+              <h2 className="text-lg font-semibold text-[color:var(--color-text)]">XML İçe Aktar</h2>
               <Button type="button" variant="ghost" onClick={() => setImportOpen(false)}>Kapat</Button>
             </div>
 
@@ -537,7 +537,7 @@ export function IncomingInvoiceManager({
               <div>
                 <Label>UBL-TR XML Dosyası</Label>
                 <input type="file" accept=".xml,text/xml,application/xml" onChange={(event) => void handleFileChange(event)} className="mt-1 block w-full text-sm" />
-                {xmlFileName ? <p className="mt-1 text-xs text-neutral-500">{xmlFileName}</p> : null}
+                {xmlFileName ? <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{xmlFileName}</p> : null}
               </div>
               <div>
                 <Label>Tedarikçi eşleştirmesi (opsiyonel)</Label>
@@ -567,9 +567,9 @@ export function IncomingInvoiceManager({
 
       {detail || detailLoading ? (
         <div className="fixed inset-0 z-30 flex justify-end bg-black/30" onClick={() => setDetail(null)}>
-          <div className="h-full w-full max-w-xl overflow-y-auto bg-white p-6 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+          <div className="h-full w-full max-w-xl overflow-y-auto bg-[color:var(--color-surface)] p-6 shadow-2xl" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-neutral-950">{detail ? detail.documentNumber : "Yükleniyor..."}</h2>
+              <h2 className="text-lg font-semibold text-[color:var(--color-text)]">{detail ? detail.documentNumber : "Yükleniyor..."}</h2>
               <Button type="button" variant="ghost" onClick={() => setDetail(null)}>Kapat</Button>
             </div>
 
@@ -581,19 +581,19 @@ export function IncomingInvoiceManager({
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <p><span className="text-neutral-500">Karşı Taraf:</span> {detail.counterpartyName}</p>
-                  <p><span className="text-neutral-500">VKN/TCKN:</span> {detail.counterpartyTaxNumber ?? "-"}</p>
-                  <p><span className="text-neutral-500">Tarih:</span> {formatDate(detail.issueDate)}</p>
-                  <p><span className="text-neutral-500">Vade:</span> {formatDate(detail.dueDate)}</p>
-                  <p><span className="text-neutral-500">Tutar:</span> {formatCurrency(detail.totalAmount, detail.currency)}</p>
-                  <p><span className="text-neutral-500">Tedarikçi kartı:</span> {detail.supplierName ?? "Eşleşmedi"}</p>
+                  <p><span className="text-[color:var(--color-text-muted)]">Karşı Taraf:</span> {detail.counterpartyName}</p>
+                  <p><span className="text-[color:var(--color-text-muted)]">VKN/TCKN:</span> {detail.counterpartyTaxNumber ?? "-"}</p>
+                  <p><span className="text-[color:var(--color-text-muted)]">Tarih:</span> {formatDate(detail.issueDate)}</p>
+                  <p><span className="text-[color:var(--color-text-muted)]">Vade:</span> {formatDate(detail.dueDate)}</p>
+                  <p><span className="text-[color:var(--color-text-muted)]">Tutar:</span> {formatCurrency(detail.totalAmount, detail.currency)}</p>
+                  <p><span className="text-[color:var(--color-text-muted)]">Tedarikçi kartı:</span> {detail.supplierName ?? "Eşleşmedi"}</p>
                 </div>
 
                 <div>
-                  <h3 className="font-medium text-neutral-900">Kalemler</h3>
+                  <h3 className="font-medium text-[color:var(--color-text)]">Kalemler</h3>
                   <div className="mt-2 space-y-1">
                     {detail.lines.map((line) => (
-                      <div key={line.id} className="flex items-center justify-between rounded-xl border border-neutral-200 px-3 py-2">
+                      <div key={line.id} className="flex items-center justify-between rounded-xl border border-[color:var(--color-border)] px-3 py-2">
                         <span>{line.productName} ({line.quantity} × {formatCurrency(line.unitPrice, detail.currency)})</span>
                         <span className="font-medium">{formatCurrency(line.lineTotal, detail.currency)}</span>
                       </div>
@@ -606,10 +606,10 @@ export function IncomingInvoiceManager({
                 ) : null}
 
                 <div>
-                  <h3 className="font-medium text-neutral-900">Geçmiş</h3>
+                  <h3 className="font-medium text-[color:var(--color-text)]">Geçmiş</h3>
                   <div className="mt-2 space-y-1">
                     {detail.lifecycleEvents.map((event) => (
-                      <p key={event.id} className="text-xs text-neutral-500">{formatDate(event.occurredAt)} — {event.summary}</p>
+                      <p key={event.id} className="text-xs text-[color:var(--color-text-muted)]">{formatDate(event.occurredAt)} — {event.summary}</p>
                     ))}
                   </div>
                 </div>
@@ -624,7 +624,7 @@ export function IncomingInvoiceManager({
                 </div>
               </div>
             ) : (
-              <p className="mt-4 text-sm text-neutral-500">Yükleniyor...</p>
+              <p className="mt-4 text-sm text-[color:var(--color-text-muted)]">Yükleniyor...</p>
             )}
           </div>
         </div>

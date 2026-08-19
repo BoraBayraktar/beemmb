@@ -463,7 +463,7 @@ function movementTypeClass(movementType: string | null) {
     return "bg-violet-100 text-violet-700";
   }
 
-  return "bg-neutral-100 text-neutral-600";
+  return "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text-muted)]";
 }
 
 function stockCountStatusLabel(status: AdminStockCountItem["status"], labels: Labels) {
@@ -487,7 +487,7 @@ function stockCountStatusClass(status: AdminStockCountItem["status"]) {
     return "bg-sky-100 text-sky-700";
   }
 
-  return "bg-neutral-100 text-neutral-700";
+  return "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)]";
 }
 
 type Props = {
@@ -1254,19 +1254,19 @@ export function InventoryManager({
         {
           label: "Aktif Depo",
           value: String(warehouses.filter((warehouse) => warehouse.isActive).length),
-          cardClassName: "border-neutral-200 bg-white/85",
-          valueClassName: "text-neutral-950",
+          cardClassName: "border-[color:var(--color-border)] bg-[color:var(--color-surface)]/85",
+          valueClassName: "text-[color:var(--color-text)]",
         },
         {
           label: "Açık Sayım",
           value: String(stockCounts.filter((count) => count.status !== "APPLIED").length),
-          cardClassName: "border-sky-200 bg-sky-50/80",
+          cardClassName: "border-sky-200 bg-sky-50",
           valueClassName: "text-sky-700",
         },
         {
           label: "Bekleyen Entegrasyon",
           value: String(integrationSummary.pendingCount),
-          cardClassName: "border-amber-200 bg-amber-50/80",
+          cardClassName: "border-amber-200 bg-amber-50",
           valueClassName: "text-amber-700",
         },
       ];
@@ -1277,20 +1277,20 @@ export function InventoryManager({
         {
           label: "Okuyucu Hazırlığı",
           value: quickActionCameraSupported ? "Hazır" : "Sınırlı",
-          cardClassName: quickActionCameraSupported ? "border-emerald-200 bg-emerald-50/80" : "border-amber-200 bg-amber-50/80",
+          cardClassName: quickActionCameraSupported ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50",
           valueClassName: quickActionCameraSupported ? "text-emerald-700" : "text-amber-700",
         },
         {
           label: "Seri Operatör",
           value: quickActionSerialModeEnabled ? "Açık" : "Kapalı",
-          cardClassName: quickActionSerialModeEnabled ? "border-sky-200 bg-sky-50/80" : "border-neutral-200 bg-white/85",
-          valueClassName: quickActionSerialModeEnabled ? "text-sky-700" : "text-neutral-950",
+          cardClassName: quickActionSerialModeEnabled ? "border-sky-200 bg-sky-50" : "border-[color:var(--color-border)] bg-[color:var(--color-surface)]/85",
+          valueClassName: quickActionSerialModeEnabled ? "text-sky-700" : "text-[color:var(--color-text)]",
         },
         {
           label: "Son Eşleşme",
           value: quickActionResult?.item?.sku ?? "Henüz yok",
-          cardClassName: quickActionResult?.item ? "border-neutral-200 bg-white/85" : "border-neutral-200 bg-neutral-50/80",
-          valueClassName: quickActionResult?.item ? "text-neutral-950" : "text-neutral-500",
+          cardClassName: quickActionResult?.item ? "border-[color:var(--color-border)] bg-[color:var(--color-surface)]/85" : "border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]/80",
+          valueClassName: quickActionResult?.item ? "text-[color:var(--color-text)]" : "text-[color:var(--color-text-muted)]",
         },
       ];
     }
@@ -1300,19 +1300,19 @@ export function InventoryManager({
         {
           label: "Toplam Kayıt",
           value: String(result.total),
-          cardClassName: "border-neutral-200 bg-white/85",
-          valueClassName: "text-neutral-950",
+          cardClassName: "border-[color:var(--color-border)] bg-[color:var(--color-surface)]/85",
+          valueClassName: "text-[color:var(--color-text)]",
         },
         {
           label: "Kritik Stok",
           value: String(result.summary.lowStockCount + result.summary.outOfStockCount),
-          cardClassName: "border-amber-200 bg-amber-50/80",
+          cardClassName: "border-amber-200 bg-amber-50",
           valueClassName: "text-amber-700",
         },
         {
           label: "Rezervasyonlu Satır",
           value: String(result.summary.rowsWithReservations),
-          cardClassName: "border-cyan-200 bg-cyan-50/80",
+          cardClassName: "border-cyan-200 bg-cyan-50",
           valueClassName: "text-cyan-700",
         },
       ];
@@ -1325,19 +1325,19 @@ export function InventoryManager({
         {
           label: "Toplam İşlem",
           value: String(transactionResult.total),
-          cardClassName: "border-neutral-200 bg-white/85",
-          valueClassName: "text-neutral-950",
+          cardClassName: "border-[color:var(--color-border)] bg-[color:var(--color-surface)]/85",
+          valueClassName: "text-[color:var(--color-text)]",
         },
         {
           label: "Belge Bağlantılı",
           value: String(documentLinkedCount),
-          cardClassName: "border-indigo-200 bg-indigo-50/80",
+          cardClassName: "border-indigo-200 bg-indigo-50",
           valueClassName: "text-indigo-700",
         },
         {
           label: "Transfer İşlemi",
           value: String(transferCount),
-          cardClassName: "border-amber-200 bg-amber-50/80",
+          cardClassName: "border-amber-200 bg-amber-50",
           valueClassName: "text-amber-700",
         },
       ];
@@ -1348,19 +1348,19 @@ export function InventoryManager({
         {
           label: "Toplam Sayım",
           value: String(stockCounts.length),
-          cardClassName: "border-neutral-200 bg-white/85",
-          valueClassName: "text-neutral-950",
+          cardClassName: "border-[color:var(--color-border)] bg-[color:var(--color-surface)]/85",
+          valueClassName: "text-[color:var(--color-text)]",
         },
         {
           label: "Açık Sayım",
           value: String(stockCounts.filter((count) => count.status !== "APPLIED").length),
-          cardClassName: "border-sky-200 bg-sky-50/80",
+          cardClassName: "border-sky-200 bg-sky-50",
           valueClassName: "text-sky-700",
         },
         {
           label: "Varyanslı Sayım",
           value: String(stockCounts.filter((count) => count.varianceLineCount > 0).length),
-          cardClassName: "border-amber-200 bg-amber-50/80",
+          cardClassName: "border-amber-200 bg-amber-50",
           valueClassName: "text-amber-700",
         },
       ];
@@ -1371,19 +1371,19 @@ export function InventoryManager({
         {
           label: "Aktif Depo",
           value: String(warehouses.filter((warehouse) => warehouse.isActive).length),
-          cardClassName: "border-neutral-200 bg-white/85",
-          valueClassName: "text-neutral-950",
+          cardClassName: "border-[color:var(--color-border)] bg-[color:var(--color-surface)]/85",
+          valueClassName: "text-[color:var(--color-text)]",
         },
         {
           label: "Varsayılan Depo",
           value: warehouses.find((warehouse) => warehouse.isDefault)?.code ?? labels.notSpecified,
-          cardClassName: "border-teal-200 bg-teal-50/80",
+          cardClassName: "border-teal-200 bg-teal-50",
           valueClassName: "text-teal-700",
         },
         {
           label: "Toplam Depo",
           value: String(warehouses.length),
-          cardClassName: "border-sky-200 bg-sky-50/80",
+          cardClassName: "border-sky-200 bg-sky-50",
           valueClassName: "text-sky-700",
         },
       ];
@@ -1394,19 +1394,19 @@ export function InventoryManager({
         {
           label: "Dışa Aktarım",
           value: String(exportHistory.length),
-          cardClassName: "border-neutral-200 bg-white/85",
-          valueClassName: "text-neutral-950",
+          cardClassName: "border-[color:var(--color-border)] bg-[color:var(--color-surface)]/85",
+          valueClassName: "text-[color:var(--color-text)]",
         },
         {
           label: "Son Oluşturan",
           value: exportHistory[0]?.actorLabel ?? labels.notSpecified,
-          cardClassName: "border-emerald-200 bg-emerald-50/80",
+          cardClassName: "border-emerald-200 bg-emerald-50",
           valueClassName: "text-emerald-700",
         },
         {
           label: "Filtreli Kayıt",
           value: String(exportHistory.filter((item) => item.hasFilters).length),
-          cardClassName: "border-amber-200 bg-amber-50/80",
+          cardClassName: "border-amber-200 bg-amber-50",
           valueClassName: "text-amber-700",
         },
       ];
@@ -1417,20 +1417,20 @@ export function InventoryManager({
         {
           label: "Hatalı Olay",
           value: String(externalEventMonitoring.failedCount),
-          cardClassName: "border-rose-200 bg-rose-50/80",
+          cardClassName: "border-rose-200 bg-rose-50",
           valueClassName: "text-rose-700",
         },
         {
           label: "Çözülmemiş",
           value: String(externalEventMonitoring.unresolvedCount),
-          cardClassName: "border-amber-200 bg-amber-50/80",
+          cardClassName: "border-amber-200 bg-amber-50",
           valueClassName: "text-amber-700",
         },
         {
           label: "Bekleyen İş",
           value: String(integrationSummary.pendingCount),
-          cardClassName: "border-neutral-200 bg-white/85",
-          valueClassName: "text-neutral-950",
+          cardClassName: "border-[color:var(--color-border)] bg-[color:var(--color-surface)]/85",
+          valueClassName: "text-[color:var(--color-text)]",
         },
       ];
     }
@@ -1439,19 +1439,19 @@ export function InventoryManager({
       {
         label: labels.totalProducts,
         value: String(result.summary.totalProducts),
-        cardClassName: "border-neutral-200 bg-white/85",
-        valueClassName: "text-neutral-950",
+        cardClassName: "border-[color:var(--color-border)] bg-[color:var(--color-surface)]/85",
+        valueClassName: "text-[color:var(--color-text)]",
       },
       {
         label: labels.lowStockCount,
         value: String(result.summary.lowStockCount),
-        cardClassName: "border-amber-200 bg-amber-50/80",
+        cardClassName: "border-amber-200 bg-amber-50",
         valueClassName: "text-amber-700",
       },
       {
         label: labels.outOfStockCount,
         value: String(result.summary.outOfStockCount),
-        cardClassName: "border-rose-200 bg-rose-50/80",
+        cardClassName: "border-rose-200 bg-rose-50",
         valueClassName: "text-rose-700",
       },
     ];
@@ -2608,21 +2608,21 @@ export function InventoryManager({
   }
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-neutral-200 bg-gradient-to-b from-neutral-50 to-white shadow-sm">
-      <div className={`border-b border-neutral-200 bg-[radial-gradient(circle_at_top_right,_rgba(14,116,144,0.15),_transparent_55%),radial-gradient(circle_at_left,_rgba(245,158,11,0.10),_transparent_45%),linear-gradient(135deg,white,rgba(250,250,250,0.92))] p-6`}>
-        <div className={`rounded-3xl border border-neutral-200 bg-gradient-to-r ${pageMeta.accentClass} p-5`}>
+    <section className="overflow-hidden rounded-3xl border border-[color:var(--color-border)] bg-gradient-to-b from-[color:var(--color-bg-soft)] to-[color:var(--color-surface)] shadow-sm">
+      <div className={`border-b border-[color:var(--color-border)] bg-[radial-gradient(circle_at_top_right,_rgba(14,116,144,0.15),_transparent_55%),radial-gradient(circle_at_left,_rgba(245,158,11,0.10),_transparent_45%),linear-gradient(135deg,var(--color-surface),var(--color-bg-soft))] p-6`}>
+        <div className={`rounded-3xl border border-[color:var(--color-border)] bg-gradient-to-r ${pageMeta.accentClass} p-5`}>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-3xl">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.title}</p>
-                <h2 className="mt-2 text-3xl font-semibold tracking-tight text-neutral-950">{pageConfig.title}</h2>
-                <p className="mt-2 max-w-3xl text-sm text-neutral-600">{pageConfig.description}</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.title}</p>
+                <h2 className="mt-2 text-3xl font-semibold tracking-tight text-[color:var(--color-text)]">{pageConfig.title}</h2>
+                <p className="mt-2 max-w-3xl text-sm text-[color:var(--color-text-muted)]">{pageConfig.description}</p>
               </div>
               {heroStatCards.length > 0 ? (
                 <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                   {heroStatCards.map((card) => (
                     <article key={card.label} className={`rounded-2xl border px-4 py-3 shadow-sm ${card.cardClassName}`}>
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">{card.label}</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{card.label}</p>
                       <p className={`mt-1 text-sm font-semibold ${card.valueClassName}`}>{card.value}</p>
                     </article>
                   ))}
@@ -2634,138 +2634,138 @@ export function InventoryManager({
       </div>
 
       {pageConfig.showSummaryCards ? (
-        <div className="grid gap-4 border-b border-neutral-200 p-5 md:grid-cols-2 xl:grid-cols-6">
-          <article className="rounded-2xl border border-neutral-200 bg-white/80 p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.totalProducts}</p>
-            <p className="mt-2 text-lg font-semibold text-neutral-950">{result.summary.totalProducts}</p>
+        <div className="grid gap-4 border-b border-[color:var(--color-border)] p-5 md:grid-cols-2 xl:grid-cols-6">
+          <article className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]/80 p-4 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.totalProducts}</p>
+            <p className="mt-2 text-lg font-semibold text-[color:var(--color-text)]">{result.summary.totalProducts}</p>
           </article>
-          <article className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.lowStockCount}</p>
+          <article className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{labels.lowStockCount}</p>
             <p className="mt-2 text-lg font-semibold text-amber-700">{result.summary.lowStockCount}</p>
           </article>
-          <article className="rounded-2xl border border-rose-200 bg-rose-50/70 p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.outOfStockCount}</p>
+          <article className="rounded-2xl border border-rose-200 bg-rose-50 p-4 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{labels.outOfStockCount}</p>
             <p className="mt-2 text-lg font-semibold text-rose-700">{result.summary.outOfStockCount}</p>
           </article>
-          <article className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.totalAvailableStock}</p>
-            <p className="mt-2 text-lg font-semibold text-neutral-950">{result.summary.totalAvailableStock}</p>
+          <article className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{labels.totalAvailableStock}</p>
+            <p className="mt-2 text-lg font-semibold text-neutral-900">{result.summary.totalAvailableStock}</p>
           </article>
-          <article className="rounded-2xl border border-cyan-200 bg-cyan-50/60 p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.totalReservedStock}</p>
+          <article className="rounded-2xl border border-cyan-200 bg-cyan-50 p-4 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{labels.totalReservedStock}</p>
             <p className="mt-2 text-lg font-semibold text-cyan-700">{result.summary.totalReservedStock}</p>
           </article>
-          <article className="rounded-2xl border border-orange-200 bg-orange-50/70 p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.rowsWithReservations}</p>
+          <article className="rounded-2xl border border-orange-200 bg-orange-50 p-4 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{labels.rowsWithReservations}</p>
             <p className="mt-2 text-lg font-semibold text-orange-700">{result.summary.rowsWithReservations}</p>
           </article>
         </div>
       ) : null}
 
       {pageVariant === "overview" ? (
-        <div className="border-b border-neutral-200 bg-[linear-gradient(180deg,rgba(250,250,250,0.95),rgba(255,255,255,1))] p-5">
+        <div className="border-b border-[color:var(--color-border)] bg-[linear-gradient(180deg,var(--color-bg-soft),var(--color-surface))] p-5">
           <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
             <div className="space-y-4">
-              <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+              <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
                 <div className="flex flex-col gap-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400">Operasyon Merkezleri</p>
-                  <h3 className="text-lg font-semibold text-neutral-950">İşine göre doğru çalışma alanını aç</h3>
-                  <p className="text-sm text-neutral-600">Genel bakış sadece yönetsel özet ve doğru operasyon ekranına geçiş için kullanılır. Aşağıdaki alanlardan doğrudan ilgili çalışma sayfasını aç.</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Operasyon Merkezleri</p>
+                  <h3 className="text-lg font-semibold text-[color:var(--color-text)]">İşine göre doğru çalışma alanını aç</h3>
+                  <p className="text-sm text-[color:var(--color-text-muted)]">Genel bakış sadece yönetsel özet ve doğru operasyon ekranına geçiş için kullanılır. Aşağıdaki alanlardan doğrudan ilgili çalışma sayfasını aç.</p>
                 </div>
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  <Link href={`${overviewPath}/quick-actions`} className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4 transition hover:bg-emerald-100/80">
-                    <p className="text-sm font-semibold text-neutral-950">Hızlı Barkod İşlemleri</p>
-                    <p className="mt-1 text-sm text-neutral-600">Stok girişi, çıkışı, transfer ve seri operatör akışı.</p>
+                  <Link href={`${overviewPath}/quick-actions`} className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 transition hover:bg-emerald-100">
+                    <p className="text-sm font-semibold text-neutral-900">Hızlı Barkod İşlemleri</p>
+                    <p className="mt-1 text-sm text-neutral-500">Stok girişi, çıkışı, transfer ve seri operatör akışı.</p>
                   </Link>
-                  <Link href={`${overviewPath}/products`} className="rounded-2xl border border-sky-200 bg-sky-50/80 p-4 transition hover:bg-sky-100/80">
-                    <p className="text-sm font-semibold text-neutral-950">Ürün Stokları</p>
-                    <p className="mt-1 text-sm text-neutral-600">Filtrele, karşılaştır ve ürün kartını drawer ile yönet.</p>
+                  <Link href={`${overviewPath}/products`} className="rounded-2xl border border-sky-200 bg-sky-50 p-4 transition hover:bg-sky-100">
+                    <p className="text-sm font-semibold text-neutral-900">Ürün Stokları</p>
+                    <p className="mt-1 text-sm text-neutral-500">Filtrele, karşılaştır ve ürün kartını drawer ile yönet.</p>
                   </Link>
-                  <Link href={transactionListPath} className="rounded-2xl border border-indigo-200 bg-indigo-50/80 p-4 transition hover:bg-indigo-100/80">
-                    <p className="text-sm font-semibold text-neutral-950">İşlemler</p>
-                    <p className="mt-1 text-sm text-neutral-600">Hareket geçmişi, belge bağlantıları ve işlem detayları.</p>
+                  <Link href={transactionListPath} className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 transition hover:bg-indigo-100">
+                    <p className="text-sm font-semibold text-neutral-900">İşlemler</p>
+                    <p className="mt-1 text-sm text-neutral-500">Hareket geçmişi, belge bağlantıları ve işlem detayları.</p>
                   </Link>
-                  <Link href={stockCountsPath} className="rounded-2xl border border-amber-200 bg-amber-50/80 p-4 transition hover:bg-amber-100/80">
-                    <p className="text-sm font-semibold text-neutral-950">Sayımlar</p>
-                    <p className="mt-1 text-sm text-neutral-600">Açık sayımları takip et, farkları uygula.</p>
+                  <Link href={stockCountsPath} className="rounded-2xl border border-amber-200 bg-amber-50 p-4 transition hover:bg-amber-100">
+                    <p className="text-sm font-semibold text-neutral-900">Sayımlar</p>
+                    <p className="mt-1 text-sm text-neutral-500">Açık sayımları takip et, farkları uygula.</p>
                   </Link>
-                  <Link href={warehousesPath} className="rounded-2xl border border-teal-200 bg-teal-50/80 p-4 transition hover:bg-teal-100/80">
-                    <p className="text-sm font-semibold text-neutral-950">Depolar</p>
-                    <p className="mt-1 text-sm text-neutral-600">Depo tanımları, öncelik ve varsayılan depo ayarları.</p>
+                  <Link href={warehousesPath} className="rounded-2xl border border-teal-200 bg-teal-50 p-4 transition hover:bg-teal-100">
+                    <p className="text-sm font-semibold text-neutral-900">Depolar</p>
+                    <p className="mt-1 text-sm text-neutral-500">Depo tanımları, öncelik ve varsayılan depo ayarları.</p>
                   </Link>
-                  <Link href={externalEventsPath} className="rounded-2xl border border-fuchsia-200 bg-fuchsia-50/80 p-4 transition hover:bg-fuchsia-100/80">
-                    <p className="text-sm font-semibold text-neutral-950">Harici Stok Olayları</p>
-                    <p className="mt-1 text-sm text-neutral-600">Entegrasyon olay akışı, eşleme durumu ve hatalı kayıtları izle.</p>
+                  <Link href={externalEventsPath} className="rounded-2xl border border-fuchsia-200 bg-fuchsia-50 p-4 transition hover:bg-fuchsia-100">
+                    <p className="text-sm font-semibold text-neutral-900">Harici Stok Olayları</p>
+                    <p className="mt-1 text-sm text-neutral-500">Entegrasyon olay akışı, eşleme durumu ve hatalı kayıtları izle.</p>
                   </Link>
                 </div>
               </section>
 
-              <section className="rounded-3xl border border-neutral-200 bg-[linear-gradient(180deg,rgba(250,250,250,0.92),rgba(255,255,255,1))] p-5 shadow-sm">
+              <section className="rounded-3xl border border-[color:var(--color-border)] bg-[linear-gradient(180deg,var(--color-bg-soft),var(--color-surface))] p-5 shadow-sm">
                 <div className="flex flex-col gap-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400">Hızlı Başlat</p>
-                  <h3 className="text-lg font-semibold text-neutral-950">En sık yapılan işleri doğrudan başlat</h3>
-                  <p className="text-sm text-neutral-600">Operasyon ekranlarını aramadan en yaygın aksiyonlara tek tıkla geç.</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Hızlı Başlat</p>
+                  <h3 className="text-lg font-semibold text-[color:var(--color-text)]">En sık yapılan işleri doğrudan başlat</h3>
+                  <p className="text-sm text-[color:var(--color-text-muted)]">Operasyon ekranlarını aramadan en yaygın aksiyonlara tek tıkla geç.</p>
                 </div>
                 <div className="mt-4 grid gap-3">
-                  <Link href={`${overviewPath}/quick-actions`} className="rounded-2xl border border-neutral-200 bg-white p-4 transition hover:bg-neutral-50">
-                    <p className="text-sm font-semibold text-neutral-950">Barkod ile hızlı işlem</p>
-                    <p className="mt-1 text-sm text-neutral-600">Mobilden veya masaüstünden ürünü bulup hızlı stok hareketi başlat.</p>
+                  <Link href={`${overviewPath}/quick-actions`} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 transition hover:bg-[color:var(--color-bg-soft)]">
+                    <p className="text-sm font-semibold text-[color:var(--color-text)]">Barkod ile hızlı işlem</p>
+                    <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">Mobilden veya masaüstünden ürünü bulup hızlı stok hareketi başlat.</p>
                   </Link>
-                  <Link href={stockCountsPath} className="rounded-2xl border border-neutral-200 bg-white p-4 transition hover:bg-neutral-50">
-                    <p className="text-sm font-semibold text-neutral-950">Yeni sayım başlat</p>
-                    <p className="mt-1 text-sm text-neutral-600">Açık sayımları takip et veya yeni bir depo sayımı oluştur.</p>
+                  <Link href={stockCountsPath} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 transition hover:bg-[color:var(--color-bg-soft)]">
+                    <p className="text-sm font-semibold text-[color:var(--color-text)]">Yeni sayım başlat</p>
+                    <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">Açık sayımları takip et veya yeni bir depo sayımı oluştur.</p>
                   </Link>
-                  <Link href={transactionListPath} className="rounded-2xl border border-neutral-200 bg-white p-4 transition hover:bg-neutral-50">
-                    <p className="text-sm font-semibold text-neutral-950">İşlem geçmişini incele</p>
-                    <p className="mt-1 text-sm text-neutral-600">Belge bağlantılı hareketleri ve stok akışını doğrula.</p>
+                  <Link href={transactionListPath} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 transition hover:bg-[color:var(--color-bg-soft)]">
+                    <p className="text-sm font-semibold text-[color:var(--color-text)]">İşlem geçmişini incele</p>
+                    <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">Belge bağlantılı hareketleri ve stok akışını doğrula.</p>
                   </Link>
                 </div>
-                <div className="mt-4 rounded-2xl border border-neutral-200 bg-white p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">Yönetim Özeti</p>
+                <div className="mt-4 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-text-muted)]">Yönetim Özeti</p>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     <div>
-                      <p className="text-[11px] font-medium text-neutral-500">Toplam aktif depo</p>
-                      <p className="mt-1 text-sm font-semibold text-neutral-950">{warehouses.filter((warehouse) => warehouse.isActive).length}</p>
+                      <p className="text-[11px] font-medium text-[color:var(--color-text-muted)]">Toplam aktif depo</p>
+                      <p className="mt-1 text-sm font-semibold text-[color:var(--color-text)]">{warehouses.filter((warehouse) => warehouse.isActive).length}</p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-medium text-neutral-500">Açık sayım</p>
-                      <p className="mt-1 text-sm font-semibold text-neutral-950">{stockCounts.filter((count) => count.status !== "APPLIED").length}</p>
+                      <p className="text-[11px] font-medium text-[color:var(--color-text-muted)]">Açık sayım</p>
+                      <p className="mt-1 text-sm font-semibold text-[color:var(--color-text)]">{stockCounts.filter((count) => count.status !== "APPLIED").length}</p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-medium text-neutral-500">Hatalı harici event</p>
-                      <p className="mt-1 text-sm font-semibold text-neutral-950">{externalEventMonitoring.failedCount}</p>
+                      <p className="text-[11px] font-medium text-[color:var(--color-text-muted)]">Hatalı harici event</p>
+                      <p className="mt-1 text-sm font-semibold text-[color:var(--color-text)]">{externalEventMonitoring.failedCount}</p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-medium text-neutral-500">Bekleyen entegrasyon işi</p>
-                      <p className="mt-1 text-sm font-semibold text-neutral-950">{integrationSummary.pendingCount}</p>
+                      <p className="text-[11px] font-medium text-[color:var(--color-text-muted)]">Bekleyen entegrasyon işi</p>
+                      <p className="mt-1 text-sm font-semibold text-[color:var(--color-text)]">{integrationSummary.pendingCount}</p>
                     </div>
                   </div>
                 </div>
               </section>
             </div>
 
-            <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+            <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
               <div className="flex flex-col gap-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400">Bugün Öncelikli</p>
-                <h3 className="text-lg font-semibold text-neutral-950">İlk bakılması gereken başlıklar</h3>
-                <p className="text-sm text-neutral-600">Ekrana ilk girişte operasyon sırasını buradan belirleyebilirsin.</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Bugün Öncelikli</p>
+                <h3 className="text-lg font-semibold text-[color:var(--color-text)]">İlk bakılması gereken başlıklar</h3>
+                <p className="text-sm text-[color:var(--color-text-muted)]">Ekrana ilk girişte operasyon sırasını buradan belirleyebilirsin.</p>
               </div>
               <div className="mt-4 grid gap-3">
-                <article className="rounded-2xl border border-amber-200 bg-amber-50/80 p-4">
-                  <p className="text-sm font-semibold text-neutral-950">Kritik stok uyarıları</p>
-                  <p className="mt-1 text-sm text-neutral-600">{alertResult.summary.activeCount} aktif uyarı var. Düşük ve tükenen ürünleri önceliklendir.</p>
+                <article className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                  <p className="text-sm font-semibold text-neutral-900">Kritik stok uyarıları</p>
+                  <p className="mt-1 text-sm text-neutral-500">{alertResult.summary.activeCount} aktif uyarı var. Düşük ve tükenen ürünleri önceliklendir.</p>
                 </article>
-                <article className="rounded-2xl border border-sky-200 bg-sky-50/80 p-4">
-                  <p className="text-sm font-semibold text-neutral-950">Açık sayımlar</p>
-                  <p className="mt-1 text-sm text-neutral-600">{stockCounts.filter((count) => count.status !== "APPLIED").length} sayım henüz kapanmadı.</p>
+                <article className="rounded-2xl border border-sky-200 bg-sky-50 p-4">
+                  <p className="text-sm font-semibold text-neutral-900">Açık sayımlar</p>
+                  <p className="mt-1 text-sm text-neutral-500">{stockCounts.filter((count) => count.status !== "APPLIED").length} sayım henüz kapanmadı.</p>
                 </article>
-                <article className="rounded-2xl border border-rose-200 bg-rose-50/80 p-4">
-                  <p className="text-sm font-semibold text-neutral-950">Harici stok hataları</p>
-                  <p className="mt-1 text-sm text-neutral-600">{externalEventMonitoring.failedCount} hatalı event, {externalEventMonitoring.unresolvedCount} çözülmemiş kayıt bulunuyor.</p>
+                <article className="rounded-2xl border border-rose-200 bg-rose-50 p-4">
+                  <p className="text-sm font-semibold text-neutral-900">Harici stok hataları</p>
+                  <p className="mt-1 text-sm text-neutral-500">{externalEventMonitoring.failedCount} hatalı event, {externalEventMonitoring.unresolvedCount} çözülmemiş kayıt bulunuyor.</p>
                 </article>
-                <article className="rounded-2xl border border-neutral-200 bg-neutral-50/80 p-4">
-                  <p className="text-sm font-semibold text-neutral-950">Entegrasyon kuyruğu</p>
-                  <p className="mt-1 text-sm text-neutral-600">{integrationSummary.pendingCount} bekleyen, {integrationSummary.processingCount} işlenen stok entegrasyon işi var.</p>
+                <article className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]/80 p-4">
+                  <p className="text-sm font-semibold text-[color:var(--color-text)]">Entegrasyon kuyruğu</p>
+                  <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{integrationSummary.pendingCount} bekleyen, {integrationSummary.processingCount} işlenen stok entegrasyon işi var.</p>
                 </article>
               </div>
             </section>
@@ -2773,7 +2773,7 @@ export function InventoryManager({
         </div>
       ) : null}
 
-      <div className="sticky top-0 z-30 border-b border-neutral-200 bg-white/95 p-5 backdrop-blur">
+      <div className="sticky top-0 z-30 border-b border-[color:var(--color-border)] bg-[color:var(--color-surface)]/95 p-5 backdrop-blur">
         <div className="flex flex-col gap-3">
           {availableSectionGroups.length > 1 ? (
             <div className="flex flex-wrap gap-2">
@@ -2788,7 +2788,7 @@ export function InventoryManager({
                   className={`inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition ${
                     activeSectionGroup === group.id
                       ? "bg-neutral-950 text-white shadow-sm"
-                      : "border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100"
+                      : "border border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)]"
                   }`}
                 >
                   {group.label}
@@ -2798,7 +2798,7 @@ export function InventoryManager({
           ) : null}
           {visibleActiveSections.length > 1 ? (
             <div className="sticky top-0 z-20 -mx-2 overflow-x-auto px-2 pb-1 [scrollbar-width:none]">
-              <div className="flex min-w-max gap-2 rounded-2xl border border-neutral-200 bg-white/95 p-2 shadow-sm backdrop-blur">
+              <div className="flex min-w-max gap-2 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]/95 p-2 shadow-sm backdrop-blur">
                 {visibleActiveSections.map((section) => (
                     <button
                       key={section.id}
@@ -2807,7 +2807,7 @@ export function InventoryManager({
                       className={`inline-flex h-10 items-center justify-center rounded-xl px-3 text-sm font-medium transition ${
                         activeSection === section.id
                           ? "bg-neutral-900 text-white shadow-sm"
-                          : "border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100"
+                          : "border border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)]"
                       }`}
                     >
                       {labels[section.key]}
@@ -2821,11 +2821,11 @@ export function InventoryManager({
 
       {pageVariant === "overview" ? (
         <div className="space-y-6">
-          <section className="rounded-3xl border border-neutral-200 bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(250,250,250,0.92))] p-5 shadow-sm">
+          <section className="rounded-3xl border border-[color:var(--color-border)] bg-[linear-gradient(180deg,var(--color-surface),var(--color-bg-soft))] p-5 shadow-sm">
             <div className="mb-5 flex flex-col gap-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400">Yönetsel İzleme</p>
-              <h3 className="text-lg font-semibold text-neutral-950">Önce durumu izle, sonra aksiyona geç</h3>
-              <p className="text-sm text-neutral-600">Bu bölüm yalnızca karar özeti içindir. Detaylı tablo ve operasyon ekranlarına gerektiğinde alt sayfalardan geç.</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Yönetsel İzleme</p>
+              <h3 className="text-lg font-semibold text-[color:var(--color-text)]">Önce durumu izle, sonra aksiyona geç</h3>
+              <p className="text-sm text-[color:var(--color-text-muted)]">Bu bölüm yalnızca karar özeti içindir. Detaylı tablo ve operasyon ekranlarına gerektiğinde alt sayfalardan geç.</p>
             </div>
 
             <div id="inventory-reports" className={getSectionPanelClass(activeSection, "inventory-reports")}>
@@ -2854,73 +2854,73 @@ export function InventoryManager({
             </div>
 
             <div className="mt-6 grid gap-4 xl:grid-cols-2">
-              <article className="rounded-3xl border border-fuchsia-200 bg-fuchsia-50/60 p-5 shadow-sm">
+              <article className="rounded-3xl border border-fuchsia-200 bg-fuchsia-50 p-5 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-fuchsia-700">Operasyon İzleme</p>
-                    <h4 className="mt-2 text-base font-semibold text-neutral-950">Harici stok olayları</h4>
-                    <p className="mt-1 text-sm text-neutral-600">Hata, eşleme ve projection detayları için özel ekrana geç.</p>
+                    <h4 className="mt-2 text-base font-semibold text-[color:var(--color-text)]">Harici stok olayları</h4>
+                    <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">Hata, eşleme ve projection detayları için özel ekrana geç.</p>
                   </div>
                   <Link
                     href={externalEventsPath}
-                    className="inline-flex h-10 items-center justify-center rounded-xl border border-fuchsia-300 bg-white px-4 text-sm font-medium text-fuchsia-800 transition hover:bg-fuchsia-100"
+                    className="inline-flex h-10 items-center justify-center rounded-xl border border-fuchsia-300 bg-[color:var(--color-surface)] px-4 text-sm font-medium text-fuchsia-800 transition hover:bg-fuchsia-100"
                   >
                     Ekranı aç
                   </Link>
                 </div>
                 <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                  <article className="rounded-2xl border border-white/70 bg-white/90 p-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Başarısız olay</p>
-                    <p className="mt-1 text-sm font-semibold text-neutral-950">{externalEventMonitoring.failedCount}</p>
+                  <article className="rounded-2xl border border-white/70 bg-[color:var(--color-surface)]/90 p-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Başarısız olay</p>
+                    <p className="mt-1 text-sm font-semibold text-[color:var(--color-text)]">{externalEventMonitoring.failedCount}</p>
                   </article>
-                  <article className="rounded-2xl border border-white/70 bg-white/90 p-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Çözülmemiş kayıt</p>
-                    <p className="mt-1 text-sm font-semibold text-neutral-950">{externalEventMonitoring.unresolvedCount}</p>
+                  <article className="rounded-2xl border border-white/70 bg-[color:var(--color-surface)]/90 p-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Çözülmemiş kayıt</p>
+                    <p className="mt-1 text-sm font-semibold text-[color:var(--color-text)]">{externalEventMonitoring.unresolvedCount}</p>
                   </article>
-                  <article className="rounded-2xl border border-white/70 bg-white/90 p-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Bekleyen iş</p>
-                    <p className="mt-1 text-sm font-semibold text-neutral-950">{integrationSummary.pendingCount}</p>
+                  <article className="rounded-2xl border border-white/70 bg-[color:var(--color-surface)]/90 p-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Bekleyen iş</p>
+                    <p className="mt-1 text-sm font-semibold text-[color:var(--color-text)]">{integrationSummary.pendingCount}</p>
                   </article>
                 </div>
               </article>
 
-              <article className="rounded-3xl border border-sky-200 bg-sky-50/60 p-5 shadow-sm">
+              <article className="rounded-3xl border border-sky-200 bg-sky-50 p-5 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Kayıt ve Çıktı</p>
-                    <h4 className="mt-2 text-base font-semibold text-neutral-950">Dışa aktarım geçmişi</h4>
-                    <p className="mt-1 text-sm text-neutral-600">CSV geçmişini, kullanıcıyı ve kapsamı ayrı ekranda izle.</p>
+                    <h4 className="mt-2 text-base font-semibold text-[color:var(--color-text)]">Dışa aktarım geçmişi</h4>
+                    <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">CSV geçmişini, kullanıcıyı ve kapsamı ayrı ekranda izle.</p>
                   </div>
                   <Link
                     href={`${overviewPath}/exports`}
-                    className="inline-flex h-10 items-center justify-center rounded-xl border border-sky-300 bg-white px-4 text-sm font-medium text-sky-800 transition hover:bg-sky-100"
+                    className="inline-flex h-10 items-center justify-center rounded-xl border border-sky-300 bg-[color:var(--color-surface)] px-4 text-sm font-medium text-sky-800 transition hover:bg-sky-100"
                   >
                     Geçmişi aç
                   </Link>
                 </div>
                 <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                  <article className="rounded-2xl border border-white/70 bg-white/90 p-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Toplam kayıt</p>
-                    <p className="mt-1 text-sm font-semibold text-neutral-950">{exportHistory.length}</p>
+                  <article className="rounded-2xl border border-white/70 bg-[color:var(--color-surface)]/90 p-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Toplam kayıt</p>
+                    <p className="mt-1 text-sm font-semibold text-[color:var(--color-text)]">{exportHistory.length}</p>
                   </article>
-                  <article className="rounded-2xl border border-white/70 bg-white/90 p-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Filtreli çıktı</p>
-                    <p className="mt-1 text-sm font-semibold text-neutral-950">{exportHistory.filter((item) => item.hasFilters).length}</p>
+                  <article className="rounded-2xl border border-white/70 bg-[color:var(--color-surface)]/90 p-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Filtreli çıktı</p>
+                    <p className="mt-1 text-sm font-semibold text-[color:var(--color-text)]">{exportHistory.filter((item) => item.hasFilters).length}</p>
                   </article>
-                  <article className="rounded-2xl border border-white/70 bg-white/90 p-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Son kullanıcı</p>
-                    <p className="mt-1 text-sm font-semibold text-neutral-950">{exportHistory[0]?.actorLabel ?? labels.notSpecified}</p>
+                  <article className="rounded-2xl border border-white/70 bg-[color:var(--color-surface)]/90 p-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Son kullanıcı</p>
+                    <p className="mt-1 text-sm font-semibold text-[color:var(--color-text)]">{exportHistory[0]?.actorLabel ?? labels.notSpecified}</p>
                   </article>
                 </div>
               </article>
             </div>
           </section>
 
-          <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+          <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
             <div className="mb-5 flex flex-col gap-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400">Operasyon Alanları</p>
-              <h3 className="text-lg font-semibold text-neutral-950">Günlük stok işlemlerini buradan yürüt</h3>
-              <p className="text-sm text-neutral-600">Hızlı işlem, sayım, depo ve hareket yönetimi için operasyonel çalışma alanları aşağıda sıralanır.</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Operasyon Alanları</p>
+              <h3 className="text-lg font-semibold text-[color:var(--color-text)]">Günlük stok işlemlerini buradan yürüt</h3>
+              <p className="text-sm text-[color:var(--color-text-muted)]">Hızlı işlem, sayım, depo ve hareket yönetimi için operasyonel çalışma alanları aşağıda sıralanır.</p>
             </div>
 
             <div id="quick-actions" className={getSectionPanelClass(activeSection, "quick-actions")}>
@@ -3109,10 +3109,10 @@ export function InventoryManager({
       {pageVariant === "inventory-list" ? (
         <>
       <form id="inventory-list" className={getSectionPanelClass(activeSection, "inventory-list")} aria-label="Stok listesi filtre formu">
-        <div className="mb-5 rounded-2xl border border-neutral-200 bg-neutral-50/80 p-4 shadow-sm">
+        <div className="mb-5 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]/80 p-4 shadow-sm">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">Toplu İşlem Alanı</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Toplu İşlem Alanı</p>
             </div>
             <button
               type="button"
@@ -3120,14 +3120,14 @@ export function InventoryManager({
                 setBulkToolsExpanded((current) => !current);
                 setActiveBulkToolTab("adjust");
               }}
-              className="inline-flex h-10 items-center justify-center rounded-xl border border-neutral-300 bg-white px-4 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100"
+              className="inline-flex h-10 items-center justify-center rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 text-sm font-medium text-[color:var(--color-text)] transition hover:bg-[color:var(--color-bg-soft)]"
             >
               {bulkToolsExpanded ? "Toplu islemleri gizle" : "Toplu islemleri ac"}
             </button>
           </div>
 
           {bulkToolsExpanded ? (
-            <div className="mt-4 rounded-3xl border border-neutral-200 bg-white p-4 shadow-sm">
+            <div className="mt-4 rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 shadow-sm">
               <div className="flex flex-wrap gap-2">
                 {[
                   { id: "adjust" as const, label: "Stok Güncelleme" },
@@ -3141,7 +3141,7 @@ export function InventoryManager({
                     className={`inline-flex h-10 items-center justify-center rounded-2xl border px-4 text-sm font-medium transition ${
                       activeBulkToolTab === tab.id
                         ? "border-neutral-900 bg-neutral-900 text-white"
-                        : "border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100"
+                        : "border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)]"
                     }`}
                   >
                     {tab.label}
@@ -3150,17 +3150,17 @@ export function InventoryManager({
               </div>
 
               {activeBulkToolTab === "adjust" ? (
-                <section className="mt-4 rounded-2xl border border-neutral-200 bg-neutral-50/70 p-4">
+                <section className="mt-4 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]/70 p-4">
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">Toplu Stok Güncelleme</p>
-                      <p className="mt-1 text-sm text-neutral-600">Format: `SKU,DEPO_KODU,HEDEF_STOK,MIN_STOK,GUVENLIK_STOK,NOT`</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Toplu Stok Güncelleme</p>
+                      <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">Format: `SKU,DEPO_KODU,HEDEF_STOK,MIN_STOK,GUVENLIK_STOK,NOT`</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
                         onClick={() => downloadBulkTemplate("adjust")}
-                        className="inline-flex h-10 items-center justify-center rounded-xl border border-neutral-300 bg-white px-3 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100"
+                        className="inline-flex h-10 items-center justify-center rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 text-sm font-medium text-[color:var(--color-text)] transition hover:bg-[color:var(--color-bg-soft)]"
                       >
                         Şablon indir
                       </button>
@@ -3168,7 +3168,7 @@ export function InventoryManager({
                         type="button"
                         onClick={() => void submitBulkOperation("adjust")}
                         disabled={bulkOperationPending !== null}
-                        className="h-10 rounded-xl border border-neutral-300 bg-neutral-900 px-3 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="h-10 rounded-xl border border-[color:var(--color-border)] bg-neutral-900 px-3 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         Toplu Güncelle
                       </button>
@@ -3179,23 +3179,23 @@ export function InventoryManager({
                     onChange={(event) => setBulkAdjustCsv(event.target.value)}
                     rows={7}
                     placeholder="SKU-001,MAIN,45,10,5,Sezon duzeltmesi"
-                    className="mt-4 w-full rounded-2xl border border-neutral-300 bg-white px-3 py-3 text-sm outline-none transition focus:border-neutral-500"
+                    className="mt-4 w-full rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3 text-sm outline-none transition focus:border-neutral-500"
                   />
                 </section>
               ) : null}
 
               {activeBulkToolTab === "warehouse" ? (
-                <section className="mt-4 rounded-2xl border border-neutral-200 bg-neutral-50/70 p-4">
+                <section className="mt-4 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]/70 p-4">
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">Toplu Tercihli Depo Atama</p>
-                      <p className="mt-1 text-sm text-neutral-600">Format: `SKU,TERCIH_EDILEN_SATIS_DEPOSU`</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Toplu Tercihli Depo Atama</p>
+                      <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">Format: `SKU,TERCIH_EDILEN_SATIS_DEPOSU`</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
                         onClick={() => downloadBulkTemplate("warehouse")}
-                        className="inline-flex h-10 items-center justify-center rounded-xl border border-neutral-300 bg-white px-3 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100"
+                        className="inline-flex h-10 items-center justify-center rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 text-sm font-medium text-[color:var(--color-text)] transition hover:bg-[color:var(--color-bg-soft)]"
                       >
                         Şablon indir
                       </button>
@@ -3203,7 +3203,7 @@ export function InventoryManager({
                         type="button"
                         onClick={() => void submitBulkOperation("warehouse")}
                         disabled={bulkOperationPending !== null}
-                        className="h-10 rounded-xl border border-neutral-300 bg-neutral-900 px-3 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="h-10 rounded-xl border border-[color:var(--color-border)] bg-neutral-900 px-3 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         Toplu Ata
                       </button>
@@ -3214,7 +3214,7 @@ export function InventoryManager({
                     onChange={(event) => setBulkWarehouseCsv(event.target.value)}
                     rows={7}
                     placeholder="SKU-001,MAIN"
-                    className="mt-4 w-full rounded-2xl border border-neutral-300 bg-white px-3 py-3 text-sm outline-none transition focus:border-neutral-500"
+                    className="mt-4 w-full rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3 text-sm outline-none transition focus:border-neutral-500"
                   />
                 </section>
               ) : null}
@@ -3222,30 +3222,30 @@ export function InventoryManager({
               {activeBulkToolTab === "history" ? (
                 <section className="mt-4 space-y-4">
                   {bulkOperationHistory.length > 0 ? (
-                    <div className="rounded-2xl border border-neutral-200 bg-neutral-50/70 p-4">
+                    <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]/70 p-4">
                       <div className="flex items-center justify-between gap-3">
                         <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">Toplu İşlem Geçmişi</p>
-                          <p className="mt-1 text-sm text-neutral-600">Bu oturumda çalıştırılan son toplu işlemler.</p>
+                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Toplu İşlem Geçmişi</p>
+                          <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">Bu oturumda çalıştırılan son toplu işlemler.</p>
                         </div>
                       </div>
                       <div className="mt-4 grid gap-3 lg:grid-cols-2">
                         {bulkOperationHistory.map((historyItem) => (
-                          <article key={historyItem.id} className="rounded-xl border border-neutral-200 bg-white p-3">
+                          <article key={historyItem.id} className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
                             <div className="flex flex-wrap items-center justify-between gap-2">
-                              <p className="text-sm font-semibold text-neutral-950">
+                              <p className="text-sm font-semibold text-[color:var(--color-text)]">
                                 {historyItem.type === "adjust"
                                   ? "Toplu stok güncelleme"
                                   : historyItem.type === "warehouse"
                                     ? "Toplu depo atama"
                                     : "Toplu sayım güncelleme"}
                               </p>
-                              <span className="text-xs text-neutral-500">{formatDate(historyItem.createdAt, locale, labels.notSpecified)}</span>
+                              <span className="text-xs text-[color:var(--color-text-muted)]">{formatDate(historyItem.createdAt, locale, labels.notSpecified)}</span>
                             </div>
                             <div className="mt-3 flex flex-wrap gap-2 text-xs">
                               <span className="rounded-full bg-emerald-100 px-2 py-1 font-semibold text-emerald-700">Başarılı: {historyItem.successCount}</span>
                               <span className="rounded-full bg-rose-100 px-2 py-1 font-semibold text-rose-700">Hatalı: {historyItem.failureCount}</span>
-                              <span className="rounded-full bg-neutral-200 px-2 py-1 font-semibold text-neutral-700">Toplam: {historyItem.total}</span>
+                              <span className="rounded-full bg-neutral-200 px-2 py-1 font-semibold text-neutral-900">Toplam: {historyItem.total}</span>
                             </div>
                           </article>
                         ))}
@@ -3254,30 +3254,30 @@ export function InventoryManager({
                   ) : null}
 
                   {operationHistory.length > 0 ? (
-                    <div className="rounded-2xl border border-neutral-200 bg-neutral-50/70 p-4">
+                    <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]/70 p-4">
                       <div className="flex items-center justify-between gap-3">
                         <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">Kalıcı Operasyon Geçmişi</p>
-                          <p className="mt-1 text-sm text-neutral-600">Inventory için özel geçmiş projeksiyonundan beslenen son stok ve depo operasyonları.</p>
+                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Kalıcı Operasyon Geçmişi</p>
+                          <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">Inventory için özel geçmiş projeksiyonundan beslenen son stok ve depo operasyonları.</p>
                         </div>
                       </div>
                       <div className="mt-4 grid gap-3 lg:grid-cols-2">
                         {operationHistory.map((historyItem) => (
-                          <article key={historyItem.id} className="rounded-xl border border-neutral-200 bg-white p-3">
+                          <article key={historyItem.id} className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
                             <div className="flex flex-wrap items-start justify-between gap-2">
                               <div>
-                                <p className="text-sm font-semibold text-neutral-950">{historyItem.title}</p>
-                                <p className="mt-1 text-xs text-neutral-600">{historyItem.summary}</p>
+                                <p className="text-sm font-semibold text-[color:var(--color-text)]">{historyItem.title}</p>
+                                <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{historyItem.summary}</p>
                               </div>
                               <span className={`inline-flex rounded-full px-2 py-1 text-[11px] font-semibold ${
                                 historyItem.entityType === "WAREHOUSE"
                                   ? "bg-sky-100 text-sky-700"
-                                  : "bg-neutral-200 text-neutral-700"
+                                  : "bg-neutral-200 text-neutral-900"
                               }`}>
                                 {historyItem.entityType === "WAREHOUSE" ? "Depo" : "Stok"}
                               </span>
                             </div>
-                            <div className="mt-3 flex flex-wrap gap-2 text-xs text-neutral-500">
+                            <div className="mt-3 flex flex-wrap gap-2 text-xs text-[color:var(--color-text-muted)]">
                               <span>{formatDate(historyItem.createdAt, locale, labels.notSpecified)}</span>
                               {historyItem.actorLabel ? <span>• {historyItem.actorLabel}</span> : null}
                             </div>
@@ -3292,10 +3292,10 @@ export function InventoryManager({
           ) : null}
         </div>
 
-        <div className="rounded-3xl border border-neutral-200 bg-white p-4 shadow-sm">
+        <div className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 shadow-sm">
           <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">Liste Filtreleri</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Liste Filtreleri</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button type="submit">
@@ -3323,7 +3323,7 @@ export function InventoryManager({
 
           <div className="mt-4 grid gap-4 xl:grid-cols-[1.4fr_1fr_1fr]">
             <label className="grid gap-2">
-              <span className="text-xs font-medium text-neutral-600">{labels.search}</span>
+              <span className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.search}</span>
               <Input
                 type="search"
                 name="search"
@@ -3334,7 +3334,7 @@ export function InventoryManager({
             </label>
 
             <label className="grid gap-2">
-              <span className="text-xs font-medium text-neutral-600">{labels.stockFilter}</span>
+              <span className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.stockFilter}</span>
               <Select name="stockStatusFilter" defaultValue={query.stockStatusFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder={labels.stockFilter} />
@@ -3349,7 +3349,7 @@ export function InventoryManager({
             </label>
 
             <label className="grid gap-2">
-              <span className="text-xs font-medium text-neutral-600">{labels.reservationFilter}</span>
+              <span className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.reservationFilter}</span>
               <Select name="reservationFilter" defaultValue={query.reservationFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder={labels.reservationFilter} />
@@ -3365,7 +3365,7 @@ export function InventoryManager({
 
           <div className="mt-4 grid gap-4 xl:grid-cols-2">
             <label className="grid gap-2">
-              <span className="text-xs font-medium text-neutral-600">{labels.warehouseFilter}</span>
+              <span className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.warehouseFilter}</span>
               <Select name="warehouseFilter" defaultValue={query.warehouseFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder={labels.warehouseFilter} />
@@ -3381,7 +3381,7 @@ export function InventoryManager({
             </label>
 
             <label className="grid gap-2">
-              <span className="text-xs font-medium text-neutral-600">{labels.movementTypeFilter}</span>
+              <span className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.movementTypeFilter}</span>
               <Select name="movementTypeFilter" defaultValue={query.movementTypeFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder={labels.movementTypeFilter} />
@@ -3395,8 +3395,8 @@ export function InventoryManager({
             </label>
           </div>
 
-          <div className="mt-4 rounded-2xl border border-neutral-200 bg-neutral-50/80 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">Hızlı Kısayollar</p>
+          <div className="mt-4 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]/80 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-text-muted)]">Hızlı Kısayollar</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <button
                 type="button"
@@ -3415,7 +3415,7 @@ export function InventoryManager({
               <button
                 type="button"
                 onClick={() => goToInventoryWithFilters({})}
-                className="inline-flex h-9 items-center justify-center rounded-xl border border-neutral-300 bg-white px-3 text-xs font-medium text-neutral-700 transition hover:bg-neutral-100"
+                className="inline-flex h-9 items-center justify-center rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 text-xs font-medium text-[color:var(--color-text)] transition hover:bg-[color:var(--color-bg-soft)]"
               >
                 Tüm kayıtları göster
               </button>
@@ -3423,10 +3423,10 @@ export function InventoryManager({
           </div>
         </div>
 
-        <div className="mt-4 rounded-3xl border border-neutral-200 bg-white p-4 shadow-sm">
+        <div className="mt-4 rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 shadow-sm">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">Liste Tercihleri</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Liste Tercihleri</p>
             </div>
             <button
               type="button"
@@ -3437,7 +3437,7 @@ export function InventoryManager({
               className={`inline-flex h-11 items-center justify-center rounded-2xl border px-4 text-sm font-medium transition ${
                 compactInventoryList
                   ? "border-neutral-900 bg-neutral-900 text-white hover:bg-neutral-800"
-                  : "border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100"
+                  : "border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)]"
               }`}
             >
               {compactInventoryList ? "Kompakt görünüm aktif" : "Kompakt görünümü etkinleştir"}
@@ -3445,8 +3445,8 @@ export function InventoryManager({
           </div>
 
           <div className="mt-4">
-            <article className="rounded-2xl border border-neutral-200 bg-white p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">Görünür Bilgi Alanları</p>
+            <article className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-text-muted)]">Görünür Bilgi Alanları</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {[
                   { key: "warehouse" as const, label: "Depo alanı" },
@@ -3462,7 +3462,7 @@ export function InventoryManager({
                     className={`inline-flex h-9 items-center justify-center rounded-full border px-3 text-xs font-medium transition ${
                       visibleColumns[column.key]
                         ? "border-neutral-900 bg-neutral-900 text-white"
-                        : "border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100"
+                        : "border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)]"
                     }`}
                   >
                     {column.label}
@@ -3502,19 +3502,19 @@ export function InventoryManager({
       {drawerItem ? (
         <div className="fixed inset-0 z-50">
           <button type="button" aria-label={labels.adjustStock} className="absolute inset-0 bg-black/30" onClick={closeDrawer} />
-          <aside className={`absolute right-0 top-0 flex h-full w-full flex-col overflow-y-auto border-l border-neutral-200 bg-white shadow-2xl ${drawerFullscreen ? "max-w-none" : "max-w-[1040px]"}`}>
-            <div className="flex items-start justify-between border-b border-neutral-200 p-5">
+          <aside className={`absolute right-0 top-0 flex h-full w-full flex-col overflow-y-auto border-l border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-2xl ${drawerFullscreen ? "max-w-none" : "max-w-[1040px]"}`}>
+            <div className="flex items-start justify-between border-b border-[color:var(--color-border)] p-5">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.title}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.title}</p>
                 <h3 className="mt-1 text-xl font-semibold tracking-tight">Stok Karti</h3>
-                <p className="mt-1 text-sm text-neutral-500">{labels.drawerInfo}</p>
+                <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{labels.drawerInfo}</p>
               </div>
               <div className="flex items-center gap-1">
                 <button
                   type="button"
                   onClick={() => setDrawerFullscreen((prev) => !prev)}
                   disabled={Boolean(pendingRowKey)}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-neutral-200 text-neutral-700 transition hover:bg-neutral-100"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[color:var(--color-border)] text-[color:var(--color-text)] transition hover:bg-[color:var(--color-bg-soft)]"
                   aria-label={drawerFullscreen ? "Daralt" : "Tam ekran"}
                   title={drawerFullscreen ? "Daralt" : "Tam ekran"}
                 >
@@ -3524,7 +3524,7 @@ export function InventoryManager({
                   type="button"
                   onClick={closeDrawer}
                   disabled={Boolean(pendingRowKey)}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-neutral-200 text-neutral-700 transition hover:bg-neutral-100"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[color:var(--color-border)] text-[color:var(--color-text)] transition hover:bg-[color:var(--color-bg-soft)]"
                   aria-label="Kapat"
                   title="Kapat"
                 >
@@ -3535,11 +3535,11 @@ export function InventoryManager({
 
             <div className="grid gap-5 p-5 xl:grid-cols-[1.1fr_0.9fr]">
               <div className="grid gap-5">
-                <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
+                <section className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 shadow-sm">
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">Hızlı Aksiyonlar</p>
-                      <p className="mt-1 text-sm text-neutral-600">Ürünü inceledikten sonra en sık yapılan işlemleri buradan başlat.</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Hızlı Aksiyonlar</p>
+                      <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">Ürünü inceledikten sonra en sık yapılan işlemleri buradan başlat.</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <button
@@ -3573,7 +3573,7 @@ export function InventoryManager({
                       <button
                         type="button"
                         onClick={viewAllHistoryInList}
-                        className="inline-flex h-10 items-center justify-center rounded-2xl border border-neutral-300 bg-white px-4 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100"
+                        className="inline-flex h-10 items-center justify-center rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 text-sm font-medium text-[color:var(--color-text)] transition hover:bg-[color:var(--color-bg-soft)]"
                       >
                         {labels.viewAllHistory}
                       </button>
@@ -3685,11 +3685,11 @@ export function InventoryManager({
 
       {warehouseDrawerMode ? (
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-neutral-950/35">
-          <div className="flex h-full w-full max-w-xl flex-col overflow-hidden bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-neutral-200 px-5 py-4">
+          <div className="flex h-full w-full max-w-xl flex-col overflow-hidden bg-[color:var(--color-surface)] shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[color:var(--color-border)] px-5 py-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.warehousesTitle}</p>
-                <h3 className="mt-1 text-xl font-semibold text-neutral-950">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.warehousesTitle}</p>
+                <h3 className="mt-1 text-xl font-semibold text-[color:var(--color-text)]">
                   {warehouseDrawerMode === "create" ? labels.createWarehouse : labels.editWarehouse}
                 </h3>
               </div>
@@ -3699,21 +3699,21 @@ export function InventoryManager({
             </div>
             <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5">
               <div>
-                <label className="mb-2 block text-sm font-medium text-neutral-700">{labels.warehouseCode}</label>
+                <label className="mb-2 block text-sm font-medium text-[color:var(--color-text)]">{labels.warehouseCode}</label>
                 <Input
                   value={warehouseCode}
                   onChange={(event) => setWarehouseCode(event.target.value)}
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-neutral-700">{labels.warehouseName}</label>
+                <label className="mb-2 block text-sm font-medium text-[color:var(--color-text)]">{labels.warehouseName}</label>
                 <Input
                   value={warehouseName}
                   onChange={(event) => setWarehouseName(event.target.value)}
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-neutral-700">{labels.warehouseDescription}</label>
+                <label className="mb-2 block text-sm font-medium text-[color:var(--color-text)]">{labels.warehouseDescription}</label>
                 <Textarea
                   value={warehouseDescription}
                   onChange={(event) => setWarehouseDescription(event.target.value)}
@@ -3721,7 +3721,7 @@ export function InventoryManager({
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-neutral-700">{labels.warehouseAddress}</label>
+                <label className="mb-2 block text-sm font-medium text-[color:var(--color-text)]">{labels.warehouseAddress}</label>
                 <Textarea
                   value={warehouseAddress}
                   onChange={(event) => setWarehouseAddress(event.target.value)}
@@ -3730,14 +3730,14 @@ export function InventoryManager({
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-neutral-700">{labels.warehouseContactName}</label>
+                  <label className="mb-2 block text-sm font-medium text-[color:var(--color-text)]">{labels.warehouseContactName}</label>
                   <Input
                     value={warehouseContactName}
                     onChange={(event) => setWarehouseContactName(event.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-neutral-700">{labels.warehouseContactPhone}</label>
+                  <label className="mb-2 block text-sm font-medium text-[color:var(--color-text)]">{labels.warehouseContactPhone}</label>
                   <Input
                     value={warehouseContactPhone}
                     onChange={(event) => setWarehouseContactPhone(event.target.value)}
@@ -3745,7 +3745,7 @@ export function InventoryManager({
                 </div>
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-neutral-700">{labels.warehousePriority}</label>
+                <label className="mb-2 block text-sm font-medium text-[color:var(--color-text)]">{labels.warehousePriority}</label>
                 <Input
                   type="number"
                   min="0"
@@ -3754,16 +3754,16 @@ export function InventoryManager({
                   onChange={(event) => setWarehousePriority(event.target.value)}
                 />
               </div>
-              <label className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-700">
+              <label className="flex items-center gap-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3 text-sm text-[color:var(--color-text)]">
                 <input type="checkbox" checked={warehouseIsActive} onChange={(event) => setWarehouseIsActive(event.target.checked)} />
                 {labels.active}
               </label>
-              <label className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-700">
+              <label className="flex items-center gap-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3 text-sm text-[color:var(--color-text)]">
                 <input type="checkbox" checked={warehouseIsDefault} onChange={(event) => setWarehouseIsDefault(event.target.checked)} />
                 {labels.defaultLabel}
               </label>
             </div>
-            <div className="flex items-center justify-end gap-3 border-t border-neutral-200 px-5 py-4">
+            <div className="flex items-center justify-end gap-3 border-t border-[color:var(--color-border)] px-5 py-4">
               <Button type="button" onClick={closeWarehouseDrawer} variant="secondary">
                 {labels.prev}
               </Button>
@@ -3781,15 +3781,15 @@ export function InventoryManager({
 
       {stockCountDrawerMode ? (
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-neutral-950/35">
-          <div className="flex h-full w-full max-w-5xl flex-col overflow-hidden bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-neutral-200 px-5 py-4">
+          <div className="flex h-full w-full max-w-5xl flex-col overflow-hidden bg-[color:var(--color-surface)] shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[color:var(--color-border)] px-5 py-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.stockCountTitle}</p>
-                <h3 className="mt-1 text-xl font-semibold text-neutral-950">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.stockCountTitle}</p>
+                <h3 className="mt-1 text-xl font-semibold text-[color:var(--color-text)]">
                   {stockCountDrawerMode === "create" ? labels.createStockCount : stockCountDrawerItem?.countNumber}
                 </h3>
               </div>
-              <button type="button" onClick={closeStockCountDrawer} className="rounded-full border border-neutral-200 p-2 text-neutral-600 transition hover:bg-neutral-100">
+              <button type="button" onClick={closeStockCountDrawer} className="rounded-full border border-[color:var(--color-border)] p-2 text-[color:var(--color-text-muted)] transition hover:bg-[color:var(--color-bg-soft)]">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -3798,7 +3798,7 @@ export function InventoryManager({
               <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-neutral-700">{labels.stockCountWarehouseScope}</label>
+                    <label className="mb-2 block text-sm font-medium text-[color:var(--color-text)]">{labels.stockCountWarehouseScope}</label>
                     <Select value={stockCountWarehouseCode} onValueChange={setStockCountWarehouseCode}>
                       <SelectTrigger>
                         <SelectValue placeholder={labels.stockCountWarehouseScope} />
@@ -3814,7 +3814,7 @@ export function InventoryManager({
                     </Select>
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-neutral-700">{labels.stockCountDate}</label>
+                    <label className="mb-2 block text-sm font-medium text-[color:var(--color-text)]">{labels.stockCountDate}</label>
                     <Input
                       type="datetime-local"
                       value={stockCountDate || defaultDateTimeLocal}
@@ -3823,14 +3823,14 @@ export function InventoryManager({
                   </div>
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-neutral-700">{labels.stockCountSearch}</label>
+                  <label className="mb-2 block text-sm font-medium text-[color:var(--color-text)]">{labels.stockCountSearch}</label>
                   <Input
                     value={stockCountSearch}
                     onChange={(event) => setStockCountSearch(event.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-neutral-700">{labels.stockCountNote}</label>
+                  <label className="mb-2 block text-sm font-medium text-[color:var(--color-text)]">{labels.stockCountNote}</label>
                   <Textarea
                     value={stockCountNote}
                     onChange={(event) => setStockCountNote(event.target.value)}
@@ -3840,7 +3840,7 @@ export function InventoryManager({
               </div>
             ) : stockCountDrawerItem ? (
               <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5">
-              <div className="grid gap-3 rounded-2xl border border-neutral-200 bg-neutral-50/80 p-4 md:grid-cols-3">
+              <div className="grid gap-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]/80 p-4 md:grid-cols-3">
                 {[
                   { id: "preparation" as const, label: "Hazırlık", description: "Sayım bağlamı ve özet" },
                   { id: "preview" as const, label: "Fark Önizleme", description: "Varyans ve rezervasyon etkisi" },
@@ -3854,10 +3854,10 @@ export function InventoryManager({
                       key={step.id}
                       className={`rounded-2xl border px-4 py-3 ${
                         isActive
-                          ? "border-neutral-900 bg-white"
+                          ? "border-neutral-900 bg-[color:var(--color-surface)]"
                           : isDone
                             ? "border-emerald-200 bg-emerald-50"
-                            : "border-neutral-200 bg-white/80"
+                            : "border-[color:var(--color-border)] bg-[color:var(--color-surface)]/80"
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -3866,14 +3866,14 @@ export function InventoryManager({
                             ? "bg-neutral-900 text-white"
                             : isDone
                               ? "bg-emerald-600 text-white"
-                              : "bg-neutral-200 text-neutral-600"
+                              : "bg-neutral-200 text-neutral-500"
                         }`}
                         >
                           {index + 1}
                         </span>
                         <div>
-                          <p className="text-sm font-semibold text-neutral-950">{step.label}</p>
-                          <p className="text-xs text-neutral-500">{step.description}</p>
+                          <p className="text-sm font-semibold text-[color:var(--color-text)]">{step.label}</p>
+                          <p className="text-xs text-[color:var(--color-text-muted)]">{step.description}</p>
                         </div>
                       </div>
                     </article>
@@ -3882,42 +3882,42 @@ export function InventoryManager({
               </div>
 
               <div className="grid gap-3 md:grid-cols-4">
-                <div className="rounded-xl border border-neutral-200 p-4">
-                  <p className="text-xs text-neutral-500">{labels.stockCountWarehouseScope}</p>
-                  <p className="mt-1 text-sm font-semibold text-neutral-950">{stockCountDrawerItem.warehouseCode ?? labels.allWarehouses}</p>
+                <div className="rounded-xl border border-[color:var(--color-border)] p-4">
+                  <p className="text-xs text-[color:var(--color-text-muted)]">{labels.stockCountWarehouseScope}</p>
+                  <p className="mt-1 text-sm font-semibold text-[color:var(--color-text)]">{stockCountDrawerItem.warehouseCode ?? labels.allWarehouses}</p>
                   </div>
-                  <div className="rounded-xl border border-neutral-200 p-4">
-                    <p className="text-xs text-neutral-500">{labels.stockCountDate}</p>
-                    <p className="mt-1 text-sm font-semibold text-neutral-950">{formatDate(stockCountDrawerItem.countedAt, locale, labels.notSpecified)}</p>
+                  <div className="rounded-xl border border-[color:var(--color-border)] p-4">
+                    <p className="text-xs text-[color:var(--color-text-muted)]">{labels.stockCountDate}</p>
+                    <p className="mt-1 text-sm font-semibold text-[color:var(--color-text)]">{formatDate(stockCountDrawerItem.countedAt, locale, labels.notSpecified)}</p>
                   </div>
-                  <div className="rounded-xl border border-neutral-200 p-4">
-                    <p className="text-xs text-neutral-500">{labels.stockCountLineCount}</p>
-                    <p className="mt-1 text-sm font-semibold text-neutral-950">{stockCountDrawerItem.lineCount}</p>
+                  <div className="rounded-xl border border-[color:var(--color-border)] p-4">
+                    <p className="text-xs text-[color:var(--color-text-muted)]">{labels.stockCountLineCount}</p>
+                    <p className="mt-1 text-sm font-semibold text-[color:var(--color-text)]">{stockCountDrawerItem.lineCount}</p>
                   </div>
-                <div className="rounded-xl border border-neutral-200 p-4">
-                  <p className="text-xs text-neutral-500">{labels.stockCountVarianceCount}</p>
-                  <p className="mt-1 text-sm font-semibold text-neutral-950">{stockCountDrawerItem.varianceLineCount}</p>
+                <div className="rounded-xl border border-[color:var(--color-border)] p-4">
+                  <p className="text-xs text-[color:var(--color-text-muted)]">{labels.stockCountVarianceCount}</p>
+                  <p className="mt-1 text-sm font-semibold text-[color:var(--color-text)]">{stockCountDrawerItem.varianceLineCount}</p>
                 </div>
               </div>
 
                 <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-                  <article className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4">
+                  <article className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
                     <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Eşleşen satır</p>
                     <p className="mt-1 text-lg font-semibold text-emerald-900">{stockCountSummary.matched}</p>
                   </article>
-                  <article className="rounded-2xl border border-sky-200 bg-sky-50/70 p-4">
+                  <article className="rounded-2xl border border-sky-200 bg-sky-50 p-4">
                     <p className="text-xs font-semibold uppercase tracking-wide text-sky-700">Fazla sayım</p>
                     <p className="mt-1 text-lg font-semibold text-sky-900">{stockCountSummary.positive}</p>
                   </article>
-                  <article className="rounded-2xl border border-rose-200 bg-rose-50/70 p-4">
+                  <article className="rounded-2xl border border-rose-200 bg-rose-50 p-4">
                     <p className="text-xs font-semibold uppercase tracking-wide text-rose-700">Eksik sayım</p>
                     <p className="mt-1 text-lg font-semibold text-rose-900">{stockCountSummary.negative}</p>
                   </article>
-                  <article className="rounded-2xl border border-neutral-200 bg-neutral-50/80 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Bekleyen satır</p>
-                    <p className="mt-1 text-lg font-semibold text-neutral-950">{stockCountSummary.pending}</p>
+                  <article className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]/80 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Bekleyen satır</p>
+                    <p className="mt-1 text-lg font-semibold text-[color:var(--color-text)]">{stockCountSummary.pending}</p>
                   </article>
-                  <article className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4">
+                  <article className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
                     <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Net fark</p>
                     <p className={`mt-1 text-lg font-semibold ${stockCountSummary.netDifference >= 0 ? "text-emerald-900" : "text-rose-900"}`}>
                       {stockCountSummary.netDifference >= 0 ? `+${stockCountSummary.netDifference}` : stockCountSummary.netDifference}
@@ -3925,11 +3925,11 @@ export function InventoryManager({
                   </article>
                 </div>
 
-                <div className="rounded-xl border border-neutral-200 p-4">
+                <div className="rounded-xl border border-[color:var(--color-border)] p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-xs text-neutral-500">{labels.stockCountNote}</p>
-                      <p className="mt-1 text-sm text-neutral-900">{stockCountDrawerItem.note ?? labels.notSpecified}</p>
+                      <p className="text-xs text-[color:var(--color-text-muted)]">{labels.stockCountNote}</p>
+                      <p className="mt-1 text-sm text-[color:var(--color-text)]">{stockCountDrawerItem.note ?? labels.notSpecified}</p>
                     </div>
                     <span className={`inline-flex rounded-full px-2 py-1 text-[11px] font-semibold ${stockCountStatusClass(stockCountDrawerItem.status)}`}>
                       {stockCountStatusLabel(stockCountDrawerItem.status, labels)}
@@ -3939,16 +3939,16 @@ export function InventoryManager({
 
                 <div className="space-y-3">
                   {stockCountDrawerStep === "preparation" ? (
-                    <section className="rounded-2xl border border-sky-200 bg-sky-50/70 p-4 shadow-sm">
+                    <section className="rounded-2xl border border-sky-200 bg-sky-50 p-4 shadow-sm">
                       <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Hazırlık Özeti</p>
-                          <p className="mt-1 text-sm text-neutral-700">Sayım kapsamını, notlarını ve genel fark dağılımını doğrula. Sonraki adımda sadece sorunlu satırları odaklı incele.</p>
+                          <p className="mt-1 text-sm text-[color:var(--color-text)]">Sayım kapsamını, notlarını ve genel fark dağılımını doğrula. Sonraki adımda sadece sorunlu satırları odaklı incele.</p>
                         </div>
                         <button
                           type="button"
                           onClick={() => setStockCountDrawerStep("preview")}
-                          className="h-10 rounded-xl border border-neutral-300 bg-neutral-900 px-4 text-sm font-medium text-white transition hover:bg-neutral-800"
+                          className="h-10 rounded-xl border border-[color:var(--color-border)] bg-neutral-900 px-4 text-sm font-medium text-white transition hover:bg-neutral-800"
                         >
                           Fark Önizleme
                         </button>
@@ -3958,25 +3958,25 @@ export function InventoryManager({
 
                   {stockCountDrawerStep === "preview" ? (
                     <section className="grid gap-3 lg:grid-cols-[1fr_1fr]">
-                      <article className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4 shadow-sm">
+                      <article className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
                         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Varyanslı Satırlar</p>
-                        <p className="mt-2 text-sm text-neutral-700">
+                        <p className="mt-2 text-sm text-[color:var(--color-text)]">
                           {stockCountDrawerItem.varianceLineCount > 0
                             ? `${stockCountDrawerItem.varianceLineCount} satır sistem stoktan farklı. Önce bu satırları gözden geçir.`
                             : "Varyanslı satır bulunmuyor. Sayım sistemle uyumlu görünüyor."}
                         </p>
                       </article>
-                      <article className="rounded-2xl border border-cyan-200 bg-cyan-50/70 p-4 shadow-sm">
+                      <article className="rounded-2xl border border-cyan-200 bg-cyan-50 p-4 shadow-sm">
                         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-700">Rezervasyon Etkisi</p>
-                        <p className="mt-2 text-sm text-neutral-700">
+                        <p className="mt-2 text-sm text-[color:var(--color-text)]">
                           Rezervasyon baskısı olan ürünlerde sayım uygulaması öncesi kullanılabilir stok ve açık sipariş etkisini ayrıca doğrula.
                         </p>
                       </article>
-                      <article className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm lg:col-span-2">
+                      <article className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 shadow-sm lg:col-span-2">
                         <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
                           <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">Uygulama Özeti</p>
-                            <p className="mt-1 text-sm text-neutral-700">
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Uygulama Özeti</p>
+                            <p className="mt-1 text-sm text-[color:var(--color-text)]">
                               Uygulama sırasında farklı satırlar için stok hareketi üretilir, bekleyen satırlar ise son kontrol gerektirir.
                             </p>
                           </div>
@@ -3984,7 +3984,7 @@ export function InventoryManager({
                             type="button"
                             onClick={() => void applyStockCount()}
                             disabled={pendingStockCount || stockCountDrawerItem.status === "APPLIED"}
-                            className="h-10 rounded-xl border border-neutral-300 bg-neutral-900 px-4 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="h-10 rounded-xl border border-[color:var(--color-border)] bg-neutral-900 px-4 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             {labels.stockCountApply}
                           </button>
@@ -3994,17 +3994,17 @@ export function InventoryManager({
                   ) : null}
 
                   {stockCountDrawerItem.status !== "APPLIED" ? (
-                    <section className="rounded-2xl border border-neutral-200 bg-neutral-50/80 p-4 shadow-sm">
+                    <section className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]/80 p-4 shadow-sm">
                       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">Toplu Sayım Satırı Güncelleme</p>
-                        <p className="mt-1 text-sm text-neutral-600">Format: `SKU,DEPO_KODU,SAYILAN_STOK,NOT`</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Toplu Sayım Satırı Güncelleme</p>
+                        <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">Format: `SKU,DEPO_KODU,SAYILAN_STOK,NOT`</p>
                       </div>
                         <div className="flex flex-wrap gap-2">
                           <button
                             type="button"
                             onClick={() => downloadBulkTemplate("stock-count")}
-                            className="h-10 rounded-xl border border-neutral-300 bg-white px-3 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100"
+                            className="h-10 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 text-sm font-medium text-[color:var(--color-text)] transition hover:bg-[color:var(--color-bg-soft)]"
                           >
                             Şablon indir
                           </button>
@@ -4012,7 +4012,7 @@ export function InventoryManager({
                             type="button"
                             onClick={() => void submitBulkOperation("stock-count")}
                             disabled={bulkOperationPending !== null}
-                            className="h-10 rounded-xl border border-neutral-300 bg-neutral-900 px-3 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="h-10 rounded-xl border border-[color:var(--color-border)] bg-neutral-900 px-3 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             Toplu Uygula
                           </button>
@@ -4023,47 +4023,47 @@ export function InventoryManager({
                         onChange={(event) => setBulkStockCountCsv(event.target.value)}
                         rows={5}
                         placeholder="SKU-001,MAIN,42,Raf sayimi"
-                        className="mt-4 w-full rounded-2xl border border-neutral-300 px-3 py-3 text-sm outline-none transition focus:border-neutral-500"
+                        className="mt-4 w-full rounded-2xl border border-[color:var(--color-border)] px-3 py-3 text-sm outline-none transition focus:border-neutral-500"
                       />
                     </section>
                   ) : null}
 
                   {stockCountDrawerItem.status !== "APPLIED" && stockCountDrawerStep !== "result" ? (
-                    <section className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4 shadow-sm">
+                    <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
                       <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Uygulama Özeti</p>
-                          <p className="mt-1 text-sm text-neutral-700">
+                          <p className="mt-1 text-sm text-[color:var(--color-text)]">
                             Sayım uygulandığında farklı satırlar için stok hareketi oluşturulur ve sistem stokları sayılan değerle hizalanır.
                           </p>
                         </div>
-                        <div className="rounded-2xl border border-amber-200 bg-white px-4 py-3 text-sm text-neutral-700">
-                          <p>Farklı satır: <span className="font-semibold text-neutral-950">{stockCountSummary.positive + stockCountSummary.negative}</span></p>
-                          <p>Bekleyen satır: <span className="font-semibold text-neutral-950">{stockCountSummary.pending}</span></p>
+                        <div className="rounded-2xl border border-amber-200 bg-[color:var(--color-surface)] px-4 py-3 text-sm text-[color:var(--color-text)]">
+                          <p>Farklı satır: <span className="font-semibold text-[color:var(--color-text)]">{stockCountSummary.positive + stockCountSummary.negative}</span></p>
+                          <p>Bekleyen satır: <span className="font-semibold text-[color:var(--color-text)]">{stockCountSummary.pending}</span></p>
                         </div>
                       </div>
                     </section>
                   ) : null}
 
                   {stockCountDrawerStep === "result" && stockCountApplyResult ? (
-                    <section className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 shadow-sm">
+                    <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
                       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Uygulama Sonucu</p>
                       <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                        <article className="rounded-xl border border-emerald-200 bg-white p-3">
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Uygulanan satır</p>
-                          <p className="mt-1 text-sm font-semibold text-neutral-950">{stockCountApplyResult.appliedLines}</p>
+                        <article className="rounded-xl border border-emerald-200 bg-[color:var(--color-surface)] p-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Uygulanan satır</p>
+                          <p className="mt-1 text-sm font-semibold text-[color:var(--color-text)]">{stockCountApplyResult.appliedLines}</p>
                         </article>
-                        <article className="rounded-xl border border-amber-200 bg-white p-3">
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Varyanslı satır</p>
-                          <p className="mt-1 text-sm font-semibold text-neutral-950">{stockCountApplyResult.varianceLines}</p>
+                        <article className="rounded-xl border border-amber-200 bg-[color:var(--color-surface)] p-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Varyanslı satır</p>
+                          <p className="mt-1 text-sm font-semibold text-[color:var(--color-text)]">{stockCountApplyResult.varianceLines}</p>
                         </article>
-                        <article className="rounded-xl border border-neutral-200 bg-white p-3">
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Bekleyen satır</p>
-                          <p className="mt-1 text-sm font-semibold text-neutral-950">{stockCountApplyResult.pendingLines}</p>
+                        <article className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Bekleyen satır</p>
+                          <p className="mt-1 text-sm font-semibold text-[color:var(--color-text)]">{stockCountApplyResult.pendingLines}</p>
                         </article>
-                        <article className="rounded-xl border border-sky-200 bg-white p-3">
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Uygulama zamanı</p>
-                          <p className="mt-1 text-sm font-semibold text-neutral-950">{formatDate(stockCountApplyResult.appliedAt, locale, labels.notSpecified)}</p>
+                        <article className="rounded-xl border border-sky-200 bg-[color:var(--color-surface)] p-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Uygulama zamanı</p>
+                          <p className="mt-1 text-sm font-semibold text-[color:var(--color-text)]">{formatDate(stockCountApplyResult.appliedAt, locale, labels.notSpecified)}</p>
                         </article>
                       </div>
                     </section>
@@ -4076,29 +4076,29 @@ export function InventoryManager({
                     };
 
                     return (
-                      <article key={line.id} className="rounded-2xl border border-neutral-200 bg-neutral-50/80 p-4 shadow-sm">
+                      <article key={line.id} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]/80 p-4 shadow-sm">
                         <div className="grid gap-4 lg:grid-cols-[1.4fr_repeat(4,minmax(0,1fr))_120px]">
                           <div>
-                            <p className="text-sm font-semibold text-neutral-950">{line.productName}</p>
-                            <p className="mt-1 text-xs text-neutral-500">{labels.sku}: {line.sku} • {line.warehouseCode}</p>
+                            <p className="text-sm font-semibold text-[color:var(--color-text)]">{line.productName}</p>
+                            <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{labels.sku}: {line.sku} • {line.warehouseCode}</p>
                           </div>
                           <div>
-                            <p className="text-xs text-neutral-500">{labels.onHandStock}</p>
-                            <p className="mt-1 text-sm font-semibold text-neutral-950">{line.systemOnHand}</p>
+                            <p className="text-xs text-[color:var(--color-text-muted)]">{labels.onHandStock}</p>
+                            <p className="mt-1 text-sm font-semibold text-[color:var(--color-text)]">{line.systemOnHand}</p>
                           </div>
                           <div>
-                            <label className="text-xs text-neutral-500">{labels.stockCountCountedOnHand}</label>
+                            <label className="text-xs text-[color:var(--color-text-muted)]">{labels.stockCountCountedOnHand}</label>
                             <input
                               type="number"
                               min={0}
                               value={draft.countedOnHand}
                               onChange={(event) => setStockCountLineDraft(line.id, "countedOnHand", event.target.value)}
                               disabled={stockCountDrawerItem.status === "APPLIED"}
-                              className="mt-1 h-10 w-full rounded-md border border-neutral-300 px-2 text-sm"
+                              className="mt-1 h-10 w-full rounded-md border border-[color:var(--color-border)] px-2 text-sm"
                             />
                           </div>
                           <div>
-                            <p className="text-xs text-neutral-500">{labels.stockCountDifference}</p>
+                            <p className="text-xs text-[color:var(--color-text-muted)]">{labels.stockCountDifference}</p>
                             <p className={`mt-1 text-sm font-semibold ${(Number(draft.countedOnHand || line.countedOnHand || 0) - line.systemOnHand) >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
                               {draft.countedOnHand === "" && line.countedOnHand === null
                                 ? labels.notSpecified
@@ -4106,13 +4106,13 @@ export function InventoryManager({
                             </p>
                           </div>
                           <div className="lg:col-span-2">
-                            <label className="text-xs text-neutral-500">{labels.stockCountNote}</label>
+                            <label className="text-xs text-[color:var(--color-text-muted)]">{labels.stockCountNote}</label>
                             <textarea
                               value={draft.note}
                               onChange={(event) => setStockCountLineDraft(line.id, "note", event.target.value)}
                               disabled={stockCountDrawerItem.status === "APPLIED"}
                               rows={2}
-                              className="mt-1 w-full rounded-md border border-neutral-300 px-2 py-2 text-sm"
+                              className="mt-1 w-full rounded-md border border-[color:var(--color-border)] px-2 py-2 text-sm"
                             />
                           </div>
                           <div className="flex items-end">
@@ -4120,7 +4120,7 @@ export function InventoryManager({
                               type="button"
                               onClick={() => void saveStockCountLine(line.id)}
                               disabled={pendingStockCountLineId === line.id || stockCountDrawerItem.status === "APPLIED"}
-                              className="h-10 w-full rounded-md border border-neutral-300 bg-white px-3 text-sm font-medium text-neutral-800 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
+                              className="h-10 w-full rounded-md border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 text-sm font-medium text-[color:var(--color-text)] transition hover:bg-[color:var(--color-bg-soft)] disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               {labels.stockCountEditLine}
                             </button>
@@ -4133,8 +4133,8 @@ export function InventoryManager({
               </div>
             ) : null}
 
-            <div className="flex items-center justify-end gap-3 border-t border-neutral-200 px-5 py-4">
-              <button type="button" onClick={closeStockCountDrawer} className="h-11 rounded-xl border border-neutral-300 px-4 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100">
+            <div className="flex items-center justify-end gap-3 border-t border-[color:var(--color-border)] px-5 py-4">
+              <button type="button" onClick={closeStockCountDrawer} className="h-11 rounded-xl border border-[color:var(--color-border)] px-4 text-sm font-medium text-[color:var(--color-text)] transition hover:bg-[color:var(--color-bg-soft)]">
                 {labels.prev}
               </button>
               {stockCountDrawerMode === "create" ? (
@@ -4142,7 +4142,7 @@ export function InventoryManager({
                   type="button"
                   disabled={pendingStockCount}
                   onClick={() => void createStockCount()}
-                  className="h-11 rounded-xl border border-neutral-300 bg-neutral-900 px-4 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="h-11 rounded-xl border border-[color:var(--color-border)] bg-neutral-900 px-4 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {labels.stockCountCreateAction}
                 </button>
@@ -4152,7 +4152,7 @@ export function InventoryManager({
                     <button
                       type="button"
                       onClick={() => setStockCountDrawerStep(stockCountDrawerStep === "result" ? "preview" : "preparation")}
-                      className="h-11 rounded-xl border border-neutral-300 px-4 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100"
+                      className="h-11 rounded-xl border border-[color:var(--color-border)] px-4 text-sm font-medium text-[color:var(--color-text)] transition hover:bg-[color:var(--color-bg-soft)]"
                     >
                       Geri
                     </button>
@@ -4161,7 +4161,7 @@ export function InventoryManager({
                     <button
                       type="button"
                       onClick={() => setStockCountDrawerStep("preview")}
-                      className="h-11 rounded-xl border border-neutral-300 bg-neutral-900 px-4 text-sm font-medium text-white transition hover:bg-neutral-800"
+                      className="h-11 rounded-xl border border-[color:var(--color-border)] bg-neutral-900 px-4 text-sm font-medium text-white transition hover:bg-neutral-800"
                     >
                       Fark Önizleme
                     </button>
@@ -4170,7 +4170,7 @@ export function InventoryManager({
                       type="button"
                       disabled={pendingStockCount || !stockCountDrawerItem || stockCountDrawerItem.status === "APPLIED"}
                       onClick={() => void applyStockCount()}
-                      className="h-11 rounded-xl border border-neutral-300 bg-neutral-900 px-4 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="h-11 rounded-xl border border-[color:var(--color-border)] bg-neutral-900 px-4 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {labels.stockCountApply}
                     </button>
@@ -4178,7 +4178,7 @@ export function InventoryManager({
                     <button
                       type="button"
                       onClick={closeStockCountDrawer}
-                      className="h-11 rounded-xl border border-neutral-300 bg-neutral-900 px-4 text-sm font-medium text-white transition hover:bg-neutral-800"
+                      className="h-11 rounded-xl border border-[color:var(--color-border)] bg-neutral-900 px-4 text-sm font-medium text-white transition hover:bg-neutral-800"
                     >
                       Tamam
                     </button>
@@ -4192,87 +4192,87 @@ export function InventoryManager({
 
       {transactionDrawerItem ? (
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-neutral-950/35">
-          <div className="flex h-full w-full max-w-2xl flex-col overflow-hidden bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-neutral-200 px-5 py-4">
+          <div className="flex h-full w-full max-w-2xl flex-col overflow-hidden bg-[color:var(--color-surface)] shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[color:var(--color-border)] px-5 py-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.transactionsTitle}</p>
-                <h3 className="mt-1 text-xl font-semibold text-neutral-950">{transactionDrawerItem.transactionNumber}</h3>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.transactionsTitle}</p>
+                <h3 className="mt-1 text-xl font-semibold text-[color:var(--color-text)]">{transactionDrawerItem.transactionNumber}</h3>
               </div>
-              <button type="button" onClick={closeTransactionDrawer} className="rounded-full border border-neutral-200 p-2 text-neutral-600 transition hover:bg-neutral-100">
+              <button type="button" onClick={closeTransactionDrawer} className="rounded-full border border-[color:var(--color-border)] p-2 text-[color:var(--color-text-muted)] transition hover:bg-[color:var(--color-bg-soft)]">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5">
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-xl border border-neutral-200 p-4">
-                  <p className="text-xs text-neutral-500">Belge</p>
-                  <p className="mt-1 text-sm font-semibold text-neutral-950">{formatTransactionType(transactionDrawerItem.type, labels)}</p>
-                  <p className="mt-1 text-xs text-neutral-500">{labels.transactionCreatedAt}: {formatDate(transactionDrawerItem.createdAt, locale, labels.notSpecified)}</p>
+                <div className="rounded-xl border border-[color:var(--color-border)] p-4">
+                  <p className="text-xs text-[color:var(--color-text-muted)]">Belge</p>
+                  <p className="mt-1 text-sm font-semibold text-[color:var(--color-text)]">{formatTransactionType(transactionDrawerItem.type, labels)}</p>
+                  <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{labels.transactionCreatedAt}: {formatDate(transactionDrawerItem.createdAt, locale, labels.notSpecified)}</p>
                 </div>
-                <div className="rounded-xl border border-neutral-200 p-4">
-                  <p className="text-xs text-neutral-500">Harici referans</p>
-                  <p className="mt-1 text-sm text-neutral-900">{transactionDrawerItem.reference ?? transactionDrawerItem.sourceDocument.externalReference ?? labels.notSpecified}</p>
+                <div className="rounded-xl border border-[color:var(--color-border)] p-4">
+                  <p className="text-xs text-[color:var(--color-text-muted)]">Harici referans</p>
+                  <p className="mt-1 text-sm text-[color:var(--color-text)]">{transactionDrawerItem.reference ?? transactionDrawerItem.sourceDocument.externalReference ?? labels.notSpecified}</p>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-neutral-200 p-4">
-                <p className="text-xs text-neutral-500">Kaynak Belge</p>
+              <div className="rounded-xl border border-[color:var(--color-border)] p-4">
+                <p className="text-xs text-[color:var(--color-text-muted)]">Kaynak Belge</p>
                 {formatSourceDocument({
                   type: transactionDrawerItem.sourceDocument.type,
                   number: transactionDrawerItem.sourceDocument.number,
                 }) ? (
                   <div className="mt-1 space-y-1">
-                    <p className="text-sm font-medium text-neutral-900">
+                    <p className="text-sm font-medium text-[color:var(--color-text)]">
                       {formatSourceDocument({
                         type: transactionDrawerItem.sourceDocument.type,
                         number: transactionDrawerItem.sourceDocument.number,
                       })}
                     </p>
                     {formatSourceDocumentMeta(transactionDrawerItem.sourceDocument, locale, labels.notSpecified) ? (
-                      <p className="text-xs text-neutral-500">
+                      <p className="text-xs text-[color:var(--color-text-muted)]">
                         {formatSourceDocumentMeta(transactionDrawerItem.sourceDocument, locale, labels.notSpecified)}
                       </p>
                     ) : null}
                     {transactionDrawerItem.sourceDocument.url ? (
-                      <Link href={`/${locale}${transactionDrawerItem.sourceDocument.url}`} className="text-xs font-medium text-neutral-600 underline decoration-neutral-300 underline-offset-4">
+                      <Link href={`/${locale}${transactionDrawerItem.sourceDocument.url}`} className="text-xs font-medium text-[color:var(--color-text-muted)] underline decoration-neutral-300 underline-offset-4">
                         Kaynak belgeye git
                       </Link>
                     ) : null}
                   </div>
                 ) : (
-                  <p className="mt-1 text-sm text-neutral-900">{labels.notSpecified}</p>
+                  <p className="mt-1 text-sm text-[color:var(--color-text)]">{labels.notSpecified}</p>
                 )}
               </div>
 
-              <div className="rounded-xl border border-neutral-200 p-4">
-                <p className="text-xs text-neutral-500">Karşı taraf</p>
-                <p className="mt-1 text-sm text-neutral-900">{transactionDrawerItem.sourceDocument.counterpartyName ?? labels.notSpecified}</p>
+              <div className="rounded-xl border border-[color:var(--color-border)] p-4">
+                <p className="text-xs text-[color:var(--color-text-muted)]">Karşı taraf</p>
+                <p className="mt-1 text-sm text-[color:var(--color-text)]">{transactionDrawerItem.sourceDocument.counterpartyName ?? labels.notSpecified}</p>
               </div>
 
-              <div className="rounded-xl border border-neutral-200 p-4">
-                <p className="text-xs text-neutral-500">Dış sistem durumu</p>
-                <p className="mt-1 text-sm text-neutral-900">{transactionDrawerItem.sourceDocument.externalSystemStatus ?? labels.notSpecified}</p>
+              <div className="rounded-xl border border-[color:var(--color-border)] p-4">
+                <p className="text-xs text-[color:var(--color-text-muted)]">Dış sistem durumu</p>
+                <p className="mt-1 text-sm text-[color:var(--color-text)]">{transactionDrawerItem.sourceDocument.externalSystemStatus ?? labels.notSpecified}</p>
               </div>
 
-              <div className="rounded-xl border border-neutral-200 p-4">
-                <h4 className="text-sm font-semibold text-neutral-900">{labels.transactionLines}</h4>
+              <div className="rounded-xl border border-[color:var(--color-border)] p-4">
+                <h4 className="text-sm font-semibold text-[color:var(--color-text)]">{labels.transactionLines}</h4>
                 <div className="mt-3 space-y-3">
                   {transactionDrawerItem.lines.map((line) => (
-                    <article key={line.id} className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
+                    <article key={line.id} className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-3">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
-                          <p className="text-sm font-semibold text-neutral-950">{line.inventoryItemName}</p>
+                          <p className="text-sm font-semibold text-[color:var(--color-text)]">{line.inventoryItemName}</p>
                           {line.variantTitle ? (
-                            <p className="mt-1 text-xs text-neutral-600">
+                            <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">
                               Varyant: {line.variantTitle}
                               {line.variantSku ? ` • ${line.variantSku}` : ""}
                             </p>
                           ) : null}
-                          <p className="text-xs text-neutral-500">{labels.sku}: {line.inventoryItemSku}</p>
+                          <p className="text-xs text-[color:var(--color-text-muted)]">{labels.sku}: {line.inventoryItemSku}</p>
                         </div>
-                        <p className="text-sm font-semibold text-neutral-950">{line.quantity}</p>
+                        <p className="text-sm font-semibold text-[color:var(--color-text)]">{line.quantity}</p>
                       </div>
-                      <div className="mt-2 grid gap-1 text-xs text-neutral-600">
+                      <div className="mt-2 grid gap-1 text-xs text-[color:var(--color-text-muted)]">
                         <p>{labels.warehouse}: {line.fromWarehouseCode ?? labels.notSpecified} {line.toWarehouseCode ? `→ ${line.toWarehouseCode}` : ""}</p>
                         {line.unitCost !== null && line.unitCost !== undefined ? (
                           <p>Birim maliyet: {formatCurrency(line.unitCost, locale)}</p>
@@ -4287,9 +4287,9 @@ export function InventoryManager({
                 </div>
               </div>
 
-              <div className="rounded-xl border border-neutral-200 p-4">
-                <h4 className="text-sm font-semibold text-neutral-900">Etkilenen Depolar</h4>
-                <div className="mt-3 space-y-2 text-sm text-neutral-700">
+              <div className="rounded-xl border border-[color:var(--color-border)] p-4">
+                <h4 className="text-sm font-semibold text-[color:var(--color-text)]">Etkilenen Depolar</h4>
+                <div className="mt-3 space-y-2 text-sm text-[color:var(--color-text)]">
                   {transactionDrawerItem.lines.map((line) => (
                     <p key={`warehouse-impact-${line.id}`}>
                       {line.inventoryItemSku}: {line.fromWarehouseCode ?? labels.notSpecified}

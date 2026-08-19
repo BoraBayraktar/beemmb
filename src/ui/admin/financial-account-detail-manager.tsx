@@ -157,43 +157,43 @@ export function FinancialAccountDetailManager({ locale, detail, accountId, initi
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-        <Link href={`/${locale}/admin/finance/bank-cash`} className="text-sm text-neutral-600 underline-offset-4 hover:text-neutral-900 hover:underline">
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
+        <Link href={`/${locale}/admin/finance/bank-cash`} className="text-sm text-[color:var(--color-text-muted)] underline-offset-4 hover:text-[color:var(--color-text)] hover:underline">
           {labels.back}
         </Link>
         <div className="mt-3 space-y-2">
-          <p className="text-sm font-medium text-neutral-500">{labels.title}</p>
-          <h1 className="text-2xl font-semibold text-neutral-950">{detail.account.name}</h1>
-          <p className="text-sm text-neutral-600">{labels.description}</p>
+          <p className="text-sm font-medium text-[color:var(--color-text-muted)]">{labels.title}</p>
+          <h1 className="text-2xl font-semibold text-[color:var(--color-text)]">{detail.account.name}</h1>
+          <p className="text-sm text-[color:var(--color-text-muted)]">{labels.description}</p>
           {detail.account.type === "BANK" && labels.openReconciliation ? (
             <Link
               href={`/${locale}/admin/finance/bank-cash/${accountId}/reconciliation`}
-              className="inline-flex text-sm font-medium text-neutral-900 underline-offset-4 hover:underline"
+              className="inline-flex text-sm font-medium text-[color:var(--color-text)] underline-offset-4 hover:underline"
             >
               {labels.openReconciliation}
             </Link>
           ) : null}
         </div>
         <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-          <article className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.accountType}</p>
-            <p className="mt-2 text-sm font-semibold text-neutral-950">{detail.account.type === "CASH" ? labels.cash : labels.bank}</p>
+          <article className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.accountType}</p>
+            <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{detail.account.type === "CASH" ? labels.cash : labels.bank}</p>
           </article>
-          <article className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.openingBalance}</p>
-            <p className="mt-2 text-sm font-semibold text-neutral-950">{formatMoney(detail.account.openingBalance, detail.account.currency)}</p>
+          <article className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.openingBalance}</p>
+            <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{formatMoney(detail.account.openingBalance, detail.account.currency)}</p>
           </article>
-          <article className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.currentBalance}</p>
-            <p className="mt-2 text-sm font-semibold text-neutral-950">{formatMoney(detail.account.currentBalance, detail.account.currency)}</p>
+          <article className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.currentBalance}</p>
+            <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{formatMoney(detail.account.currentBalance, detail.account.currency)}</p>
           </article>
-          <article className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.transactionCount}</p>
-            <p className="mt-2 text-sm font-semibold text-neutral-950">{detail.account.transactionCount}</p>
+          <article className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.transactionCount}</p>
+            <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{detail.account.transactionCount}</p>
           </article>
-          <article className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.note}</p>
-            <p className="mt-2 text-sm font-semibold text-neutral-950">{detail.account.note ?? labels.notSpecified}</p>
+          <article className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.note}</p>
+            <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{detail.account.note ?? labels.notSpecified}</p>
           </article>
         </div>
       </section>
@@ -211,19 +211,19 @@ export function FinancialAccountDetailManager({ locale, detail, accountId, initi
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-rose-700">{labels.totalOutgoing}</p>
           <p className="mt-3 text-2xl font-semibold text-rose-950">{formatMoney(detail.summary.totalOutgoing, detail.summary.currency)}</p>
         </article>
-        <article className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.netCashFlow}</p>
-          <p className="mt-3 text-2xl font-semibold text-neutral-950">{formatMoney(detail.summary.netCashFlow, detail.summary.currency)}</p>
+        <article className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.netCashFlow}</p>
+          <p className="mt-3 text-2xl font-semibold text-[color:var(--color-text)]">{formatMoney(detail.summary.netCashFlow, detail.summary.currency)}</p>
         </article>
       </section>
 
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-        <h2 className="text-lg font-semibold text-neutral-950">{labels.movementTitle}</h2>
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
+        <h2 className="text-lg font-semibold text-[color:var(--color-text)]">{labels.movementTitle}</h2>
         <form action={`/${locale}/admin/finance/bank-cash/${accountId}`} className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <select
             name="direction"
             defaultValue={initialDirection}
-            className="h-11 rounded-[var(--radius-md)] border border-[color:var(--color-border)] bg-white px-4 text-sm text-[color:var(--color-text)] outline-none focus:border-[color:var(--color-brand)] focus:ring-2 focus:ring-[color:var(--color-brand)]/15"
+            className="h-11 rounded-[var(--radius-md)] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 text-sm text-[color:var(--color-text)] outline-none focus:border-[color:var(--color-brand)] focus:ring-2 focus:ring-[color:var(--color-brand)]/15"
           >
             <option value="all">{labels.filterAllDirections}</option>
             <option value="IN">{labels.filterIncoming}</option>
@@ -243,33 +243,33 @@ export function FinancialAccountDetailManager({ locale, detail, accountId, initi
           <button
             type="button"
             onClick={exportCsv}
-            className="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-neutral-300 px-4 text-sm font-medium text-neutral-700"
+            className="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[color:var(--color-border)] px-4 text-sm font-medium text-[color:var(--color-text)]"
           >
             {labels.exportCsv}
           </button>
         </div>
         <div className="mt-4 grid gap-3 md:grid-cols-3">
-          <article className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.filterSummaryTitle}</p>
-            <p className="mt-2 text-sm font-semibold text-neutral-950">{formatDirectionFilter(initialDirection, labels)}</p>
+          <article className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.filterSummaryTitle}</p>
+            <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{formatDirectionFilter(initialDirection, labels)}</p>
           </article>
-          <article className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.filterSummaryRange}</p>
-            <p className="mt-2 text-sm font-semibold text-neutral-950">{dateRangeLabel}</p>
+          <article className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.filterSummaryRange}</p>
+            <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{dateRangeLabel}</p>
           </article>
-          <article className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.filterSummaryRecordCount}</p>
-            <p className="mt-2 text-sm font-semibold text-neutral-950">{detail.transactions.length}</p>
+          <article className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.filterSummaryRecordCount}</p>
+            <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{detail.transactions.length}</p>
           </article>
         </div>
         <div className="mt-4 space-y-3">
           {detail.transactions.length === 0 ? (
-            <article className="rounded-2xl border border-dashed border-neutral-300 bg-white p-6 text-sm text-neutral-500">
+            <article className="rounded-2xl border border-dashed border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-6 text-sm text-[color:var(--color-text-muted)]">
               {labels.empty}
             </article>
           ) : detail.transactions.map((item) => (
-            <article key={item.id} className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-              <div className="grid gap-2 text-sm text-neutral-700 md:grid-cols-2 xl:grid-cols-4">
+            <article key={item.id} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+              <div className="grid gap-2 text-sm text-[color:var(--color-text)] md:grid-cols-2 xl:grid-cols-4">
                 <p>{labels.movementDirection}: {formatDirection(item.direction, labels)}</p>
                 <p>{labels.movementSourceType}: {item.sourceType}</p>
                 <p>{labels.movementCategory}: {item.category ?? labels.notSpecified}</p>

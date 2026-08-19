@@ -66,7 +66,7 @@ function getEntityBadgeClass(entityType: string) {
     case "STOREFRONT_ITEM":
       return "bg-fuchsia-100 text-fuchsia-700";
     default:
-      return "bg-neutral-200 text-neutral-700";
+      return "bg-neutral-200 text-neutral-900";
   }
 }
 
@@ -91,7 +91,7 @@ function getActionBadgeClass(action: string) {
     case "SYNC":
       return "bg-indigo-100 text-indigo-700";
     default:
-      return "bg-neutral-200 text-neutral-700";
+      return "bg-neutral-200 text-neutral-900";
   }
 }
 
@@ -258,40 +258,40 @@ export default async function AdminAuditLogsPage({ params, searchParams }: Audit
   }
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-neutral-200 bg-gradient-to-b from-neutral-50 to-white shadow-sm">
-      <div className="border-b border-neutral-200 bg-[radial-gradient(circle_at_top_right,_rgba(14,116,144,0.12),_transparent_55%),radial-gradient(circle_at_left,_rgba(245,158,11,0.12),_transparent_45%),linear-gradient(135deg,white,rgba(250,250,250,0.96))] p-6">
-        <div className="rounded-3xl border border-neutral-200 bg-white/80 p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{dictionary.admin.auditLogMenu}</p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-tight text-neutral-950">{dictionary.admin.auditLogTitle}</h2>
-          <p className="mt-2 text-sm text-neutral-600">{result.total} {dictionary.admin.auditLogCount}</p>
+    <section className="overflow-hidden rounded-3xl border border-[color:var(--color-border)] bg-gradient-to-b from-[color:var(--color-bg-soft)] to-[color:var(--color-surface)] shadow-sm">
+      <div className="border-b border-[color:var(--color-border)] bg-[radial-gradient(circle_at_top_right,_rgba(14,116,144,0.12),_transparent_55%),radial-gradient(circle_at_left,_rgba(245,158,11,0.12),_transparent_45%),linear-gradient(135deg,var(--color-surface),var(--color-bg-soft))] p-6">
+        <div className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]/80 p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{dictionary.admin.auditLogMenu}</p>
+          <h2 className="mt-2 text-3xl font-semibold tracking-tight text-[color:var(--color-text)]">{dictionary.admin.auditLogTitle}</h2>
+          <p className="mt-2 text-sm text-[color:var(--color-text-muted)]">{result.total} {dictionary.admin.auditLogCount}</p>
           <div className="mt-4">
-            <Link href={getExportHref()} className="inline-flex rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100">
+            <Link href={getExportHref()} className="inline-flex rounded-md border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2 text-sm font-medium text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)]">
               Denetçi manifesti indir
             </Link>
           </div>
 
           <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <article className="rounded-2xl border border-neutral-200 bg-white px-4 py-3 shadow-sm">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Toplam</p>
-              <p className="mt-2 text-lg font-semibold text-neutral-950">{result.total}</p>
+            <article className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 shadow-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Toplam</p>
+              <p className="mt-2 text-lg font-semibold text-[color:var(--color-text)]">{result.total}</p>
             </article>
-            <article className="rounded-2xl border border-emerald-200 bg-emerald-50/70 px-4 py-3 shadow-sm">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Oluşturma</p>
+            <article className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 shadow-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Oluşturma</p>
               <p className="mt-2 text-lg font-semibold text-emerald-700">{createCount}</p>
             </article>
-            <article className="rounded-2xl border border-sky-200 bg-sky-50/70 px-4 py-3 shadow-sm">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Güncelleme</p>
+            <article className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 shadow-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Güncelleme</p>
               <p className="mt-2 text-lg font-semibold text-sky-700">{updateCount}</p>
             </article>
-            <article className="rounded-2xl border border-rose-200 bg-rose-50/70 px-4 py-3 shadow-sm">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Silme</p>
+            <article className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 shadow-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Silme</p>
               <p className="mt-2 text-lg font-semibold text-rose-700">{deleteCount}</p>
             </article>
           </div>
         </div>
       </div>
 
-      <div className="border-b border-neutral-200 bg-white/95 p-5">
+      <div className="border-b border-[color:var(--color-border)] bg-[color:var(--color-surface)]/95 p-5">
         <form className="grid gap-3 lg:grid-cols-[1.4fr_220px_220px_180px_180px_auto]">
           <Input
             type="search"
@@ -339,13 +339,13 @@ export default async function AdminAuditLogsPage({ params, searchParams }: Audit
 
       <div className="p-5">
         {result.items.length === 0 ? (
-          <div className="rounded-2xl border border-neutral-200 bg-white p-6 text-sm text-neutral-500 shadow-sm">
+          <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-6 text-sm text-[color:var(--color-text-muted)] shadow-sm">
             {dictionary.admin.auditEmpty}
           </div>
         ) : (
           <div className="space-y-3">
             {result.items.map((item) => (
-              <article key={item.id} className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:border-neutral-300 hover:bg-neutral-50/60">
+              <article key={item.id} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 shadow-sm transition hover:border-[color:var(--color-border)] hover:bg-[color:var(--color-bg-soft)]/60">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -356,142 +356,142 @@ export default async function AdminAuditLogsPage({ params, searchParams }: Audit
                         {getActionLabel(item.action)}
                       </Badge>
                     </div>
-                    <h3 className="mt-3 text-base font-semibold text-neutral-950">{item.entityLabel}</h3>
-                    <p className="mt-2 text-sm leading-6 text-neutral-600">
+                    <h3 className="mt-3 text-base font-semibold text-[color:var(--color-text)]">{item.entityLabel}</h3>
+                    <p className="mt-2 text-sm leading-6 text-[color:var(--color-text-muted)]">
                       {formatAuditSummary(item.summary, dictionary.common.notSpecified)}
                     </p>
                   </div>
 
-                  <div className="grid gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-600 lg:min-w-[280px]">
+                  <div className="grid gap-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3 text-sm text-[color:var(--color-text-muted)] lg:min-w-[280px]">
                     <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">{dictionary.admin.auditActor}</p>
-                      <p className="mt-1 font-medium text-neutral-900">{item.actorLabel ?? dictionary.common.notSpecified}</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{dictionary.admin.auditActor}</p>
+                      <p className="mt-1 font-medium text-[color:var(--color-text)]">{item.actorLabel ?? dictionary.common.notSpecified}</p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">{dictionary.admin.auditDate}</p>
-                      <p className="mt-1 font-medium text-neutral-900">{formatDate(item.createdAt, locale as Locale)}</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{dictionary.admin.auditDate}</p>
+                      <p className="mt-1 font-medium text-[color:var(--color-text)]">{formatDate(item.createdAt, locale as Locale)}</p>
                     </div>
                   </div>
                 </div>
 
-                <details className="mt-4 rounded-2xl border border-neutral-200 bg-neutral-50/70 px-4 py-3">
-                  <summary className="cursor-pointer list-none text-sm font-medium text-neutral-700 marker:hidden">
+                <details className="mt-4 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]/70 px-4 py-3">
+                  <summary className="cursor-pointer list-none text-sm font-medium text-[color:var(--color-text)] marker:hidden">
                     Detayı göster
                   </summary>
 
                   <div className="mt-4 grid gap-4 lg:grid-cols-2">
-                    <div className="space-y-3 rounded-2xl border border-neutral-200 bg-white p-4">
+                    <div className="space-y-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
                       <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Varlık tipi</p>
-                        <p className="mt-1 text-sm font-medium text-neutral-900">{getEntityTypeLabel(item.entityType)}</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Varlık tipi</p>
+                        <p className="mt-1 text-sm font-medium text-[color:var(--color-text)]">{getEntityTypeLabel(item.entityType)}</p>
                       </div>
                       <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Aksiyon tipi</p>
-                        <p className="mt-1 text-sm font-medium text-neutral-900">{getActionLabel(item.action)}</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Aksiyon tipi</p>
+                        <p className="mt-1 text-sm font-medium text-[color:var(--color-text)]">{getActionLabel(item.action)}</p>
                       </div>
                       <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Varlık</p>
-                        <p className="mt-1 text-sm font-medium text-neutral-900">{item.entityLabel}</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Varlık</p>
+                        <p className="mt-1 text-sm font-medium text-[color:var(--color-text)]">{item.entityLabel}</p>
                       </div>
                       <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">İşlemi yapan</p>
-                        <p className="mt-1 text-sm font-medium text-neutral-900">{item.actorLabel ?? dictionary.common.notSpecified}</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">İşlemi yapan</p>
+                        <p className="mt-1 text-sm font-medium text-[color:var(--color-text)]">{item.actorLabel ?? dictionary.common.notSpecified}</p>
                       </div>
                       <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Modül / İşlem</p>
-                        <p className="mt-1 text-sm font-medium text-neutral-900">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Modül / İşlem</p>
+                        <p className="mt-1 text-sm font-medium text-[color:var(--color-text)]">
                           {[item.module, item.operation].filter(Boolean).join(" / ") || dictionary.common.notSpecified}
                         </p>
                       </div>
                     </div>
 
-                    <div className="rounded-2xl border border-neutral-200 bg-white p-4">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Ek veri</p>
+                    <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Ek veri</p>
                       {item.metadata && Object.keys(item.metadata).length > 0 ? (
                         <div className="mt-3 space-y-3">
                           {Object.entries(item.metadata).map(([key, value]) => (
-                            <div key={key} className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2">
-                              <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">{key}</p>
-                              <pre className="mt-1 overflow-x-auto whitespace-pre-wrap break-words text-xs text-neutral-700">
+                            <div key={key} className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-2">
+                              <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{key}</p>
+                              <pre className="mt-1 overflow-x-auto whitespace-pre-wrap break-words text-xs text-[color:var(--color-text)]">
                                 {formatMetadataValue(value)}
                               </pre>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <p className="mt-3 text-sm text-neutral-500">Bu kayıt için ek veri bulunmuyor.</p>
+                        <p className="mt-3 text-sm text-[color:var(--color-text-muted)]">Bu kayıt için ek veri bulunmuyor.</p>
                       )}
                     </div>
                   </div>
 
-                  <details className="mt-4 rounded-2xl border border-dashed border-neutral-300 bg-white px-4 py-3">
-                    <summary className="cursor-pointer list-none text-sm font-medium text-neutral-600 marker:hidden">
+                  <details className="mt-4 rounded-2xl border border-dashed border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
+                    <summary className="cursor-pointer list-none text-sm font-medium text-[color:var(--color-text-muted)] marker:hidden">
                       Geliştirici detayı
                     </summary>
                     <div className="mt-4 grid gap-3 lg:grid-cols-3">
-                      <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Varlık kimliği</p>
-                        <p className="mt-1 break-all text-xs text-neutral-700">{item.entityId ?? dictionary.common.notSpecified}</p>
+                      <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Varlık kimliği</p>
+                        <p className="mt-1 break-all text-xs text-[color:var(--color-text)]">{item.entityId ?? dictionary.common.notSpecified}</p>
                       </div>
-                      <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Kayıt kimliği</p>
-                        <p className="mt-1 break-all text-xs text-neutral-700">{item.id}</p>
+                      <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Kayıt kimliği</p>
+                        <p className="mt-1 break-all text-xs text-[color:var(--color-text)]">{item.id}</p>
                       </div>
-                      <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Kullanıcı kimliği</p>
-                        <p className="mt-1 break-all text-xs text-neutral-700">{item.actorUserId ?? dictionary.common.notSpecified}</p>
+                      <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Kullanıcı kimliği</p>
+                        <p className="mt-1 break-all text-xs text-[color:var(--color-text)]">{item.actorUserId ?? dictionary.common.notSpecified}</p>
                       </div>
-                      <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Aktör tipi</p>
-                        <p className="mt-1 break-all text-xs text-neutral-700">{item.actorType}</p>
+                      <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Aktör tipi</p>
+                        <p className="mt-1 break-all text-xs text-[color:var(--color-text)]">{item.actorType}</p>
                       </div>
-                      <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Tenant</p>
-                        <p className="mt-1 break-all text-xs text-neutral-700">{item.tenantId ?? dictionary.common.notSpecified}</p>
+                      <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Tenant</p>
+                        <p className="mt-1 break-all text-xs text-[color:var(--color-text)]">{item.tenantId ?? dictionary.common.notSpecified}</p>
                       </div>
-                      <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Request ID</p>
-                        <p className="mt-1 break-all text-xs text-neutral-700">{item.requestId ?? dictionary.common.notSpecified}</p>
+                      <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Request ID</p>
+                        <p className="mt-1 break-all text-xs text-[color:var(--color-text)]">{item.requestId ?? dictionary.common.notSpecified}</p>
                       </div>
-                      <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Correlation ID</p>
-                        <p className="mt-1 break-all text-xs text-neutral-700">{item.correlationId ?? dictionary.common.notSpecified}</p>
+                      <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Correlation ID</p>
+                        <p className="mt-1 break-all text-xs text-[color:var(--color-text)]">{item.correlationId ?? dictionary.common.notSpecified}</p>
                       </div>
-                      <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Route</p>
-                        <p className="mt-1 break-all text-xs text-neutral-700">{item.route ?? dictionary.common.notSpecified}</p>
+                      <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Route</p>
+                        <p className="mt-1 break-all text-xs text-[color:var(--color-text)]">{item.route ?? dictionary.common.notSpecified}</p>
                       </div>
-                      <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">IP Adresi</p>
-                        <p className="mt-1 break-all text-xs text-neutral-700">{item.ipAddress ?? dictionary.common.notSpecified}</p>
+                      <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">IP Adresi</p>
+                        <p className="mt-1 break-all text-xs text-[color:var(--color-text)]">{item.ipAddress ?? dictionary.common.notSpecified}</p>
                       </div>
-                      <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3 lg:col-span-2">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">User Agent</p>
-                        <p className="mt-1 break-all text-xs text-neutral-700">{item.userAgent ?? dictionary.common.notSpecified}</p>
+                      <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-3 lg:col-span-2">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">User Agent</p>
+                        <p className="mt-1 break-all text-xs text-[color:var(--color-text)]">{item.userAgent ?? dictionary.common.notSpecified}</p>
                       </div>
-                      <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Olay zamanı</p>
-                        <p className="mt-1 break-all text-xs text-neutral-700">{formatDate(item.occurredAt, locale as Locale)}</p>
+                      <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Olay zamanı</p>
+                        <p className="mt-1 break-all text-xs text-[color:var(--color-text)]">{formatDate(item.occurredAt, locale as Locale)}</p>
                       </div>
-                      <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Sunucu alma zamanı</p>
-                        <p className="mt-1 break-all text-xs text-neutral-700">{formatDate(item.serverReceivedAt, locale as Locale)}</p>
+                      <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Sunucu alma zamanı</p>
+                        <p className="mt-1 break-all text-xs text-[color:var(--color-text)]">{formatDate(item.serverReceivedAt, locale as Locale)}</p>
                       </div>
-                      <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Hash algoritması</p>
-                        <p className="mt-1 break-all text-xs text-neutral-700">{item.hashAlgorithm}</p>
+                      <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Hash algoritması</p>
+                        <p className="mt-1 break-all text-xs text-[color:var(--color-text)]">{item.hashAlgorithm}</p>
                       </div>
-                      <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3 lg:col-span-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Payload hash</p>
-                        <p className="mt-1 break-all text-xs text-neutral-700">{item.payloadHash ?? dictionary.common.notSpecified}</p>
+                      <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-3 lg:col-span-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Payload hash</p>
+                        <p className="mt-1 break-all text-xs text-[color:var(--color-text)]">{item.payloadHash ?? dictionary.common.notSpecified}</p>
                       </div>
-                      <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3 lg:col-span-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Önceki zincir hash</p>
-                        <p className="mt-1 break-all text-xs text-neutral-700">{item.previousHash ?? "İlk kayıt veya eski kayıt"}</p>
+                      <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-3 lg:col-span-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Önceki zincir hash</p>
+                        <p className="mt-1 break-all text-xs text-[color:var(--color-text)]">{item.previousHash ?? "İlk kayıt veya eski kayıt"}</p>
                       </div>
-                      <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3 lg:col-span-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Zincir hash</p>
-                        <p className="mt-1 break-all text-xs text-neutral-700">{item.chainHash ?? dictionary.common.notSpecified}</p>
+                      <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-3 lg:col-span-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Zincir hash</p>
+                        <p className="mt-1 break-all text-xs text-[color:var(--color-text)]">{item.chainHash ?? dictionary.common.notSpecified}</p>
                       </div>
                     </div>
                   </details>
@@ -502,15 +502,15 @@ export default async function AdminAuditLogsPage({ params, searchParams }: Audit
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-3 border-t border-neutral-200 p-4">
+      <div className="flex items-center justify-between gap-3 border-t border-[color:var(--color-border)] p-4">
         {prevPage ? (
-          <Link href={getPageHref(prevPage)} className="rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100">
+          <Link href={getPageHref(prevPage)} className="rounded-md border border-[color:var(--color-border)] px-3 py-2 text-sm text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)]">
             {dictionary.admin.prev}
           </Link>
         ) : <span />}
-        <p className="text-sm text-neutral-500">{dictionary.admin.page} {result.page}/{result.totalPages}</p>
+        <p className="text-sm text-[color:var(--color-text-muted)]">{dictionary.admin.page} {result.page}/{result.totalPages}</p>
         {nextPage ? (
-          <Link href={getPageHref(nextPage)} className="rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100">
+          <Link href={getPageHref(nextPage)} className="rounded-md border border-[color:var(--color-border)] px-3 py-2 text-sm text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)]">
             {dictionary.admin.next}
           </Link>
         ) : <span />}

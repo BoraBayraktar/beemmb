@@ -228,7 +228,7 @@ function statusClass(status: MarketplacePackage["importStatus"]) {
     return "bg-rose-100 text-rose-700";
   }
 
-  return "bg-neutral-100 text-neutral-700";
+  return "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)]";
 }
 
 function getAdminProductCreateUrl(locale: string, line: MarketplacePackageLine) {
@@ -828,12 +828,12 @@ export function TrendyolIntegrationManager({
 
   return (
     <section className="grid gap-5">
-      <div className="rounded-2xl border border-neutral-200 bg-white p-5">
+      <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5">
         <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.title}</p>
-            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-neutral-950">{labels.connectionTitle}</h2>
-            <p className="mt-1 max-w-3xl text-sm text-neutral-500">{labels.subtitle}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.title}</p>
+            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[color:var(--color-text)]">{labels.connectionTitle}</h2>
+            <p className="mt-1 max-w-3xl text-sm text-[color:var(--color-text-muted)]">{labels.subtitle}</p>
           </div>
           <Button type="button" onClick={syncNow} disabled={!canManage || !activeConfig || busy} variant="secondary">
             <Play className="h-4 w-4" />
@@ -842,13 +842,13 @@ export function TrendyolIntegrationManager({
         </div>
 
         <div className="mt-5 grid gap-3 md:grid-cols-4">
-          <article className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.activeAccounts}</p>
-            <p className="mt-2 text-xl font-semibold text-neutral-950">{dashboardSummary.activeConfigCount}</p>
+          <article className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.activeAccounts}</p>
+            <p className="mt-2 text-xl font-semibold text-[color:var(--color-text)]">{dashboardSummary.activeConfigCount}</p>
           </article>
-          <article className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.packages}</p>
-            <p className="mt-2 text-xl font-semibold text-neutral-950">{dashboardSummary.packageCount}</p>
+          <article className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.packages}</p>
+            <p className="mt-2 text-xl font-semibold text-[color:var(--color-text)]">{dashboardSummary.packageCount}</p>
           </article>
           <article className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">{labels.readyForOrder}</p>
@@ -860,15 +860,15 @@ export function TrendyolIntegrationManager({
           </article>
         </div>
 
-        <div className="mt-5 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+        <div className="mt-5 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
           <div className="flex flex-col gap-1">
-            <h3 className="text-sm font-semibold text-neutral-950">{labels.capabilitiesTitle}</h3>
-            <p className="text-sm text-neutral-500">{labels.capabilitiesHint}</p>
+            <h3 className="text-sm font-semibold text-[color:var(--color-text)]">{labels.capabilitiesTitle}</h3>
+            <p className="text-sm text-[color:var(--color-text-muted)]">{labels.capabilitiesHint}</p>
           </div>
           <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
             {capabilityItems.map((item) => (
-              <div key={item.label} className="flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm">
-                <span className="text-neutral-700">{item.label}</span>
+              <div key={item.label} className="flex items-center justify-between gap-3 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2 text-sm">
+                <span className="text-[color:var(--color-text)]">{item.label}</span>
                 <Badge className={item.enabled ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-800"}>
                   {item.enabled ? labels.capabilityAvailable : labels.capabilityLimited}
                 </Badge>
@@ -886,11 +886,11 @@ export function TrendyolIntegrationManager({
           <Input value={storeFrontCode} onChange={(event) => setStoreFrontCode(event.target.value)} placeholder={labels.storeFrontCode} disabled={!canManage || busy} />
           <Input value={endpointUrl} onChange={(event) => setEndpointUrl(event.target.value)} placeholder={labels.endpointUrl} disabled={!canManage || busy} />
           <Input value={syncWindowMinutes} onChange={(event) => setSyncWindowMinutes(event.target.value)} placeholder={labels.syncWindowMinutes} disabled={!canManage || busy} type="number" min={15} max={1440} />
-          <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-600 md:col-span-2">
+          <div className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3 text-sm text-[color:var(--color-text-muted)] md:col-span-2">
             <div className="flex flex-col gap-1 md:flex-row md:items-start md:justify-between">
               <div>
-                <p className="font-semibold text-neutral-950">{labels.productV2DefaultsTitle}</p>
-                <p className="mt-1 max-w-2xl text-xs text-neutral-500">{labels.productV2DefaultsDescription}</p>
+                <p className="font-semibold text-[color:var(--color-text)]">{labels.productV2DefaultsTitle}</p>
+                <p className="mt-1 max-w-2xl text-xs text-[color:var(--color-text-muted)]">{labels.productV2DefaultsDescription}</p>
               </div>
             </div>
             <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -901,9 +901,9 @@ export function TrendyolIntegrationManager({
               <Input value={productV2ReturningAddressId} onChange={(event) => setProductV2ReturningAddressId(event.target.value)} placeholder={labels.productV2ReturningAddressId} disabled={!canManage || busy} type="number" min={0} />
             </div>
           </div>
-          <div className="flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3 text-sm text-[color:var(--color-text-muted)]">
             <span>{labels.lastSync}</span>
-            <span className="font-medium text-neutral-950">{formatDate(activeConfig?.lastSuccessfulSyncAt ?? null)}</span>
+            <span className="font-medium text-[color:var(--color-text)]">{formatDate(activeConfig?.lastSuccessfulSyncAt ?? null)}</span>
           </div>
         </div>
 
@@ -922,25 +922,25 @@ export function TrendyolIntegrationManager({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-neutral-200 bg-white">
-        <div className="border-b border-neutral-200 p-5">
-          <h3 className="text-lg font-semibold text-neutral-950">{labels.packagesTitle}</h3>
+      <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
+        <div className="border-b border-[color:var(--color-border)] p-5">
+          <h3 className="text-lg font-semibold text-[color:var(--color-text)]">{labels.packagesTitle}</h3>
         </div>
-        <div className="divide-y divide-neutral-200">
+        <div className="divide-y divide-[color:var(--color-border)]">
           {packages.length === 0 ? (
-            <p className="p-5 text-sm text-neutral-500">{labels.emptyPackages}</p>
+            <p className="p-5 text-sm text-[color:var(--color-text-muted)]">{labels.emptyPackages}</p>
           ) : packages.map((item) => (
             <article key={item.id} className="grid gap-3 p-5 lg:grid-cols-[1fr_150px_180px_130px_110px] lg:items-center">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-semibold text-neutral-950">{item.externalOrderNumber}</p>
+                  <p className="font-semibold text-[color:var(--color-text)]">{item.externalOrderNumber}</p>
                   <Badge className={statusClass(item.importStatus)}>{item.importStatus}</Badge>
                 </div>
-                <p className="mt-1 text-sm text-neutral-500">{item.customerName ?? item.configName} - {item.externalPackageId}</p>
+                <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{item.customerName ?? item.configName} - {item.externalPackageId}</p>
               </div>
-              <p className="text-sm text-neutral-600">{item.packageStatus}</p>
-              <p className="text-sm text-neutral-600">{item.cargoProviderName ?? "-"} {item.cargoTrackingNumber ? `- ${item.cargoTrackingNumber}` : ""}</p>
-              <div className="text-sm text-neutral-600">
+              <p className="text-sm text-[color:var(--color-text-muted)]">{item.packageStatus}</p>
+              <p className="text-sm text-[color:var(--color-text-muted)]">{item.cargoProviderName ?? "-"} {item.cargoTrackingNumber ? `- ${item.cargoTrackingNumber}` : ""}</p>
+              <div className="text-sm text-[color:var(--color-text-muted)]">
                 <p>{item.matchedLineCount}/{item.lineCount} {labels.matchedLines}</p>
                 <p className="mt-1 text-xs text-amber-700">{item.needsReviewLineCount} {labels.needsReview}</p>
               </div>
@@ -955,12 +955,12 @@ export function TrendyolIntegrationManager({
 
       {selectedPackage ? (
         <div className="fixed inset-0 z-50 flex justify-end bg-neutral-950/30">
-          <aside className="h-full w-full max-w-3xl overflow-y-auto bg-white shadow-2xl">
-            <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-neutral-200 bg-white p-5">
+          <aside className="h-full w-full max-w-3xl overflow-y-auto bg-[color:var(--color-surface)] shadow-2xl">
+            <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.packageDetail}</p>
-                <h3 className="mt-1 text-xl font-semibold text-neutral-950">{selectedPackage.externalOrderNumber}</h3>
-                <p className="mt-1 text-sm text-neutral-500">{selectedPackage.customerName ?? selectedPackage.configName}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.packageDetail}</p>
+                <h3 className="mt-1 text-xl font-semibold text-[color:var(--color-text)]">{selectedPackage.externalOrderNumber}</h3>
+                <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{selectedPackage.customerName ?? selectedPackage.configName}</p>
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -984,7 +984,7 @@ export function TrendyolIntegrationManager({
                 <button
                   type="button"
                   onClick={() => setSelectedPackage(null)}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-neutral-200 text-neutral-700 transition hover:bg-neutral-100"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[color:var(--color-border)] text-[color:var(--color-text)] transition hover:bg-[color:var(--color-bg-soft)]"
                   aria-label={labels.closeLabel}
                 >
                   <X className="h-4 w-4" />
@@ -994,27 +994,27 @@ export function TrendyolIntegrationManager({
 
             <div className="grid gap-4 p-5">
               <div className="grid gap-3 md:grid-cols-3">
-                <article className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.packageStatusLabel}</p>
-                  <p className="mt-2 text-sm font-semibold text-neutral-950">{selectedPackage.packageStatus}</p>
-                  <p className="mt-1 text-xs text-neutral-500">{selectedPackage.externalPackageId}</p>
+                <article className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.packageStatusLabel}</p>
+                  <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{selectedPackage.packageStatus}</p>
+                  <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{selectedPackage.externalPackageId}</p>
                 </article>
-                <article className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.cargoLabel}</p>
-                  <p className="mt-2 text-sm font-semibold text-neutral-950">{selectedPackage.cargoProviderName ?? "-"}</p>
-                  <p className="mt-1 text-xs text-neutral-500">{selectedPackage.cargoTrackingNumber ?? "-"}</p>
+                <article className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.cargoLabel}</p>
+                  <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{selectedPackage.cargoProviderName ?? "-"}</p>
+                  <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{selectedPackage.cargoTrackingNumber ?? "-"}</p>
                 </article>
-                <article className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.lastSync}</p>
-                  <p className="mt-2 text-sm font-semibold text-neutral-950">{formatDate(selectedPackage.updatedAt)}</p>
-                  <p className="mt-1 text-xs text-neutral-500">{selectedPackage.importStatus}</p>
+                <article className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.lastSync}</p>
+                  <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{formatDate(selectedPackage.updatedAt)}</p>
+                  <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{selectedPackage.importStatus}</p>
                 </article>
               </div>
 
               <div className="grid gap-3 md:grid-cols-3">
-                <article className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.packages}</p>
-                  <p className="mt-2 text-xl font-semibold text-neutral-950">{selectedPackage.lineCount}</p>
+                <article className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.packages}</p>
+                  <p className="mt-2 text-xl font-semibold text-[color:var(--color-text)]">{selectedPackage.lineCount}</p>
                 </article>
                 <article className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
                   <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">{labels.matchedLines}</p>
@@ -1027,11 +1027,11 @@ export function TrendyolIntegrationManager({
               </div>
 
               {capabilities.supportsPackageSplit ? (
-                <div className="rounded-lg border border-cyan-200 bg-cyan-50/60 p-4">
+                <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <h4 className="text-sm font-semibold text-neutral-950">{labels.splitPackageTitle}</h4>
-                      <p className="mt-1 text-sm text-neutral-600">{labels.splitPackageHint}</p>
+                      <h4 className="text-sm font-semibold text-[color:var(--color-text)]">{labels.splitPackageTitle}</h4>
+                      <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{labels.splitPackageHint}</p>
                     </div>
                     <Button
                       type="button"
@@ -1047,7 +1047,7 @@ export function TrendyolIntegrationManager({
                       const checked = splitLineIds.includes(line.id);
 
                       return (
-                        <label key={line.id} className="grid gap-2 rounded-lg border border-cyan-100 bg-white px-3 py-2 text-sm sm:grid-cols-[1fr_120px] sm:items-center">
+                        <label key={line.id} className="grid gap-2 rounded-lg border border-cyan-100 bg-[color:var(--color-surface)] px-3 py-2 text-sm sm:grid-cols-[1fr_120px] sm:items-center">
                           <span className="flex items-start gap-2">
                             <input
                               type="checkbox"
@@ -1057,8 +1057,8 @@ export function TrendyolIntegrationManager({
                               onChange={() => toggleSplitLine(line)}
                             />
                             <span>
-                              <span className="block font-medium text-neutral-900">{line.productName}</span>
-                              <span className="block text-xs text-neutral-500">{line.quantity} adet - {line.externalLineId}</span>
+                              <span className="block font-medium text-[color:var(--color-text)]">{line.productName}</span>
+                              <span className="block text-xs text-[color:var(--color-text-muted)]">{line.quantity} adet - {line.externalLineId}</span>
                             </span>
                           </span>
                           <Input
@@ -1078,18 +1078,18 @@ export function TrendyolIntegrationManager({
               ) : null}
 
               {capabilities.supportsUnsuppliedCancel ? (
-                <div className="rounded-lg border border-rose-200 bg-rose-50/60 p-4">
+                <div className="rounded-lg border border-rose-200 bg-rose-50 p-4">
                   <div className="flex flex-col gap-3">
                     <div>
-                      <h4 className="text-sm font-semibold text-neutral-950">{labels.unsuppliedTitle}</h4>
-                      <p className="mt-1 text-sm text-neutral-600">{labels.unsuppliedHint}</p>
+                      <h4 className="text-sm font-semibold text-[color:var(--color-text)]">{labels.unsuppliedTitle}</h4>
+                      <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{labels.unsuppliedHint}</p>
                     </div>
                     <div className="grid gap-2">
                       {selectedPackage.lines.map((line) => {
                         const checked = unsuppliedLineIds.includes(line.id);
 
                         return (
-                          <label key={line.id} className="grid gap-2 rounded-lg border border-rose-100 bg-white px-3 py-2 text-sm sm:grid-cols-[1fr_120px] sm:items-center">
+                          <label key={line.id} className="grid gap-2 rounded-lg border border-rose-100 bg-[color:var(--color-surface)] px-3 py-2 text-sm sm:grid-cols-[1fr_120px] sm:items-center">
                             <span className="flex items-start gap-2">
                               <input
                                 type="checkbox"
@@ -1099,8 +1099,8 @@ export function TrendyolIntegrationManager({
                                 onChange={() => toggleUnsuppliedLine(line)}
                               />
                               <span>
-                                <span className="block font-medium text-neutral-900">{line.productName}</span>
-                                <span className="block text-xs text-neutral-500">{line.quantity} adet - {line.externalLineId}</span>
+                                <span className="block font-medium text-[color:var(--color-text)]">{line.productName}</span>
+                                <span className="block text-xs text-[color:var(--color-text-muted)]">{line.quantity} adet - {line.externalLineId}</span>
                               </span>
                             </span>
                             <Input
@@ -1118,7 +1118,7 @@ export function TrendyolIntegrationManager({
                     </div>
                     <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
                       <select
-                        className="h-9 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                        className="h-9 rounded-md border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 text-sm"
                         value={unsuppliedReasonId}
                         onChange={(event) => setUnsuppliedReasonId(event.target.value)}
                         disabled={!canManage || detailBusy || !canCancelUnsuppliedSelectedPackage}
@@ -1141,7 +1141,7 @@ export function TrendyolIntegrationManager({
                 </div>
               ) : null}
 
-              <div className="grid gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-4 md:grid-cols-[1fr_auto] md:items-center">
+              <div className="grid gap-3 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4 md:grid-cols-[1fr_auto] md:items-center">
                 <Input
                   value={invoiceNumber}
                   onChange={(event) => setInvoiceNumber(event.target.value)}
@@ -1157,28 +1157,28 @@ export function TrendyolIntegrationManager({
                   {labels.notifyInvoiced}
                 </Button>
               </div>
-              <div className="rounded-lg border border-neutral-200 p-4">
-                <h4 className="text-sm font-semibold text-neutral-950">{labels.statusHistory}</h4>
+              <div className="rounded-lg border border-[color:var(--color-border)] p-4">
+                <h4 className="text-sm font-semibold text-[color:var(--color-text)]">{labels.statusHistory}</h4>
                 <div className="mt-3 grid gap-2">
                   {selectedPackage.statusHistory.length === 0 ? (
-                    <p className="text-sm text-neutral-500">{labels.noStatusHistory}</p>
+                    <p className="text-sm text-[color:var(--color-text-muted)]">{labels.noStatusHistory}</p>
                   ) : selectedPackage.statusHistory.map((item) => (
-                    <article key={item.id} className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
+                    <article key={item.id} className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-2">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex flex-wrap items-center gap-2">
-                          <Badge className={item.status === "SUCCESS" ? "bg-emerald-100 text-emerald-700" : item.status === "FAILED" || item.status === "DEAD_LETTER" ? "bg-rose-100 text-rose-700" : "bg-neutral-100 text-neutral-700"}>
+                          <Badge className={item.status === "SUCCESS" ? "bg-emerald-100 text-emerald-700" : item.status === "FAILED" || item.status === "DEAD_LETTER" ? "bg-rose-100 text-rose-700" : "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)]"}>
                             {item.status}
                           </Badge>
-                          <span className="text-sm font-medium text-neutral-800">{labels.targetStatus}: {item.targetStatus ?? "-"}</span>
+                          <span className="text-sm font-medium text-[color:var(--color-text)]">{labels.targetStatus}: {item.targetStatus ?? "-"}</span>
                         </div>
-                        <span className="text-xs text-neutral-500">{formatDate(item.processedAt ?? item.lastAttemptAt ?? item.createdAt)}</span>
+                        <span className="text-xs text-[color:var(--color-text-muted)]">{formatDate(item.processedAt ?? item.lastAttemptAt ?? item.createdAt)}</span>
                       </div>
-                      <p className="mt-1 text-xs text-neutral-500">
+                      <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">
                         {labels.attempts}: {item.attemptCount}/{item.maxAttempts}
                         {item.invoiceNumber ? ` - ${labels.invoiceNumber}: ${item.invoiceNumber}` : ""}
                       </p>
                       {item.externalReference ? (
-                        <p className="mt-1 break-all text-xs text-neutral-500">{labels.externalReferenceShort}: {item.externalReference}</p>
+                        <p className="mt-1 break-all text-xs text-[color:var(--color-text-muted)]">{labels.externalReferenceShort}: {item.externalReference}</p>
                       ) : null}
                       {item.lastError ? <p className="mt-1 break-all text-xs text-rose-700">{item.lastError}</p> : null}
                       {item.deadLetter?.resolved && item.deadLetter.resolvedAt ? (
@@ -1196,16 +1196,16 @@ export function TrendyolIntegrationManager({
                 </div>
               </div>
               {selectedPackage.lines.map((line) => (
-                <article key={line.id} className="rounded-lg border border-neutral-200 p-4">
+                <article key={line.id} className="rounded-lg border border-[color:var(--color-border)] p-4">
                   <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-semibold text-neutral-950">{line.productName}</p>
+                        <p className="font-semibold text-[color:var(--color-text)]">{line.productName}</p>
                         <Badge className={line.matchStatus === "MATCHED" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}>
                           {line.matchStatus}
                         </Badge>
                       </div>
-                      <p className="mt-1 text-sm text-neutral-500">
+                      <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">
                         {line.quantity} x {line.unitPrice ?? "-"} {line.currency}
                         {line.merchantSku ? ` - ${line.merchantSku}` : ""}
                         {line.barcode ? ` - ${line.barcode}` : ""}

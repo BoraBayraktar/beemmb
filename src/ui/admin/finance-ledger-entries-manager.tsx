@@ -67,10 +67,10 @@ export function FinanceLedgerEntriesManager({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
         <div className="max-w-3xl space-y-2">
-          <h1 className="text-2xl font-semibold text-neutral-950">{copy.title}</h1>
-          <p className="text-sm text-neutral-600">{copy.description}</p>
+          <h1 className="text-2xl font-semibold text-[color:var(--color-text)]">{copy.title}</h1>
+          <p className="text-sm text-[color:var(--color-text-muted)]">{copy.description}</p>
         </div>
       </section>
 

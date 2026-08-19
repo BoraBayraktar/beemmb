@@ -40,20 +40,20 @@ type Props = {
 export function SupplierPayableDetailManager({ locale, item, inventorySummary, labels }: Props) {
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-2">
-            <h1 className="text-2xl font-semibold text-neutral-950">{item.supplierName}</h1>
-            <p className="text-sm text-neutral-600">{labels.description}</p>
+            <h1 className="text-2xl font-semibold text-[color:var(--color-text)]">{item.supplierName}</h1>
+            <p className="text-sm text-[color:var(--color-text-muted)]">{labels.description}</p>
             {labels.counterpartyFinanceHint ? (
               <p className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">{labels.counterpartyFinanceHint}</p>
             ) : null}
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link href={`/${locale}/admin/finance/payables`} className="inline-flex h-10 items-center rounded-xl border border-neutral-300 px-4 text-sm font-medium text-neutral-700">
+            <Link href={`/${locale}/admin/finance/payables`} className="inline-flex h-10 items-center rounded-xl border border-[color:var(--color-border)] px-4 text-sm font-medium text-[color:var(--color-text)]">
               {labels.backToList}
             </Link>
-            <Link href={`/${locale}/admin/documents`} className="inline-flex h-10 items-center rounded-xl border border-neutral-300 px-4 text-sm font-medium text-neutral-700">
+            <Link href={`/${locale}/admin/documents`} className="inline-flex h-10 items-center rounded-xl border border-[color:var(--color-border)] px-4 text-sm font-medium text-[color:var(--color-text)]">
               {labels.openDocuments}
             </Link>
           </div>
@@ -65,17 +65,17 @@ export function SupplierPayableDetailManager({ locale, item, inventorySummary, l
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">{labels.totalAmount}</p>
           <p className="mt-3 text-2xl font-semibold text-amber-950">{item.totalAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {item.currency}</p>
         </article>
-        <article className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.documentCount}</p>
-          <p className="mt-3 text-2xl font-semibold text-neutral-950">{item.documentCount}</p>
+        <article className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.documentCount}</p>
+          <p className="mt-3 text-2xl font-semibold text-[color:var(--color-text)]">{item.documentCount}</p>
         </article>
-        <article className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.draftCount}</p>
-          <p className="mt-3 text-2xl font-semibold text-neutral-950">{item.draftCount}</p>
+        <article className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.draftCount}</p>
+          <p className="mt-3 text-2xl font-semibold text-[color:var(--color-text)]">{item.draftCount}</p>
         </article>
-        <article className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.lastIssueDate}</p>
-          <p className="mt-3 text-sm font-semibold text-neutral-950">{item.lastIssueDate ? new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium" }).format(new Date(item.lastIssueDate)) : labels.notSpecified}</p>
+        <article className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.lastIssueDate}</p>
+          <p className="mt-3 text-sm font-semibold text-[color:var(--color-text)]">{item.lastIssueDate ? new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium" }).format(new Date(item.lastIssueDate)) : labels.notSpecified}</p>
         </article>
       </section>
 
@@ -96,13 +96,13 @@ export function SupplierPayableDetailManager({ locale, item, inventorySummary, l
 
       <section className="space-y-3">
         {item.documents.map((document) => (
-          <article key={document.id} className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+          <article key={document.id} className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-neutral-200 px-3 py-1 text-xs font-semibold text-neutral-700">{document.documentType}</span>
+              <span className="rounded-full bg-neutral-200 px-3 py-1 text-xs font-semibold text-neutral-900">{document.documentType}</span>
               <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">{document.status}</span>
             </div>
-            <h2 className="mt-3 text-lg font-semibold text-neutral-950">{document.documentNumber}</h2>
-            <div className="mt-3 grid gap-2 text-sm text-neutral-700 md:grid-cols-2 xl:grid-cols-3">
+            <h2 className="mt-3 text-lg font-semibold text-[color:var(--color-text)]">{document.documentNumber}</h2>
+            <div className="mt-3 grid gap-2 text-sm text-[color:var(--color-text)] md:grid-cols-2 xl:grid-cols-3">
               <p>{labels.documentStatus}: {document.status}</p>
               <p>{labels.documentType}: {document.documentType}</p>
               <p>{labels.orderNumber}: {document.orderNumber ?? labels.notSpecified}</p>
@@ -113,17 +113,17 @@ export function SupplierPayableDetailManager({ locale, item, inventorySummary, l
             <div className="mt-4">
               <Link
                 href={`/${locale}/admin/finance/business-documents/${document.id}/movements`}
-                className="inline-flex text-sm font-medium text-neutral-800 underline-offset-2 hover:underline"
+                className="inline-flex text-sm font-medium text-[color:var(--color-text)] underline-offset-2 hover:underline"
               >
                 {labels.financeDocumentMovementPreviewOpen}
               </Link>
             </div>
             <div className="mt-4 space-y-2">
               {document.lines.map((line) => (
-                <article key={line.id} className="rounded-2xl border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-700">
-                  <p className="font-semibold text-neutral-950">{line.productName}</p>
+                <article key={line.id} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-3 text-sm text-[color:var(--color-text)]">
+                  <p className="font-semibold text-[color:var(--color-text)]">{line.productName}</p>
                   {line.productVariantTitle ? (
-                    <p className="mt-1 text-xs text-neutral-600">
+                    <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">
                       Varyant: {line.productVariantTitle}
                       {line.productVariantSku ? ` • ${line.productVariantSku}` : ""}
                     </p>
@@ -131,7 +131,7 @@ export function SupplierPayableDetailManager({ locale, item, inventorySummary, l
                   <p className="mt-1">
                     SKU: {line.productSku} • {line.quantity}
                   </p>
-                  <p className="mt-1 text-xs text-neutral-600">
+                  <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">
                     Birim maliyet: {line.unitPrice === null ? labels.notSpecified : `${line.unitPrice.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${line.currency}`}
                     {" • "}
                     Satır toplamı: {line.lineTotal === null ? labels.notSpecified : `${line.lineTotal.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${line.currency}`}

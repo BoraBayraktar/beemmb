@@ -101,16 +101,16 @@ export function FinanceManualAllocationPanel({ mode, contexts, labels }: Props) 
   }
 
   return (
-    <section className="space-y-4 rounded-2xl border border-neutral-200 bg-white p-5">
+    <section className="space-y-4 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5">
       <div>
-        <h3 className="text-lg font-semibold text-neutral-950">{labels.title}</h3>
+        <h3 className="text-lg font-semibold text-[color:var(--color-text)]">{labels.title}</h3>
       </div>
 
-      {message ? <p className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-700">{message}</p> : null}
+      {message ? <p className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-2 text-sm text-[color:var(--color-text)]">{message}</p> : null}
 
       {contexts.map((context) => (
-        <div key={context.recordId} className="space-y-3 rounded-2xl border border-neutral-200 p-4">
-          <p className="text-sm font-medium text-neutral-950">{labels.record}: {context.recordLabel}</p>
+        <div key={context.recordId} className="space-y-3 rounded-2xl border border-[color:var(--color-border)] p-4">
+          <p className="text-sm font-medium text-[color:var(--color-text)]">{labels.record}: {context.recordLabel}</p>
           <FinanceAllocationSummaryPanel
             summary={context.summary}
             labels={{
@@ -122,8 +122,8 @@ export function FinanceManualAllocationPanel({ mode, contexts, labels }: Props) 
             }}
           />
 
-          <details className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-            <summary className="cursor-pointer text-sm font-medium text-neutral-900">{labels.title}</summary>
+          <details className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-3">
+            <summary className="cursor-pointer text-sm font-medium text-[color:var(--color-text)]">{labels.title}</summary>
             <div className="mt-3 space-y-3">
               {getDraft(context.recordId).map((draft, index) => (
                 <div key={`${context.recordId}-${index}`} className="grid gap-2 md:grid-cols-[minmax(0,1fr)_140px]">
@@ -136,7 +136,7 @@ export function FinanceManualAllocationPanel({ mode, contexts, labels }: Props) 
                         next[index] = { ...next[index], businessDocumentLineId: event.target.value };
                         updateDraft(context.recordId, next);
                       }}
-                      className="h-10 rounded-xl border border-neutral-300 px-3 text-sm text-neutral-700"
+                      className="h-10 rounded-xl border border-[color:var(--color-border)] px-3 text-sm text-[color:var(--color-text)]"
                     >
                       <option value="">{labels.line}</option>
                       {context.lineOptions.map((option) => (

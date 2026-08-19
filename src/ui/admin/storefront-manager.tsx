@@ -332,12 +332,12 @@ export function StorefrontManager({ items, productOptions, categoryOptions, labe
   }
 
   return (
-    <section className="rounded-2xl border border-neutral-200 bg-white">
-      <div className="flex flex-col gap-4 border-b border-neutral-200 p-5 lg:flex-row lg:items-center lg:justify-between">
+    <section className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
+      <div className="flex flex-col gap-4 border-b border-[color:var(--color-border)] p-5 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Storefront</p>
-          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-neutral-950">{labels.title}</h2>
-          <p className="mt-1 text-sm text-neutral-500">{items.length} Vitrin öğesi yönetiliyor</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Storefront</p>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[color:var(--color-text)]">{labels.title}</h2>
+          <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{items.length} Vitrin öğesi yönetiliyor</p>
         </div>
         <Button type="button" onClick={openCreateDrawer}>{labels.createTitle}</Button>
       </div>
@@ -347,23 +347,23 @@ export function StorefrontManager({ items, productOptions, categoryOptions, labe
 
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {items.map((item) => (
-            <article key={item.id} className="rounded-xl border border-neutral-200 p-4 transition-colors hover:border-neutral-300">
+            <article key={item.id} className="rounded-xl border border-[color:var(--color-border)] p-4 transition-colors hover:border-[color:var(--color-border)]">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">
                     {getSectionLabel(item.section, labels)} / {getVariantLabel(item.variant, labels)}
                   </p>
-                  <h3 className="mt-2 font-medium text-neutral-950">{item.titleTr}</h3>
-                  <p className="mt-1 text-xs font-medium text-neutral-500">
+                  <h3 className="mt-2 font-medium text-[color:var(--color-text)]">{item.titleTr}</h3>
+                  <p className="mt-1 text-xs font-medium text-[color:var(--color-text-muted)]">
                     {item.targetType === "CATEGORY" ? labels.targetCategory : labels.targetProduct}: {item.categoryName ?? item.productName ?? labels.selectProduct}
                   </p>
-                  <p className="mt-1 text-xs text-neutral-500">
+                  <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">
                     {labels.startAt}: {formatWindowDate(item.startsAt, "tr") ?? labels.noDateWindow} • {labels.endAt}: {formatWindowDate(item.endsAt, "tr") ?? labels.noDateWindow}
                   </p>
                 </div>
-                <span className="rounded-full bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-500">#{item.sortOrder}</span>
+                <span className="rounded-full bg-[color:var(--color-bg-soft)] px-2 py-1 text-xs font-medium text-[color:var(--color-text-muted)]">#{item.sortOrder}</span>
               </div>
-              <p className="mt-3 line-clamp-3 text-sm leading-6 text-neutral-500">{item.descriptionTr}</p>
+              <p className="mt-3 line-clamp-3 text-sm leading-6 text-[color:var(--color-text-muted)]">{item.descriptionTr}</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button type="button" size="sm" variant="secondary" disabled={loading} onClick={() => openEditDrawer(item)}>
                   {labels.edit}
@@ -382,10 +382,10 @@ export function StorefrontManager({ items, productOptions, categoryOptions, labe
       {drawerMode ? (
         <div className="fixed inset-0 z-50">
           <button type="button" aria-label={labels.cancel} className="absolute inset-0 bg-black/30" onClick={closeDrawer} />
-          <aside className="absolute right-0 top-0 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-neutral-200 bg-white shadow-2xl">
-            <div className="flex items-start justify-between border-b border-neutral-200 p-5">
+          <aside className="absolute right-0 top-0 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-2xl">
+            <div className="flex items-start justify-between border-b border-[color:var(--color-border)] p-5">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Storefront</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Storefront</p>
                 <h3 className="mt-1 text-xl font-semibold tracking-tight">{activeTitle}</h3>
               </div>
               <Button type="button" size="icon" variant="ghost" onClick={closeDrawer} disabled={loading}>
@@ -480,7 +480,7 @@ export function StorefrontManager({ items, productOptions, categoryOptions, labe
                 </div>
               </div>
 
-              <div className="mt-2 flex justify-end gap-2 border-t border-neutral-200 pt-5">
+              <div className="mt-2 flex justify-end gap-2 border-t border-[color:var(--color-border)] pt-5">
                 <Button type="button" variant="secondary" onClick={closeDrawer} disabled={loading}>{labels.cancel}</Button>
                 <Button type="submit" disabled={loading}>{loading ? labels.loading : activeSubmit}</Button>
               </div>

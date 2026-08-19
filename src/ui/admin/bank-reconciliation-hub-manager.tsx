@@ -23,28 +23,28 @@ function formatMoney(value: number, currency: string) {
 export function BankReconciliationHubManager({ locale, hub, copy }: Props) {
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
         <Link
           href={`/${locale}/admin/finance/bank-cash`}
-          className="text-sm font-medium text-neutral-500 no-underline hover:text-neutral-950"
+          className="text-sm font-medium text-[color:var(--color-text-muted)] no-underline hover:text-[color:var(--color-text)]"
         >
           {copy.hubBackToBankCash}
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold text-neutral-950">{copy.hubTitle}</h1>
-        <p className="mt-1 text-sm text-neutral-600">{copy.hubDescription}</p>
+        <h1 className="mt-2 text-2xl font-semibold text-[color:var(--color-text)]">{copy.hubTitle}</h1>
+        <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{copy.hubDescription}</p>
       </section>
 
       {hub.items.length === 0 ? (
-        <section className="rounded-3xl border border-neutral-200 bg-neutral-50 p-8 text-center">
-          <p className="text-sm font-medium text-neutral-950">{copy.hubEmpty}</p>
-          <p className="mt-2 text-sm text-neutral-600">{copy.hubEmptyHint}</p>
+        <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-8 text-center">
+          <p className="text-sm font-medium text-[color:var(--color-text)]">{copy.hubEmpty}</p>
+          <p className="mt-2 text-sm text-[color:var(--color-text-muted)]">{copy.hubEmptyHint}</p>
           <Button asChild className="mt-4" variant="outline">
             <Link href={`/${locale}/admin/finance/bank-cash`}>{copy.hubBackToBankCash}</Link>
           </Button>
         </section>
       ) : (
-        <section className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm">
-          <div className="hidden grid-cols-[1.4fr_180px_180px] gap-4 border-b border-neutral-200 bg-neutral-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 lg:grid">
+        <section className="overflow-hidden rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-sm">
+          <div className="hidden grid-cols-[1.4fr_180px_180px] gap-4 border-b border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)] lg:grid">
             <span>{copy.hubColAccount}</span>
             <span>{copy.hubColBalance}</span>
             <span>{copy.openReconciliation}</span>
@@ -52,21 +52,21 @@ export function BankReconciliationHubManager({ locale, hub, copy }: Props) {
           {hub.items.map((item) => (
             <article
               key={item.id}
-              className="grid gap-4 border-b border-neutral-200 p-4 last:border-b-0 lg:grid-cols-[1.4fr_180px_180px] lg:items-center"
+              className="grid gap-4 border-b border-[color:var(--color-border)] p-4 last:border-b-0 lg:grid-cols-[1.4fr_180px_180px] lg:items-center"
             >
               <div>
-                <p className="font-medium text-neutral-950">{item.name}</p>
+                <p className="font-medium text-[color:var(--color-text)]">{item.name}</p>
                 <Link
                   href={`/${locale}/admin/finance/bank-cash/${item.id}`}
-                  className="mt-1 inline-flex text-xs text-neutral-500 underline underline-offset-2"
+                  className="mt-1 inline-flex text-xs text-[color:var(--color-text-muted)] underline underline-offset-2"
                 >
                   {copy.hubOpenAccount}
                 </Link>
               </div>
-              <p className="text-sm font-medium text-neutral-950">{formatMoney(item.currentBalance, item.currency)}</p>
+              <p className="text-sm font-medium text-[color:var(--color-text)]">{formatMoney(item.currentBalance, item.currency)}</p>
               <Link
                 href={item.reconciliationHref}
-                className="text-sm font-medium text-neutral-950 underline underline-offset-4"
+                className="text-sm font-medium text-[color:var(--color-text)] underline underline-offset-4"
               >
                 {copy.openReconciliation}
               </Link>

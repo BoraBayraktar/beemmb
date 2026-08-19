@@ -113,7 +113,7 @@ function shipmentStatusBadgeClass(value: ShipmentStatusFilter) {
     case "PREPARING":
       return "bg-amber-100 text-amber-700";
     default:
-      return "bg-neutral-200 text-neutral-700";
+      return "bg-neutral-200 text-neutral-900";
   }
 }
 
@@ -173,52 +173,52 @@ export default async function AdminOrdersPage({ params, searchParams }: OrdersPa
   }
 
   return (
-    <section className="min-w-0 overflow-hidden rounded-2xl border border-neutral-200 bg-white">
-      <div className="flex flex-col gap-2 border-b border-neutral-200 p-5">
+    <section className="min-w-0 overflow-hidden rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
+      <div className="flex flex-col gap-2 border-b border-[color:var(--color-border)] p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{dictionary.admin.orderManager}</p>
-            <h2 className="text-2xl font-semibold tracking-tight text-neutral-950">{dictionary.admin.orderList}</h2>
-            <p className="text-sm text-neutral-500">{result.total} {dictionary.admin.orderCountLabel}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{dictionary.admin.orderManager}</p>
+            <h2 className="text-2xl font-semibold tracking-tight text-[color:var(--color-text)]">{dictionary.admin.orderList}</h2>
+            <p className="text-sm text-[color:var(--color-text-muted)]">{result.total} {dictionary.admin.orderCountLabel}</p>
           </div>
           <Link
             href={`/${locale}/admin/orders/shipping-report`}
-            className="inline-flex h-9 items-center justify-center rounded-md border border-neutral-300 px-3 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100"
+            className="inline-flex h-9 items-center justify-center rounded-md border border-[color:var(--color-border)] px-3 text-sm font-medium text-[color:var(--color-text)] transition hover:bg-[color:var(--color-bg-soft)]"
           >
             {dictionary.admin.shippingReportTitle}
           </Link>
         </div>
 
-        <details className="mt-2 rounded-xl border border-neutral-200" open={hasActiveFilters}>
-          <summary className="cursor-pointer select-none rounded-xl px-4 py-3 text-sm font-medium text-neutral-700">
+        <details className="mt-2 rounded-xl border border-[color:var(--color-border)]" open={hasActiveFilters}>
+          <summary className="cursor-pointer select-none rounded-xl px-4 py-3 text-sm font-medium text-[color:var(--color-text)]">
             {dictionary.admin.orderListAdvancedFilters}
           </summary>
-          <form method="GET" className="grid gap-3 border-t border-neutral-200 p-4 md:grid-cols-2 xl:grid-cols-5">
+          <form method="GET" className="grid gap-3 border-t border-[color:var(--color-border)] p-4 md:grid-cols-2 xl:grid-cols-5">
             <input
               type="text"
               name="search"
               defaultValue={query.search ?? ""}
               placeholder={dictionary.admin.orderListSearchPlaceholder}
-              className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+              className="h-10 rounded-md border border-[color:var(--color-border)] px-3 text-sm"
             />
-            <select name="status" defaultValue={statusFilter ?? ""} className="h-10 rounded-md border border-neutral-300 px-3 text-sm">
+            <select name="status" defaultValue={statusFilter ?? ""} className="h-10 rounded-md border border-[color:var(--color-border)] px-3 text-sm">
               <option value="">{dictionary.admin.orderListFilterStatus}: {dictionary.admin.orderListFilterAll}</option>
               <option value="CONFIRMED">{dictionary.admin.orderStatusConfirmed}</option>
               <option value="CANCELLED">{dictionary.admin.orderStatusCancelled}</option>
             </select>
-            <select name="paymentStatus" defaultValue={paymentStatusFilter ?? ""} className="h-10 rounded-md border border-neutral-300 px-3 text-sm">
+            <select name="paymentStatus" defaultValue={paymentStatusFilter ?? ""} className="h-10 rounded-md border border-[color:var(--color-border)] px-3 text-sm">
               <option value="">{dictionary.admin.orderListFilterPaymentStatus}: {dictionary.admin.orderListFilterAll}</option>
               {PAYMENT_STATUS_VALUES.map((value) => (
                 <option key={value} value={value}>{formatPaymentStatus(value)}</option>
               ))}
             </select>
-            <select name="shipmentStatus" defaultValue={shipmentStatusFilter ?? ""} className="h-10 rounded-md border border-neutral-300 px-3 text-sm">
+            <select name="shipmentStatus" defaultValue={shipmentStatusFilter ?? ""} className="h-10 rounded-md border border-[color:var(--color-border)] px-3 text-sm">
               <option value="">{dictionary.admin.orderListFilterShipmentStatus}: {dictionary.admin.orderListFilterAll}</option>
               {SHIPMENT_STATUS_VALUES.map((value) => (
                 <option key={value} value={value}>{formatShipmentStatus(value, dictionary)}</option>
               ))}
             </select>
-            <select name="carrierCompanyId" defaultValue={carrierCompanyIdFilter ?? ""} className="h-10 rounded-md border border-neutral-300 px-3 text-sm">
+            <select name="carrierCompanyId" defaultValue={carrierCompanyIdFilter ?? ""} className="h-10 rounded-md border border-[color:var(--color-border)] px-3 text-sm">
               <option value="">{dictionary.admin.orderListFilterCarrier}: {dictionary.admin.orderListFilterAll}</option>
               {carrierCompanies.map((carrier) => (
                 <option key={carrier.id} value={carrier.id}>{carrier.name}</option>
@@ -229,7 +229,7 @@ export default async function AdminOrdersPage({ params, searchParams }: OrdersPa
                 {dictionary.admin.orderListApplyFilters}
               </button>
               {hasActiveFilters ? (
-                <Link href={`/${locale}/admin/orders`} className="inline-flex h-10 items-center justify-center rounded-md border border-neutral-300 px-4 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100">
+                <Link href={`/${locale}/admin/orders`} className="inline-flex h-10 items-center justify-center rounded-md border border-[color:var(--color-border)] px-4 text-sm font-medium text-[color:var(--color-text)] transition hover:bg-[color:var(--color-bg-soft)]">
                   {dictionary.admin.orderListClearFilters}
                 </Link>
               ) : null}
@@ -239,7 +239,7 @@ export default async function AdminOrdersPage({ params, searchParams }: OrdersPa
       </div>
 
       <div className="rounded-b-2xl">
-        <div className="hidden grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)_minmax(0,0.7fr)_minmax(0,0.75fr)_minmax(0,0.95fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.4fr)_minmax(0,0.75fr)_minmax(0,0.75fr)_minmax(0,0.95fr)_minmax(0,0.55fr)] gap-3 border-b border-neutral-200 bg-neutral-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 lg:grid">
+        <div className="hidden grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)_minmax(0,0.7fr)_minmax(0,0.75fr)_minmax(0,0.95fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.4fr)_minmax(0,0.75fr)_minmax(0,0.75fr)_minmax(0,0.95fr)_minmax(0,0.55fr)] gap-3 border-b border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)] lg:grid">
           <span className="min-w-0 break-words">{dictionary.admin.orderNumber}</span>
           <span className="min-w-0 break-words">{dictionary.admin.customerAccountsTitle}</span>
           <span className="min-w-0 break-words">{dictionary.admin.orderStatus}</span>
@@ -255,20 +255,20 @@ export default async function AdminOrdersPage({ params, searchParams }: OrdersPa
         </div>
 
         {result.items.length === 0 ? (
-          <p className="p-6 text-sm text-neutral-500">{dictionary.admin.emptyOrders}</p>
+          <p className="p-6 text-sm text-[color:var(--color-text-muted)]">{dictionary.admin.emptyOrders}</p>
         ) : (
           <div>
-            <div className="divide-y divide-neutral-200">
+            <div className="divide-y divide-[color:var(--color-border)]">
               {result.items.map((item) => (
                 <article key={item.id} className="grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)_minmax(0,0.7fr)_minmax(0,0.75fr)_minmax(0,0.95fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.4fr)_minmax(0,0.75fr)_minmax(0,0.75fr)_minmax(0,0.95fr)_minmax(0,0.55fr)] lg:items-center lg:gap-3">
-                  <p className="min-w-0 font-medium text-neutral-950">
+                  <p className="min-w-0 font-medium text-[color:var(--color-text)]">
                     <Link href={`/${locale}/admin/orders/${item.id}`} className="break-words underline-offset-4 hover:underline">
                       {item.orderNumber}
                     </Link>
                   </p>
-                  <p className="min-w-0 break-words text-sm text-neutral-700">{item.customerAccountName ?? "Cari kart bağlanmadı"}</p>
+                  <p className="min-w-0 break-words text-sm text-[color:var(--color-text)]">{item.customerAccountName ?? "Cari kart bağlanmadı"}</p>
                   <p className="min-w-0">
-                    <span className={`inline-flex max-w-full whitespace-normal break-words rounded-full px-2 py-1 text-xs font-semibold ${item.status === "CONFIRMED" ? "bg-emerald-100 text-emerald-700" : "bg-neutral-200 text-neutral-700"}`}>
+                    <span className={`inline-flex max-w-full whitespace-normal break-words rounded-full px-2 py-1 text-xs font-semibold ${item.status === "CONFIRMED" ? "bg-emerald-100 text-emerald-700" : "bg-neutral-200 text-neutral-900"}`}>
                       {item.status === "CONFIRMED" ? dictionary.admin.orderStatusConfirmed : dictionary.admin.orderStatusCancelled}
                     </span>
                   </p>
@@ -282,31 +282,31 @@ export default async function AdminOrdersPage({ params, searchParams }: OrdersPa
                       {formatShipmentStatus(item.shipmentStatus, dictionary)}
                     </span>
                     {item.carrierCompanyName ? (
-                      <p className="mt-1 truncate text-xs text-neutral-500">{item.carrierCompanyName}</p>
+                      <p className="mt-1 truncate text-xs text-[color:var(--color-text-muted)]">{item.carrierCompanyName}</p>
                     ) : null}
                     {(() => {
                       const trackingUrl = buildTrackingUrl(item.carrierTrackingUrlTemplate, item.cargoTrackingNumber);
                       return trackingUrl ? (
-                        <a href={trackingUrl} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs text-neutral-600 underline underline-offset-4 hover:text-neutral-900">
+                        <a href={trackingUrl} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs text-[color:var(--color-text-muted)] underline underline-offset-4 hover:text-[color:var(--color-text)]">
                           {dictionary.admin.orderListTrackingLink}
                         </a>
                       ) : null;
                     })()}
                   </div>
                   <p className="min-w-0">
-                    <span className={`inline-flex max-w-full whitespace-normal break-words rounded-full px-2 py-1 text-xs font-semibold ${item.restockStatus === "RESTOCKED" ? "bg-emerald-100 text-emerald-700" : item.restockStatus === "PARTIALLY_RESTOCKED" ? "bg-amber-100 text-amber-700" : "bg-neutral-200 text-neutral-700"}`}>
+                    <span className={`inline-flex max-w-full whitespace-normal break-words rounded-full px-2 py-1 text-xs font-semibold ${item.restockStatus === "RESTOCKED" ? "bg-emerald-100 text-emerald-700" : item.restockStatus === "PARTIALLY_RESTOCKED" ? "bg-amber-100 text-amber-700" : "bg-neutral-200 text-neutral-900"}`}>
                       {formatRestockStatus(item.restockStatus, dictionary)}
                     </span>
                   </p>
-                  <p className="min-w-0 break-words text-sm text-neutral-500">{formatLastRestockedAt(item.lastRestockedAt, locale as Locale, dictionary)}</p>
-                  <p className="min-w-0 break-words text-sm text-neutral-700">{item.itemCount}</p>
-                  <p className="min-w-0 break-words text-sm text-neutral-700">{formatMoney(item.subtotal, item.currency, locale as Locale)}</p>
-                  <p className="min-w-0 break-words text-sm font-semibold text-neutral-950">{formatMoney(item.total, item.currency, locale as Locale)}</p>
-                  <p className="min-w-0 break-words text-sm text-neutral-500">{formatDate(item.createdAt, locale as Locale)}</p>
+                  <p className="min-w-0 break-words text-sm text-[color:var(--color-text-muted)]">{formatLastRestockedAt(item.lastRestockedAt, locale as Locale, dictionary)}</p>
+                  <p className="min-w-0 break-words text-sm text-[color:var(--color-text)]">{item.itemCount}</p>
+                  <p className="min-w-0 break-words text-sm text-[color:var(--color-text)]">{formatMoney(item.subtotal, item.currency, locale as Locale)}</p>
+                  <p className="min-w-0 break-words text-sm font-semibold text-[color:var(--color-text)]">{formatMoney(item.total, item.currency, locale as Locale)}</p>
+                  <p className="min-w-0 break-words text-sm text-[color:var(--color-text-muted)]">{formatDate(item.createdAt, locale as Locale)}</p>
                   <p className="min-w-0">
                     <Link
                       href={`/${locale}/admin/orders/${item.id}`}
-                      className="inline-flex min-h-9 items-center justify-center rounded-md border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100"
+                      className="inline-flex min-h-9 items-center justify-center rounded-md border border-[color:var(--color-border)] px-3 py-2 text-sm font-medium text-[color:var(--color-text)] transition hover:bg-[color:var(--color-bg-soft)]"
                     >
                       Detay
                     </Link>
@@ -318,15 +318,15 @@ export default async function AdminOrdersPage({ params, searchParams }: OrdersPa
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-3 border-t border-neutral-200 p-4">
+      <div className="flex items-center justify-between gap-3 border-t border-[color:var(--color-border)] p-4">
         {prevPage ? (
-          <Link href={getPageHref(prevPage)} className="rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100">
+          <Link href={getPageHref(prevPage)} className="rounded-md border border-[color:var(--color-border)] px-3 py-2 text-sm text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)]">
             {dictionary.admin.prev}
           </Link>
         ) : <span />}
-        <p className="text-sm text-neutral-500">{dictionary.admin.page} {result.page}/{result.totalPages}</p>
+        <p className="text-sm text-[color:var(--color-text-muted)]">{dictionary.admin.page} {result.page}/{result.totalPages}</p>
         {nextPage ? (
-          <Link href={getPageHref(nextPage)} className="rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100">
+          <Link href={getPageHref(nextPage)} className="rounded-md border border-[color:var(--color-border)] px-3 py-2 text-sm text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)]">
             {dictionary.admin.next}
           </Link>
         ) : <span />}

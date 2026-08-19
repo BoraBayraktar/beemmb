@@ -36,16 +36,16 @@ function resolveToneClass(tone: "neutral" | "success" | "warning") {
     return "border-amber-200 bg-amber-50 text-amber-900";
   }
 
-  return "border-neutral-200 bg-white text-neutral-950";
+  return "border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[color:var(--color-text)]";
 }
 
 export function FinanceOverviewManager({ overview, labels }: Props) {
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
         <div className="max-w-3xl space-y-2">
-          <h1 className="text-2xl font-semibold text-neutral-950">{labels.title}</h1>
-          <p className="text-sm text-neutral-600">{labels.description}</p>
+          <h1 className="text-2xl font-semibold text-[color:var(--color-text)]">{labels.title}</h1>
+          <p className="text-sm text-[color:var(--color-text-muted)]">{labels.description}</p>
         </div>
       </section>
 
@@ -63,16 +63,16 @@ export function FinanceOverviewManager({ overview, labels }: Props) {
         ))}
       </section>
 
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold text-neutral-950">{labels.sectionsTitle}</h2>
+          <h2 className="text-lg font-semibold text-[color:var(--color-text)]">{labels.sectionsTitle}</h2>
         </div>
         <div className="mt-4 grid gap-3 lg:grid-cols-2">
           {overview.sections.map((section) => (
-            <article key={section.href} className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-              <h3 className="text-base font-semibold text-neutral-950">{section.title}</h3>
-              <p className="mt-2 text-sm text-neutral-600">{section.description}</p>
-              <Link href={section.href} className="mt-4 inline-flex text-sm font-medium text-neutral-950 underline underline-offset-4">
+            <article key={section.href} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+              <h3 className="text-base font-semibold text-[color:var(--color-text)]">{section.title}</h3>
+              <p className="mt-2 text-sm text-[color:var(--color-text-muted)]">{section.description}</p>
+              <Link href={section.href} className="mt-4 inline-flex text-sm font-medium text-[color:var(--color-text)] underline underline-offset-4">
                 {labels.openRoute}
               </Link>
             </article>

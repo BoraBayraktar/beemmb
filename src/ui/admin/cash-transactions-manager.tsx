@@ -243,12 +243,12 @@ export function CashTransactionsManager({
   }
 
   return (
-    <section className="rounded-2xl border border-neutral-200 bg-white">
-      <div className="flex flex-col gap-4 border-b border-neutral-200 p-5 lg:flex-row lg:items-center lg:justify-between">
+    <section className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
+      <div className="flex flex-col gap-4 border-b border-[color:var(--color-border)] p-5 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.title}</p>
-          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-neutral-950">{labels.title}</h2>
-          <p className="mt-1 text-sm text-neutral-500">{labels.description}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.title}</p>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[color:var(--color-text)]">{labels.title}</h2>
+          <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{labels.description}</p>
         </div>
         <Button type="button" onClick={openCreateDrawer}>
           {labels.createTitle}
@@ -258,7 +258,7 @@ export function CashTransactionsManager({
       <div className="p-5">
         <form action={`/${locale}/admin/finance/transactions`} className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_280px_auto]">
           <Input type="search" name="search" defaultValue={initialSearch} placeholder={labels.search} />
-          <select name="accountId" defaultValue={initialAccountId} className="h-10 rounded-xl border border-neutral-300 px-3 text-sm text-neutral-700">
+          <select name="accountId" defaultValue={initialAccountId} className="h-10 rounded-xl border border-[color:var(--color-border)] px-3 text-sm text-[color:var(--color-text)]">
             <option value="">{labels.account}</option>
             {accountOptions.map((option) => (
               <option key={option.id} value={option.id}>{option.label}</option>
@@ -270,13 +270,13 @@ export function CashTransactionsManager({
         </form>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          <Link href={buildFilterHref(locale, "all", initialSearch, initialAccountId)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialDirection === "all" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-neutral-100 text-neutral-700 hover:text-neutral-950"}`}>{labels.allDirections}</Link>
-          <Link href={buildFilterHref(locale, "IN", initialSearch, initialAccountId)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialDirection === "IN" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-neutral-100 text-neutral-700 hover:text-neutral-950"}`}>{labels.incoming}</Link>
-          <Link href={buildFilterHref(locale, "OUT", initialSearch, initialAccountId)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialDirection === "OUT" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-neutral-100 text-neutral-700 hover:text-neutral-950"}`}>{labels.outgoing}</Link>
-          <Link href={buildFilterHref(locale, "TRANSFER", initialSearch, initialAccountId)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialDirection === "TRANSFER" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-neutral-100 text-neutral-700 hover:text-neutral-950"}`}>{labels.transfer}</Link>
+          <Link href={buildFilterHref(locale, "all", initialSearch, initialAccountId)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialDirection === "all" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)] hover:text-[color:var(--color-text)]"}`}>{labels.allDirections}</Link>
+          <Link href={buildFilterHref(locale, "IN", initialSearch, initialAccountId)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialDirection === "IN" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)] hover:text-[color:var(--color-text)]"}`}>{labels.incoming}</Link>
+          <Link href={buildFilterHref(locale, "OUT", initialSearch, initialAccountId)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialDirection === "OUT" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)] hover:text-[color:var(--color-text)]"}`}>{labels.outgoing}</Link>
+          <Link href={buildFilterHref(locale, "TRANSFER", initialSearch, initialAccountId)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialDirection === "TRANSFER" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)] hover:text-[color:var(--color-text)]"}`}>{labels.transfer}</Link>
         </div>
 
-        {message ? <p className="mt-4 rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-700 shadow-sm">{message}</p> : null}
+        {message ? <p className="mt-4 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 text-sm text-[color:var(--color-text)] shadow-sm">{message}</p> : null}
 
         <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <article className="rounded-3xl border border-emerald-200 bg-emerald-50 p-5">
@@ -291,14 +291,14 @@ export function CashTransactionsManager({
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">{labels.netAmount}</p>
             <p className="mt-3 text-2xl font-semibold text-blue-950">{formatMoney(result.summary.netAmount, result.summary.currency)}</p>
           </article>
-          <article className="rounded-3xl border border-neutral-200 bg-white p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.transactionCount}</p>
-            <p className="mt-3 text-2xl font-semibold text-neutral-950">{result.summary.transactionCount}</p>
+          <article className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.transactionCount}</p>
+            <p className="mt-3 text-2xl font-semibold text-[color:var(--color-text)]">{result.summary.transactionCount}</p>
           </article>
         </div>
 
-        <div className="mt-5 overflow-hidden rounded-xl border border-neutral-200">
-          <div className="hidden grid-cols-[120px_1.2fr_1fr_150px_170px_1fr_1fr] gap-4 border-b border-neutral-200 bg-neutral-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 lg:grid">
+        <div className="mt-5 overflow-hidden rounded-xl border border-[color:var(--color-border)]">
+          <div className="hidden grid-cols-[120px_1.2fr_1fr_150px_170px_1fr_1fr] gap-4 border-b border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)] lg:grid">
             <span>{labels.allDirections}</span>
             <span>{labels.titleField}</span>
             <span>{labels.account}</span>
@@ -308,39 +308,39 @@ export function CashTransactionsManager({
             <span>{labels.note}</span>
           </div>
           {result.items.length === 0 ? (
-            <p className="p-6 text-sm text-neutral-500">{labels.empty}</p>
+            <p className="p-6 text-sm text-[color:var(--color-text-muted)]">{labels.empty}</p>
           ) : result.items.map((item) => (
-            <article key={item.id} className="grid gap-4 border-b border-neutral-200 p-4 last:border-b-0 lg:grid-cols-[120px_1.2fr_1fr_150px_170px_1fr_1fr] lg:items-center">
+            <article key={item.id} className="grid gap-4 border-b border-[color:var(--color-border)] p-4 last:border-b-0 lg:grid-cols-[120px_1.2fr_1fr_150px_170px_1fr_1fr] lg:items-center">
               <div>
                 <span className={`inline-flex rounded-full border px-2 py-1 text-xs font-semibold ${getDirectionClassName(item.direction)}`}>
                   {item.direction === "IN" ? labels.incoming : item.direction === "OUT" ? labels.outgoing : labels.transfer}
                 </span>
               </div>
               <div>
-                <h3 className="font-medium text-neutral-950">
-                  <Link href={`/${locale}/admin/finance/transactions/${item.id}`} className="text-neutral-950 no-underline hover:underline">
+                <h3 className="font-medium text-[color:var(--color-text)]">
+                  <Link href={`/${locale}/admin/finance/transactions/${item.id}`} className="text-[color:var(--color-text)] no-underline hover:underline">
                     {item.title}
                   </Link>
                 </h3>
-                <p className="mt-1 text-xs text-neutral-500">{item.sourceType === "REFUND" ? labels.refund : item.sourceType === "TRANSFER" ? labels.transfer : item.sourceType}</p>
+                <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{item.sourceType === "REFUND" ? labels.refund : item.sourceType === "TRANSFER" ? labels.transfer : item.sourceType}</p>
               </div>
-              <p className="text-sm text-neutral-500">{item.accountName}</p>
-              <p className="text-sm font-medium text-neutral-950">{formatMoney(item.amount, item.currency)}</p>
-              <p className="text-sm text-neutral-500">{formatDate(item.transactionAt)}</p>
-              <div className="text-sm text-neutral-500">
+              <p className="text-sm text-[color:var(--color-text-muted)]">{item.accountName}</p>
+              <p className="text-sm font-medium text-[color:var(--color-text)]">{formatMoney(item.amount, item.currency)}</p>
+              <p className="text-sm text-[color:var(--color-text-muted)]">{formatDate(item.transactionAt)}</p>
+              <div className="text-sm text-[color:var(--color-text-muted)]">
                 {item.customerAccountSlug ? (
-                  <Link href={`/${locale}/admin/finance/customers/${encodeURIComponent(item.customerAccountSlug)}`} className="text-neutral-700 no-underline hover:text-neutral-950">
+                  <Link href={`/${locale}/admin/finance/customers/${encodeURIComponent(item.customerAccountSlug)}`} className="text-[color:var(--color-text)] no-underline hover:text-[color:var(--color-text)]">
                     {item.counterpartyName ?? labels.openLedger}
                   </Link>
                 ) : item.supplierSlug ? (
-                  <Link href={`/${locale}/admin/finance/suppliers/${encodeURIComponent(item.supplierSlug)}`} className="text-neutral-700 no-underline hover:text-neutral-950">
+                  <Link href={`/${locale}/admin/finance/suppliers/${encodeURIComponent(item.supplierSlug)}`} className="text-[color:var(--color-text)] no-underline hover:text-[color:var(--color-text)]">
                     {item.counterpartyName ?? labels.openLedger}
                   </Link>
                 ) : (
                   item.counterpartyName ?? "-"
                 )}
               </div>
-              <p className="text-sm text-neutral-500">{item.note ?? "-"}</p>
+              <p className="text-sm text-[color:var(--color-text-muted)]">{item.note ?? "-"}</p>
             </article>
           ))}
         </div>
@@ -349,10 +349,10 @@ export function CashTransactionsManager({
       {drawerOpen ? (
         <div className="fixed inset-0 z-50">
           <button type="button" aria-label={labels.cancel} className="absolute inset-0 bg-black/30" onClick={closeDrawer} />
-          <aside className="absolute right-0 top-0 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-neutral-200 bg-white shadow-2xl">
-            <div className="flex items-start justify-between border-b border-neutral-200 p-5">
+          <aside className="absolute right-0 top-0 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-2xl">
+            <div className="flex items-start justify-between border-b border-[color:var(--color-border)] p-5">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.title}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.title}</p>
                 <h3 className="mt-1 text-xl font-semibold tracking-tight">{labels.createTitle}</h3>
               </div>
               <Button type="button" size="icon" variant="ghost" onClick={closeDrawer} disabled={isPending}>
@@ -363,7 +363,7 @@ export function CashTransactionsManager({
             <form className="grid gap-4 p-5" onSubmit={submitTransaction}>
               <div className="grid gap-2">
                 <Label>{labels.account}</Label>
-                <select value={form.accountId} onChange={(event) => setForm((current) => ({ ...current, accountId: event.target.value }))} className="h-10 rounded-xl border border-neutral-300 px-3 text-sm text-neutral-700">
+                <select value={form.accountId} onChange={(event) => setForm((current) => ({ ...current, accountId: event.target.value }))} className="h-10 rounded-xl border border-[color:var(--color-border)] px-3 text-sm text-[color:var(--color-text)]">
                   <option value="">{labels.account}</option>
                   {accountOptions.map((option) => (
                     <option key={option.id} value={option.id}>{option.label}</option>
@@ -387,7 +387,7 @@ export function CashTransactionsManager({
                     }));
                     setSelectedCounterparty(null);
                   }}
-                  className="h-10 rounded-xl border border-neutral-300 px-3 text-sm text-neutral-700"
+                  className="h-10 rounded-xl border border-[color:var(--color-border)] px-3 text-sm text-[color:var(--color-text)]"
                 >
                   <option value="IN">{labels.incoming}</option>
                   <option value="OUT">{labels.outgoing}</option>
@@ -406,7 +406,7 @@ export function CashTransactionsManager({
                       category: nextSourceType === "REFUND" ? "REFUND" : nextSourceType === "TRANSFER" ? "TRANSFER" : current.direction === "IN" ? "GENERAL_INCOME" : current.category === "REFUND" ? "GENERAL_EXPENSE" : current.category,
                     }));
                   }}
-                  className="h-10 rounded-xl border border-neutral-300 px-3 text-sm text-neutral-700"
+                  className="h-10 rounded-xl border border-[color:var(--color-border)] px-3 text-sm text-[color:var(--color-text)]"
                 >
                   <option value="MANUAL">{labels.sourceType}</option>
                   <option value="REFUND">{labels.refund}</option>
@@ -416,7 +416,7 @@ export function CashTransactionsManager({
               {form.direction === "OUT" ? (
                 <div className="grid gap-2">
                   <Label>{labels.category}</Label>
-                  <select value={form.category} onChange={(event) => setForm((current) => ({ ...current, category: event.target.value as AdminCashTransactionCategory }))} className="h-10 rounded-xl border border-neutral-300 px-3 text-sm text-neutral-700">
+                  <select value={form.category} onChange={(event) => setForm((current) => ({ ...current, category: event.target.value as AdminCashTransactionCategory }))} className="h-10 rounded-xl border border-[color:var(--color-border)] px-3 text-sm text-[color:var(--color-text)]">
                     <option value="GENERAL_EXPENSE">{labels.category}</option>
                     <option value="MARKETPLACE_COMMISSION">Pazaryeri komisyonu</option>
                     <option value="SHIPPING_EXPENSE">Kargo gideri</option>
@@ -428,7 +428,7 @@ export function CashTransactionsManager({
               {form.direction === "TRANSFER" ? (
                 <div className="grid gap-2">
                   <Label>{labels.targetAccount}</Label>
-                  <select value={form.targetAccountId} onChange={(event) => setForm((current) => ({ ...current, targetAccountId: event.target.value }))} className="h-10 rounded-xl border border-neutral-300 px-3 text-sm text-neutral-700">
+                  <select value={form.targetAccountId} onChange={(event) => setForm((current) => ({ ...current, targetAccountId: event.target.value }))} className="h-10 rounded-xl border border-[color:var(--color-border)] px-3 text-sm text-[color:var(--color-text)]">
                     <option value="">{labels.targetAccount}</option>
                     {accountOptions
                       .filter((option) => option.id !== form.accountId)
@@ -450,7 +450,7 @@ export function CashTransactionsManager({
                 <Label>{labels.counterparty}</Label>
                 {form.direction !== "TRANSFER" ? (
                   <>
-                    <label className="flex items-center gap-2 text-sm text-neutral-700">
+                    <label className="flex items-center gap-2 text-sm text-[color:var(--color-text)]">
                       <input
                         type="checkbox"
                         checked={form.useUnregisteredCounterparty}
@@ -474,7 +474,7 @@ export function CashTransactionsManager({
                       <Input value={form.counterpartyName} onChange={(event) => setForm((current) => ({ ...current, counterpartyName: event.target.value }))} placeholder={labels.counterpartyUnregistered} />
                     ) : (
                       <>
-                        <Label className="text-xs text-neutral-500">{labels.counterpartyKind}</Label>
+                        <Label className="text-xs text-[color:var(--color-text-muted)]">{labels.counterpartyKind}</Label>
                         <select
                           value={form.counterpartyKind}
                           onChange={(event) => {
@@ -487,25 +487,25 @@ export function CashTransactionsManager({
                             }));
                             setSelectedCounterparty(null);
                           }}
-                          className="h-10 rounded-xl border border-neutral-300 px-3 text-sm text-neutral-700"
+                          className="h-10 rounded-xl border border-[color:var(--color-border)] px-3 text-sm text-[color:var(--color-text)]"
                         >
                           <option value="CUSTOMER">{labels.counterpartyCustomer}</option>
                           <option value="SUPPLIER">{labels.counterpartySupplier}</option>
                         </select>
                         <Input value={counterpartySearch} onChange={(event) => setCounterpartySearch(event.target.value)} placeholder={labels.counterpartySearch} />
                         {selectedCounterparty ? (
-                          <p className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-700">
-                            {labels.counterpartySelected}: <span className="font-medium text-neutral-950">{selectedCounterparty.label}</span>
+                          <p className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-2 text-sm text-[color:var(--color-text)]">
+                            {labels.counterpartySelected}: <span className="font-medium text-[color:var(--color-text)]">{selectedCounterparty.label}</span>
                           </p>
                         ) : null}
-                        <div className="max-h-40 overflow-y-auto rounded-xl border border-neutral-200">
+                        <div className="max-h-40 overflow-y-auto rounded-xl border border-[color:var(--color-border)]">
                           {counterpartyOptions.length === 0 ? (
-                            <p className="p-3 text-sm text-neutral-500">{labels.counterpartySearch}</p>
+                            <p className="p-3 text-sm text-[color:var(--color-text-muted)]">{labels.counterpartySearch}</p>
                           ) : counterpartyOptions.map((option) => (
                             <button
                               key={`${option.kind}:${option.id}`}
                               type="button"
-                              className="flex w-full flex-col items-start border-b border-neutral-100 px-3 py-2 text-left last:border-b-0 hover:bg-neutral-50"
+                              className="flex w-full flex-col items-start border-b border-[color:var(--color-border)] px-3 py-2 text-left last:border-b-0 hover:bg-[color:var(--color-bg-soft)]"
                               onClick={() => {
                                 setSelectedCounterparty(option);
                                 setForm((current) => ({
@@ -516,8 +516,8 @@ export function CashTransactionsManager({
                                 }));
                               }}
                             >
-                              <span className="text-sm font-medium text-neutral-950">{option.label}</span>
-                              {option.subtitle ? <span className="text-xs text-neutral-500">{option.subtitle}</span> : null}
+                              <span className="text-sm font-medium text-[color:var(--color-text)]">{option.label}</span>
+                              {option.subtitle ? <span className="text-xs text-[color:var(--color-text-muted)]">{option.subtitle}</span> : null}
                             </button>
                           ))}
                         </div>
@@ -525,7 +525,7 @@ export function CashTransactionsManager({
                     )}
                   </>
                 ) : (
-                  <p className="text-sm text-neutral-500">{labels.transfer}</p>
+                  <p className="text-sm text-[color:var(--color-text-muted)]">{labels.transfer}</p>
                 )}
               </div>
               <div className="grid gap-2">

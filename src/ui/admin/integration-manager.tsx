@@ -719,7 +719,7 @@ function statusClass(status: JobStatus) {
     return "bg-rose-100 text-rose-700";
   }
 
-  return "bg-neutral-100 text-neutral-700";
+  return "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)]";
 }
 
 function toggleStatusFilter(
@@ -1005,74 +1005,74 @@ export function IntegrationManager({
   }
 
   return (
-    <section className="rounded-3xl border border-neutral-200 bg-gradient-to-b from-neutral-50 to-white shadow-sm">
-      <div className="border-b border-neutral-200 bg-[radial-gradient(circle_at_top_right,_rgba(14,116,144,0.15),_transparent_55%),radial-gradient(circle_at_left,_rgba(245,158,11,0.10),_transparent_45%)] p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.title}</p>
-        <h2 className="mt-2 text-3xl font-semibold tracking-tight text-neutral-950">{labels.title}</h2>
-        <p className="mt-2 max-w-3xl text-sm text-neutral-600">{labels.subtitle}</p>
+    <section className="rounded-3xl border border-[color:var(--color-border)] bg-gradient-to-b from-[color:var(--color-bg-soft)] to-[color:var(--color-surface)] shadow-sm">
+      <div className="border-b border-[color:var(--color-border)] bg-[radial-gradient(circle_at_top_right,_rgba(14,116,144,0.15),_transparent_55%),radial-gradient(circle_at_left,_rgba(245,158,11,0.10),_transparent_45%)] p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.title}</p>
+        <h2 className="mt-2 text-3xl font-semibold tracking-tight text-[color:var(--color-text)]">{labels.title}</h2>
+        <p className="mt-2 max-w-3xl text-sm text-[color:var(--color-text-muted)]">{labels.subtitle}</p>
       </div>
 
       {error ? (
         <p className="mx-5 mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
       ) : null}
 
-      <div className="grid gap-4 border-b border-neutral-200 p-5 md:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-4 border-b border-[color:var(--color-border)] p-5 md:grid-cols-2 xl:grid-cols-5">
         <button
           type="button"
           onClick={() => toggleStatusFilter(statusFilter, "PENDING", setStatusFilter)}
-          className={`rounded-2xl border bg-white/80 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-sm ${
-            statusFilter === "PENDING" ? "border-neutral-950 ring-2 ring-neutral-200" : "border-neutral-200"
+          className={`rounded-2xl border bg-[color:var(--color-surface)]/80 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-sm ${
+            statusFilter === "PENDING" ? "border-[color:var(--color-text)] ring-2 ring-[color:var(--color-border)]" : "border-[color:var(--color-border)]"
           }`}
         >
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.summaryPending}</p>
-          <p className="mt-2 text-lg font-semibold text-neutral-950">{summary.pending}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.summaryPending}</p>
+          <p className="mt-2 text-lg font-semibold text-[color:var(--color-text)]">{summary.pending}</p>
         </button>
         <button
           type="button"
           onClick={() => toggleStatusFilter(statusFilter, "PROCESSING", setStatusFilter)}
-          className={`rounded-2xl border bg-sky-50/70 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-sm ${
+          className={`rounded-2xl border bg-sky-50 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-sm ${
             statusFilter === "PROCESSING" ? "border-sky-500 ring-2 ring-sky-200" : "border-sky-200"
           }`}
         >
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.summaryProcessing}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.summaryProcessing}</p>
           <p className="mt-2 text-lg font-semibold text-sky-700">{summary.processing}</p>
         </button>
         <button
           type="button"
           onClick={() => toggleStatusFilter(statusFilter, "SUCCESS", setStatusFilter)}
-          className={`rounded-2xl border bg-emerald-50/70 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-sm ${
+          className={`rounded-2xl border bg-emerald-50 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-sm ${
             statusFilter === "SUCCESS" ? "border-emerald-500 ring-2 ring-emerald-200" : "border-emerald-200"
           }`}
         >
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.summarySuccess}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.summarySuccess}</p>
           <p className="mt-2 text-lg font-semibold text-emerald-700">{summary.success}</p>
         </button>
         <button
           type="button"
           onClick={() => toggleStatusFilter(statusFilter, "FAILED", setStatusFilter)}
-          className={`rounded-2xl border bg-amber-50/70 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-sm ${
+          className={`rounded-2xl border bg-amber-50 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-sm ${
             statusFilter === "FAILED" ? "border-amber-500 ring-2 ring-amber-200" : "border-amber-200"
           }`}
         >
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.summaryFailed}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.summaryFailed}</p>
           <p className="mt-2 text-lg font-semibold text-amber-700">{summary.failed}</p>
         </button>
         <button
           type="button"
           onClick={() => toggleStatusFilter(statusFilter, "DEAD_LETTER", setStatusFilter)}
-          className={`rounded-2xl border bg-rose-50/70 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-sm ${
+          className={`rounded-2xl border bg-rose-50 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-sm ${
             statusFilter === "DEAD_LETTER" ? "border-rose-500 ring-2 ring-rose-200" : "border-rose-200"
           }`}
         >
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.summaryDeadLetter}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.summaryDeadLetter}</p>
           <p className="mt-2 text-lg font-semibold text-rose-700">{summary.deadLetter}</p>
         </button>
       </div>
 
-      <div className="border-b border-neutral-200 bg-white/90 p-5">
+      <div className="border-b border-[color:var(--color-border)] bg-[color:var(--color-surface)]/90 p-5">
         <div className="flex flex-col gap-1">
-          <h3 className="text-lg font-semibold tracking-tight text-neutral-950">{labels.marketplaceOverview}</h3>
-          <p className="text-sm text-neutral-600">{labels.marketplaceOverviewHint}</p>
+          <h3 className="text-lg font-semibold tracking-tight text-[color:var(--color-text)]">{labels.marketplaceOverview}</h3>
+          <p className="text-sm text-[color:var(--color-text-muted)]">{labels.marketplaceOverviewHint}</p>
         </div>
         <div className="mt-4 grid gap-4 lg:grid-cols-2 2xl:grid-cols-4">
           {channelSummaries.map((item) => {
@@ -1086,14 +1086,14 @@ export function IntegrationManager({
                 onClick={() => setChannelFilter(item.channel)}
                 className={`rounded-2xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-sm ${
                   channelFilter === item.channel
-                    ? "border-cyan-300 bg-cyan-50/80"
-                    : "border-neutral-200 bg-neutral-50/80"
+                    ? "border-cyan-300 bg-cyan-50"
+                    : "border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]/80"
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-neutral-950">{channelLabel(item.channel, labels)}</p>
-                    <p className="mt-1 text-xs text-neutral-500">{labels.filterByChannel}</p>
+                    <p className="text-sm font-semibold text-[color:var(--color-text)]">{channelLabel(item.channel, labels)}</p>
+                    <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{labels.filterByChannel}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     {capabilitySummary ? (
@@ -1105,33 +1105,33 @@ export function IntegrationManager({
                   </div>
                 </div>
                 <div className="mt-4 grid grid-cols-3 gap-2 text-sm">
-                  <div className="rounded-xl bg-white px-3 py-2">
-                    <p className="text-xs text-neutral-500">{labels.jobs}</p>
-                    <p className="mt-1 font-semibold text-neutral-950">{item.total}</p>
+                  <div className="rounded-xl bg-[color:var(--color-surface)] px-3 py-2">
+                    <p className="text-xs text-[color:var(--color-text-muted)]">{labels.jobs}</p>
+                    <p className="mt-1 font-semibold text-[color:var(--color-text)]">{item.total}</p>
                   </div>
-                  <div className="rounded-xl bg-white px-3 py-2">
-                    <p className="text-xs text-neutral-500">{labels.summaryPending}</p>
+                  <div className="rounded-xl bg-[color:var(--color-surface)] px-3 py-2">
+                    <p className="text-xs text-[color:var(--color-text-muted)]">{labels.summaryPending}</p>
                     <p className="mt-1 font-semibold text-sky-700">{item.activeCount}</p>
                   </div>
-                  <div className="rounded-xl bg-white px-3 py-2">
-                    <p className="text-xs text-neutral-500">{labels.summaryFailed}</p>
+                  <div className="rounded-xl bg-[color:var(--color-surface)] px-3 py-2">
+                    <p className="text-xs text-[color:var(--color-text-muted)]">{labels.summaryFailed}</p>
                     <p className="mt-1 font-semibold text-amber-700">{item.failedCount}</p>
                   </div>
                 </div>
                 {item.lastJob ? (
-                  <p className="mt-3 text-xs text-neutral-500">
+                  <p className="mt-3 text-xs text-[color:var(--color-text-muted)]">
                     {jobTypeLabel(item.lastJob.jobType, labels)} - {statusLabel(item.lastJob.status, labels)} - {formatDate(item.lastJob.createdAt, locale)}
                   </p>
                 ) : (
-                  <p className="mt-3 text-xs text-neutral-500">{labels.emptyJobs}</p>
+                  <p className="mt-3 text-xs text-[color:var(--color-text-muted)]">{labels.emptyJobs}</p>
                 )}
                 {capabilitySummary ? (
-                  <div className="mt-3 rounded-xl border border-neutral-200 bg-white/80 p-2.5">
-                    <p className="text-[11px] leading-4 text-neutral-500">{labels.marketplaceCapabilitySummary}</p>
+                  <div className="mt-3 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]/80 p-2.5">
+                    <p className="text-[11px] leading-4 text-[color:var(--color-text-muted)]">{labels.marketplaceCapabilitySummary}</p>
                     <div className="mt-2 grid gap-1.5">
                       {capabilityEntries.map((entry) => (
-                        <div key={entry.label} className="flex items-center justify-between gap-2 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-xs leading-4">
-                          <span className="text-neutral-700">{entry.label}</span>
+                        <div key={entry.label} className="flex items-center justify-between gap-2 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-2.5 py-1.5 text-xs leading-4">
+                          <span className="text-[color:var(--color-text)]">{entry.label}</span>
                           <Badge className={entry.enabled ? "h-6 bg-emerald-100 px-2 py-0 text-[11px] text-emerald-700" : "h-6 bg-amber-100 px-2 py-0 text-[11px] text-amber-800"}>
                             {entry.enabled ? labels.capabilityAvailable : labels.capabilityLimited}
                           </Badge>
@@ -1146,7 +1146,7 @@ export function IntegrationManager({
         </div>
       </div>
 
-      <div className="border-b border-neutral-200 bg-white/90 p-5">
+      <div className="border-b border-[color:var(--color-border)] bg-[color:var(--color-surface)]/90 p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <Input
@@ -1227,10 +1227,10 @@ export function IntegrationManager({
         ) : null}
       </div>
 
-      <div className="border-b border-neutral-200 bg-white/90 p-5">
-        <h3 className="text-lg font-semibold tracking-tight text-neutral-950">{labels.jobs}</h3>
-        <div className="mt-3 overflow-hidden rounded-xl border border-neutral-200">
-          <div className="hidden grid-cols-[150px_180px_130px_1fr_190px_130px] gap-3 border-b border-neutral-200 bg-neutral-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 xl:grid">
+      <div className="border-b border-[color:var(--color-border)] bg-[color:var(--color-surface)]/90 p-5">
+        <h3 className="text-lg font-semibold tracking-tight text-[color:var(--color-text)]">{labels.jobs}</h3>
+        <div className="mt-3 overflow-hidden rounded-xl border border-[color:var(--color-border)]">
+          <div className="hidden grid-cols-[150px_180px_130px_1fr_190px_130px] gap-3 border-b border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)] xl:grid">
             <span>{labels.channel}</span>
             <span>{labels.jobType}</span>
             <span>{labels.status}</span>
@@ -1240,9 +1240,9 @@ export function IntegrationManager({
           </div>
 
           {filteredJobs.length === 0 ? (
-            <p className="p-4 text-sm text-neutral-500">{labels.emptyJobs}</p>
+            <p className="p-4 text-sm text-[color:var(--color-text-muted)]">{labels.emptyJobs}</p>
           ) : (
-            <div className="divide-y divide-neutral-200">
+            <div className="divide-y divide-[color:var(--color-border)]">
               {filteredJobs.map((item) => {
                 const canCheckBatch = (item.channel === "TRENDYOL" || item.channel === "N11" || item.channel === "PAZARAMA" || item.channel === "HEPSIBURADA")
                   && item.status === "SUCCESS"
@@ -1253,12 +1253,12 @@ export function IntegrationManager({
                 return (
                   <article key={item.id} className="grid gap-3 p-4 xl:grid-cols-[150px_180px_130px_1fr_190px_130px] xl:items-center">
                     <div>
-                      <p className="font-semibold text-neutral-900">{channelLabel(item.channel, labels)}</p>
-                      <p className="mt-1 text-xs text-neutral-500">{entityTypeLabel(item.entityType, labels)}</p>
+                      <p className="font-semibold text-[color:var(--color-text)]">{channelLabel(item.channel, labels)}</p>
+                      <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{entityTypeLabel(item.entityType, labels)}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-neutral-800">{jobTypeLabel(item.jobType, labels)}</p>
-                      <p className="mt-1 text-xs text-neutral-500">{labels.attemptProgress}: {item.attemptCount}/{item.maxAttempts}</p>
+                      <p className="text-sm font-medium text-[color:var(--color-text)]">{jobTypeLabel(item.jobType, labels)}</p>
+                      <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{labels.attemptProgress}: {item.attemptCount}/{item.maxAttempts}</p>
                     </div>
                     <div>
                       <Badge className={statusClass(item.status)}>
@@ -1266,12 +1266,12 @@ export function IntegrationManager({
                       </Badge>
                     </div>
                     <div className="min-w-0">
-                      <p className="break-all text-neutral-700">{item.entityId}</p>
-                      <p className="mt-1 truncate text-xs text-neutral-500">{item.idempotencyKey}</p>
+                      <p className="break-all text-[color:var(--color-text)]">{item.entityId}</p>
+                      <p className="mt-1 truncate text-xs text-[color:var(--color-text-muted)]">{item.idempotencyKey}</p>
                       {item.externalReference ? (
                         <p className="mt-1 truncate text-xs text-cyan-700">{labels.externalReference}: {item.externalReference}</p>
                       ) : (
-                        <p className="mt-1 text-xs text-neutral-400">{labels.noExternalReference}</p>
+                        <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{labels.noExternalReference}</p>
                       )}
                       {highlights.length > 0 ? (
                         <div className="mt-2 flex flex-wrap gap-1.5">
@@ -1283,7 +1283,7 @@ export function IntegrationManager({
                                   ? "bg-cyan-50 text-cyan-700"
                                   : highlight.tone === "amber"
                                     ? "bg-amber-50 text-amber-700"
-                                    : "bg-neutral-100 text-neutral-600"
+                                    : "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text-muted)]"
                               }`}
                             >
                               {highlight.label}: {highlight.value}
@@ -1292,7 +1292,7 @@ export function IntegrationManager({
                         </div>
                       ) : null}
                       {typeof item.responsePayload?.batchCheckedAt === "string" ? (
-                        <p className="mt-1 text-xs text-neutral-500">
+                        <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">
                           {labels.batchCheckedAt}: {formatDate(item.responsePayload.batchCheckedAt, locale)}
                         </p>
                       ) : null}
@@ -1300,7 +1300,7 @@ export function IntegrationManager({
                         <p className="mt-1 text-xs text-red-600">{labels.lastError}: {item.lastError}</p>
                       ) : null}
                     </div>
-                    <div className="text-sm text-neutral-500">
+                    <div className="text-sm text-[color:var(--color-text-muted)]">
                       <p>{labels.createdAt}: {formatDate(item.createdAt, locale)}</p>
                       <p className="mt-1">{labels.nextAttemptAt}: {formatDate(item.nextAttemptAt, locale)}</p>
                       {item.lastAttemptAt ? <p className="mt-1">{labels.lastAttemptAt}: {formatDate(item.lastAttemptAt, locale)}</p> : null}
@@ -1318,7 +1318,7 @@ export function IntegrationManager({
                           {batchBusyJobId === item.id ? labels.loading : labels.checkBatchResult}
                         </Button>
                       ) : (
-                        <span className="text-xs text-neutral-500">{actionHint(item, labels)}</span>
+                        <span className="text-xs text-[color:var(--color-text-muted)]">{actionHint(item, labels)}</span>
                       )}
                       <Button type="button" variant="ghost" size="sm" onClick={() => setSelectedJob(item)}>
                         {labels.openJobDetail}
@@ -1333,12 +1333,12 @@ export function IntegrationManager({
       </div>
 
       {batchResult ? (
-        <div className="border-b border-neutral-200 bg-cyan-50/60 p-5">
-          <div className="rounded-2xl border border-cyan-200 bg-white p-4 shadow-sm">
+        <div className="border-b border-[color:var(--color-border)] bg-cyan-50 p-5">
+          <div className="rounded-2xl border border-cyan-200 bg-[color:var(--color-surface)] p-4 shadow-sm">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h3 className="text-lg font-semibold tracking-tight text-neutral-950">{labels.batchResult}</h3>
-                <p className="mt-1 text-sm text-neutral-600">{labels.batchResultHint}</p>
+                <h3 className="text-lg font-semibold tracking-tight text-[color:var(--color-text)]">{labels.batchResult}</h3>
+                <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{labels.batchResultHint}</p>
                 <p className="mt-2 text-xs font-medium text-cyan-800">Batch: {batchResult.batchRequestId}</p>
               </div>
               <Button type="button" variant="ghost" size="sm" onClick={() => setBatchResult(null)}>
@@ -1354,22 +1354,22 @@ export function IntegrationManager({
                       ? "border-emerald-200 bg-emerald-50"
                       : item.tone === "warning"
                         ? "border-amber-200 bg-amber-50"
-                        : "border-neutral-200 bg-neutral-50"
+                        : "border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]"
                   }`}
                 >
-                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{item.label}</p>
-                  <p className="mt-2 break-all text-sm font-semibold text-neutral-950">{item.value}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{item.label}</p>
+                  <p className="mt-2 break-all text-sm font-semibold text-[color:var(--color-text)]">{item.value}</p>
                 </article>
               ))}
             </div>
             {summarizeBatchIssues(batchResult, labels).length > 0 ? (
               <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
-                <p className="text-sm font-semibold text-neutral-950">{labels.batchIssueSummary}</p>
+                <p className="text-sm font-semibold text-[color:var(--color-text)]">{labels.batchIssueSummary}</p>
                 <div className="mt-3 grid gap-2">
                   {summarizeBatchIssues(batchResult, labels).map((item) => (
-                    <article key={`${item.key}:${item.status ?? "-"}:${item.reason ?? "-"}`} className="rounded-lg border border-amber-200 bg-white px-3 py-2">
-                      <p className="text-sm font-medium text-neutral-900">{item.key}</p>
-                      <p className="mt-1 text-xs text-neutral-600">
+                    <article key={`${item.key}:${item.status ?? "-"}:${item.reason ?? "-"}`} className="rounded-lg border border-amber-200 bg-[color:var(--color-surface)] px-3 py-2">
+                      <p className="text-sm font-medium text-[color:var(--color-text)]">{item.key}</p>
+                      <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">
                         {labels.batchIssueStatus}: {item.status ?? "-"}
                         {item.reason ? ` • ${labels.batchIssueReason}: ${item.reason}` : ""}
                         {item.recommendedAction ? ` • ${labels.batchIssueRecommendedAction}: ${item.recommendedAction}` : ""}
@@ -1389,28 +1389,28 @@ export function IntegrationManager({
       {selectedJob ? (
         <div className="fixed inset-0 z-50 flex justify-end bg-neutral-950/30">
           <button type="button" className="absolute inset-0" onClick={() => setSelectedJob(null)} aria-label={labels.close} />
-          <aside className="relative h-full w-full max-w-4xl overflow-y-auto bg-white shadow-2xl">
-            <div className="sticky top-0 z-10 flex flex-col gap-3 border-b border-neutral-200 bg-white p-5 sm:flex-row sm:items-start sm:justify-between">
+          <aside className="relative h-full w-full max-w-4xl overflow-y-auto bg-[color:var(--color-surface)] shadow-2xl">
+            <div className="sticky top-0 z-10 flex flex-col gap-3 border-b border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.jobDetailTitle}</p>
-                <h3 className="mt-1 text-lg font-semibold tracking-tight text-neutral-950">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.jobDetailTitle}</p>
+                <h3 className="mt-1 text-lg font-semibold tracking-tight text-[color:var(--color-text)]">
                   {channelLabel(selectedJob.channel, labels)} - {jobTypeLabel(selectedJob.jobType, labels)}
                 </h3>
-                <p className="mt-1 text-sm text-neutral-600">{labels.jobDetailDescription}</p>
+                <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{labels.jobDetailDescription}</p>
               </div>
               <Button type="button" variant="ghost" size="sm" onClick={() => setSelectedJob(null)}>
                 {labels.close}
               </Button>
             </div>
             <div className="grid gap-4 p-5 lg:grid-cols-2">
-              <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-                <p className="text-sm font-semibold text-neutral-900">{labels.requestPayload}</p>
+              <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+                <p className="text-sm font-semibold text-[color:var(--color-text)]">{labels.requestPayload}</p>
                 <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-neutral-950 p-4 text-xs text-neutral-50">
                   {JSON.stringify(selectedJob.payload ?? labels.payloadEmpty, null, 2)}
                 </pre>
               </div>
-              <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-                <p className="text-sm font-semibold text-neutral-900">{labels.responsePayload}</p>
+              <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+                <p className="text-sm font-semibold text-[color:var(--color-text)]">{labels.responsePayload}</p>
                 <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-neutral-950 p-4 text-xs text-neutral-50">
                   {JSON.stringify(selectedJob.responsePayload ?? labels.payloadEmpty, null, 2)}
                 </pre>
@@ -1420,22 +1420,22 @@ export function IntegrationManager({
         </div>
       ) : null}
 
-      <div className="bg-white/90 p-5">
-        <h3 className="text-lg font-semibold tracking-tight text-neutral-950">{labels.deadLetters}</h3>
+      <div className="bg-[color:var(--color-surface)]/90 p-5">
+        <h3 className="text-lg font-semibold tracking-tight text-[color:var(--color-text)]">{labels.deadLetters}</h3>
         <div className="mt-3 grid gap-3">
           {deadLetters.length === 0 ? (
             <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">{labels.deadLettersEmpty}</p>
           ) : deadLetters.map((item) => (
-            <article key={item.id} className="rounded-2xl border border-rose-100 bg-rose-50/60 p-4">
+            <article key={item.id} className="rounded-2xl border border-rose-100 bg-rose-50 p-4">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge className="bg-rose-100 text-rose-700">{labels.statusDeadLetter}</Badge>
-                    <p className="text-sm font-semibold text-neutral-950">{channelLabel(item.channel, labels)}</p>
-                    <p className="text-sm text-neutral-600">{jobTypeLabel(item.jobType, labels)}</p>
+                    <p className="text-sm font-semibold text-[color:var(--color-text)]">{channelLabel(item.channel, labels)}</p>
+                    <p className="text-sm text-[color:var(--color-text-muted)]">{jobTypeLabel(item.jobType, labels)}</p>
                   </div>
-                  <p className="mt-2 break-all text-sm text-neutral-700">{labels.entityId}: {item.entityId}</p>
-                  <p className="mt-1 text-xs text-neutral-500">{labels.attemptProgress}: {item.attemptCount}/{item.maxAttempts} - {labels.createdAt}: {formatDate(item.createdAt, locale)}</p>
+                  <p className="mt-2 break-all text-sm text-[color:var(--color-text)]">{labels.entityId}: {item.entityId}</p>
+                  <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{labels.attemptProgress}: {item.attemptCount}/{item.maxAttempts} - {labels.createdAt}: {formatDate(item.createdAt, locale)}</p>
                   <p className="mt-2 text-sm text-rose-700">{labels.lastError}: {item.lastError}</p>
                 </div>
                 {canManage ? (
@@ -1452,21 +1452,21 @@ export function IntegrationManager({
       {drawerMode ? (
         <div className="fixed inset-0 z-50">
           <button type="button" className="absolute inset-0 bg-black/30" onClick={closeDrawer} aria-label={labels.close} />
-          <aside className={`absolute right-0 top-0 flex h-full w-full flex-col overflow-y-auto border-l border-neutral-200 bg-white shadow-2xl ${drawerFullscreen ? "max-w-none" : "max-w-2xl"}`}>
-            <div className="flex items-start justify-between border-b border-neutral-200 p-5">
+          <aside className={`absolute right-0 top-0 flex h-full w-full flex-col overflow-y-auto border-l border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-2xl ${drawerFullscreen ? "max-w-none" : "max-w-2xl"}`}>
+            <div className="flex items-start justify-between border-b border-[color:var(--color-border)] p-5">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.title}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.title}</p>
                 <h3 className="mt-1 text-xl font-semibold tracking-tight">
                   {drawerMode === "create" ? labels.drawerCreateTitle : labels.drawerProcessTitle}
                 </h3>
-                <p className="mt-1 text-sm text-neutral-500">{labels.drawerDescription}</p>
+                <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{labels.drawerDescription}</p>
               </div>
               <div className="flex items-center gap-1">
                 <button
                   type="button"
                   onClick={() => setDrawerFullscreen((prev) => !prev)}
                   disabled={busy}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-neutral-200 text-neutral-700 transition hover:bg-neutral-100"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[color:var(--color-border)] text-[color:var(--color-text)] transition hover:bg-[color:var(--color-bg-soft)]"
                   aria-label={drawerFullscreen ? "Daralt" : "Tam ekran"}
                 >
                   {drawerFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
@@ -1475,7 +1475,7 @@ export function IntegrationManager({
                   type="button"
                   onClick={closeDrawer}
                   disabled={busy}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-neutral-200 text-neutral-700 transition hover:bg-neutral-100"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[color:var(--color-border)] text-[color:var(--color-text)] transition hover:bg-[color:var(--color-bg-soft)]"
                   aria-label={labels.close}
                 >
                   <X className="h-4 w-4" />
@@ -1488,7 +1488,7 @@ export function IntegrationManager({
                 <>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="grid gap-1">
-                      <label className="text-xs font-medium text-neutral-600">{labels.channel}</label>
+                      <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.channel}</label>
                       <Select value={channel} onValueChange={(value) => setChannel(value as Channel)}>
                         <SelectTrigger>
                           <SelectValue placeholder={labels.channel} />
@@ -1503,7 +1503,7 @@ export function IntegrationManager({
                       </Select>
                     </div>
                     <div className="grid gap-1">
-                      <label className="text-xs font-medium text-neutral-600">{labels.jobType}</label>
+                      <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.jobType}</label>
                       <Select
                         value={jobType}
                         onValueChange={(value) => {
@@ -1531,7 +1531,7 @@ export function IntegrationManager({
                   <div className={`rounded-2xl border px-4 py-3 text-sm ${
                     isStockSync
                       ? "border-cyan-200 bg-cyan-50 text-cyan-800"
-                      : "border-neutral-200 bg-neutral-50 text-neutral-700"
+                      : "border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)]"
                   }`}>
                     {isStockSync ? labels.stockSyncHint : labels.genericSyncHint}
                     <p className="mt-2 text-xs font-medium">
@@ -1541,19 +1541,19 @@ export function IntegrationManager({
                   </div>
 
                   <div className="grid gap-1">
-                    <label className="text-xs font-medium text-neutral-600">{labels.entityIds}</label>
+                    <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.entityIds}</label>
                     <Textarea
                       value={entityIds}
                       onChange={(event) => setEntityIds(event.target.value)}
                       rows={6}
                       placeholder={targetEntityIdsHint}
                     />
-                    <p className="text-xs text-neutral-500">{targetEntityIdsHint}</p>
+                    <p className="text-xs text-[color:var(--color-text-muted)]">{targetEntityIdsHint}</p>
                   </div>
 
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="grid gap-1">
-                      <label className="text-xs font-medium text-neutral-600">{labels.maxAttempts}</label>
+                      <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.maxAttempts}</label>
                       <Input
                         type="number"
                         min={1}
@@ -1564,7 +1564,7 @@ export function IntegrationManager({
                     </div>
                     {isStockSync ? (
                       <div className="grid gap-1">
-                        <label className="text-xs font-medium text-neutral-600">{labels.idempotencySuffix}</label>
+                        <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.idempotencySuffix}</label>
                         <Input
                           value={idempotencySuffix}
                           onChange={(event) => setIdempotencySuffix(event.target.value)}
@@ -1576,15 +1576,15 @@ export function IntegrationManager({
                   {isStockSync ? (
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="grid gap-1">
-                        <label className="text-xs font-medium text-neutral-600">{labels.integrationReference}</label>
+                        <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.integrationReference}</label>
                         <Input
                           value={reference}
                           onChange={(event) => setReference(event.target.value)}
                         />
-                        <p className="text-xs text-neutral-500">{labels.stockSyncReferenceHint}</p>
+                        <p className="text-xs text-[color:var(--color-text-muted)]">{labels.stockSyncReferenceHint}</p>
                       </div>
                       <div className="grid gap-1">
-                        <label className="text-xs font-medium text-neutral-600">{labels.triggerPreset}</label>
+                        <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.triggerPreset}</label>
                         <Select value={trigger} onValueChange={(value) => setTrigger(value)}>
                           <SelectTrigger>
                             <SelectValue placeholder={labels.triggerPreset} />
@@ -1597,19 +1597,19 @@ export function IntegrationManager({
                             ))}
                           </SelectContent>
                         </Select>
-                        <p className="text-xs text-neutral-500">{labels.stockSyncTriggerHint}</p>
+                        <p className="text-xs text-[color:var(--color-text-muted)]">{labels.stockSyncTriggerHint}</p>
                       </div>
                     </div>
                   ) : null}
 
-                  <label className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-700">
+                  <label className="flex items-center gap-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3 text-sm text-[color:var(--color-text)]">
                     <input type="checkbox" checked={forceFail} onChange={(event) => setForceFail(event.target.checked)} />
                     {labels.forceFail}
                   </label>
                 </>
               ) : (
                 <div className="grid gap-1">
-                  <label className="text-xs font-medium text-neutral-600">{labels.queueLimit}</label>
+                  <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.queueLimit}</label>
                   <Input
                     type="number"
                     min={1}
@@ -1621,7 +1621,7 @@ export function IntegrationManager({
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-3 border-t border-neutral-200 px-5 py-4">
+            <div className="flex items-center justify-end gap-3 border-t border-[color:var(--color-border)] px-5 py-4">
               <Button type="button" variant="secondary" onClick={closeDrawer} disabled={busy}>
                 {labels.close}
               </Button>

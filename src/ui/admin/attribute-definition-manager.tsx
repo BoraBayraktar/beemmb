@@ -546,12 +546,12 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
   }
 
   return (
-    <section className="rounded-2xl border border-neutral-200 bg-white">
-      <div className="flex flex-col gap-4 border-b border-neutral-200 p-5 lg:flex-row lg:items-center lg:justify-between">
+    <section className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
+      <div className="flex flex-col gap-4 border-b border-[color:var(--color-border)] p-5 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.title}</p>
-          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-neutral-950">{labels.createTitle}</h2>
-          <p className="mt-1 text-sm text-neutral-500">{labels.description}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.title}</p>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[color:var(--color-text)]">{labels.createTitle}</h2>
+          <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{labels.description}</p>
         </div>
         <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
           <input
@@ -591,19 +591,19 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
             placeholder={labels.search}
             className="w-full max-w-md"
           />
-          <p className="text-sm text-neutral-500">
+          <p className="text-sm text-[color:var(--color-text-muted)]">
             {labels.selectedCount}: {selectedIds.length}
           </p>
         </div>
 
         <div className="grid gap-3 lg:hidden">
           {filteredItems.length === 0 ? (
-            <article className="rounded-2xl border border-neutral-200 bg-white p-4 text-sm text-neutral-500">
+            <article className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 text-sm text-[color:var(--color-text-muted)]">
               {labels.empty}
             </article>
           ) : (
             filteredItems.map((item) => (
-              <article key={item.id} className="rounded-2xl border border-neutral-200 bg-white p-4">
+              <article key={item.id} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
                 <div className="flex items-start gap-3">
                   <input
                     type="checkbox"
@@ -614,18 +614,18 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <h3 className="text-sm font-semibold text-neutral-950">{item.name}</h3>
+                      <h3 className="text-sm font-semibold text-[color:var(--color-text)]">{item.name}</h3>
                       <span
                         className={
                           item.isActive
                             ? "rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700"
-                            : "rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-600"
+                            : "rounded-full bg-[color:var(--color-bg-soft)] px-2.5 py-1 text-xs font-medium text-[color:var(--color-text-muted)]"
                         }
                       >
                         {item.isActive ? labels.statusActive : labels.statusArchived}
                       </span>
                     </div>
-                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-neutral-600">
+                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-[color:var(--color-text-muted)]">
                       <p>{labels.slug}: {item.slug}</p>
                       <p>{labels.attributeDisplayType}: {item.displayType}</p>
                       <p>{labels.trendyolId}: {item.trendyolAttributeId ?? "-"}</p>
@@ -649,10 +649,10 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
           )}
         </div>
 
-        <div className="hidden overflow-hidden rounded-2xl border border-neutral-200 lg:block">
+        <div className="hidden overflow-hidden rounded-2xl border border-[color:var(--color-border)] lg:block">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-neutral-200 text-sm">
-              <thead className="bg-neutral-50 text-left text-xs font-semibold uppercase tracking-wide text-neutral-500">
+            <table className="min-w-full divide-y divide-[color:var(--color-border)] text-sm">
+              <thead className="bg-[color:var(--color-bg-soft)] text-left text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">
                 <tr>
                   <th className="px-4 py-3">
                     <input type="checkbox" checked={allVisibleSelected} onChange={toggleSelectAllVisible} aria-label={labels.selectedCount} />
@@ -667,16 +667,16 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
                   <th className="px-4 py-3 text-right">{labels.save}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-200 bg-white">
+              <tbody className="divide-y divide-[color:var(--color-border)] bg-[color:var(--color-surface)]">
                 {filteredItems.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-4 py-10 text-center text-sm text-neutral-500">
+                    <td colSpan={9} className="px-4 py-10 text-center text-sm text-[color:var(--color-text-muted)]">
                       {labels.empty}
                     </td>
                   </tr>
                 ) : (
                   filteredItems.map((item) => (
-                    <tr key={item.id} className="hover:bg-neutral-50/80">
+                    <tr key={item.id} className="hover:bg-[color:var(--color-bg-soft)]/80">
                       <td className="px-4 py-3">
                         <input
                           type="checkbox"
@@ -685,18 +685,18 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
                           aria-label={item.name}
                         />
                       </td>
-                      <td className="px-4 py-3 font-medium text-neutral-950">{item.name}</td>
-                      <td className="px-4 py-3 text-neutral-600">{item.slug}</td>
-                      <td className="px-4 py-3 text-neutral-600">{item.displayType}</td>
-                      <td className="px-4 py-3 text-neutral-600">{item.trendyolAttributeId ?? "-"}</td>
-                      <td className="px-4 py-3 text-neutral-600">{item.sortOrder}</td>
-                      <td className="px-4 py-3 text-neutral-600">{item.productCount}</td>
+                      <td className="px-4 py-3 font-medium text-[color:var(--color-text)]">{item.name}</td>
+                      <td className="px-4 py-3 text-[color:var(--color-text-muted)]">{item.slug}</td>
+                      <td className="px-4 py-3 text-[color:var(--color-text-muted)]">{item.displayType}</td>
+                      <td className="px-4 py-3 text-[color:var(--color-text-muted)]">{item.trendyolAttributeId ?? "-"}</td>
+                      <td className="px-4 py-3 text-[color:var(--color-text-muted)]">{item.sortOrder}</td>
+                      <td className="px-4 py-3 text-[color:var(--color-text-muted)]">{item.productCount}</td>
                       <td className="px-4 py-3">
                         <span
                           className={
                             item.isActive
                               ? "rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700"
-                              : "rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-600"
+                              : "rounded-full bg-[color:var(--color-bg-soft)] px-2.5 py-1 text-xs font-medium text-[color:var(--color-text-muted)]"
                           }
                         >
                           {item.isActive ? labels.statusActive : labels.statusArchived}
@@ -722,18 +722,18 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
           </div>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-cyan-200 bg-cyan-50/40 p-4">
+        <div className="mt-6 rounded-2xl border border-cyan-200 bg-cyan-50 p-4">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-neutral-950">{labels.valueMappingsTitle}</h3>
-              <p className="mt-1 text-sm text-neutral-600">{labels.valueMappingsDescription}</p>
+              <h3 className="text-lg font-semibold text-[color:var(--color-text)]">{labels.valueMappingsTitle}</h3>
+              <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{labels.valueMappingsDescription}</p>
             </div>
             <Button type="button" variant="secondary" size="sm" disabled={pending} onClick={() => void refreshMappings()}>
               {labels.search}
             </Button>
           </div>
 
-          <div className="mt-4 grid gap-3 rounded-xl border border-cyan-200 bg-white p-3">
+          <div className="mt-4 grid gap-3 rounded-xl border border-cyan-200 bg-[color:var(--color-surface)] p-3">
             <div className="grid gap-2 md:max-w-xs">
               <Label>{labels.valueMappingsChannel}</Label>
               <Select
@@ -788,9 +788,9 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
                   </div>
                 ) : null}
                 {mappingCategorySearch.busy ? (
-                  <p className="text-sm text-neutral-500">{labels.saving}</p>
+                  <p className="text-sm text-[color:var(--color-text-muted)]">{labels.saving}</p>
                 ) : mappingCategorySearch.items.length === 0 ? (
-                  <p className="text-sm text-neutral-500">{labels.trendyolCategorySearchHint}</p>
+                  <p className="text-sm text-[color:var(--color-text-muted)]">{labels.trendyolCategorySearchHint}</p>
                 ) : (
                   <div className="grid max-h-52 gap-1 overflow-y-auto">
                     {mappingCategorySearch.items.map((option) => (
@@ -803,7 +803,7 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
                           mappingCategorySearch.setItems([]);
                           setTrendyolValueOptionsByMappingId({});
                         }}
-                        className="rounded-lg bg-neutral-50 px-3 py-2 text-left text-sm transition hover:bg-cyan-50"
+                        className="rounded-lg bg-[color:var(--color-bg-soft)] px-3 py-2 text-left text-sm transition hover:bg-cyan-50"
                       >
                         {option.path}
                       </button>
@@ -818,11 +818,11 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
             )}
           </div>
 
-          <div className="mt-4 overflow-hidden rounded-xl border border-cyan-200 bg-white">
+          <div className="mt-4 overflow-hidden rounded-xl border border-cyan-200 bg-[color:var(--color-surface)]">
             {mappingRows.length === 0 ? (
-              <p className="p-4 text-sm text-neutral-500">{labels.empty}</p>
+              <p className="p-4 text-sm text-[color:var(--color-text-muted)]">{labels.empty}</p>
             ) : (
-              <div className="divide-y divide-neutral-200">
+              <div className="divide-y divide-[color:var(--color-border)]">
                 {mappingRows.map((item) => {
                   const definition = items.find((candidate) => candidate.id === item.attributeDefinitionId);
                   const draft = mappingDrafts[item.id] ?? {
@@ -842,12 +842,12 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
                   return (
                     <article key={item.id} className="grid gap-3 p-4 lg:grid-cols-[1fr_1fr_1.3fr_1fr_1fr_110px] lg:items-end">
                       <div>
-                        <p className="text-xs font-medium text-neutral-500">{labels.attributeName}</p>
-                        <p className="mt-1 text-sm font-semibold text-neutral-950">{item.attributeName}</p>
+                        <p className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.attributeName}</p>
+                        <p className="mt-1 text-sm font-semibold text-[color:var(--color-text)]">{item.attributeName}</p>
                       </div>
                       <div>
-                        <p className="text-xs font-medium text-neutral-500">{labels.localValue}</p>
-                        <p className="mt-1 text-sm text-neutral-700">{item.localValue}</p>
+                        <p className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.localValue}</p>
+                        <p className="mt-1 text-sm text-[color:var(--color-text)]">{item.localValue}</p>
                       </div>
                       <div className="grid gap-1">
                         <Label className="text-xs">{labels.externalValueId}</Label>
@@ -857,12 +857,12 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
                               {labels.search}
                             </Button>
                             {(trendyolValueOptionsByMappingId[item.id] ?? []).length > 0 ? (
-                              <div className="max-h-44 overflow-y-auto rounded-lg border border-neutral-200 bg-neutral-50 p-2">
+                              <div className="max-h-44 overflow-y-auto rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-2">
                                 {trendyolValueOptionsByMappingId[item.id].map((option) => (
                                   <button
                                     key={option.id}
                                     type="button"
-                                    className="block w-full rounded-md px-2 py-1 text-left text-xs hover:bg-white"
+                                    className="block w-full rounded-md px-2 py-1 text-left text-xs hover:bg-[color:var(--color-surface)]"
                                     onClick={() => {
                                       updateMappingDraft(item.id, "externalAttributeValueId", String(option.id));
                                       updateMappingDraft(item.id, "externalAttributeValueName", option.name);
@@ -874,7 +874,7 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
                                 ))}
                               </div>
                             ) : (
-                              <p className="text-xs text-neutral-500">
+                              <p className="text-xs text-[color:var(--color-text-muted)]">
                                 {draft.externalAttributeValueId ? `${labels.trendyolSelected}: ${draft.externalAttributeValueId}` : valueLookupHint}
                               </p>
                             )}
@@ -916,11 +916,11 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
       {drawerMode ? (
         <div className="fixed inset-0 z-50">
           <button type="button" aria-label={labels.cancel} className="absolute inset-0 bg-black/30" onClick={closeDrawer} />
-          <aside className="absolute right-0 top-0 h-full w-full overflow-y-auto border-l border-neutral-200 bg-white shadow-2xl sm:max-w-2xl">
-            <div className="flex items-start justify-between gap-3 border-b border-neutral-200 px-4 py-4 sm:px-5">
+          <aside className="absolute right-0 top-0 h-full w-full overflow-y-auto border-l border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-2xl sm:max-w-2xl">
+            <div className="flex items-start justify-between gap-3 border-b border-[color:var(--color-border)] px-4 py-4 sm:px-5">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.title}</p>
-                <h3 className="mt-1 text-lg font-semibold text-neutral-950 sm:text-xl">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.title}</p>
+                <h3 className="mt-1 text-lg font-semibold text-[color:var(--color-text)] sm:text-xl">
                   {drawerMode === "create" ? labels.createTitle : `${labels.edit}: ${form.name || labels.attributeName}`}
                 </h3>
               </div>
@@ -965,10 +965,10 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
                   placeholder={labels.trendyolCategorySearch}
                   disabled={pending}
                 />
-                <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
+                <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-3">
                   {form.trendyolAttributeId ? (
-                    <div className="mb-2 flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 text-sm">
-                      <span className="text-neutral-700">{labels.trendyolSelected}: {form.trendyolAttributeId}</span>
+                    <div className="mb-2 flex items-center justify-between gap-3 rounded-lg bg-[color:var(--color-surface)] px-3 py-2 text-sm">
+                      <span className="text-[color:var(--color-text)]">{labels.trendyolSelected}: {form.trendyolAttributeId}</span>
                       <button type="button" className="text-xs font-medium text-rose-600" onClick={() => updateForm("trendyolAttributeId", "")}>
                         {labels.delete}
                       </button>
@@ -977,9 +977,9 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
                   {!attributeCategoryId ? (
                     <>
                       {attributeCategorySearch.busy ? (
-                        <p className="text-sm text-neutral-500">{labels.saving}</p>
+                        <p className="text-sm text-[color:var(--color-text-muted)]">{labels.saving}</p>
                       ) : attributeCategorySearch.items.length === 0 ? (
-                        <p className="text-sm text-neutral-500">{labels.trendyolCategorySearchHint}</p>
+                        <p className="text-sm text-[color:var(--color-text-muted)]">{labels.trendyolCategorySearchHint}</p>
                       ) : (
                         <div className="grid gap-1">
                           {attributeCategorySearch.items.map((option) => (
@@ -991,7 +991,7 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
                                 attributeCategorySearch.setQuery(option.path);
                                 attributeCategorySearch.setItems([]);
                               }}
-                              className="rounded-lg bg-white px-3 py-2 text-left text-sm transition hover:bg-cyan-50"
+                              className="rounded-lg bg-[color:var(--color-surface)] px-3 py-2 text-left text-sm transition hover:bg-cyan-50"
                             >
                               {option.path}
                             </button>
@@ -1000,9 +1000,9 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
                       )}
                     </>
                   ) : trendyolAttributeLookupBusy ? (
-                    <p className="text-sm text-neutral-500">{labels.saving}</p>
+                    <p className="text-sm text-[color:var(--color-text-muted)]">{labels.saving}</p>
                   ) : trendyolAttributeOptions.length === 0 ? (
-                    <p className="text-sm text-neutral-500">{labels.trendyolAttributeSearchHint}</p>
+                    <p className="text-sm text-[color:var(--color-text-muted)]">{labels.trendyolAttributeSearchHint}</p>
                   ) : (
                     <div className="grid gap-1">
                       {trendyolAttributeOptions.map((option) => (
@@ -1010,10 +1010,10 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
                           key={option.id}
                           type="button"
                           onClick={() => updateForm("trendyolAttributeId", String(option.id))}
-                          className="rounded-lg bg-white px-3 py-2 text-left text-sm transition hover:bg-cyan-50"
+                          className="rounded-lg bg-[color:var(--color-surface)] px-3 py-2 text-left text-sm transition hover:bg-cyan-50"
                         >
-                          <span className="font-medium text-neutral-950">{option.name}</span>
-                          <span className="ml-2 text-xs text-neutral-500">
+                          <span className="font-medium text-[color:var(--color-text)]">{option.name}</span>
+                          <span className="ml-2 text-xs text-[color:var(--color-text-muted)]">
                             {option.required ? "Zorunlu" : "Opsiyonel"}{option.varianter ? " - Varyant" : ""}
                           </span>
                         </button>
@@ -1022,7 +1022,7 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
                   )}
                 </div>
               </div>
-              <label className="flex items-center gap-3 rounded-xl border border-neutral-200 px-4 py-3 text-sm text-neutral-700">
+              <label className="flex items-center gap-3 rounded-xl border border-[color:var(--color-border)] px-4 py-3 text-sm text-[color:var(--color-text)]">
                 <input
                   type="checkbox"
                   checked={form.isActive}
@@ -1032,7 +1032,7 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
               </label>
             </div>
 
-            <div className="flex flex-col-reverse gap-2 border-t border-neutral-200 px-4 py-4 sm:flex-row sm:justify-end sm:px-5">
+            <div className="flex flex-col-reverse gap-2 border-t border-[color:var(--color-border)] px-4 py-4 sm:flex-row sm:justify-end sm:px-5">
               <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={closeDrawer} disabled={pending}>
                 {labels.cancel}
               </Button>

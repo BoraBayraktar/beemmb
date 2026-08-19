@@ -564,12 +564,12 @@ export function CategoryManager({ initialResult, parentCandidates, labels, canDe
   }
 
   return (
-    <section className="rounded-2xl border border-neutral-200 bg-white">
-      <div className="flex flex-col gap-4 border-b border-neutral-200 p-5 lg:flex-row lg:items-center lg:justify-between">
+    <section className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
+      <div className="flex flex-col gap-4 border-b border-[color:var(--color-border)] p-5 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.title}</p>
-          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-neutral-950">{labels.listTitle}</h2>
-          <p className="mt-1 text-sm text-neutral-500">{result.total} kategori listeleniyor</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.title}</p>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[color:var(--color-text)]">{labels.listTitle}</h2>
+          <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{result.total} kategori listeleniyor</p>
           <p className="mt-3 rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-900">{labels.marketplaceNote}</p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -631,14 +631,14 @@ export function CategoryManager({ initialResult, parentCandidates, labels, canDe
               <SelectItem value="product_count_desc">{labels.sortProductCountDesc}</SelectItem>
             </SelectContent>
           </Select>
-          <label className="flex items-center gap-3 rounded-xl border border-neutral-200 px-3 py-2 text-sm text-neutral-700">
+          <label className="flex items-center gap-3 rounded-xl border border-[color:var(--color-border)] px-3 py-2 text-sm text-[color:var(--color-text)]">
             <input type="checkbox" checked={rootOnly} onChange={(event) => setRootOnly(event.target.checked)} />
             {labels.rootCategoriesOnly}
           </label>
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-neutral-200">
-          <div className="hidden grid-cols-[1fr_1fr_120px_120px_1fr_120px_190px] gap-4 border-b border-neutral-200 bg-neutral-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 lg:grid">
+        <div className="overflow-hidden rounded-xl border border-[color:var(--color-border)]">
+          <div className="hidden grid-cols-[1fr_1fr_120px_120px_1fr_120px_190px] gap-4 border-b border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)] lg:grid">
             <span>{labels.name}</span>
             <span>{labels.slug}</span>
             <span>{labels.trendyolId}</span>
@@ -649,19 +649,19 @@ export function CategoryManager({ initialResult, parentCandidates, labels, canDe
           </div>
 
           {result.items.length === 0 ? (
-            <p className="p-6 text-sm text-neutral-500">{labels.empty}</p>
+            <p className="p-6 text-sm text-[color:var(--color-text-muted)]">{labels.empty}</p>
           ) : (
-            <div className="divide-y divide-neutral-200">
+            <div className="divide-y divide-[color:var(--color-border)]">
               {result.items.map((category) => (
                 <article key={category.id} className="grid gap-4 p-4 lg:grid-cols-[1fr_1fr_120px_120px_1fr_120px_190px] lg:items-center">
                   <div>
-                    <h3 className="font-medium text-neutral-950">{category.name}</h3>
+                    <h3 className="font-medium text-[color:var(--color-text)]">{category.name}</h3>
                   </div>
-                  <p className="text-sm text-neutral-500">{category.slug}</p>
-                  <p className="text-sm text-neutral-500">{category.trendyolCategoryId ?? "-"}</p>
-                  <p className="text-sm text-neutral-500">{category.pazaramaCategoryId ?? "-"}</p>
-                  <p className="text-sm text-neutral-500">{getParentBreadcrumb(category)}</p>
-                  <p className="text-sm font-semibold text-neutral-950">{category.productCount}</p>
+                  <p className="text-sm text-[color:var(--color-text-muted)]">{category.slug}</p>
+                  <p className="text-sm text-[color:var(--color-text-muted)]">{category.trendyolCategoryId ?? "-"}</p>
+                  <p className="text-sm text-[color:var(--color-text-muted)]">{category.pazaramaCategoryId ?? "-"}</p>
+                  <p className="text-sm text-[color:var(--color-text-muted)]">{getParentBreadcrumb(category)}</p>
+                  <p className="text-sm font-semibold text-[color:var(--color-text)]">{category.productCount}</p>
                   <div className="flex flex-wrap gap-2 lg:justify-end">
                     <Button type="button" size="sm" variant="secondary" disabled={loading} onClick={() => openEditDrawer(category)}>{labels.edit}</Button>
                     {canDelete ? (
@@ -676,7 +676,7 @@ export function CategoryManager({ initialResult, parentCandidates, labels, canDe
 
         <div className="mt-4 flex items-center justify-between gap-3">
           <Button type="button" variant="secondary" disabled={result.page <= 1 || loading} onClick={() => goToPage(Math.max(1, result.page - 1))}>{labels.prev}</Button>
-          <span className="text-sm text-neutral-500">{labels.page} {result.page}/{result.totalPages}</span>
+          <span className="text-sm text-[color:var(--color-text-muted)]">{labels.page} {result.page}/{result.totalPages}</span>
           <Button type="button" variant="secondary" disabled={result.page >= result.totalPages || loading} onClick={() => goToPage(Math.min(result.totalPages, result.page + 1))}>{labels.next}</Button>
         </div>
       </div>
@@ -684,10 +684,10 @@ export function CategoryManager({ initialResult, parentCandidates, labels, canDe
       {drawerMode ? (
         <div className="fixed inset-0 z-50">
           <button type="button" aria-label={labels.cancel} className="absolute inset-0 bg-black/30" onClick={closeDrawer} />
-          <aside className="absolute right-0 top-0 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-neutral-200 bg-white shadow-2xl">
-            <div className="flex items-start justify-between border-b border-neutral-200 p-5">
+          <aside className="absolute right-0 top-0 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-2xl">
+            <div className="flex items-start justify-between border-b border-[color:var(--color-border)] p-5">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.title}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.title}</p>
                 <h3 className="mt-1 text-xl font-semibold tracking-tight">{activeTitle}</h3>
               </div>
               <Button type="button" size="icon" variant="ghost" onClick={closeDrawer} disabled={loading}>
@@ -708,19 +708,19 @@ export function CategoryManager({ initialResult, parentCandidates, labels, canDe
                   placeholder={labels.pazaramaSearch}
                   disabled={loading}
                 />
-                <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
+                <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-3">
                   {activeForm.pazaramaCategoryId ? (
-                    <div className="mb-2 flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 text-sm">
-                      <span className="text-neutral-700">{labels.pazaramaSelected}: {activeForm.pazaramaCategoryId}</span>
+                    <div className="mb-2 flex items-center justify-between gap-3 rounded-lg bg-[color:var(--color-surface)] px-3 py-2 text-sm">
+                      <span className="text-[color:var(--color-text)]">{labels.pazaramaSelected}: {activeForm.pazaramaCategoryId}</span>
                       <button type="button" className="text-xs font-medium text-rose-600" onClick={() => patchActiveField("pazaramaCategoryId", "")}>
                         {labels.delete}
                       </button>
                     </div>
                   ) : null}
                   {pazaramaCategorySearch.busy ? (
-                    <p className="text-sm text-neutral-500">{labels.loading}</p>
+                    <p className="text-sm text-[color:var(--color-text-muted)]">{labels.loading}</p>
                   ) : pazaramaCategorySearch.items.length === 0 ? (
-                    <p className="text-sm text-neutral-500">{labels.pazaramaSearchHint}</p>
+                    <p className="text-sm text-[color:var(--color-text-muted)]">{labels.pazaramaSearchHint}</p>
                   ) : (
                     <div className="grid gap-1">
                       {pazaramaCategorySearch.items.map((option) => (
@@ -732,9 +732,9 @@ export function CategoryManager({ initialResult, parentCandidates, labels, canDe
                             pazaramaCategorySearch.setQuery(option.path);
                             pazaramaCategorySearch.setItems([]);
                           }}
-                          className="rounded-lg bg-white px-3 py-2 text-left text-sm transition hover:bg-cyan-50"
+                          className="rounded-lg bg-[color:var(--color-surface)] px-3 py-2 text-left text-sm transition hover:bg-cyan-50"
                         >
-                          <span className="font-medium text-neutral-950">{option.path}</span>
+                          <span className="font-medium text-[color:var(--color-text)]">{option.path}</span>
                         </button>
                       ))}
                     </div>
@@ -753,19 +753,19 @@ export function CategoryManager({ initialResult, parentCandidates, labels, canDe
                   placeholder={labels.trendyolSearch}
                   disabled={loading}
                 />
-                <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
+                <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-3">
                   {activeForm.trendyolCategoryId ? (
-                    <div className="mb-2 flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 text-sm">
-                      <span className="text-neutral-700">{labels.trendyolSelected}: {activeForm.trendyolCategoryId}</span>
+                    <div className="mb-2 flex items-center justify-between gap-3 rounded-lg bg-[color:var(--color-surface)] px-3 py-2 text-sm">
+                      <span className="text-[color:var(--color-text)]">{labels.trendyolSelected}: {activeForm.trendyolCategoryId}</span>
                       <button type="button" className="text-xs font-medium text-rose-600" onClick={() => patchActiveField("trendyolCategoryId", "")}>
                         {labels.delete}
                       </button>
                     </div>
                   ) : null}
                   {trendyolCategorySearch.busy ? (
-                    <p className="text-sm text-neutral-500">{labels.loading}</p>
+                    <p className="text-sm text-[color:var(--color-text-muted)]">{labels.loading}</p>
                   ) : trendyolCategorySearch.items.length === 0 ? (
-                    <p className="text-sm text-neutral-500">{labels.trendyolSearchHint}</p>
+                    <p className="text-sm text-[color:var(--color-text-muted)]">{labels.trendyolSearchHint}</p>
                   ) : (
                     <div className="grid gap-1">
                       {trendyolCategorySearch.items.map((option) => (
@@ -777,9 +777,9 @@ export function CategoryManager({ initialResult, parentCandidates, labels, canDe
                             trendyolCategorySearch.setQuery(option.path);
                             trendyolCategorySearch.setItems([]);
                           }}
-                          className="rounded-lg bg-white px-3 py-2 text-left text-sm transition hover:bg-cyan-50"
+                          className="rounded-lg bg-[color:var(--color-surface)] px-3 py-2 text-left text-sm transition hover:bg-cyan-50"
                         >
-                          <span className="font-medium text-neutral-950">{option.path}</span>
+                          <span className="font-medium text-[color:var(--color-text)]">{option.path}</span>
                         </button>
                       ))}
                     </div>
@@ -808,7 +808,7 @@ export function CategoryManager({ initialResult, parentCandidates, labels, canDe
                 </Select>
               </div>
 
-              <div className="mt-2 flex justify-end gap-2 border-t border-neutral-200 pt-5">
+              <div className="mt-2 flex justify-end gap-2 border-t border-[color:var(--color-border)] pt-5">
                 <Button type="button" variant="secondary" onClick={closeDrawer} disabled={loading}>{labels.cancel}</Button>
                 <Button type="submit" disabled={loading}>{loading ? labels.loading : activeSubmit}</Button>
               </div>

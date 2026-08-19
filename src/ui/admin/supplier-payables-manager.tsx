@@ -89,10 +89,10 @@ export function SupplierPayablesManager({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold text-neutral-950">{labels.title}</h1>
-          <p className="text-sm text-neutral-600">{labels.description}</p>
+          <h1 className="text-2xl font-semibold text-[color:var(--color-text)]">{labels.title}</h1>
+          <p className="text-sm text-[color:var(--color-text-muted)]">{labels.description}</p>
         </div>
         <form action={`/${locale}/admin/finance/payables`} className="mt-4 space-y-3">
           {overdueOnly ? <input type="hidden" name="overdueOnly" value="1" /> : null}
@@ -106,13 +106,13 @@ export function SupplierPayablesManager({
         <div className="mt-4 flex flex-wrap gap-2">
           <Link
             href={buildFilterHref(locale, false, initialSearch)}
-            className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${!overdueOnly ? "bg-neutral-950 !text-white hover:!text-white" : "bg-neutral-100 text-neutral-700 hover:text-neutral-950"}`}
+            className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${!overdueOnly ? "bg-neutral-950 !text-white hover:!text-white" : "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)] hover:text-[color:var(--color-text)]"}`}
           >
             {labels.allOpenFilter}
           </Link>
           <Link
             href={buildFilterHref(locale, true, initialSearch)}
-            className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${overdueOnly ? "bg-neutral-950 !text-white hover:!text-white" : "bg-neutral-100 text-neutral-700 hover:text-neutral-950"}`}
+            className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${overdueOnly ? "bg-neutral-950 !text-white hover:!text-white" : "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)] hover:text-[color:var(--color-text)]"}`}
           >
             {labels.overdueFilter}
           </Link>
@@ -128,9 +128,9 @@ export function SupplierPayablesManager({
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">{dueWithinLabel}</p>
           <p className="mt-3 text-2xl font-semibold text-amber-950">{formatMoney(dueKpi.dueWithinDaysAmount, dueKpi.currency)}</p>
         </article>
-        <article className="rounded-3xl border border-neutral-200 bg-neutral-50 p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.nearestDueDateKpi}</p>
-          <p className="mt-3 text-lg font-semibold text-neutral-950">
+        <article className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.nearestDueDateKpi}</p>
+          <p className="mt-3 text-lg font-semibold text-[color:var(--color-text)]">
             {dueKpi.nearestDueDate ? formatDate(dueKpi.nearestDueDate) : labels.notSpecified}
           </p>
         </article>
@@ -138,18 +138,18 @@ export function SupplierPayablesManager({
 
       <section className="grid gap-3">
         {items.length === 0 ? (
-          <article className="rounded-3xl border border-dashed border-neutral-300 bg-white p-6 text-sm text-neutral-500 shadow-sm">
+          <article className="rounded-3xl border border-dashed border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-6 text-sm text-[color:var(--color-text-muted)] shadow-sm">
             {labels.noResults}
           </article>
         ) : items.map((item) => {
           const overdueDocument = item.documents.find((document) => document.isOverdue) ?? null;
 
           return (
-            <article key={item.supplierKey} className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+            <article key={item.supplierKey} className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-lg font-semibold text-neutral-950">{item.supplierName}</h2>
-                  <div className="mt-3 grid gap-2 text-sm text-neutral-700 md:grid-cols-2 xl:grid-cols-4">
+                  <h2 className="text-lg font-semibold text-[color:var(--color-text)]">{item.supplierName}</h2>
+                  <div className="mt-3 grid gap-2 text-sm text-[color:var(--color-text)] md:grid-cols-2 xl:grid-cols-4">
                     <p>{labels.totalAmount}: {item.totalAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {item.currency}</p>
                     <p>{labels.documentCount}: {item.documentCount}</p>
                     <p>{labels.draftCount}: {item.draftCount}</p>
@@ -164,7 +164,7 @@ export function SupplierPayablesManager({
                 <div className="flex flex-wrap gap-2">
                   <Link
                     href={`/${locale}/admin/finance/payables/${encodeURIComponent(item.supplierKey)}`}
-                    className="inline-flex h-10 items-center rounded-xl border border-neutral-300 px-4 text-sm font-medium text-neutral-700"
+                    className="inline-flex h-10 items-center rounded-xl border border-[color:var(--color-border)] px-4 text-sm font-medium text-[color:var(--color-text)]"
                   >
                     {labels.viewDetail}
                   </Link>

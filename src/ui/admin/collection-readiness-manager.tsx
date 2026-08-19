@@ -141,15 +141,15 @@ export function CollectionReadinessManager({ result, accountOptions, labels }: P
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold text-neutral-950">{labels.title}</h1>
-          <p className="text-sm text-neutral-600">{labels.description}</p>
+          <h1 className="text-2xl font-semibold text-[color:var(--color-text)]">{labels.title}</h1>
+          <p className="text-sm text-[color:var(--color-text-muted)]">{labels.description}</p>
         </div>
       </section>
 
       {message ? (
-        <section className="rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-700 shadow-sm">
+        <section className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 text-sm text-[color:var(--color-text)] shadow-sm">
           {message}
         </section>
       ) : null}
@@ -167,9 +167,9 @@ export function CollectionReadinessManager({ result, accountOptions, labels }: P
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">{labels.pendingCount}</p>
           <p className="mt-3 text-2xl font-semibold text-amber-950">{result.summary.pendingCount}</p>
         </article>
-        <article className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.recordedCount}</p>
-          <p className="mt-3 text-2xl font-semibold text-neutral-950">{result.summary.recordedCount}</p>
+        <article className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.recordedCount}</p>
+          <p className="mt-3 text-2xl font-semibold text-[color:var(--color-text)]">{result.summary.recordedCount}</p>
         </article>
       </section>
 
@@ -186,11 +186,11 @@ export function CollectionReadinessManager({ result, accountOptions, labels }: P
 
       <section className="grid gap-3">
         {result.items.length === 0 ? (
-          <article className="rounded-3xl border border-dashed border-neutral-300 bg-white p-6 text-sm text-neutral-500 shadow-sm">
+          <article className="rounded-3xl border border-dashed border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-6 text-sm text-[color:var(--color-text-muted)] shadow-sm">
             {labels.noResults}
           </article>
         ) : result.items.map((item) => (
-          <article key={item.orderId} className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+          <article key={item.orderId} className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
             {(() => {
               const financeStatus = getFinanceStatus(item, labels);
 
@@ -198,8 +198,8 @@ export function CollectionReadinessManager({ result, accountOptions, labels }: P
                 <>
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="min-w-0 flex-1">
-                <h2 className="text-lg font-semibold text-neutral-950">{item.orderNumber}</h2>
-                <div className="mt-3 grid gap-2 text-sm text-neutral-700 md:grid-cols-2 xl:grid-cols-4">
+                <h2 className="text-lg font-semibold text-[color:var(--color-text)]">{item.orderNumber}</h2>
+                <div className="mt-3 grid gap-2 text-sm text-[color:var(--color-text)] md:grid-cols-2 xl:grid-cols-4">
                   <p>{labels.counterparty}: {item.counterpartyName}</p>
                   <p>{labels.paymentStatus}: {item.paymentStatus}</p>
                   <p>
@@ -218,7 +218,7 @@ export function CollectionReadinessManager({ result, accountOptions, labels }: P
                 <select
                   value={selectedAccountIds[item.orderId] ?? accountOptions[0]?.id ?? ""}
                   onChange={(event) => setSelectedAccountIds((current) => ({ ...current, [item.orderId]: event.target.value }))}
-                  className="h-10 rounded-xl border border-neutral-300 px-3 text-sm text-neutral-700"
+                  className="h-10 rounded-xl border border-[color:var(--color-border)] px-3 text-sm text-[color:var(--color-text)]"
                 >
                   {accountOptions.length === 0 ? <option value="">{labels.account}</option> : null}
                   {accountOptions.map((option) => (
@@ -229,14 +229,14 @@ export function CollectionReadinessManager({ result, accountOptions, labels }: P
                   type="button"
                   disabled={item.remainingAmount <= 0 || busyOrderId === item.orderId || isPending}
                   onClick={() => createCollectionRecord(item.orderId, item.remainingAmount)}
-                  className="inline-flex h-10 items-center rounded-xl border border-neutral-300 px-4 text-sm font-medium text-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex h-10 items-center rounded-xl border border-[color:var(--color-border)] px-4 text-sm font-medium text-[color:var(--color-text)] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {busyOrderId === item.orderId ? labels.creatingRecord : labels.createRecord}
                 </button>
-                <Link href={item.detailHref} className="inline-flex h-10 items-center rounded-xl border border-neutral-300 px-4 text-sm font-medium text-neutral-700">
+                <Link href={item.detailHref} className="inline-flex h-10 items-center rounded-xl border border-[color:var(--color-border)] px-4 text-sm font-medium text-[color:var(--color-text)]">
                   {labels.openDetail}
                 </Link>
-                <Link href={item.sourceHref} className="inline-flex h-10 items-center rounded-xl border border-neutral-300 px-4 text-sm font-medium text-neutral-700">
+                <Link href={item.sourceHref} className="inline-flex h-10 items-center rounded-xl border border-[color:var(--color-border)] px-4 text-sm font-medium text-[color:var(--color-text)]">
                   {labels.openSource}
                 </Link>
               </div>

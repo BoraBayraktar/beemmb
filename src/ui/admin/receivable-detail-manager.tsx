@@ -40,20 +40,20 @@ function formatPaymentStatus(value: AdminReceivableDetail["paymentStatus"]) {
 export function ReceivableDetailManager({ locale, item, labels }: Props) {
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-2">
-            <h1 className="text-2xl font-semibold text-neutral-950">{item.orderNumber}</h1>
-            <p className="text-sm text-neutral-600">{labels.description}</p>
+            <h1 className="text-2xl font-semibold text-[color:var(--color-text)]">{item.orderNumber}</h1>
+            <p className="text-sm text-[color:var(--color-text-muted)]">{labels.description}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link href={`/${locale}/admin/finance/receivables`} className="inline-flex h-10 items-center rounded-xl border border-neutral-300 px-4 text-sm font-medium text-neutral-700">
+            <Link href={`/${locale}/admin/finance/receivables`} className="inline-flex h-10 items-center rounded-xl border border-[color:var(--color-border)] px-4 text-sm font-medium text-[color:var(--color-text)]">
               {labels.backToList}
             </Link>
-            <Link href={`/${locale}/admin/orders/${item.orderId}`} className="inline-flex h-10 items-center rounded-xl border border-neutral-300 px-4 text-sm font-medium text-neutral-700">
+            <Link href={`/${locale}/admin/orders/${item.orderId}`} className="inline-flex h-10 items-center rounded-xl border border-[color:var(--color-border)] px-4 text-sm font-medium text-[color:var(--color-text)]">
               {labels.openOrder}
             </Link>
-            <Link href={`/${locale}/admin/finance/collections/${item.orderId}`} className="inline-flex h-10 items-center rounded-xl border border-neutral-300 px-4 text-sm font-medium text-neutral-700">
+            <Link href={`/${locale}/admin/finance/collections/${item.orderId}`} className="inline-flex h-10 items-center rounded-xl border border-[color:var(--color-border)] px-4 text-sm font-medium text-[color:var(--color-text)]">
               {labels.openCollection}
             </Link>
           </div>
@@ -71,23 +71,23 @@ export function ReceivableDetailManager({ locale, item, labels }: Props) {
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">{labels.totalAmount}</p>
           <p className="mt-3 text-2xl font-semibold text-emerald-950">{item.totalAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {item.currency}</p>
         </article>
-        <article className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.paymentStatus}</p>
-          <p className="mt-3 text-2xl font-semibold text-neutral-950">{formatPaymentStatus(item.paymentStatus)}</p>
+        <article className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.paymentStatus}</p>
+          <p className="mt-3 text-2xl font-semibold text-[color:var(--color-text)]">{formatPaymentStatus(item.paymentStatus)}</p>
         </article>
-        <article className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.itemCount}</p>
-          <p className="mt-3 text-2xl font-semibold text-neutral-950">{item.itemCount}</p>
+        <article className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.itemCount}</p>
+          <p className="mt-3 text-2xl font-semibold text-[color:var(--color-text)]">{item.itemCount}</p>
         </article>
-        <article className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.orderDate}</p>
-          <p className="mt-3 text-sm font-semibold text-neutral-950">{new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))}</p>
+        <article className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.orderDate}</p>
+          <p className="mt-3 text-sm font-semibold text-[color:var(--color-text)]">{new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))}</p>
         </article>
       </section>
 
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-        <h2 className="text-lg font-semibold text-neutral-950">{labels.title}</h2>
-        <div className="mt-4 grid gap-2 text-sm text-neutral-700 md:grid-cols-2">
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
+        <h2 className="text-lg font-semibold text-[color:var(--color-text)]">{labels.title}</h2>
+        <div className="mt-4 grid gap-2 text-sm text-[color:var(--color-text)] md:grid-cols-2">
           <p>{labels.paymentStatus}: {formatPaymentStatus(item.paymentStatus)}</p>
           <p>{labels.totalAmount}: {item.totalAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {item.currency}</p>
           <p>{labels.itemCount}: {item.itemCount}</p>
@@ -97,15 +97,15 @@ export function ReceivableDetailManager({ locale, item, labels }: Props) {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-        <h2 className="text-lg font-semibold text-neutral-950">{labels.documentsTitle}</h2>
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
+        <h2 className="text-lg font-semibold text-[color:var(--color-text)]">{labels.documentsTitle}</h2>
         {item.documents.length === 0 ? (
-          <p className="mt-3 text-sm text-neutral-500">{labels.notSpecified}</p>
+          <p className="mt-3 text-sm text-[color:var(--color-text-muted)]">{labels.notSpecified}</p>
         ) : (
           <ul className="mt-4 space-y-3">
             {item.documents.map((document) => (
-              <li key={document.id} className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700">
-                <p className="font-semibold text-neutral-950">{document.documentNumber}</p>
+              <li key={document.id} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4 text-sm text-[color:var(--color-text)]">
+                <p className="font-semibold text-[color:var(--color-text)]">{document.documentNumber}</p>
                 <p className="mt-1">
                   {new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium" }).format(new Date(document.issueDate))}
                   {" • "}
@@ -113,7 +113,7 @@ export function ReceivableDetailManager({ locale, item, labels }: Props) {
                 </p>
                 <Link
                   href={`/${locale}/admin/finance/business-documents/${document.id}/movements`}
-                  className="mt-2 inline-flex text-sm font-medium text-neutral-800 underline-offset-2 hover:underline"
+                  className="mt-2 inline-flex text-sm font-medium text-[color:var(--color-text)] underline-offset-2 hover:underline"
                 >
                   {labels.financeDocumentMovementPreviewOpen}
                 </Link>

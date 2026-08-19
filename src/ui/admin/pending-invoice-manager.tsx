@@ -141,10 +141,10 @@ export function PendingInvoiceManager({ locale, result, initialSearch, labels }:
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold text-neutral-950">{labels.title}</h1>
-          <p className="text-sm text-neutral-600">{labels.description}</p>
+          <h1 className="text-2xl font-semibold text-[color:var(--color-text)]">{labels.title}</h1>
+          <p className="text-sm text-[color:var(--color-text-muted)]">{labels.description}</p>
         </div>
         <form action={`/${locale}/admin/documents/pending-invoices`} className="mt-4">
           <Input
@@ -160,11 +160,11 @@ export function PendingInvoiceManager({ locale, result, initialSearch, labels }:
 
       <section className="grid gap-3">
         {result.items.length === 0 ? (
-          <article className="rounded-3xl border border-dashed border-neutral-300 bg-white p-6 text-sm text-neutral-500 shadow-sm">
+          <article className="rounded-3xl border border-dashed border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-6 text-sm text-[color:var(--color-text-muted)] shadow-sm">
             {labels.noResults}
           </article>
         ) : result.items.map((item) => (
-          <article key={item.id} className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+          <article key={item.id} className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
@@ -177,7 +177,7 @@ export function PendingInvoiceManager({ locale, result, initialSearch, labels }:
                           ? "border-sky-200 bg-sky-100 text-sky-700"
                           : cardStatuses[item.id] === "queued"
                             ? "border-violet-200 bg-violet-100 text-violet-700"
-                            : "border-neutral-200 bg-neutral-200 text-neutral-700"
+                            : "border-[color:var(--color-border)] bg-neutral-200 text-neutral-900"
                       }
                     >
                       {cardStatuses[item.id] === "sent"
@@ -188,9 +188,9 @@ export function PendingInvoiceManager({ locale, result, initialSearch, labels }:
                     </Badge>
                   ) : null}
                 </div>
-                <h2 className="mt-3 text-lg font-semibold text-neutral-950">{item.documentNumber}</h2>
-                <p className="mt-1 text-sm text-neutral-600">{item.counterpartyName}</p>
-                <div className="mt-3 grid gap-2 text-sm text-neutral-700 md:grid-cols-2 xl:grid-cols-4">
+                <h2 className="mt-3 text-lg font-semibold text-[color:var(--color-text)]">{item.documentNumber}</h2>
+                <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{item.counterpartyName}</p>
+                <div className="mt-3 grid gap-2 text-sm text-[color:var(--color-text)] md:grid-cols-2 xl:grid-cols-4">
                   <p>{labels.sourceLabel}: {item.sourceLabel}</p>
                   <p>{labels.issueDate}: {new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.issueDate))}</p>
                   <p>{labels.orderNumber}: {item.orderNumber ?? labels.notSpecified}</p>
@@ -237,35 +237,35 @@ export function PendingInvoiceManager({ locale, result, initialSearch, labels }:
 
       {detail ? (
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-neutral-950/35">
-          <div className="flex h-full w-full max-w-2xl flex-col overflow-y-auto bg-white p-5 shadow-2xl">
+          <div className="flex h-full w-full max-w-2xl flex-col overflow-y-auto bg-[color:var(--color-surface)] p-5 shadow-2xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{detail.documentType}</p>
-                <h3 className="mt-1 text-xl font-semibold text-neutral-950">{detail.documentNumber}</h3>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{detail.documentType}</p>
+                <h3 className="mt-1 text-xl font-semibold text-[color:var(--color-text)]">{detail.documentNumber}</h3>
               </div>
               <Button type="button" onClick={() => setDetail(null)} variant="secondary" size="sm">
                 {labels.close}
               </Button>
             </div>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
-              <div className="rounded-2xl border border-neutral-200 p-4 text-sm text-neutral-700">
+              <div className="rounded-2xl border border-[color:var(--color-border)] p-4 text-sm text-[color:var(--color-text)]">
                 <p>{labels.counterparty}: {detail.counterpartyName}</p>
                 <p className="mt-2">{labels.providerSelection}: {detail.providerDisplayName ?? labels.notSpecified}</p>
                 <p className="mt-2">{labels.orderNumber}: {detail.orderNumber ?? labels.notSpecified}</p>
                 <p className="mt-2">{labels.inventoryTransactionNumber}: {detail.inventoryTransactionNumber ?? labels.notSpecified}</p>
               </div>
-              <div className="rounded-2xl border border-neutral-200 p-4 text-sm text-neutral-700">
+              <div className="rounded-2xl border border-[color:var(--color-border)] p-4 text-sm text-[color:var(--color-text)]">
                 <p>{labels.documentStatus}: {detail.status}</p>
                 <p className="mt-2">{labels.externalSystemStatus}: {detail.externalSystemStatus}</p>
                 <p className="mt-2">{labels.externalReference}: {detail.externalReference ?? labels.notSpecified}</p>
               </div>
             </div>
             <div className="mt-6">
-              <h4 className="text-sm font-semibold text-neutral-950">{labels.linesTitle}</h4>
+              <h4 className="text-sm font-semibold text-[color:var(--color-text)]">{labels.linesTitle}</h4>
               <div className="mt-3 space-y-3">
                 {detail.lines.map((line) => (
-                  <article key={line.id} className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700">
-                    <p className="font-semibold text-neutral-950">{line.productName}</p>
+                  <article key={line.id} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4 text-sm text-[color:var(--color-text)]">
+                    <p className="font-semibold text-[color:var(--color-text)]">{line.productName}</p>
                     <p className="mt-1">{line.productSku} • {line.quantity}</p>
                   </article>
                 ))}

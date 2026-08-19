@@ -335,12 +335,12 @@ export function UserManager({ initialResult, labels, availableRoles = [], fixedR
   }
 
   return (
-    <section className="rounded-2xl border border-neutral-200 bg-white">
-      <div className="flex flex-col gap-4 border-b border-neutral-200 p-5 lg:flex-row lg:items-center lg:justify-between">
+    <section className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
+      <div className="flex flex-col gap-4 border-b border-[color:var(--color-border)] p-5 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.title}</p>
-          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-neutral-950">{labels.listTitle}</h2>
-          <p className="mt-1 text-sm text-neutral-500">{result.total} kullanıcı listeleniyor</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.title}</p>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[color:var(--color-text)]">{labels.listTitle}</h2>
+          <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{result.total} kullanıcı listeleniyor</p>
         </div>
         <Button type="button" onClick={openCreateDrawer}>{labels.createTitle}</Button>
       </div>
@@ -366,8 +366,8 @@ export function UserManager({ initialResult, labels, availableRoles = [], fixedR
           <Button type="submit" variant="secondary" disabled={loading}>{labels.search}</Button>
         </form>
 
-        <div className="overflow-hidden rounded-xl border border-neutral-200">
-          <div className="hidden grid-cols-[1.1fr_1fr_140px_190px] gap-4 border-b border-neutral-200 bg-neutral-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 lg:grid">
+        <div className="overflow-hidden rounded-xl border border-[color:var(--color-border)]">
+          <div className="hidden grid-cols-[1.1fr_1fr_140px_190px] gap-4 border-b border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)] lg:grid">
             <span>{labels.name}</span>
             <span>{labels.email}</span>
             <span>{labels.role}</span>
@@ -375,16 +375,16 @@ export function UserManager({ initialResult, labels, availableRoles = [], fixedR
           </div>
 
           {result.items.length === 0 ? (
-            <p className="p-6 text-sm text-neutral-500">{labels.empty}</p>
+            <p className="p-6 text-sm text-[color:var(--color-text-muted)]">{labels.empty}</p>
           ) : (
-            <div className="divide-y divide-neutral-200">
+            <div className="divide-y divide-[color:var(--color-border)]">
               {result.items.map((user) => (
                 <article key={user.id} className="grid gap-4 p-4 lg:grid-cols-[1.1fr_1fr_140px_190px] lg:items-center">
                   <div>
-                    <h3 className="font-medium text-neutral-950">{user.name}</h3>
+                    <h3 className="font-medium text-[color:var(--color-text)]">{user.name}</h3>
                   </div>
-                  <p className="text-sm text-neutral-500">{user.email}</p>
-                  <p className="text-sm font-semibold text-neutral-950">{user.roleNames.length > 0 ? user.roleNames.join(", ") : getRoleLabel(user.role)}</p>
+                  <p className="text-sm text-[color:var(--color-text-muted)]">{user.email}</p>
+                  <p className="text-sm font-semibold text-[color:var(--color-text)]">{user.roleNames.length > 0 ? user.roleNames.join(", ") : getRoleLabel(user.role)}</p>
                   <div className="flex flex-wrap gap-2 lg:justify-end">
                     <Button type="button" size="sm" variant="secondary" disabled={loading} onClick={() => openEditDrawer(user)}>{labels.edit}</Button>
                     <Button type="button" size="sm" variant="destructive" disabled={loading} onClick={() => deleteUser(user.id)}>{labels.delete}</Button>
@@ -397,7 +397,7 @@ export function UserManager({ initialResult, labels, availableRoles = [], fixedR
 
         <div className="mt-4 flex items-center justify-between gap-3">
           <Button type="button" variant="secondary" disabled={result.page <= 1 || loading} onClick={() => goToPage(Math.max(1, result.page - 1))}>{labels.prev}</Button>
-          <span className="text-sm text-neutral-500">{labels.page} {result.page}/{result.totalPages}</span>
+          <span className="text-sm text-[color:var(--color-text-muted)]">{labels.page} {result.page}/{result.totalPages}</span>
           <Button type="button" variant="secondary" disabled={result.page >= result.totalPages || loading} onClick={() => goToPage(Math.min(result.totalPages, result.page + 1))}>{labels.next}</Button>
         </div>
       </div>
@@ -405,10 +405,10 @@ export function UserManager({ initialResult, labels, availableRoles = [], fixedR
       {drawerMode ? (
         <div className="fixed inset-0 z-50">
           <button type="button" aria-label={labels.cancel} className="absolute inset-0 bg-black/30" onClick={closeDrawer} />
-          <aside className="absolute right-0 top-0 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-neutral-200 bg-white shadow-2xl">
-            <div className="flex items-start justify-between border-b border-neutral-200 p-5">
+          <aside className="absolute right-0 top-0 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-2xl">
+            <div className="flex items-start justify-between border-b border-[color:var(--color-border)] p-5">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.title}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.title}</p>
                 <h3 className="mt-1 text-xl font-semibold tracking-tight">{activeTitle}</h3>
               </div>
               <Button type="button" size="icon" variant="ghost" onClick={closeDrawer} disabled={loading}>
@@ -429,13 +429,13 @@ export function UserManager({ initialResult, labels, availableRoles = [], fixedR
                 {!fixedRole ? (
                   <div className="grid gap-2">
                     <Label>{labels.roles}</Label>
-                    <div className="grid gap-2 rounded-xl border border-neutral-200 p-3">
+                    <div className="grid gap-2 rounded-xl border border-[color:var(--color-border)] p-3">
                       {availableRoles.map((role) => (
-                        <label key={role.id} className="flex items-start gap-2 text-sm text-neutral-700">
+                        <label key={role.id} className="flex items-start gap-2 text-sm text-[color:var(--color-text)]">
                           <input type="checkbox" className="mt-1" checked={activeForm.roleIds.includes(role.id)} onChange={() => toggleRole(role.id)} />
                           <span>
-                            <span className="block font-medium text-neutral-950">{role.name}</span>
-                            {role.description ? <span className="block text-xs text-neutral-500">{role.description}</span> : null}
+                            <span className="block font-medium text-[color:var(--color-text)]">{role.name}</span>
+                            {role.description ? <span className="block text-xs text-[color:var(--color-text-muted)]">{role.description}</span> : null}
                           </span>
                         </label>
                       ))}
@@ -448,7 +448,7 @@ export function UserManager({ initialResult, labels, availableRoles = [], fixedR
                     <Input type="password" value={activeForm.password} onChange={(event) => patchActiveField("password", event.target.value)} required />
                   </div>
                 ) : (
-                  <div className="grid gap-2 rounded-xl border border-neutral-200 p-3">
+                  <div className="grid gap-2 rounded-xl border border-[color:var(--color-border)] p-3">
                     {passwordChangeOpen ? (
                       <>
                         <Label>{labels.passwordOptional}</Label>
@@ -463,7 +463,7 @@ export function UserManager({ initialResult, labels, availableRoles = [], fixedR
                 )}
               </div>
 
-              <div className="flex shrink-0 justify-end gap-2 border-t border-neutral-200 bg-neutral-50 p-5">
+              <div className="flex shrink-0 justify-end gap-2 border-t border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-5">
                 <Button type="button" variant="secondary" onClick={closeDrawer} disabled={loading}>{labels.cancel}</Button>
                 <Button type="submit" disabled={loading}>{loading ? labels.loading : activeSubmit}</Button>
               </div>

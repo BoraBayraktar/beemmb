@@ -130,15 +130,15 @@ export function PaymentReadinessManager({ result, accountOptions, labels }: Prop
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold text-neutral-950">{labels.title}</h1>
-          <p className="text-sm text-neutral-600">{labels.description}</p>
+          <h1 className="text-2xl font-semibold text-[color:var(--color-text)]">{labels.title}</h1>
+          <p className="text-sm text-[color:var(--color-text-muted)]">{labels.description}</p>
         </div>
       </section>
 
       {message ? (
-        <section className="rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-700 shadow-sm">
+        <section className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 text-sm text-[color:var(--color-text)] shadow-sm">
           {message}
         </section>
       ) : null}
@@ -152,25 +152,25 @@ export function PaymentReadinessManager({ result, accountOptions, labels }: Prop
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">{labels.totalRecordedAmount}</p>
           <p className="mt-3 text-2xl font-semibold text-blue-950">{formatMoney(result.summary.totalRecordedAmount, result.summary.currency)}</p>
         </article>
-        <article className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.supplierCount}</p>
-          <p className="mt-3 text-2xl font-semibold text-neutral-950">{result.summary.supplierCount}</p>
+        <article className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.supplierCount}</p>
+          <p className="mt-3 text-2xl font-semibold text-[color:var(--color-text)]">{result.summary.supplierCount}</p>
         </article>
       </section>
 
       <section className="grid gap-3 md:grid-cols-2">
-        <article className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.draftDocumentCount}</p>
-          <p className="mt-3 text-2xl font-semibold text-neutral-950">{result.summary.draftDocumentCount}</p>
+        <article className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.draftDocumentCount}</p>
+          <p className="mt-3 text-2xl font-semibold text-[color:var(--color-text)]">{result.summary.draftDocumentCount}</p>
         </article>
-        <article className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{labels.recordedCount}</p>
-          <p className="mt-3 text-2xl font-semibold text-neutral-950">{result.summary.recordedCount}</p>
+        <article className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.recordedCount}</p>
+          <p className="mt-3 text-2xl font-semibold text-[color:var(--color-text)]">{result.summary.recordedCount}</p>
         </article>
       </section>
 
-      <section className="overflow-visible rounded-xl border border-neutral-200 bg-white">
-        <div className="hidden grid-cols-[150px_1.2fr_170px_170px_140px_150px_88px] gap-4 border-b border-neutral-200 bg-neutral-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 lg:grid">
+      <section className="overflow-visible rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
+        <div className="hidden grid-cols-[150px_1.2fr_170px_170px_140px_150px_88px] gap-4 border-b border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)] lg:grid">
           <span>{labels.financeStatus}</span>
           <span>{labels.supplier}</span>
           <span>{labels.amount}</span>
@@ -181,11 +181,11 @@ export function PaymentReadinessManager({ result, accountOptions, labels }: Prop
         </div>
 
         {result.items.length === 0 ? (
-          <p className="p-6 text-sm text-neutral-500">
+          <p className="p-6 text-sm text-[color:var(--color-text-muted)]">
             {labels.noResults}
           </p>
         ) : result.items.map((item) => (
-          <article key={item.supplierKey} className="grid gap-4 border-b border-neutral-200 p-4 last:border-b-0 lg:grid-cols-[150px_1.2fr_170px_170px_140px_150px_88px] lg:items-center">
+          <article key={item.supplierKey} className="grid gap-4 border-b border-[color:var(--color-border)] p-4 last:border-b-0 lg:grid-cols-[150px_1.2fr_170px_170px_140px_150px_88px] lg:items-center">
             {(() => {
               const financeStatus = getFinanceStatus(item, labels);
 
@@ -197,14 +197,14 @@ export function PaymentReadinessManager({ result, accountOptions, labels }: Prop
                     </Badge>
                   </div>
                   <div className="min-w-0">
-                    <p className="font-medium text-neutral-950">{item.supplierName}</p>
-                    <p className="mt-1 text-sm text-neutral-500">{labels.recordedPaymentCount}: {item.recordedPaymentCount}</p>
-                    <p className="mt-1 line-clamp-1 text-xs text-neutral-500">Varyant özeti: {item.topVariantSummary ?? "-"}</p>
+                    <p className="font-medium text-[color:var(--color-text)]">{item.supplierName}</p>
+                    <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{labels.recordedPaymentCount}: {item.recordedPaymentCount}</p>
+                    <p className="mt-1 line-clamp-1 text-xs text-[color:var(--color-text-muted)]">Varyant özeti: {item.topVariantSummary ?? "-"}</p>
                   </div>
-                  <p className="text-sm font-medium text-neutral-950">{formatMoney(item.totalAmount, item.currency)}</p>
-                  <p className="text-sm font-medium text-neutral-950">{formatMoney(item.remainingAmount, item.currency)}</p>
-                  <p className="text-sm text-neutral-500">{item.documentCount} / {labels.draftDocumentCount}: {item.draftCount}</p>
-                  <p className="text-sm text-neutral-500">{item.lastIssueDate ? new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium" }).format(new Date(item.lastIssueDate)) : "-"}</p>
+                  <p className="text-sm font-medium text-[color:var(--color-text)]">{formatMoney(item.totalAmount, item.currency)}</p>
+                  <p className="text-sm font-medium text-[color:var(--color-text)]">{formatMoney(item.remainingAmount, item.currency)}</p>
+                  <p className="text-sm text-[color:var(--color-text-muted)]">{item.documentCount} / {labels.draftDocumentCount}: {item.draftCount}</p>
+                  <p className="text-sm text-[color:var(--color-text-muted)]">{item.lastIssueDate ? new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium" }).format(new Date(item.lastIssueDate)) : "-"}</p>
                   <div className="relative flex justify-start lg:justify-end">
                     <Button
                       type="button"
@@ -215,11 +215,11 @@ export function PaymentReadinessManager({ result, accountOptions, labels }: Prop
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                     {openActionMenuId === item.supplierKey ? (
-                      <div className="absolute bottom-11 right-0 z-10 grid min-w-64 gap-2 rounded-xl border border-neutral-200 bg-white p-2 shadow-xl">
+                      <div className="absolute bottom-11 right-0 z-10 grid min-w-64 gap-2 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-2 shadow-xl">
                         <select
                           value={selectedAccountIds[item.supplierKey] ?? accountOptions[0]?.id ?? ""}
                           onChange={(event) => setSelectedAccountIds((current) => ({ ...current, [item.supplierKey]: event.target.value }))}
-                          className="h-10 rounded-lg border border-neutral-300 px-3 text-sm text-neutral-700"
+                          className="h-10 rounded-lg border border-[color:var(--color-border)] px-3 text-sm text-[color:var(--color-text)]"
                         >
                           {accountOptions.length === 0 ? <option value="">{labels.account}</option> : null}
                           {accountOptions.map((option) => (
@@ -233,20 +233,20 @@ export function PaymentReadinessManager({ result, accountOptions, labels }: Prop
                             createPaymentRecord(item.supplierId, item.supplierKey, item.remainingAmount);
                             setOpenActionMenuId(null);
                           }}
-                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)] disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {busySupplierKey === item.supplierKey ? labels.creatingRecord : labels.createRecord}
                         </button>
                         <Link
                           href={item.detailHref}
-                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100"
+                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)]"
                           onClick={() => setOpenActionMenuId(null)}
                         >
                           {labels.openDetail}
                         </Link>
                         <Link
                           href={item.sourceHref}
-                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100"
+                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)]"
                           onClick={() => setOpenActionMenuId(null)}
                         >
                           {labels.openSource}

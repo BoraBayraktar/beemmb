@@ -65,31 +65,31 @@ export function IncomingInvoiceProviderManager({ items }: { items: AdminIncoming
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-        <h1 className="text-2xl font-semibold text-neutral-950">Gelen Fatura Entegratörleri</h1>
-        <p className="mt-2 text-sm text-neutral-600">
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
+        <h1 className="text-2xl font-semibold text-[color:var(--color-text)]">Gelen Fatura Entegratörleri</h1>
+        <p className="mt-2 text-sm text-[color:var(--color-text-muted)]">
           Şu an aktif bir e-fatura entegratörü (Nilvera, Foriba, Uyumsoft vb.) bağlı değil. Bu ekran, ileride bir
           entegratör bağlanacağı zaman kullanılacak yapılandırma altyapısını hazırlar — bir sağlayıcı kaydedip
           &ldquo;Aktif&rdquo; işaretlemediğiniz sürece hiçbir otomatik senkronizasyon çalışmaz.
         </p>
       </section>
 
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
         <div className="grid gap-3 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-3">
             {items.length === 0 ? (
-              <article className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-4 text-sm text-neutral-600">
+              <article className="rounded-2xl border border-dashed border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4 text-sm text-[color:var(--color-text-muted)]">
                 Henüz kayıtlı bir entegratör yapılandırması yok.
               </article>
             ) : items.map((item) => (
-              <article key={item.id} className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700">
+              <article key={item.id} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4 text-sm text-[color:var(--color-text)]">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge>{item.displayName}</Badge>
                   {item.isDefault ? <Badge className="border-sky-200 bg-sky-100 text-sky-700">Varsayılan</Badge> : null}
                   {item.isActive ? (
                     <Badge className="border-emerald-200 bg-emerald-100 text-emerald-700">Aktif</Badge>
                   ) : (
-                    <Badge className="border-neutral-300 bg-neutral-100 text-neutral-600">Pasif</Badge>
+                    <Badge className="border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] text-[color:var(--color-text-muted)]">Pasif</Badge>
                   )}
                 </div>
                 <p className="mt-2">Sağlayıcı kodu: {item.providerCode}</p>
@@ -102,18 +102,18 @@ export function IncomingInvoiceProviderManager({ items }: { items: AdminIncoming
             ))}
           </div>
 
-          <div className="grid gap-3 rounded-2xl border border-neutral-200 p-4">
+          <div className="grid gap-3 rounded-2xl border border-[color:var(--color-border)] p-4">
             <Input value={providerCode} onChange={(event) => setProviderCode(event.target.value)} placeholder="Sağlayıcı kodu" />
             <Input value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder="Görünen ad" />
             <Input value={endpointUrl} onChange={(event) => setEndpointUrl(event.target.value)} placeholder="Uç nokta URL" />
             <Input value={username} onChange={(event) => setUsername(event.target.value)} placeholder="Kullanıcı adı" />
             <Input type="password" autoComplete="new-password" value={secretKey} onChange={(event) => setSecretKey(event.target.value)} placeholder="Gizli anahtar" />
             <Input type="password" autoComplete="new-password" value={webhookSecret} onChange={(event) => setWebhookSecret(event.target.value)} placeholder="Webhook gizli anahtarı" />
-            <label className="flex items-center gap-2 text-sm text-neutral-700">
+            <label className="flex items-center gap-2 text-sm text-[color:var(--color-text)]">
               <input type="checkbox" checked={isActive} onChange={(event) => setIsActive(event.target.checked)} />
               Aktif
             </label>
-            <label className="flex items-center gap-2 text-sm text-neutral-700">
+            <label className="flex items-center gap-2 text-sm text-[color:var(--color-text)]">
               <input type="checkbox" checked={isDefault} onChange={(event) => setIsDefault(event.target.checked)} />
               Varsayılan
             </label>

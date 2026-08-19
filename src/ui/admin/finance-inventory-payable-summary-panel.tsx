@@ -19,25 +19,25 @@ type Props = {
 
 export function FinanceInventoryPayableSummaryPanel({ summary, labels }: Props) {
   return (
-    <details className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-      <summary className="cursor-pointer text-lg font-semibold text-neutral-950">{labels.title}</summary>
+    <details className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
+      <summary className="cursor-pointer text-lg font-semibold text-[color:var(--color-text)]">{labels.title}</summary>
       <div className="mt-4 grid gap-3 md:grid-cols-2">
-        <p className="text-sm text-neutral-700">
+        <p className="text-sm text-[color:var(--color-text)]">
           {labels.linkedDocumentCount}:{" "}
-          <span className="font-medium text-neutral-950">{summary.linkedDocumentCount}</span>
+          <span className="font-medium text-[color:var(--color-text)]">{summary.linkedDocumentCount}</span>
         </p>
-        <p className="text-sm text-neutral-700">
+        <p className="text-sm text-[color:var(--color-text)]">
           {labels.totalLineQuantity}:{" "}
-          <span className="font-medium text-neutral-950">{summary.totalLineQuantity}</span>
+          <span className="font-medium text-[color:var(--color-text)]">{summary.totalLineQuantity}</span>
         </p>
       </div>
       {summary.documents.length === 0 ? (
-        <p className="mt-4 text-sm text-neutral-500">{labels.empty}</p>
+        <p className="mt-4 text-sm text-[color:var(--color-text-muted)]">{labels.empty}</p>
       ) : (
         <ul className="mt-4 space-y-3">
           {summary.documents.map((document) => (
-            <li key={document.documentId} className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700">
-              <p className="font-semibold text-neutral-950">{labels.documentNumber}: {document.documentNumber}</p>
+            <li key={document.documentId} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4 text-sm text-[color:var(--color-text)]">
+              <p className="font-semibold text-[color:var(--color-text)]">{labels.documentNumber}: {document.documentNumber}</p>
               <p className="mt-1">
                 {labels.inventoryTransaction}:{" "}
                 {document.inventoryTransactionNumber ?? labels.notSpecified}
@@ -47,7 +47,7 @@ export function FinanceInventoryPayableSummaryPanel({ summary, labels }: Props) 
                 {labels.lineQuantity}: {document.lineQuantityTotal}
               </p>
               {document.inventoryHref ? (
-                <a href={document.inventoryHref} className="mt-2 inline-flex text-sm font-medium text-neutral-800 underline-offset-2 hover:underline">
+                <a href={document.inventoryHref} className="mt-2 inline-flex text-sm font-medium text-[color:var(--color-text)] underline-offset-2 hover:underline">
                   {labels.openInventory}
                 </a>
               ) : null}

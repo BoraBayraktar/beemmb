@@ -303,7 +303,7 @@ function movementBadgeClass(value: OrderDetail["inventoryMovements"][number]["ty
       return "bg-blue-100 text-blue-700";
     case "INITIAL_LOAD":
     default:
-      return "bg-neutral-200 text-neutral-700";
+      return "bg-neutral-200 text-neutral-900";
   }
 }
 
@@ -398,7 +398,7 @@ function shipmentStatusBadgeClass(value: ShipmentStatus) {
       return "bg-amber-100 text-amber-700";
     case "NOT_SHIPPED":
     default:
-      return "bg-neutral-200 text-neutral-700";
+      return "bg-neutral-200 text-neutral-900";
   }
 }
 
@@ -620,92 +620,92 @@ export function OrderDetailManager({ locale, order, labels, canManage, accountOp
   }
 
   return (
-    <section className="rounded-2xl border border-neutral-200 bg-white">
-      <div className="flex flex-col gap-3 border-b border-neutral-200 p-5">
-        <Link href={`/${locale}/admin/orders`} className="text-sm text-neutral-600 underline-offset-4 hover:text-neutral-900 hover:underline">{labels.back}</Link>
-        <h2 className="text-2xl font-semibold tracking-tight text-neutral-950">{order.orderNumber}</h2>
-        <p className="text-sm text-neutral-500">{labels.orderDate}: {formatDate(order.createdAt, locale)}</p>
+    <section className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
+      <div className="flex flex-col gap-3 border-b border-[color:var(--color-border)] p-5">
+        <Link href={`/${locale}/admin/orders`} className="text-sm text-[color:var(--color-text-muted)] underline-offset-4 hover:text-[color:var(--color-text)] hover:underline">{labels.back}</Link>
+        <h2 className="text-2xl font-semibold tracking-tight text-[color:var(--color-text)]">{order.orderNumber}</h2>
+        <p className="text-sm text-[color:var(--color-text-muted)]">{labels.orderDate}: {formatDate(order.createdAt, locale)}</p>
       </div>
 
-      <div className="grid gap-4 border-b border-neutral-200 p-5 md:grid-cols-4">
-        <article className="rounded-xl border border-neutral-200 p-4 md:col-span-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.customerAccount}</p>
-          <p className="mt-2 text-sm font-semibold text-neutral-950">{order.customerAccountName ?? "Cari kart bağlanmadı"}</p>
+      <div className="grid gap-4 border-b border-[color:var(--color-border)] p-5 md:grid-cols-4">
+        <article className="rounded-xl border border-[color:var(--color-border)] p-4 md:col-span-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.customerAccount}</p>
+          <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{order.customerAccountName ?? "Cari kart bağlanmadı"}</p>
           {order.customerAccountEmail ? (
-            <p className="mt-1 text-sm text-neutral-500">{order.customerAccountEmail}</p>
+            <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{order.customerAccountEmail}</p>
           ) : null}
           {order.customerAccountId ? (
-            <Link href={`/${locale}/admin/customer-accounts`} className="mt-2 inline-flex text-sm text-neutral-700 underline underline-offset-4">
+            <Link href={`/${locale}/admin/customer-accounts`} className="mt-2 inline-flex text-sm text-[color:var(--color-text)] underline underline-offset-4">
               {labels.customerAccount}
             </Link>
           ) : null}
         </article>
-        <article className="rounded-xl border border-neutral-200 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.orderStatus}</p>
-          <p className="mt-2 text-sm font-semibold text-neutral-950">{formatOrderStatus(order.status, labels)}</p>
+        <article className="rounded-xl border border-[color:var(--color-border)] p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.orderStatus}</p>
+          <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{formatOrderStatus(order.status, labels)}</p>
         </article>
-        <article className="rounded-xl border border-neutral-200 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.paymentStatus}</p>
-          <p className="mt-2 text-sm font-semibold text-neutral-950">{formatPaymentStatus(paymentStatus)}</p>
+        <article className="rounded-xl border border-[color:var(--color-border)] p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.paymentStatus}</p>
+          <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{formatPaymentStatus(paymentStatus)}</p>
         </article>
-        <article className="rounded-xl border border-neutral-200 p-4 md:col-span-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.shipmentTitle}</p>
+        <article className="rounded-xl border border-[color:var(--color-border)] p-4 md:col-span-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.shipmentTitle}</p>
           {hasShipmentInfo ? (
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${shipmentStatusBadgeClass(order.shipment.shipmentStatus)}`}>
                 {formatShipmentStatus(order.shipment.shipmentStatus, labels)}
               </span>
-              {selectedCarrier ? <span className="text-sm font-medium text-neutral-800">{selectedCarrier.name}</span> : null}
+              {selectedCarrier ? <span className="text-sm font-medium text-[color:var(--color-text)]">{selectedCarrier.name}</span> : null}
               {order.shipment.cargoTrackingNumber ? (
                 trackingUrl ? (
-                  <a href={trackingUrl} target="_blank" rel="noreferrer" className="text-sm text-neutral-600 underline underline-offset-4 hover:text-neutral-900">
+                  <a href={trackingUrl} target="_blank" rel="noreferrer" className="text-sm text-[color:var(--color-text-muted)] underline underline-offset-4 hover:text-[color:var(--color-text)]">
                     {order.shipment.cargoTrackingNumber}
                   </a>
                 ) : (
-                  <span className="text-sm text-neutral-600">{order.shipment.cargoTrackingNumber}</span>
+                  <span className="text-sm text-[color:var(--color-text-muted)]">{order.shipment.cargoTrackingNumber}</span>
                 )
               ) : null}
               {canManage ? (
-                <button type="button" onClick={openShipmentPanel} className="text-xs font-medium text-neutral-600 underline decoration-neutral-300 underline-offset-4">
+                <button type="button" onClick={openShipmentPanel} className="text-xs font-medium text-[color:var(--color-text-muted)] underline decoration-neutral-300 underline-offset-4">
                   {labels.shipmentEdit}
                 </button>
               ) : null}
             </div>
           ) : (
             <div className="mt-2 flex flex-wrap items-center gap-3">
-              <p className="text-sm text-neutral-500">{labels.shipmentSummaryEmpty}</p>
+              <p className="text-sm text-[color:var(--color-text-muted)]">{labels.shipmentSummaryEmpty}</p>
               {canManage ? (
-                <button type="button" onClick={openShipmentPanel} className="text-xs font-medium text-neutral-600 underline decoration-neutral-300 underline-offset-4">
+                <button type="button" onClick={openShipmentPanel} className="text-xs font-medium text-[color:var(--color-text-muted)] underline decoration-neutral-300 underline-offset-4">
                   {labels.shipmentSummaryEmptyAction}
                 </button>
               ) : null}
             </div>
           )}
         </article>
-        <article className="rounded-xl border border-neutral-200 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.orderSubtotal}</p>
-          <p className="mt-2 text-sm font-semibold text-neutral-950">{formatMoney(order.subtotal, order.currency, locale)}</p>
+        <article className="rounded-xl border border-[color:var(--color-border)] p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.orderSubtotal}</p>
+          <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{formatMoney(order.subtotal, order.currency, locale)}</p>
         </article>
-        <article className="rounded-xl border border-neutral-200 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.orderDiscount}</p>
-          <p className="mt-2 text-sm font-semibold text-neutral-950">{formatMoney(order.discountTotal, order.currency, locale)}</p>
+        <article className="rounded-xl border border-[color:var(--color-border)] p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.orderDiscount}</p>
+          <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{formatMoney(order.discountTotal, order.currency, locale)}</p>
         </article>
-        <article className="rounded-xl border border-neutral-200 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.orderItems}</p>
-          <p className="mt-2 text-sm font-semibold text-neutral-950">{order.items.reduce((sum, item) => sum + item.quantity, 0)}</p>
+        <article className="rounded-xl border border-[color:var(--color-border)] p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.orderItems}</p>
+          <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{order.items.reduce((sum, item) => sum + item.quantity, 0)}</p>
         </article>
-        <article className="rounded-xl border border-neutral-200 p-4 md:col-span-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.orderTotal}</p>
-          <p className="mt-2 text-xl font-semibold text-neutral-950">{formatMoney(order.total, order.currency, locale)}</p>
-          <p className="mt-1 text-xs text-neutral-500">{labels.promotionCode}: {order.promotionCode ?? labels.notSpecified}</p>
+        <article className="rounded-xl border border-[color:var(--color-border)] p-4 md:col-span-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.orderTotal}</p>
+          <p className="mt-2 text-xl font-semibold text-[color:var(--color-text)]">{formatMoney(order.total, order.currency, locale)}</p>
+          <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{labels.promotionCode}: {order.promotionCode ?? labels.notSpecified}</p>
         </article>
       </div>
 
       {error ? <p className="mx-5 mt-5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
 
       <div className="p-5">
-        <div className="overflow-hidden rounded-xl border border-neutral-200">
-          <div className="hidden grid-cols-[80px_1.2fr_120px_130px_140px] gap-4 border-b border-neutral-200 bg-neutral-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 lg:grid">
+        <div className="overflow-hidden rounded-xl border border-[color:var(--color-border)]">
+          <div className="hidden grid-cols-[80px_1.2fr_120px_130px_140px] gap-4 border-b border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)] lg:grid">
             <span>Görsel</span>
             <span>{labels.orderItems}</span>
             <span>Adet</span>
@@ -713,27 +713,27 @@ export function OrderDetailManager({ locale, order, labels, canManage, accountOp
             <span>Toplam</span>
           </div>
 
-          <div className="divide-y divide-neutral-200">
+          <div className="divide-y divide-[color:var(--color-border)]">
             {order.items.map((item) => (
               <article key={item.id} className="grid gap-3 p-4 lg:grid-cols-[80px_1.2fr_120px_130px_140px] lg:items-center">
-                <div className="h-20 w-20 overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50">
+                <div className="h-20 w-20 overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={item.productImageUrl} alt={item.productName} className="h-full w-full object-cover" />
                 </div>
                 <div>
-                  <p className="font-medium text-neutral-950">{item.productName}</p>
-                  <p className="mt-1 text-xs text-neutral-500">/{item.productSlug} · {item.productSku}</p>
+                  <p className="font-medium text-[color:var(--color-text)]">{item.productName}</p>
+                  <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">/{item.productSlug} · {item.productSku}</p>
                   {item.productVariantTitle ? (
-                    <p className="mt-1 text-xs text-neutral-500">
+                    <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">
                       {item.productVariantTitle}
                       {item.productVariantOptionSummary ? ` • ${item.productVariantOptionSummary}` : ""}
                       {item.productVariantSku ? ` · ${item.productVariantSku}` : ""}
                     </p>
                   ) : null}
                 </div>
-                <p className="text-sm text-neutral-700">{item.quantity}</p>
-                <p className="text-sm text-neutral-700">{formatMoney(item.unitPrice, item.currency, locale)}</p>
-                <p className="text-sm font-semibold text-neutral-950">{formatMoney(item.lineTotal, item.currency, locale)}</p>
+                <p className="text-sm text-[color:var(--color-text)]">{item.quantity}</p>
+                <p className="text-sm text-[color:var(--color-text)]">{formatMoney(item.unitPrice, item.currency, locale)}</p>
+                <p className="text-sm font-semibold text-[color:var(--color-text)]">{formatMoney(item.lineTotal, item.currency, locale)}</p>
               </article>
             ))}
           </div>
@@ -741,10 +741,10 @@ export function OrderDetailManager({ locale, order, labels, canManage, accountOp
       </div>
 
       {canManage && shipmentPanelOpen ? (
-        <div className="border-t border-neutral-200 bg-neutral-50 p-5">
+        <div className="border-t border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-5">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-lg font-semibold tracking-tight text-neutral-950">{labels.shipmentTitle}</h3>
-            <button type="button" onClick={() => setShipmentPanelOpen(false)} className="text-xs font-medium text-neutral-600 underline decoration-neutral-300 underline-offset-4">
+            <h3 className="text-lg font-semibold tracking-tight text-[color:var(--color-text)]">{labels.shipmentTitle}</h3>
+            <button type="button" onClick={() => setShipmentPanelOpen(false)} className="text-xs font-medium text-[color:var(--color-text-muted)] underline decoration-neutral-300 underline-offset-4">
               {labels.shipmentClose}
             </button>
           </div>
@@ -754,11 +754,11 @@ export function OrderDetailManager({ locale, order, labels, canManage, accountOp
 
           <div className="grid gap-3 md:grid-cols-2">
             <div className="grid gap-1">
-              <label className="text-xs font-medium text-neutral-600">{labels.shipmentStatusLabel}</label>
+              <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.shipmentStatusLabel}</label>
               <select
                 value={shipmentForm.shipmentStatus}
                 onChange={(event) => patchShipmentField("shipmentStatus", event.target.value)}
-                className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                className="h-10 rounded-md border border-[color:var(--color-border)] px-3 text-sm"
                 disabled={shipmentSaving}
               >
                 <option value="NOT_SHIPPED">{labels.shipmentStatusNotShipped}</option>
@@ -769,11 +769,11 @@ export function OrderDetailManager({ locale, order, labels, canManage, accountOp
               </select>
             </div>
             <div className="grid gap-1">
-              <label className="text-xs font-medium text-neutral-600">{labels.shipmentCarrier}</label>
+              <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.shipmentCarrier}</label>
               <select
                 value={shipmentForm.carrierCompanyId}
                 onChange={(event) => patchShipmentField("carrierCompanyId", event.target.value)}
-                className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                className="h-10 rounded-md border border-[color:var(--color-border)] px-3 text-sm"
                 disabled={shipmentSaving}
               >
                 <option value="">{labels.shipmentCarrierPlaceholder}</option>
@@ -783,65 +783,65 @@ export function OrderDetailManager({ locale, order, labels, canManage, accountOp
               </select>
             </div>
             <div className="grid gap-1">
-              <label className="text-xs font-medium text-neutral-600">{labels.shipmentTrackingNumber}</label>
+              <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.shipmentTrackingNumber}</label>
               <input
                 value={shipmentForm.cargoTrackingNumber}
                 onChange={(event) => patchShipmentField("cargoTrackingNumber", event.target.value)}
-                className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                className="h-10 rounded-md border border-[color:var(--color-border)] px-3 text-sm"
                 disabled={shipmentSaving}
               />
             </div>
             <div className="grid gap-1">
-              <label className="text-xs font-medium text-neutral-600">{labels.shipmentContactName}</label>
+              <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.shipmentContactName}</label>
               <input
                 value={shipmentForm.shipmentContactName}
                 onChange={(event) => patchShipmentField("shipmentContactName", event.target.value)}
-                className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                className="h-10 rounded-md border border-[color:var(--color-border)] px-3 text-sm"
                 disabled={shipmentSaving}
               />
             </div>
             <div className="grid gap-1">
-              <label className="text-xs font-medium text-neutral-600">{labels.shipmentContactPhone}</label>
+              <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.shipmentContactPhone}</label>
               <input
                 value={shipmentForm.shipmentContactPhone}
                 onChange={(event) => patchShipmentField("shipmentContactPhone", event.target.value)}
-                className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                className="h-10 rounded-md border border-[color:var(--color-border)] px-3 text-sm"
                 disabled={shipmentSaving}
               />
             </div>
             <div className="grid gap-1 md:col-span-2">
-              <label className="text-xs font-medium text-neutral-600">{labels.shipmentAddressLine}</label>
+              <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.shipmentAddressLine}</label>
               <input
                 value={shipmentForm.shipmentAddressLine}
                 onChange={(event) => patchShipmentField("shipmentAddressLine", event.target.value)}
-                className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                className="h-10 rounded-md border border-[color:var(--color-border)] px-3 text-sm"
                 disabled={shipmentSaving}
               />
             </div>
             <div className="grid gap-1">
-              <label className="text-xs font-medium text-neutral-600">{labels.shipmentCity}</label>
+              <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.shipmentCity}</label>
               <input
                 value={shipmentForm.shipmentCity}
                 onChange={(event) => patchShipmentField("shipmentCity", event.target.value)}
-                className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                className="h-10 rounded-md border border-[color:var(--color-border)] px-3 text-sm"
                 disabled={shipmentSaving}
               />
             </div>
             <div className="grid gap-1">
-              <label className="text-xs font-medium text-neutral-600">{labels.shipmentDistrict}</label>
+              <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.shipmentDistrict}</label>
               <input
                 value={shipmentForm.shipmentDistrict}
                 onChange={(event) => patchShipmentField("shipmentDistrict", event.target.value)}
-                className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                className="h-10 rounded-md border border-[color:var(--color-border)] px-3 text-sm"
                 disabled={shipmentSaving}
               />
             </div>
             <div className="grid gap-1">
-              <label className="text-xs font-medium text-neutral-600">{labels.shipmentPostalCode}</label>
+              <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.shipmentPostalCode}</label>
               <input
                 value={shipmentForm.shipmentPostalCode}
                 onChange={(event) => patchShipmentField("shipmentPostalCode", event.target.value)}
-                className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                className="h-10 rounded-md border border-[color:var(--color-border)] px-3 text-sm"
                 disabled={shipmentSaving}
               />
             </div>
@@ -855,24 +855,24 @@ export function OrderDetailManager({ locale, order, labels, canManage, accountOp
         </div>
       ) : null}
 
-      <div className="border-t border-neutral-200 p-5">
-        <h3 className="mb-3 text-lg font-semibold tracking-tight text-neutral-950">{labels.orderDocumentsTitle}</h3>
+      <div className="border-t border-[color:var(--color-border)] p-5">
+        <h3 className="mb-3 text-lg font-semibold tracking-tight text-[color:var(--color-text)]">{labels.orderDocumentsTitle}</h3>
         <div className="space-y-3">
           {order.documents.length === 0 ? (
-            <p className="text-sm text-neutral-500">{labels.notSpecified}</p>
+            <p className="text-sm text-[color:var(--color-text-muted)]">{labels.notSpecified}</p>
           ) : order.documents.map((document) => (
-            <article key={document.id} className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+            <article key={document.id} className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                <div className="grid gap-2 text-sm text-neutral-700 md:grid-cols-2">
-                  <p><span className="font-medium text-neutral-900">Belge:</span> {document.documentNumber}</p>
-                  <p><span className="font-medium text-neutral-900">Tür:</span> {formatDocumentType(document.documentType)}</p>
-                  <p><span className="font-medium text-neutral-900">Durum:</span> {document.status}</p>
-                  <p><span className="font-medium text-neutral-900">Dış sistem:</span> {document.externalSystemStatus}</p>
-                  <p><span className="font-medium text-neutral-900">{labels.historyAt}:</span> {formatDate(document.issueDate, locale)}</p>
-                  <p><span className="font-medium text-neutral-900">İşlem no:</span> {document.inventoryTransactionNumber ?? labels.notSpecified}</p>
-                  <p><span className="font-medium text-neutral-900">{labels.orderTotal}:</span> {document.totalAmount !== null ? formatMoney(document.totalAmount, document.currency, locale) : labels.notSpecified}</p>
+                <div className="grid gap-2 text-sm text-[color:var(--color-text)] md:grid-cols-2">
+                  <p><span className="font-medium text-[color:var(--color-text)]">Belge:</span> {document.documentNumber}</p>
+                  <p><span className="font-medium text-[color:var(--color-text)]">Tür:</span> {formatDocumentType(document.documentType)}</p>
+                  <p><span className="font-medium text-[color:var(--color-text)]">Durum:</span> {document.status}</p>
+                  <p><span className="font-medium text-[color:var(--color-text)]">Dış sistem:</span> {document.externalSystemStatus}</p>
+                  <p><span className="font-medium text-[color:var(--color-text)]">{labels.historyAt}:</span> {formatDate(document.issueDate, locale)}</p>
+                  <p><span className="font-medium text-[color:var(--color-text)]">İşlem no:</span> {document.inventoryTransactionNumber ?? labels.notSpecified}</p>
+                  <p><span className="font-medium text-[color:var(--color-text)]">{labels.orderTotal}:</span> {document.totalAmount !== null ? formatMoney(document.totalAmount, document.currency, locale) : labels.notSpecified}</p>
                 </div>
-                <Link href={`/${locale}/admin/documents`} className="text-xs font-medium text-neutral-600 underline decoration-neutral-300 underline-offset-4">
+                <Link href={`/${locale}/admin/documents`} className="text-xs font-medium text-[color:var(--color-text-muted)] underline decoration-neutral-300 underline-offset-4">
                   Belgelerde aç
                 </Link>
               </div>
@@ -881,85 +881,85 @@ export function OrderDetailManager({ locale, order, labels, canManage, accountOp
         </div>
       </div>
 
-      <div className="border-t border-neutral-200 p-5">
-        <h3 className="mb-3 text-lg font-semibold tracking-tight text-neutral-950">{labels.inventorySummaryTitle}</h3>
+      <div className="border-t border-[color:var(--color-border)] p-5">
+        <h3 className="mb-3 text-lg font-semibold tracking-tight text-[color:var(--color-text)]">{labels.inventorySummaryTitle}</h3>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <article className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.inventoryReservations}</p>
-            <p className="mt-2 text-sm font-semibold text-neutral-950">{order.inventorySummary.reservationCount}</p>
-            <p className="mt-1 text-xs text-neutral-500">Kesinleşen: {order.inventorySummary.committedReservationCount} · Aktif: {order.inventorySummary.activeReservationCount}</p>
+          <article className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.inventoryReservations}</p>
+            <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{order.inventorySummary.reservationCount}</p>
+            <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">Kesinleşen: {order.inventorySummary.committedReservationCount} · Aktif: {order.inventorySummary.activeReservationCount}</p>
           </article>
-          <article className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.inventoryReservedQuantity}</p>
-            <p className="mt-2 text-sm font-semibold text-neutral-950">{order.inventorySummary.totalReservedQuantity}</p>
-            <p className="mt-1 text-xs text-neutral-500">Serbest bırakılan: {order.inventorySummary.releasedReservationCount} · İptal edilen: {order.inventorySummary.cancelledReservationCount}</p>
+          <article className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.inventoryReservedQuantity}</p>
+            <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{order.inventorySummary.totalReservedQuantity}</p>
+            <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">Serbest bırakılan: {order.inventorySummary.releasedReservationCount} · İptal edilen: {order.inventorySummary.cancelledReservationCount}</p>
           </article>
-          <article className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.inventoryRestockStatus}</p>
-            <p className="mt-2 text-sm font-semibold text-neutral-950">{formatRestockStatus(order.inventorySummary.restockStatus, labels)}</p>
+          <article className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.inventoryRestockStatus}</p>
+            <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{formatRestockStatus(order.inventorySummary.restockStatus, labels)}</p>
           </article>
-          <article className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.inventoryLastRestockedAt}</p>
-            <p className="mt-2 text-sm font-semibold text-neutral-950">{order.inventorySummary.lastRestockedAt ? formatDate(order.inventorySummary.lastRestockedAt, locale) : labels.notSpecified}</p>
+          <article className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.inventoryLastRestockedAt}</p>
+            <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{order.inventorySummary.lastRestockedAt ? formatDate(order.inventorySummary.lastRestockedAt, locale) : labels.notSpecified}</p>
           </article>
         </div>
       </div>
 
-      <div className="border-t border-neutral-200 p-5">
-        <h3 className="mb-3 text-lg font-semibold tracking-tight text-neutral-950">{labels.financialMovementsTitle}</h3>
+      <div className="border-t border-[color:var(--color-border)] p-5">
+        <h3 className="mb-3 text-lg font-semibold tracking-tight text-[color:var(--color-text)]">{labels.financialMovementsTitle}</h3>
         <div className="space-y-3">
           {order.financialMovements.map((movement) => (
-            <article key={movement.id} className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-              <div className="grid gap-2 text-sm text-neutral-700 md:grid-cols-2">
-                <p><span className="font-medium text-neutral-900">{labels.financialMovementAccount}:</span> {movement.accountName}</p>
-                <p><span className="font-medium text-neutral-900">{labels.financialMovementDirection}:</span> {formatFinancialDirection(movement.direction)}</p>
-                <p><span className="font-medium text-neutral-900">{labels.financialMovementSource}:</span> {movement.sourceType}</p>
-                <p><span className="font-medium text-neutral-900">{labels.financialMovementCategory}:</span> {movement.category ?? labels.notSpecified}</p>
-                <p><span className="font-medium text-neutral-900">{labels.orderTotal}:</span> {formatMoney(movement.amount, movement.currency, locale)}</p>
-                <p><span className="font-medium text-neutral-900">{labels.historyAt}:</span> {formatDate(movement.transactionAt, locale)}</p>
-                <p><span className="font-medium text-neutral-900">{labels.customerAccount}:</span> {movement.counterpartyName ?? labels.notSpecified}</p>
-                <p><span className="font-medium text-neutral-900">{labels.historyNote}:</span> {movement.note ?? movement.title}</p>
+            <article key={movement.id} className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+              <div className="grid gap-2 text-sm text-[color:var(--color-text)] md:grid-cols-2">
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.financialMovementAccount}:</span> {movement.accountName}</p>
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.financialMovementDirection}:</span> {formatFinancialDirection(movement.direction)}</p>
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.financialMovementSource}:</span> {movement.sourceType}</p>
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.financialMovementCategory}:</span> {movement.category ?? labels.notSpecified}</p>
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.orderTotal}:</span> {formatMoney(movement.amount, movement.currency, locale)}</p>
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.historyAt}:</span> {formatDate(movement.transactionAt, locale)}</p>
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.customerAccount}:</span> {movement.counterpartyName ?? labels.notSpecified}</p>
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.historyNote}:</span> {movement.note ?? movement.title}</p>
               </div>
             </article>
           ))}
-          {order.financialMovements.length === 0 ? <p className="text-sm text-neutral-500">{labels.notSpecified}</p> : null}
+          {order.financialMovements.length === 0 ? <p className="text-sm text-[color:var(--color-text-muted)]">{labels.notSpecified}</p> : null}
         </div>
       </div>
 
-      <div className="border-t border-neutral-200 p-5">
-        <h3 className="mb-3 text-lg font-semibold tracking-tight text-neutral-950">{labels.inventoryMovementTitle}</h3>
+      <div className="border-t border-[color:var(--color-border)] p-5">
+        <h3 className="mb-3 text-lg font-semibold tracking-tight text-[color:var(--color-text)]">{labels.inventoryMovementTitle}</h3>
         <div className="space-y-3">
           {order.inventoryMovements.map((movement) => (
-            <article key={movement.id} className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-              <div className="grid gap-2 text-sm text-neutral-700 md:grid-cols-2">
+            <article key={movement.id} className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+              <div className="grid gap-2 text-sm text-[color:var(--color-text)] md:grid-cols-2">
                 <p>
-                  <span className="font-medium text-neutral-900">{labels.inventoryMovementType}:</span>{" "}
+                  <span className="font-medium text-[color:var(--color-text)]">{labels.inventoryMovementType}:</span>{" "}
                   <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${movementBadgeClass(movement.type)}`}>
                     {formatMovementType(movement.type, labels)}
                   </span>
                 </p>
-                <p><span className="font-medium text-neutral-900">{labels.inventoryMovementQuantity}:</span> {movement.quantity}</p>
-                <p><span className="font-medium text-neutral-900">{labels.inventoryMovementWarehouse}:</span> {formatWarehouseCode(movement.warehouseCode, labels)}</p>
-                <p><span className="font-medium text-neutral-900">{labels.inventoryMovementReservation}:</span> {movement.reservationId ?? labels.notSpecified}</p>
-                <p><span className="font-medium text-neutral-900">{labels.historyAt}:</span> {formatDate(movement.createdAt, locale)}</p>
-                <p><span className="font-medium text-neutral-900">{labels.historyNote}:</span> {formatSystemNote(movement.note, order.orderNumber, labels)}</p>
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.inventoryMovementQuantity}:</span> {movement.quantity}</p>
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.inventoryMovementWarehouse}:</span> {formatWarehouseCode(movement.warehouseCode, labels)}</p>
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.inventoryMovementReservation}:</span> {movement.reservationId ?? labels.notSpecified}</p>
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.historyAt}:</span> {formatDate(movement.createdAt, locale)}</p>
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.historyNote}:</span> {formatSystemNote(movement.note, order.orderNumber, labels)}</p>
               </div>
             </article>
           ))}
-          {order.inventoryMovements.length === 0 ? <p className="text-sm text-neutral-500">{labels.notSpecified}</p> : null}
+          {order.inventoryMovements.length === 0 ? <p className="text-sm text-[color:var(--color-text-muted)]">{labels.notSpecified}</p> : null}
         </div>
       </div>
 
-      <div className="border-t border-neutral-200 p-5">
-        <h3 className="mb-3 text-lg font-semibold tracking-tight text-neutral-950">{labels.collectionSummaryTitle}</h3>
+      <div className="border-t border-[color:var(--color-border)] p-5">
+        <h3 className="mb-3 text-lg font-semibold tracking-tight text-[color:var(--color-text)]">{labels.collectionSummaryTitle}</h3>
         <div className="grid gap-3 md:grid-cols-2">
-          <article className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.collectionRecordedAmount}</p>
-            <p className="mt-2 text-sm font-semibold text-neutral-950">{formatMoney(recordedCollectionAmount, order.currency, locale)}</p>
+          <article className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.collectionRecordedAmount}</p>
+            <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{formatMoney(recordedCollectionAmount, order.currency, locale)}</p>
           </article>
-          <article className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.collectionRemainingAmount}</p>
-            <p className="mt-2 text-sm font-semibold text-neutral-950">{formatMoney(remainingCollectionAmount, order.currency, locale)}</p>
+          <article className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.collectionRemainingAmount}</p>
+            <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{formatMoney(remainingCollectionAmount, order.currency, locale)}</p>
           </article>
         </div>
         {isAutoPaidByCollections ? (
@@ -970,36 +970,36 @@ export function OrderDetailManager({ locale, order, labels, canManage, accountOp
         ) : null}
       </div>
 
-      <div className="border-t border-neutral-200 p-5">
-        <h3 className="mb-3 text-lg font-semibold tracking-tight text-neutral-950">{labels.statusHistoryTitle}</h3>
+      <div className="border-t border-[color:var(--color-border)] p-5">
+        <h3 className="mb-3 text-lg font-semibold tracking-tight text-[color:var(--color-text)]">{labels.statusHistoryTitle}</h3>
         <div className="space-y-3">
           {order.statusHistory.map((entry) => (
-            <article key={entry.id} className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-              <div className="grid gap-2 text-sm text-neutral-700 md:grid-cols-2">
-                <p><span className="font-medium text-neutral-900">{labels.historyFrom}:</span> {entry.fromStatus ? formatOrderStatus(entry.fromStatus, labels) : labels.notSpecified}</p>
-                <p><span className="font-medium text-neutral-900">{labels.historyTo}:</span> {formatOrderStatus(entry.toStatus, labels)}</p>
-                <p><span className="font-medium text-neutral-900">{labels.historySource}:</span> {entry.source === "ADMIN" ? labels.historySourceAdmin : labels.historySourceSystem}</p>
-                <p><span className="font-medium text-neutral-900">{labels.historyBy}:</span> {entry.changedByUserId ?? labels.notSpecified}</p>
-                <p><span className="font-medium text-neutral-900">{labels.historyAt}:</span> {formatDate(entry.createdAt, locale)}</p>
-                <p><span className="font-medium text-neutral-900">{labels.historyNote}:</span> {formatSystemNote(entry.note, order.orderNumber, labels)}</p>
+            <article key={entry.id} className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+              <div className="grid gap-2 text-sm text-[color:var(--color-text)] md:grid-cols-2">
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.historyFrom}:</span> {entry.fromStatus ? formatOrderStatus(entry.fromStatus, labels) : labels.notSpecified}</p>
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.historyTo}:</span> {formatOrderStatus(entry.toStatus, labels)}</p>
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.historySource}:</span> {entry.source === "ADMIN" ? labels.historySourceAdmin : labels.historySourceSystem}</p>
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.historyBy}:</span> {entry.changedByUserId ?? labels.notSpecified}</p>
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.historyAt}:</span> {formatDate(entry.createdAt, locale)}</p>
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.historyNote}:</span> {formatSystemNote(entry.note, order.orderNumber, labels)}</p>
               </div>
             </article>
           ))}
         </div>
       </div>
 
-      <div className="border-t border-neutral-200 p-5">
-        <h3 className="mb-3 text-lg font-semibold tracking-tight text-neutral-950">{labels.paymentHistoryTitle}</h3>
+      <div className="border-t border-[color:var(--color-border)] p-5">
+        <h3 className="mb-3 text-lg font-semibold tracking-tight text-[color:var(--color-text)]">{labels.paymentHistoryTitle}</h3>
         <div className="space-y-3">
           {order.paymentStatusHistory.map((entry) => (
-            <article key={entry.id} className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-              <div className="grid gap-2 text-sm text-neutral-700 md:grid-cols-2">
-                <p><span className="font-medium text-neutral-900">{labels.paymentHistoryFrom}:</span> {entry.fromStatus ? formatPaymentStatus(entry.fromStatus) : labels.notSpecified}</p>
-                <p><span className="font-medium text-neutral-900">{labels.paymentHistoryTo}:</span> {formatPaymentStatus(entry.toStatus)}</p>
-                <p><span className="font-medium text-neutral-900">{labels.historySource}:</span> {entry.source === "ADMIN" ? labels.historySourceAdmin : labels.historySourceSystem}</p>
-                <p><span className="font-medium text-neutral-900">{labels.historyBy}:</span> {entry.changedByUserId ?? labels.notSpecified}</p>
-                <p><span className="font-medium text-neutral-900">{labels.historyAt}:</span> {formatDate(entry.createdAt, locale)}</p>
-                <p><span className="font-medium text-neutral-900">{labels.historyNote}:</span> {formatSystemNote(entry.note, order.orderNumber, labels)}</p>
+            <article key={entry.id} className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
+              <div className="grid gap-2 text-sm text-[color:var(--color-text)] md:grid-cols-2">
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.paymentHistoryFrom}:</span> {entry.fromStatus ? formatPaymentStatus(entry.fromStatus) : labels.notSpecified}</p>
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.paymentHistoryTo}:</span> {formatPaymentStatus(entry.toStatus)}</p>
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.historySource}:</span> {entry.source === "ADMIN" ? labels.historySourceAdmin : labels.historySourceSystem}</p>
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.historyBy}:</span> {entry.changedByUserId ?? labels.notSpecified}</p>
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.historyAt}:</span> {formatDate(entry.createdAt, locale)}</p>
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.historyNote}:</span> {formatSystemNote(entry.note, order.orderNumber, labels)}</p>
               </div>
             </article>
           ))}
@@ -1007,13 +1007,13 @@ export function OrderDetailManager({ locale, order, labels, canManage, accountOp
       </div>
 
       {canManage ? (
-        <div className="flex flex-wrap items-center gap-3 border-t border-neutral-200 p-5">
+        <div className="flex flex-wrap items-center gap-3 border-t border-[color:var(--color-border)] p-5">
           {remainingCollectionAmount > 0 && paymentStatus !== "REFUNDED" ? (
             <>
               <select
                 value={collectionFinancialAccountId}
                 onChange={(event) => setCollectionFinancialAccountId(event.target.value)}
-                className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                className="h-10 rounded-md border border-[color:var(--color-border)] px-3 text-sm"
                 disabled={loading}
               >
                 <option value="">{labels.collectionFinancialAccount}</option>
@@ -1029,7 +1029,7 @@ export function OrderDetailManager({ locale, order, labels, canManage, accountOp
           <select
             value={status}
             onChange={(event) => setStatus(event.target.value as OrderStatus)}
-            className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+            className="h-10 rounded-md border border-[color:var(--color-border)] px-3 text-sm"
             disabled={loading}
           >
             <option value="CONFIRMED">{labels.orderStatusConfirmed}</option>
@@ -1038,7 +1038,7 @@ export function OrderDetailManager({ locale, order, labels, canManage, accountOp
           <select
             value={paymentStatus}
             onChange={(event) => setPaymentStatus(event.target.value as PaymentStatus)}
-            className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+            className="h-10 rounded-md border border-[color:var(--color-border)] px-3 text-sm"
             disabled={loading}
           >
             <option value="PENDING">{formatPaymentStatus("PENDING")}</option>
@@ -1051,7 +1051,7 @@ export function OrderDetailManager({ locale, order, labels, canManage, accountOp
             <select
               value={refundFinancialAccountId}
               onChange={(event) => setRefundFinancialAccountId(event.target.value)}
-              className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+              className="h-10 rounded-md border border-[color:var(--color-border)] px-3 text-sm"
               disabled={loading}
             >
               <option value="">{labels.refundFinancialAccount}</option>

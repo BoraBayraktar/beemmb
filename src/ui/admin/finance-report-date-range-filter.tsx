@@ -39,13 +39,13 @@ export function FinanceReportDateRangeFilter({ locale, reportPath, fromIso, toIs
 
   const form = (
     <div className="flex flex-col gap-3 md:flex-row md:items-end">
-      <p className="text-sm text-neutral-600 md:mr-auto md:self-center">{labels.defaultMonthHint}</p>
+      <p className="text-sm text-[color:var(--color-text-muted)] md:mr-auto md:self-center">{labels.defaultMonthHint}</p>
       <label className="flex flex-col gap-1 text-sm">
-        <span className="font-medium text-neutral-800">{labels.fromLabel}</span>
+        <span className="font-medium text-[color:var(--color-text)]">{labels.fromLabel}</span>
         <Input type="date" value={fromValue} onChange={(event) => setFromValue(event.target.value)} />
       </label>
       <label className="flex flex-col gap-1 text-sm">
-        <span className="font-medium text-neutral-800">{labels.toLabel}</span>
+        <span className="font-medium text-[color:var(--color-text)]">{labels.toLabel}</span>
         <Input type="date" value={toValue} onChange={(event) => setToValue(event.target.value)} />
       </label>
       <Button type="button" onClick={applyRange}>
@@ -55,13 +55,13 @@ export function FinanceReportDateRangeFilter({ locale, reportPath, fromIso, toIs
   );
 
   return (
-    <section className="mb-6 rounded-lg border border-neutral-200 bg-neutral-50">
+    <section className="mb-6 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]">
       <div className="hidden p-4 md:block">{form}</div>
       <details className="md:hidden">
-        <summary className="cursor-pointer list-none p-4 font-medium text-neutral-900 marker:content-none">
+        <summary className="cursor-pointer list-none p-4 font-medium text-[color:var(--color-text)] marker:content-none">
           {labels.mobileToggleLabel}
         </summary>
-        <div className="border-t border-neutral-200 p-4">{form}</div>
+        <div className="border-t border-[color:var(--color-border)] p-4">{form}</div>
       </details>
     </section>
   );

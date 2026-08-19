@@ -244,7 +244,7 @@ function statusClass(status: MarketplacePackage["importStatus"]) {
     return "bg-rose-100 text-rose-700";
   }
 
-  return "bg-neutral-100 text-neutral-700";
+  return "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)]";
 }
 
 function getAdminProductCreateUrl(locale: string, line: MarketplacePackageLine) {
@@ -889,12 +889,12 @@ export function HepsiburadaIntegrationManager({
 
   return (
     <section className="grid gap-5">
-      <div className="rounded-2xl border border-neutral-200 bg-white p-5">
+      <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5">
         <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.title}</p>
-            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-neutral-950">{labels.connectionTitle}</h2>
-            <p className="mt-1 max-w-3xl text-sm text-neutral-500">{labels.subtitle}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.title}</p>
+            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[color:var(--color-text)]">{labels.connectionTitle}</h2>
+            <p className="mt-1 max-w-3xl text-sm text-[color:var(--color-text-muted)]">{labels.subtitle}</p>
           </div>
           <Button type="button" onClick={syncNow} disabled={!canManage || !activeConfig || busy} variant="secondary">
             <Play className="h-4 w-4" />
@@ -903,13 +903,13 @@ export function HepsiburadaIntegrationManager({
         </div>
 
         <div className="mt-5 grid gap-3 md:grid-cols-4">
-          <article className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.activeAccounts}</p>
-            <p className="mt-2 text-xl font-semibold text-neutral-950">{dashboardSummary.activeConfigCount}</p>
+          <article className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.activeAccounts}</p>
+            <p className="mt-2 text-xl font-semibold text-[color:var(--color-text)]">{dashboardSummary.activeConfigCount}</p>
           </article>
-          <article className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.packages}</p>
-            <p className="mt-2 text-xl font-semibold text-neutral-950">{dashboardSummary.packageCount}</p>
+          <article className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.packages}</p>
+            <p className="mt-2 text-xl font-semibold text-[color:var(--color-text)]">{dashboardSummary.packageCount}</p>
           </article>
           <article className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">{labels.readyForOrder}</p>
@@ -921,15 +921,15 @@ export function HepsiburadaIntegrationManager({
           </article>
         </div>
 
-        <div className="mt-5 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+        <div className="mt-5 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
           <div className="flex flex-col gap-1">
-            <h3 className="text-sm font-semibold text-neutral-950">{labels.capabilitiesTitle}</h3>
-            <p className="text-sm text-neutral-500">{labels.capabilitiesHint}</p>
+            <h3 className="text-sm font-semibold text-[color:var(--color-text)]">{labels.capabilitiesTitle}</h3>
+            <p className="text-sm text-[color:var(--color-text-muted)]">{labels.capabilitiesHint}</p>
           </div>
           <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
             {capabilityItems.map((item) => (
-              <div key={item.label} className="flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm">
-                <span className="text-neutral-700">{item.label}</span>
+              <div key={item.label} className="flex items-center justify-between gap-3 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2 text-sm">
+                <span className="text-[color:var(--color-text)]">{item.label}</span>
                 <Badge className={item.enabled ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-800"}>
                   {item.enabled ? labels.capabilityAvailable : labels.capabilityLimited}
                 </Badge>
@@ -947,9 +947,9 @@ export function HepsiburadaIntegrationManager({
           <Input value={userAgent} onChange={(event) => setUserAgent(event.target.value)} placeholder={labels.userAgent} disabled={!canManage || busy} />
           <Input value={endpointUrl} onChange={(event) => setEndpointUrl(event.target.value)} placeholder={labels.endpointUrl} disabled={!canManage || busy} />
           <Input value={syncWindowMinutes} onChange={(event) => setSyncWindowMinutes(event.target.value)} placeholder={labels.syncWindowMinutes} disabled={!canManage || busy} type="number" min={15} max={1440} />
-          <div className="flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-600 md:col-span-2">
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3 text-sm text-[color:var(--color-text-muted)] md:col-span-2">
             <span>{labels.lastSync}</span>
-            <span className="font-medium text-neutral-950">{formatDate(activeConfig?.lastSuccessfulSyncAt ?? null)}</span>
+            <span className="font-medium text-[color:var(--color-text)]">{formatDate(activeConfig?.lastSuccessfulSyncAt ?? null)}</span>
           </div>
         </div>
 
@@ -968,13 +968,13 @@ export function HepsiburadaIntegrationManager({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-neutral-200 bg-white">
-        <div className="border-b border-neutral-200 p-5">
-          <h3 className="text-lg font-semibold text-neutral-950">{labels.packagesTitle}</h3>
+      <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
+        <div className="border-b border-[color:var(--color-border)] p-5">
+          <h3 className="text-lg font-semibold text-[color:var(--color-text)]">{labels.packagesTitle}</h3>
         </div>
-        <div className="divide-y divide-neutral-200">
+        <div className="divide-y divide-[color:var(--color-border)]">
           {packages.length === 0 ? (
-            <p className="p-5 text-sm text-neutral-500">{labels.emptyPackages}</p>
+            <p className="p-5 text-sm text-[color:var(--color-text-muted)]">{labels.emptyPackages}</p>
           ) : packages.map((item) => {
             const packageHint = resolvePackageListHint(item, labels, capabilities);
 
@@ -982,14 +982,14 @@ export function HepsiburadaIntegrationManager({
             <article key={item.id} className="grid gap-3 p-5 lg:grid-cols-[1fr_150px_180px_220px_110px] lg:items-center">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-semibold text-neutral-950">{item.externalOrderNumber}</p>
+                  <p className="font-semibold text-[color:var(--color-text)]">{item.externalOrderNumber}</p>
                   <Badge className={statusClass(item.importStatus)}>{item.importStatus}</Badge>
                 </div>
-                <p className="mt-1 text-sm text-neutral-500">{item.customerName ?? item.configName} - {item.externalPackageId}</p>
+                <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{item.customerName ?? item.configName} - {item.externalPackageId}</p>
               </div>
-              <p className="text-sm text-neutral-600">{item.packageStatus}</p>
-              <p className="text-sm text-neutral-600">{item.cargoProviderName ?? "-"} {item.cargoTrackingNumber ? `- ${item.cargoTrackingNumber}` : ""}</p>
-              <div className="text-sm text-neutral-600">
+              <p className="text-sm text-[color:var(--color-text-muted)]">{item.packageStatus}</p>
+              <p className="text-sm text-[color:var(--color-text-muted)]">{item.cargoProviderName ?? "-"} {item.cargoTrackingNumber ? `- ${item.cargoTrackingNumber}` : ""}</p>
+              <div className="text-sm text-[color:var(--color-text-muted)]">
                 <p>{item.matchedLineCount}/{item.lineCount} {labels.matchedLines}</p>
                 <p className="mt-1 text-xs text-amber-700">{item.needsReviewLineCount} {labels.needsReview}</p>
                 {item.latestStatusJob ? (
@@ -998,7 +998,7 @@ export function HepsiburadaIntegrationManager({
                       ? "border-rose-200 bg-rose-50 text-rose-800"
                       : item.latestStatusJob.status === "FAILED"
                         ? "border-amber-200 bg-amber-50 text-amber-900"
-                        : "border-neutral-200 bg-white text-neutral-700"
+                        : "border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[color:var(--color-text)]"
                   }`}>
                     <p className="font-semibold">{labels.packageListLatestJobLabel}: {formatBusinessStatusLabel(item.latestStatusJob.status, labels)}</p>
                     {item.latestStatusJob.status === "DEAD_LETTER" ? (
@@ -1015,7 +1015,7 @@ export function HepsiburadaIntegrationManager({
                       ? "border-cyan-200 bg-cyan-50 text-cyan-800"
                       : packageHint.tone === "amber"
                         ? "border-amber-200 bg-amber-50 text-amber-900"
-                        : "border-neutral-200 bg-neutral-50 text-neutral-700"
+                        : "border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)]"
                 }`}>
                   <span className="font-semibold">{labels.packageListActionLabel}:</span> {packageHint.text}
                 </div>
@@ -1031,12 +1031,12 @@ export function HepsiburadaIntegrationManager({
 
       {selectedPackage ? (
         <div className="fixed inset-0 z-50 flex justify-end bg-neutral-950/30">
-          <aside className="h-full w-full max-w-3xl overflow-y-auto bg-white shadow-2xl">
-            <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-neutral-200 bg-white p-5">
+          <aside className="h-full w-full max-w-3xl overflow-y-auto bg-[color:var(--color-surface)] shadow-2xl">
+            <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.packageDetail}</p>
-                <h3 className="mt-1 text-xl font-semibold text-neutral-950">{selectedPackage.externalOrderNumber}</h3>
-                <p className="mt-1 text-sm text-neutral-500">{selectedPackage.customerName ?? selectedPackage.configName}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.packageDetail}</p>
+                <h3 className="mt-1 text-xl font-semibold text-[color:var(--color-text)]">{selectedPackage.externalOrderNumber}</h3>
+                <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{selectedPackage.customerName ?? selectedPackage.configName}</p>
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -1062,7 +1062,7 @@ export function HepsiburadaIntegrationManager({
                 <button
                   type="button"
                   onClick={() => setSelectedPackage(null)}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-neutral-200 text-neutral-700 transition hover:bg-neutral-100"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[color:var(--color-border)] text-[color:var(--color-text)] transition hover:bg-[color:var(--color-bg-soft)]"
                   aria-label={labels.closeLabel}
                 >
                   <X className="h-4 w-4" />
@@ -1083,17 +1083,17 @@ export function HepsiburadaIntegrationManager({
                       ? "border-rose-200 bg-rose-50"
                       : "border-amber-200 bg-amber-50"
               }`}>
-                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{labels.nextActionTitle}</p>
-                <p className="mt-2 text-sm font-medium text-neutral-900">{nextActionSummary?.text}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.nextActionTitle}</p>
+                <p className="mt-2 text-sm font-medium text-[color:var(--color-text)]">{nextActionSummary?.text}</p>
               </div>
 
-              <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
+              <div className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3">
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{labels.operationsTitle}</p>
-                    <p className="mt-2 text-sm text-neutral-700">{labels.operationsHint}</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.operationsTitle}</p>
+                    <p className="mt-2 text-sm text-[color:var(--color-text)]">{labels.operationsHint}</p>
                     {latestStatusJob ? (
-                      <div className="mt-3 space-y-1 text-xs text-neutral-600">
+                      <div className="mt-3 space-y-1 text-xs text-[color:var(--color-text-muted)]">
                         <p>Son iş durumu: {formatBusinessStatusLabel(latestStatusJob.status, labels)}</p>
                         <p>Hedef statü: {latestStatusJob.targetStatus ?? "-"}</p>
                         <p>Son deneme: {formatDate(latestStatusJob.processedAt ?? latestStatusJob.lastAttemptAt ?? latestStatusJob.createdAt)}</p>
@@ -1112,33 +1112,33 @@ export function HepsiburadaIntegrationManager({
               </div>
 
               <div className="grid gap-3 md:grid-cols-3">
-                <article className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.packageStatusLabel}</p>
-                  <p className="mt-2 text-sm font-semibold text-neutral-950">{selectedPackage.packageStatus}</p>
-                  <p className="mt-1 text-xs text-neutral-500">{selectedPackage.externalPackageId}</p>
+                <article className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.packageStatusLabel}</p>
+                  <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{selectedPackage.packageStatus}</p>
+                  <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{selectedPackage.externalPackageId}</p>
                 </article>
-                <article className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.cargoLabel}</p>
-                  <p className="mt-2 text-sm font-semibold text-neutral-950">{selectedPackage.cargoProviderName ?? "-"}</p>
-                  <p className="mt-1 text-xs text-neutral-500">{selectedPackage.cargoTrackingNumber ?? "-"}</p>
+                <article className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.cargoLabel}</p>
+                  <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{selectedPackage.cargoProviderName ?? "-"}</p>
+                  <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{selectedPackage.cargoTrackingNumber ?? "-"}</p>
                 </article>
-                <article className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.lastSync}</p>
-                  <p className="mt-2 text-sm font-semibold text-neutral-950">{formatDate(selectedPackage.updatedAt)}</p>
-                  <p className="mt-1 text-xs text-neutral-500">{selectedPackage.importStatus}</p>
+                <article className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.lastSync}</p>
+                  <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{formatDate(selectedPackage.updatedAt)}</p>
+                  <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{selectedPackage.importStatus}</p>
                 </article>
               </div>
 
               {selectedPackage.packageStatus === "Picking" || selectedPackage.packageStatus === "Invoiced" ? (
-                <div className="rounded-lg border border-neutral-200 bg-white px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{labels.cargoCompanyChangeTitle}</p>
+                <div className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.cargoCompanyChangeTitle}</p>
                   <div className="mt-3 grid gap-3 md:grid-cols-[1fr_auto]">
                     <div className="grid gap-1">
-                      <label className="text-xs font-medium text-neutral-600">{labels.cargoCompanyChangeLabel}</label>
+                      <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.cargoCompanyChangeLabel}</label>
                       <select
                         value={selectedCarrierCompanyId}
                         onChange={(event) => setSelectedCarrierCompanyId(event.target.value)}
-                        className="h-10 rounded-md border border-neutral-300 px-3 text-sm"
+                        className="h-10 rounded-md border border-[color:var(--color-border)] px-3 text-sm"
                         disabled={!canManage || detailBusy}
                       >
                         <option value="">{labels.cargoCompanyChangePlaceholder}</option>
@@ -1154,10 +1154,10 @@ export function HepsiburadaIntegrationManager({
                     </div>
                   </div>
 
-                  <div className="mt-4 flex flex-col gap-2 border-t border-neutral-200 pt-3 md:flex-row md:items-center md:justify-between">
+                  <div className="mt-4 flex flex-col gap-2 border-t border-[color:var(--color-border)] pt-3 md:flex-row md:items-center md:justify-between">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{labels.cargoInfoRefreshTitle}</p>
-                      <p className="mt-1 text-xs text-neutral-500">{labels.cargoInfoRefreshHint}</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.cargoInfoRefreshTitle}</p>
+                      <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{labels.cargoInfoRefreshHint}</p>
                     </div>
                     <Button type="button" variant="secondary" onClick={refreshCargoInfo} disabled={!canManage || detailBusy} size="sm">
                       {labels.cargoInfoRefreshSubmit}
@@ -1167,9 +1167,9 @@ export function HepsiburadaIntegrationManager({
               ) : null}
 
               <div className="grid gap-3 md:grid-cols-3">
-                <article className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.packages}</p>
-                  <p className="mt-2 text-xl font-semibold text-neutral-950">{selectedPackage.lineCount}</p>
+                <article className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.packages}</p>
+                  <p className="mt-2 text-xl font-semibold text-[color:var(--color-text)]">{selectedPackage.lineCount}</p>
                 </article>
                 <article className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
                   <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">{labels.matchedLines}</p>
@@ -1182,7 +1182,7 @@ export function HepsiburadaIntegrationManager({
               </div>
 
               {capabilities.supportsStatusInvoiced ? (
-                <div className="grid gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-4 md:grid-cols-[1fr_160px_160px_auto] md:items-center">
+                <div className="grid gap-3 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4 md:grid-cols-[1fr_160px_160px_auto] md:items-center">
                   <Input
                     value={invoiceLink}
                     onChange={(event) => setInvoiceLink(event.target.value)}
@@ -1212,25 +1212,25 @@ export function HepsiburadaIntegrationManager({
                 </div>
               ) : null}
 
-              <div className="rounded-lg border border-neutral-200 p-4">
-                <h4 className="text-sm font-semibold text-neutral-950">{labels.statusHistory}</h4>
+              <div className="rounded-lg border border-[color:var(--color-border)] p-4">
+                <h4 className="text-sm font-semibold text-[color:var(--color-text)]">{labels.statusHistory}</h4>
                 <div className="mt-3 grid gap-2">
                   {selectedPackage.statusHistory.length === 0 ? (
-                    <p className="text-sm text-neutral-500">{labels.noStatusHistory}</p>
+                    <p className="text-sm text-[color:var(--color-text-muted)]">{labels.noStatusHistory}</p>
                   ) : selectedPackage.statusHistory.map((item) => (
-                    <article key={item.id} className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
+                    <article key={item.id} className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-2">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex flex-wrap items-center gap-2">
-                          <Badge className={item.status === "SUCCESS" ? "bg-emerald-100 text-emerald-700" : item.status === "FAILED" || item.status === "DEAD_LETTER" ? "bg-rose-100 text-rose-700" : "bg-neutral-100 text-neutral-700"}>
+                          <Badge className={item.status === "SUCCESS" ? "bg-emerald-100 text-emerald-700" : item.status === "FAILED" || item.status === "DEAD_LETTER" ? "bg-rose-100 text-rose-700" : "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)]"}>
                             {formatBusinessStatusLabel(item.status, labels)}
                           </Badge>
-                          <span className="text-sm font-medium text-neutral-800">{labels.targetStatus}: {item.targetStatus ?? "-"}</span>
+                          <span className="text-sm font-medium text-[color:var(--color-text)]">{labels.targetStatus}: {item.targetStatus ?? "-"}</span>
                         </div>
-                        <span className="text-xs text-neutral-500">{formatDate(item.processedAt ?? item.lastAttemptAt ?? item.createdAt)}</span>
+                        <span className="text-xs text-[color:var(--color-text-muted)]">{formatDate(item.processedAt ?? item.lastAttemptAt ?? item.createdAt)}</span>
                       </div>
-                      <p className="mt-1 text-xs text-neutral-500">{labels.attempts}: {item.attemptCount}/{item.maxAttempts}</p>
+                      <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{labels.attempts}: {item.attemptCount}/{item.maxAttempts}</p>
                       {item.externalReference ? (
-                        <p className="mt-1 break-all text-xs text-neutral-500">{labels.externalReferenceShort}: {item.externalReference}</p>
+                        <p className="mt-1 break-all text-xs text-[color:var(--color-text-muted)]">{labels.externalReferenceShort}: {item.externalReference}</p>
                       ) : null}
                       {item.lastError ? <p className="mt-1 break-all text-xs text-rose-700">{item.lastError}</p> : null}
                       {item.deadLetter?.resolved && item.deadLetter.resolvedAt ? (
@@ -1249,15 +1249,15 @@ export function HepsiburadaIntegrationManager({
               </div>
 
               {selectedPackage.lines.map((line) => (
-                <article key={line.id} className="rounded-lg border border-neutral-200 p-4">
+                <article key={line.id} className="rounded-lg border border-[color:var(--color-border)] p-4">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-semibold text-neutral-950">{line.productName}</p>
+                      <p className="font-semibold text-[color:var(--color-text)]">{line.productName}</p>
                       <Badge className={line.matchStatus === "MATCHED" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}>
                         {line.matchStatus}
                       </Badge>
                     </div>
-                    <p className="mt-1 text-sm text-neutral-500">
+                    <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">
                       {line.quantity} x {line.unitPrice ?? "-"} {line.currency}
                       {line.merchantSku ? ` - ${line.merchantSku}` : ""}
                       {line.barcode ? ` - ${line.barcode}` : ""}

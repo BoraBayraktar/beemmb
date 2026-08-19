@@ -233,12 +233,12 @@ export function CarrierDirectoryManager({ items, labels, canDelete }: Props) {
   }
 
   return (
-    <section className="rounded-2xl border border-neutral-200 bg-white">
-      <div className="flex flex-col gap-4 border-b border-neutral-200 p-5 lg:flex-row lg:items-center lg:justify-between">
+    <section className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
+      <div className="flex flex-col gap-4 border-b border-[color:var(--color-border)] p-5 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.title}</p>
-          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-neutral-950">{labels.listTitle}</h2>
-          <p className="mt-1 text-sm text-neutral-500">{labels.description}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.title}</p>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[color:var(--color-text)]">{labels.listTitle}</h2>
+          <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{labels.description}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button type="button" onClick={openCreateDrawer}>{labels.createTitle}</Button>
@@ -271,8 +271,8 @@ export function CarrierDirectoryManager({ items, labels, canDelete }: Props) {
           </Select>
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-neutral-200">
-          <div className="hidden grid-cols-[1fr_1fr_110px_110px_110px_120px_190px] gap-4 border-b border-neutral-200 bg-neutral-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 lg:grid">
+        <div className="overflow-hidden rounded-xl border border-[color:var(--color-border)]">
+          <div className="hidden grid-cols-[1fr_1fr_110px_110px_110px_120px_190px] gap-4 border-b border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)] lg:grid">
             <span>{labels.name}</span>
             <span>{labels.slug}</span>
             <span>{labels.trendyolId}</span>
@@ -283,24 +283,24 @@ export function CarrierDirectoryManager({ items, labels, canDelete }: Props) {
           </div>
 
           {filteredItems.length === 0 ? (
-            <p className="p-6 text-sm text-neutral-500">{labels.empty}</p>
+            <p className="p-6 text-sm text-[color:var(--color-text-muted)]">{labels.empty}</p>
           ) : (
-            <div className="divide-y divide-neutral-200">
+            <div className="divide-y divide-[color:var(--color-border)]">
               {filteredItems.map((item) => (
                 <article key={item.id} className="grid gap-4 p-4 lg:grid-cols-[1fr_1fr_110px_110px_110px_120px_190px] lg:items-center">
                   <div>
-                    <h3 className="font-medium text-neutral-950">{item.name}</h3>
+                    <h3 className="font-medium text-[color:var(--color-text)]">{item.name}</h3>
                     {!item.isActive ? (
-                      <span className="mt-1 inline-block rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-500">
+                      <span className="mt-1 inline-block rounded-full bg-[color:var(--color-bg-soft)] px-2 py-0.5 text-xs font-medium text-[color:var(--color-text-muted)]">
                         {labels.filterPassive}
                       </span>
                     ) : null}
                   </div>
-                  <p className="text-sm text-neutral-500">{item.slug}</p>
-                  <p className="text-sm text-neutral-500">{item.externalCodeTrendyol ?? "-"}</p>
-                  <p className="text-sm text-neutral-500">{item.externalCodePazarama ?? "-"}</p>
-                  <p className="text-sm text-neutral-500">{item.externalCodeHepsiburada ?? "-"}</p>
-                  <p className="text-sm font-semibold text-neutral-950">{item.orderCount}</p>
+                  <p className="text-sm text-[color:var(--color-text-muted)]">{item.slug}</p>
+                  <p className="text-sm text-[color:var(--color-text-muted)]">{item.externalCodeTrendyol ?? "-"}</p>
+                  <p className="text-sm text-[color:var(--color-text-muted)]">{item.externalCodePazarama ?? "-"}</p>
+                  <p className="text-sm text-[color:var(--color-text-muted)]">{item.externalCodeHepsiburada ?? "-"}</p>
+                  <p className="text-sm font-semibold text-[color:var(--color-text)]">{item.orderCount}</p>
                   <div className="flex flex-wrap gap-2 lg:justify-end">
                     <Button type="button" size="sm" variant="secondary" disabled={loading} onClick={() => openEditDrawer(item)}>{labels.edit}</Button>
                     {canDelete ? (
@@ -317,10 +317,10 @@ export function CarrierDirectoryManager({ items, labels, canDelete }: Props) {
       {drawerMode ? (
         <div className="fixed inset-0 z-50">
           <button type="button" aria-label={labels.cancel} className="absolute inset-0 bg-black/30" onClick={closeDrawer} />
-          <aside className="absolute right-0 top-0 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-neutral-200 bg-white shadow-2xl">
-            <div className="flex items-start justify-between border-b border-neutral-200 p-5">
+          <aside className="absolute right-0 top-0 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-2xl">
+            <div className="flex items-start justify-between border-b border-[color:var(--color-border)] p-5">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{labels.title}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.title}</p>
                 <h3 className="mt-1 text-xl font-semibold tracking-tight">{activeTitle}</h3>
               </div>
               <Button type="button" size="icon" variant="ghost" onClick={closeDrawer} disabled={loading}>
@@ -344,7 +344,7 @@ export function CarrierDirectoryManager({ items, labels, canDelete }: Props) {
               <div className="grid gap-2">
                 <Label>{labels.trackingUrlTemplate}</Label>
                 <Input value={activeForm.trackingUrlTemplate} onChange={(event) => patchActiveField("trackingUrlTemplate", event.target.value)} placeholder="https://kargo.example.com/takip?kod={trackingNumber}" />
-                <p className="text-xs text-neutral-500">{labels.trackingUrlTemplateHint}</p>
+                <p className="text-xs text-[color:var(--color-text-muted)]">{labels.trackingUrlTemplateHint}</p>
               </div>
               <div className="grid gap-2">
                 <Label>{labels.trendyolId}</Label>

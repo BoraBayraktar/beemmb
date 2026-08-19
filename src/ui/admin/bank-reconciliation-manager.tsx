@@ -156,27 +156,27 @@ export function BankReconciliationManager({ locale, accountId, initialWorkspace,
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-        <Link href={`/${locale}/admin/finance/bank-cash/${accountId}`} className="text-sm font-medium text-neutral-500 no-underline hover:text-neutral-950">
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
+        <Link href={`/${locale}/admin/finance/bank-cash/${accountId}`} className="text-sm font-medium text-[color:var(--color-text-muted)] no-underline hover:text-[color:var(--color-text)]">
           {copy.backToAccount}
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold text-neutral-950">{copy.title}</h1>
-        <p className="mt-1 text-sm text-neutral-600">{copy.description}</p>
-        <p className="mt-2 text-sm text-neutral-700">
+        <h1 className="mt-2 text-2xl font-semibold text-[color:var(--color-text)]">{copy.title}</h1>
+        <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{copy.description}</p>
+        <p className="mt-2 text-sm text-[color:var(--color-text)]">
           {workspace.financialAccountName} · {workspace.currency}
         </p>
       </section>
 
-      <section className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-        <h2 className="text-lg font-semibold text-neutral-950">{copy.uploadTitle}</h2>
-        <p className="mt-1 text-sm text-neutral-600">{copy.uploadHint}</p>
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
+        <h2 className="text-lg font-semibold text-[color:var(--color-text)]">{copy.uploadTitle}</h2>
+        <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{copy.uploadHint}</p>
         <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-end">
           <Input type="file" accept=".csv,text/csv" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
           <Button type="button" disabled={pending} onClick={uploadStatement}>
             {copy.uploadButton}
           </Button>
         </div>
-        <label className="mt-3 flex items-start gap-2 text-sm text-neutral-700">
+        <label className="mt-3 flex items-start gap-2 text-sm text-[color:var(--color-text)]">
           <input
             type="checkbox"
             className="mt-1"
@@ -189,21 +189,21 @@ export function BankReconciliationManager({ locale, accountId, initialWorkspace,
 
       {importSummary ? (
         <section className="grid gap-3 md:grid-cols-4">
-          <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm">{copy.summaryLineCount}: <strong>{importSummary.lineCount}</strong></div>
-          <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm">{copy.summaryUnmatched}: <strong>{importSummary.unmatchedCount}</strong></div>
-          <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm">{copy.summarySuggested}: <strong>{importSummary.suggestedCount}</strong></div>
-          <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm">{copy.summaryConfirmed}: <strong>{importSummary.confirmedCount}</strong></div>
+          <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4 text-sm">{copy.summaryLineCount}: <strong>{importSummary.lineCount}</strong></div>
+          <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4 text-sm">{copy.summaryUnmatched}: <strong>{importSummary.unmatchedCount}</strong></div>
+          <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4 text-sm">{copy.summarySuggested}: <strong>{importSummary.suggestedCount}</strong></div>
+          <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4 text-sm">{copy.summaryConfirmed}: <strong>{importSummary.confirmedCount}</strong></div>
         </section>
       ) : (
-        <p className="text-sm text-neutral-600">{copy.emptyImport}</p>
+        <p className="text-sm text-[color:var(--color-text-muted)]">{copy.emptyImport}</p>
       )}
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
       {workspace.lines.length > 0 ? (
-        <section className="overflow-x-auto rounded-3xl border border-neutral-200 bg-white shadow-sm">
-          <table className="min-w-full divide-y divide-neutral-200 text-sm">
-            <thead className="bg-neutral-50 text-left text-neutral-500">
+        <section className="overflow-x-auto rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-sm">
+          <table className="min-w-full divide-y divide-[color:var(--color-border)] text-sm">
+            <thead className="bg-[color:var(--color-bg-soft)] text-left text-[color:var(--color-text-muted)]">
               <tr>
                 <th className="px-4 py-3 font-medium">{copy.colDate}</th>
                 <th className="px-4 py-3 font-medium">{copy.colDescription}</th>
@@ -213,7 +213,7 @@ export function BankReconciliationManager({ locale, accountId, initialWorkspace,
                 <th className="px-4 py-3 font-medium" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-y divide-[color:var(--color-border)]">
               {workspace.lines.map((line) => (
                 <tr key={line.id}>
                   <td className="px-4 py-3">{formatDate(line.transactionAt)}</td>
@@ -256,7 +256,7 @@ export function BankReconciliationManager({ locale, accountId, initialWorkspace,
                           {copy.confirmButton}
                         </Button>
                         {!effectiveSelections[line.id] ? (
-                          <span className="text-xs text-neutral-500">{copy.confirmCreateHint}</span>
+                          <span className="text-xs text-[color:var(--color-text-muted)]">{copy.confirmCreateHint}</span>
                         ) : null}
                       </div>
                     )}

@@ -436,7 +436,7 @@ export function formatDelta(value: number | null) {
 }
 
 export function getSectionPanelClass(activeSection: InventorySectionId, sectionId: InventorySectionId) {
-  return activeSection === sectionId ? "border-b border-neutral-200 bg-white/90 p-5" : "hidden";
+  return activeSection === sectionId ? "border-b border-[color:var(--color-border)] bg-[color:var(--color-surface)]/90 p-5" : "hidden";
 }
 
 export function EmptyStateCard({
@@ -447,9 +447,9 @@ export function EmptyStateCard({
   description: string;
 }) {
   return (
-    <div className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50/80 p-5 text-sm">
-      <p className="font-semibold text-neutral-900">{title}</p>
-      <p className="mt-1 text-neutral-500">{description}</p>
+    <div className="rounded-2xl border border-dashed border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]/80 p-5 text-sm">
+      <p className="font-semibold text-[color:var(--color-text)]">{title}</p>
+      <p className="mt-1 text-[color:var(--color-text-muted)]">{description}</p>
     </div>
   );
 }

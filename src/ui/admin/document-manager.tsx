@@ -224,7 +224,7 @@ function getExternalStatusBadgeClass(status: AdminBusinessDocumentSyncStatus) {
     case "FAILED":
       return "border-rose-200 bg-rose-100 text-rose-700";
     default:
-      return "border-slate-200 bg-slate-100 text-slate-700";
+      return "border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)]";
   }
 }
 
@@ -789,10 +789,10 @@ export function DocumentManager({
 
   const renderForm = (
     <form onSubmit={(event) => void submitDocument(event)} className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+      <div className="flex items-center justify-between border-b border-[color:var(--color-border)] px-5 py-4">
         <div>
-          <h2 className="text-lg font-semibold text-slate-950">{drawerMode === "edit" ? labels.edit : labels.createTitle}</h2>
-          <p className="mt-1 text-sm text-slate-500">{drawerMode === "edit" ? labels.title : labels.description}</p>
+          <h2 className="text-lg font-semibold text-[color:var(--color-text)]">{drawerMode === "edit" ? labels.edit : labels.createTitle}</h2>
+          <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{drawerMode === "edit" ? labels.title : labels.description}</p>
         </div>
         <Button type="button" size="icon" variant="ghost" onClick={closeDrawer} disabled={pending}>
           <X className="h-4 w-4" />
@@ -895,10 +895,10 @@ export function DocumentManager({
                 </Select>
               </div>
             </div>
-            <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="space-y-4 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
               <div>
-                <p className="text-sm font-semibold text-slate-950">{labels.sourcePrimary}</p>
-                <p className="mt-1 text-xs text-slate-500">{labels.sourceHelper}</p>
+                <p className="text-sm font-semibold text-[color:var(--color-text)]">{labels.sourcePrimary}</p>
+                <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{labels.sourceHelper}</p>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
@@ -996,7 +996,7 @@ export function DocumentManager({
         )}
         {error ? <p className="text-sm text-rose-600">{error}</p> : null}
       </div>
-      <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-5 py-4">
+      <div className="flex items-center justify-end gap-3 border-t border-[color:var(--color-border)] px-5 py-4">
         <Button type="button" variant="outline" onClick={closeDrawer} disabled={pending}>{labels.cancel}</Button>
         <Button type="submit" disabled={pending}>{pending ? labels.saving : drawerMode === "edit" ? labels.save : labels.create}</Button>
       </div>
@@ -1005,12 +1005,12 @@ export function DocumentManager({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-sm">
         <div className="flex flex-col gap-5 p-5">
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div>
-              <h1 className="text-2xl font-semibold text-slate-950">{labels.title}</h1>
-              <p className="mt-2 max-w-3xl text-sm text-slate-600">{labels.description}</p>
+              <h1 className="text-2xl font-semibold text-[color:var(--color-text)]">{labels.title}</h1>
+              <p className="mt-2 max-w-3xl text-sm text-[color:var(--color-text-muted)]">{labels.description}</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <input
@@ -1095,18 +1095,18 @@ export function DocumentManager({
         </div>
       </section>
 
-      <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 px-5 py-4">
-          <h2 className="text-lg font-semibold text-slate-950">{labels.listTitle}</h2>
+      <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-sm">
+        <div className="border-b border-[color:var(--color-border)] px-5 py-4">
+          <h2 className="text-lg font-semibold text-[color:var(--color-text)]">{labels.listTitle}</h2>
         </div>
 
         {filteredItems.length === 0 ? (
-          <div className="px-5 py-12 text-sm text-slate-500">{labels.empty}</div>
+          <div className="px-5 py-12 text-sm text-[color:var(--color-text-muted)]">{labels.empty}</div>
         ) : (
           <>
             <div className="hidden overflow-x-auto lg:block">
-              <table className="min-w-full divide-y divide-slate-200 text-sm">
-                <thead className="bg-slate-50 text-left text-slate-500">
+              <table className="min-w-full divide-y divide-[color:var(--color-border)] text-sm">
+                <thead className="bg-[color:var(--color-bg-soft)] text-left text-[color:var(--color-text-muted)]">
                   <tr>
                     <th className="px-5 py-3 font-medium">{labels.documentNumber}</th>
                     <th className="px-5 py-3 font-medium">{labels.documentType}</th>
@@ -1118,19 +1118,19 @@ export function DocumentManager({
                     <th className="px-5 py-3 font-medium text-right">{labels.edit}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200">
+                <tbody className="divide-y divide-[color:var(--color-border)]">
                   {filteredItems.map((item) => {
                     const slaBadge = getSlaBadge(item, labels);
 
                     return (
                       <tr key={item.id} className="align-top">
                         <td className="px-5 py-4">
-                          <div className="font-semibold text-slate-950">{item.documentNumber}</div>
-                          <div className="mt-1 text-xs text-slate-500">{item.orderNumber ?? item.inventoryTransactionNumber ?? labels.notSpecified}</div>
+                          <div className="font-semibold text-[color:var(--color-text)]">{item.documentNumber}</div>
+                          <div className="mt-1 text-xs text-[color:var(--color-text-muted)]">{item.orderNumber ?? item.inventoryTransactionNumber ?? labels.notSpecified}</div>
                         </td>
-                        <td className="px-5 py-4 text-slate-700">{getDocumentTypeLabel(item.documentType)}</td>
-                        <td className="px-5 py-4 text-slate-700">{item.counterpartyName}</td>
-                        <td className="px-5 py-4 text-slate-700">{formatDate(item.issueDate)}</td>
+                        <td className="px-5 py-4 text-[color:var(--color-text)]">{getDocumentTypeLabel(item.documentType)}</td>
+                        <td className="px-5 py-4 text-[color:var(--color-text)]">{item.counterpartyName}</td>
+                        <td className="px-5 py-4 text-[color:var(--color-text)]">{formatDate(item.issueDate)}</td>
                         <td className="px-5 py-4">
                           <Badge variant="outline">{getDocumentStatusLabel(item.status)}</Badge>
                         </td>
@@ -1142,7 +1142,7 @@ export function DocumentManager({
                             {slaBadge ? <Badge className={slaBadge.className}>{slaBadge.label}</Badge> : null}
                           </div>
                         </td>
-                        <td className="px-5 py-4 text-slate-700">{item.providerDisplayName ?? labels.providerNone}</td>
+                        <td className="px-5 py-4 text-[color:var(--color-text)]">{item.providerDisplayName ?? labels.providerNone}</td>
                         <td className="px-5 py-4">
                           <div className="flex justify-end gap-2">
                             <Button type="button" size="sm" variant="outline" onClick={() => void openDetail(item.id)}>{labels.viewLines}</Button>
@@ -1164,11 +1164,11 @@ export function DocumentManager({
                 const slaBadge = getSlaBadge(item, labels);
 
                 return (
-                  <article key={item.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <article key={item.id} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <h3 className="truncate text-base font-semibold text-slate-950">{item.documentNumber}</h3>
-                        <p className="mt-1 text-sm text-slate-600">{item.counterpartyName}</p>
+                        <h3 className="truncate text-base font-semibold text-[color:var(--color-text)]">{item.documentNumber}</h3>
+                        <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{item.counterpartyName}</p>
                       </div>
                       <Badge variant="outline">{getDocumentStatusLabel(item.status)}</Badge>
                     </div>
@@ -1179,7 +1179,7 @@ export function DocumentManager({
                       </Badge>
                       {slaBadge ? <Badge className={slaBadge.className}>{slaBadge.label}</Badge> : null}
                     </div>
-                    <div className="mt-4 space-y-2 text-sm text-slate-600">
+                    <div className="mt-4 space-y-2 text-sm text-[color:var(--color-text-muted)]">
                       <p>{labels.issueDate}: {formatDate(item.issueDate)}</p>
                       <p>{labels.providerSelection}: {item.providerDisplayName ?? labels.providerNone}</p>
                       <p>{labels.orderNumber}: {item.orderNumber ?? labels.notSpecified}</p>
@@ -1202,7 +1202,7 @@ export function DocumentManager({
 
       {drawerMode ? (
         <div className="fixed inset-0 z-50 bg-slate-950/40">
-          <div className="absolute inset-y-0 right-0 h-full w-full max-w-2xl overflow-hidden bg-white shadow-2xl">
+          <div className="absolute inset-y-0 right-0 h-full w-full max-w-2xl overflow-hidden bg-[color:var(--color-surface)] shadow-2xl">
             {renderForm}
           </div>
         </div>
@@ -1210,12 +1210,12 @@ export function DocumentManager({
 
       {detail ? (
         <div className="fixed inset-0 z-50 bg-slate-950/40">
-          <div className="absolute inset-y-0 right-0 h-full w-full max-w-3xl overflow-hidden bg-white shadow-2xl">
+          <div className="absolute inset-y-0 right-0 h-full w-full max-w-3xl overflow-hidden bg-[color:var(--color-surface)] shadow-2xl">
             <div className="flex h-full flex-col">
-              <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+              <div className="flex items-center justify-between border-b border-[color:var(--color-border)] px-5 py-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{getDocumentTypeLabel(detail.documentType)}</p>
-                  <h2 className="mt-1 text-xl font-semibold text-slate-950">{detail.documentNumber}</h2>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-text-muted)]">{getDocumentTypeLabel(detail.documentType)}</p>
+                  <h2 className="mt-1 text-xl font-semibold text-[color:var(--color-text)]">{detail.documentNumber}</h2>
                 </div>
                 <Button type="button" size="icon" variant="ghost" onClick={() => setDetail(null)}>
                   <X className="h-4 w-4" />
@@ -1224,21 +1224,21 @@ export function DocumentManager({
 
               <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5">
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div className="rounded-2xl border border-slate-200 p-4 text-sm text-slate-700">
-                    <p><span className="font-medium text-slate-950">{labels.counterparty}:</span> {detail.counterpartyName}</p>
-                    <p className="mt-2"><span className="font-medium text-slate-950">{labels.providerSelection}:</span> {detail.providerDisplayName ?? labels.providerNone}</p>
-                    <p className="mt-2"><span className="font-medium text-slate-950">{labels.orderNumber}:</span> {detail.orderNumber ?? labels.notSpecified}</p>
-                    <p className="mt-2"><span className="font-medium text-slate-950">{labels.inventoryTransactionNumber}:</span> {detail.inventoryTransactionNumber ?? labels.notSpecified}</p>
+                  <div className="rounded-2xl border border-[color:var(--color-border)] p-4 text-sm text-[color:var(--color-text)]">
+                    <p><span className="font-medium text-[color:var(--color-text)]">{labels.counterparty}:</span> {detail.counterpartyName}</p>
+                    <p className="mt-2"><span className="font-medium text-[color:var(--color-text)]">{labels.providerSelection}:</span> {detail.providerDisplayName ?? labels.providerNone}</p>
+                    <p className="mt-2"><span className="font-medium text-[color:var(--color-text)]">{labels.orderNumber}:</span> {detail.orderNumber ?? labels.notSpecified}</p>
+                    <p className="mt-2"><span className="font-medium text-[color:var(--color-text)]">{labels.inventoryTransactionNumber}:</span> {detail.inventoryTransactionNumber ?? labels.notSpecified}</p>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 p-4 text-sm text-slate-700">
-                    <p><span className="font-medium text-slate-950">{labels.documentStatus}:</span> {getDocumentStatusLabel(detail.status)}</p>
-                    <p className="mt-2"><span className="font-medium text-slate-950">{labels.externalSystemStatus}:</span> {getExternalStatusLabel(detail.externalSystemStatus, labels)}</p>
-                    <p className="mt-2"><span className="font-medium text-slate-950">{labels.externalReference}:</span> {detail.externalReference ?? labels.notSpecified}</p>
-                    <p className="mt-2"><span className="font-medium text-slate-950">{labels.note}:</span> {detail.note ?? labels.notSpecified}</p>
+                  <div className="rounded-2xl border border-[color:var(--color-border)] p-4 text-sm text-[color:var(--color-text)]">
+                    <p><span className="font-medium text-[color:var(--color-text)]">{labels.documentStatus}:</span> {getDocumentStatusLabel(detail.status)}</p>
+                    <p className="mt-2"><span className="font-medium text-[color:var(--color-text)]">{labels.externalSystemStatus}:</span> {getExternalStatusLabel(detail.externalSystemStatus, labels)}</p>
+                    <p className="mt-2"><span className="font-medium text-[color:var(--color-text)]">{labels.externalReference}:</span> {detail.externalReference ?? labels.notSpecified}</p>
+                    <p className="mt-2"><span className="font-medium text-[color:var(--color-text)]">{labels.note}:</span> {detail.note ?? labels.notSpecified}</p>
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 p-4">
+                <div className="rounded-2xl border border-[color:var(--color-border)] p-4">
                   <div className="flex flex-wrap gap-2">
                     <Button type="button" variant="outline" asChild>
                       <Link href={`/${locale}/admin/finance/business-documents/${detail.id}/movements`}>
@@ -1266,12 +1266,12 @@ export function DocumentManager({
 
                 {(detail.documentType === "E_INVOICE" || detail.documentType === "E_DISPATCH") ? (
                   <div>
-                    <h3 className="text-sm font-semibold text-slate-950">{labels.xmlArtifacts}</h3>
+                    <h3 className="text-sm font-semibold text-[color:var(--color-text)]">{labels.xmlArtifacts}</h3>
                     {complianceReport ? (
-                      <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+                      <div className="mt-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 text-sm text-[color:var(--color-text)]">
                         <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                           <div>
-                            <p className="font-semibold text-slate-950">{labels.complianceReport}</p>
+                            <p className="font-semibold text-[color:var(--color-text)]">{labels.complianceReport}</p>
                             <p className="mt-1">{complianceReport.documentRootType} • {complianceReport.schemaVersion}</p>
                             <p className="mt-1">{labels.localRuleValid}: {complianceReport.localRuleValid ? labels.badgeSent : labels.badgeFailed}</p>
                             <p className="mt-1">{labels.officialSchemaReady}: {complianceReport.officialSchemaReady ? labels.badgeSent : labels.badgeFailed}</p>
@@ -1301,10 +1301,10 @@ export function DocumentManager({
                       </div>
                     ) : null}
                     {configReadinessReport ? (
-                      <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+                      <div className="mt-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 text-sm text-[color:var(--color-text)]">
                         <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                           <div>
-                            <p className="font-semibold text-slate-950">{labels.configReadiness}</p>
+                            <p className="font-semibold text-[color:var(--color-text)]">{labels.configReadiness}</p>
                             <p className="mt-1">
                               {configReadinessReport.ready ? labels.configReady : labels.configMissing}
                             </p>
@@ -1346,12 +1346,12 @@ export function DocumentManager({
                           </div>
                         ) : null}
                         {configReadinessReport.productionChecklist.length > 0 ? (
-                          <div className="mt-3 border-t border-slate-200 pt-3">
-                            <p className="text-xs font-semibold text-slate-900">{labels.productionChecklist}</p>
+                          <div className="mt-3 border-t border-[color:var(--color-border)] pt-3">
+                            <p className="text-xs font-semibold text-[color:var(--color-text)]">{labels.productionChecklist}</p>
                             <div className="mt-2 space-y-2">
                               {configReadinessReport.productionChecklist.map((item) => (
-                                <div key={item.key} className="text-xs text-slate-600">
-                                  <p className="font-medium text-slate-800">{item.label}</p>
+                                <div key={item.key} className="text-xs text-[color:var(--color-text-muted)]">
+                                  <p className="font-medium text-[color:var(--color-text)]">{item.label}</p>
                                   <p className="mt-1 break-all">
                                     {labels.requiredEvidence}: {item.requiredEvidence.join(", ")}
                                   </p>
@@ -1361,12 +1361,12 @@ export function DocumentManager({
                           </div>
                         ) : null}
                         {configReadinessReport.liveProviderTestScenarios.length > 0 ? (
-                          <div className="mt-3 border-t border-slate-200 pt-3">
-                            <p className="text-xs font-semibold text-slate-900">{labels.liveProviderTestScenarios}</p>
+                          <div className="mt-3 border-t border-[color:var(--color-border)] pt-3">
+                            <p className="text-xs font-semibold text-[color:var(--color-text)]">{labels.liveProviderTestScenarios}</p>
                             <div className="mt-2 space-y-2">
                               {configReadinessReport.liveProviderTestScenarios.map((item) => (
-                                <div key={item.key} className="text-xs text-slate-600">
-                                  <p className="font-medium text-slate-800">{item.label}</p>
+                                <div key={item.key} className="text-xs text-[color:var(--color-text-muted)]">
+                                  <p className="font-medium text-[color:var(--color-text)]">{item.label}</p>
                                   <p className="mt-1 break-all">
                                     {labels.requiredEvidence}: {item.requiredEvidence.join(", ")}
                                   </p>
@@ -1378,27 +1378,27 @@ export function DocumentManager({
                       </div>
                     ) : null}
                     {xmlArtifacts.length === 0 ? (
-                      <p className="mt-3 text-sm text-slate-500">{labels.noXmlArtifacts}</p>
+                      <p className="mt-3 text-sm text-[color:var(--color-text-muted)]">{labels.noXmlArtifacts}</p>
                     ) : (
                       <div className="mt-3 space-y-3">
                         {xmlArtifacts.map((artifact) => (
-                          <article key={artifact.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                          <article key={artifact.id} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4 text-sm text-[color:var(--color-text)]">
                             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                               <div>
                                 <div className="flex flex-wrap items-center gap-2">
-                                  <p className="font-semibold text-slate-950">{artifact.documentRootType} • {artifact.schemaVersion}</p>
+                                  <p className="font-semibold text-[color:var(--color-text)]">{artifact.documentRootType} • {artifact.schemaVersion}</p>
                                   {artifact.isCurrent ? <Badge variant="default">Güncel</Badge> : null}
                                 </div>
                                 {artifact.supersedesArtifactId ? (
-                                  <p className="mt-1 break-all text-xs text-slate-600">Önceki XML: {artifact.supersedesArtifactId}</p>
+                                  <p className="mt-1 break-all text-xs text-[color:var(--color-text-muted)]">Önceki XML: {artifact.supersedesArtifactId}</p>
                                 ) : null}
                                 <p className="mt-1">{labels.xmlValidationStatus}: {artifact.validationStatus}</p>
-                                <p className="mt-1 break-all text-xs text-slate-600">{labels.lifecyclePayloadHash}: {artifact.xmlHash}</p>
+                                <p className="mt-1 break-all text-xs text-[color:var(--color-text-muted)]">{labels.lifecyclePayloadHash}: {artifact.xmlHash}</p>
                                 {artifact.xsdHash ? (
-                                  <p className="mt-1 break-all text-xs text-slate-600">{labels.schemaHash}: {artifact.xsdHash}</p>
+                                  <p className="mt-1 break-all text-xs text-[color:var(--color-text-muted)]">{labels.schemaHash}: {artifact.xsdHash}</p>
                                 ) : null}
                                 {artifact.schematronHash ? (
-                                  <p className="mt-1 break-all text-xs text-slate-600">{labels.schematronHash}: {artifact.schematronHash}</p>
+                                  <p className="mt-1 break-all text-xs text-[color:var(--color-text-muted)]">{labels.schematronHash}: {artifact.schematronHash}</p>
                                 ) : null}
                                 {artifact.validationErrors.length > 0 ? (
                                   <p className="mt-2 text-xs text-rose-700">{artifact.validationErrors.join(" ")}</p>
@@ -1419,19 +1419,19 @@ export function DocumentManager({
                 ) : null}
 
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-950">{labels.viewLines}</h3>
+                  <h3 className="text-sm font-semibold text-[color:var(--color-text)]">{labels.viewLines}</h3>
                   <div className="mt-3 space-y-3">
                     {detail.lines.map((line) => (
-                      <article key={line.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-                        <p className="font-semibold text-slate-950">{line.productName}</p>
+                      <article key={line.id} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4 text-sm text-[color:var(--color-text)]">
+                        <p className="font-semibold text-[color:var(--color-text)]">{line.productName}</p>
                         {line.productVariantTitle ? (
-                          <p className="mt-1 text-xs text-slate-600">
+                          <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">
                             Varyant: {line.productVariantTitle}
                             {line.productVariantSku ? ` • ${line.productVariantSku}` : ""}
                           </p>
                         ) : null}
                         <p className="mt-1">{line.productSku} • {line.quantity}</p>
-                        <p className="mt-1 text-xs text-slate-600">
+                        <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">
                           Birim fiyat: {line.unitPrice === null ? labels.notSpecified : `${line.unitPrice.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${line.currency}`}
                           {" • "}
                           Satır toplamı: {line.lineTotal === null ? labels.notSpecified : `${line.lineTotal.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${line.currency}`}
@@ -1442,14 +1442,14 @@ export function DocumentManager({
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-950">{labels.dispatchHistory}</h3>
+                  <h3 className="text-sm font-semibold text-[color:var(--color-text)]">{labels.dispatchHistory}</h3>
                   {detail.dispatches.length === 0 ? (
-                    <p className="mt-3 text-sm text-slate-500">{labels.noDispatchHistory}</p>
+                    <p className="mt-3 text-sm text-[color:var(--color-text-muted)]">{labels.noDispatchHistory}</p>
                   ) : (
                     <div className="mt-3 space-y-3">
                       {detail.dispatches.map((dispatch) => (
-                        <article key={dispatch.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-                          <p className="font-semibold text-slate-950">{dispatch.channel} • {getExternalStatusLabel(dispatch.status, labels)}</p>
+                        <article key={dispatch.id} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4 text-sm text-[color:var(--color-text)]">
+                          <p className="font-semibold text-[color:var(--color-text)]">{dispatch.channel} • {getExternalStatusLabel(dispatch.status, labels)}</p>
                           <p className="mt-1">{labels.dispatchProvider}: {dispatch.providerKey}</p>
                           <p className="mt-1">{labels.externalReference}: {dispatch.externalReference ?? labels.notSpecified}</p>
                           <p className="mt-1">{labels.dispatchQueuedAt}: {formatDate(dispatch.queuedAt)}</p>
@@ -1461,37 +1461,37 @@ export function DocumentManager({
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-950">{labels.lifecycleHistory}</h3>
+                  <h3 className="text-sm font-semibold text-[color:var(--color-text)]">{labels.lifecycleHistory}</h3>
                   {detail.lifecycleEvents.length === 0 ? (
-                    <p className="mt-3 text-sm text-slate-500">{labels.noLifecycleHistory}</p>
+                    <p className="mt-3 text-sm text-[color:var(--color-text-muted)]">{labels.noLifecycleHistory}</p>
                   ) : (
                     <div className="mt-3 space-y-3">
                       {detail.lifecycleEvents.map((event) => (
-                        <article key={event.id} className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700 shadow-sm">
+                        <article key={event.id} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 text-sm text-[color:var(--color-text)] shadow-sm">
                           <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                             <div>
-                              <p className="font-semibold text-slate-950">{event.summary}</p>
-                              <p className="mt-1 text-xs text-slate-500">{event.eventType} • {formatDate(event.occurredAt)}</p>
+                              <p className="font-semibold text-[color:var(--color-text)]">{event.summary}</p>
+                              <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{event.eventType} • {formatDate(event.occurredAt)}</p>
                             </div>
-                            <span className="w-fit rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                            <span className="w-fit rounded-full bg-[color:var(--color-bg-soft)] px-2.5 py-1 text-xs font-medium text-[color:var(--color-text-muted)]">
                               {event.externalStatus ?? event.status ?? labels.notSpecified}
                             </span>
                           </div>
                           <div className="mt-3 grid gap-2 md:grid-cols-2">
-                            <p className="break-all text-xs text-slate-600">{labels.lifecycleRequestId}: {event.requestId ?? labels.notSpecified}</p>
-                            <p className="break-all text-xs text-slate-600">{labels.lifecycleIntegrationJobId}: {event.integrationJobId ?? labels.notSpecified}</p>
+                            <p className="break-all text-xs text-[color:var(--color-text-muted)]">{labels.lifecycleRequestId}: {event.requestId ?? labels.notSpecified}</p>
+                            <p className="break-all text-xs text-[color:var(--color-text-muted)]">{labels.lifecycleIntegrationJobId}: {event.integrationJobId ?? labels.notSpecified}</p>
                           </div>
                           {event.messages.length > 0 ? (
-                            <details className="mt-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-2">
-                              <summary className="cursor-pointer list-none text-xs font-semibold text-slate-600 marker:hidden">
+                            <details className="mt-3 rounded-xl border border-dashed border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-2">
+                              <summary className="cursor-pointer list-none text-xs font-semibold text-[color:var(--color-text-muted)] marker:hidden">
                                 {labels.lifecycleMessageEvidence}
                               </summary>
                               <div className="mt-3 space-y-2">
                                 {event.messages.map((message) => (
-                                  <div key={message.id} className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-                                    <p className="text-xs font-semibold text-slate-900">{message.direction} • {message.messageType}</p>
-                                    <p className="mt-1 break-all text-xs text-slate-600">{labels.lifecyclePayloadHash}: {message.payloadHash}</p>
-                                    <p className="mt-1 text-xs text-slate-500">{formatDate(message.occurredAt)}</p>
+                                  <div key={message.id} className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2">
+                                    <p className="text-xs font-semibold text-[color:var(--color-text)]">{message.direction} • {message.messageType}</p>
+                                    <p className="mt-1 break-all text-xs text-[color:var(--color-text-muted)]">{labels.lifecyclePayloadHash}: {message.payloadHash}</p>
+                                    <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{formatDate(message.occurredAt)}</p>
                                   </div>
                                 ))}
                               </div>
@@ -1504,7 +1504,7 @@ export function DocumentManager({
                 </div>
               </div>
 
-              <div className="border-t border-slate-200 px-5 py-4">
+              <div className="border-t border-[color:var(--color-border)] px-5 py-4">
                 <Button type="button" variant="outline" onClick={() => setDetail(null)}>{labels.close}</Button>
               </div>
             </div>

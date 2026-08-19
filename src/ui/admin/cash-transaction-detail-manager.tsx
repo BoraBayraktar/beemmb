@@ -56,33 +56,33 @@ export function CashTransactionDetailManager({ locale, detail, labels }: Props) 
       : null;
 
   return (
-    <section className="rounded-2xl border border-neutral-200 bg-white">
-      <div className="border-b border-neutral-200 p-5">
-        <Link href={`/${locale}/admin/finance/transactions`} className="text-sm font-medium text-neutral-500 no-underline hover:text-neutral-950">
+    <section className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
+      <div className="border-b border-[color:var(--color-border)] p-5">
+        <Link href={`/${locale}/admin/finance/transactions`} className="text-sm font-medium text-[color:var(--color-text-muted)] no-underline hover:text-[color:var(--color-text)]">
           {labels.back}
         </Link>
-        <h2 className="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">{detail.title}</h2>
-        <p className="mt-1 text-sm text-neutral-500">{labels.title}</p>
+        <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[color:var(--color-text)]">{detail.title}</h2>
+        <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{labels.title}</p>
       </div>
 
       <div className="grid gap-4 p-5">
-        <div className="grid gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 p-4 md:grid-cols-2">
-          <p className="text-sm text-neutral-700">{labels.account}: <span className="font-medium text-neutral-950">{detail.accountName}</span></p>
-          <p className="text-sm text-neutral-700">{labels.amount}: <span className="font-medium text-neutral-950">{formatMoney(detail.amount, detail.currency)}</span></p>
-          <p className="text-sm text-neutral-700">{labels.date}: <span className="font-medium text-neutral-950">{formatDate(detail.transactionAt)}</span></p>
-          <p className="text-sm text-neutral-700">{labels.direction}: <span className="font-medium text-neutral-950">{detail.direction === "IN" ? labels.incoming : detail.direction === "OUT" ? labels.outgoing : labels.transfer}</span></p>
-          <p className="text-sm text-neutral-700">{labels.sourceType}: <span className="font-medium text-neutral-950">{detail.sourceType}</span></p>
-          <p className="text-sm text-neutral-700">
+        <div className="grid gap-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4 md:grid-cols-2">
+          <p className="text-sm text-[color:var(--color-text)]">{labels.account}: <span className="font-medium text-[color:var(--color-text)]">{detail.accountName}</span></p>
+          <p className="text-sm text-[color:var(--color-text)]">{labels.amount}: <span className="font-medium text-[color:var(--color-text)]">{formatMoney(detail.amount, detail.currency)}</span></p>
+          <p className="text-sm text-[color:var(--color-text)]">{labels.date}: <span className="font-medium text-[color:var(--color-text)]">{formatDate(detail.transactionAt)}</span></p>
+          <p className="text-sm text-[color:var(--color-text)]">{labels.direction}: <span className="font-medium text-[color:var(--color-text)]">{detail.direction === "IN" ? labels.incoming : detail.direction === "OUT" ? labels.outgoing : labels.transfer}</span></p>
+          <p className="text-sm text-[color:var(--color-text)]">{labels.sourceType}: <span className="font-medium text-[color:var(--color-text)]">{detail.sourceType}</span></p>
+          <p className="text-sm text-[color:var(--color-text)]">
             {labels.counterparty}:{" "}
             {ledgerHref ? (
-              <Link href={ledgerHref} className="font-medium text-neutral-950 no-underline hover:underline">
+              <Link href={ledgerHref} className="font-medium text-[color:var(--color-text)] no-underline hover:underline">
                 {detail.counterpartyName ?? labels.openLedger}
               </Link>
             ) : (
-              <span className="font-medium text-neutral-950">{detail.counterpartyName ?? labels.notSpecified}</span>
+              <span className="font-medium text-[color:var(--color-text)]">{detail.counterpartyName ?? labels.notSpecified}</span>
             )}
           </p>
-          <p className="text-sm text-neutral-700 md:col-span-2">{labels.note}: <span className="font-medium text-neutral-950">{detail.note ?? labels.notSpecified}</span></p>
+          <p className="text-sm text-[color:var(--color-text)] md:col-span-2">{labels.note}: <span className="font-medium text-[color:var(--color-text)]">{detail.note ?? labels.notSpecified}</span></p>
         </div>
 
         <FinanceAllocationSummaryPanel
