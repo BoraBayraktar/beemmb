@@ -1532,7 +1532,7 @@ export function AdminPanelShell({
             </div>
           </header>
 
-          <div className="grid min-w-0 gap-4">{children}</div>
+          <div className="grid min-w-0 grid-cols-1 gap-4">{children}</div>
         </section>
       </div>
 

@@ -2630,7 +2630,7 @@ export function ProductManager({
           onClose: () => setHepsiburadaPreflightResult(null),
         }, labels.loading, labels.cancel) : null}
         <p className="mb-4 text-sm text-[color:var(--color-text-muted)]">{labels.importHint}</p>
-        <form className="mb-5 grid gap-3 md:grid-cols-2 xl:grid-cols-[1.4fr_220px_220px_220px_220px_auto]" onSubmit={applyFilters}>
+        <form className="mb-5 grid gap-3 md:grid-cols-2 2xl:grid-cols-[1.4fr_220px_220px_220px_220px_auto]" onSubmit={applyFilters}>
           <Input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder={labels.search} />
           <Select value={categoryFilter || NONE_VALUE} onValueChange={(value) => setCategoryFilter(value === NONE_VALUE ? "" : value)}>
             <SelectTrigger>
@@ -2687,7 +2687,7 @@ export function ProductManager({
           </Button>
         </form>
 
-        <div className="overflow-hidden rounded-xl border border-[color:var(--color-border)]">
+        <div className="overflow-x-auto rounded-xl border border-[color:var(--color-border)]">
           <div className="hidden grid-cols-[80px_1.15fr_1fr_1fr_150px_160px_180px_140px_80px] gap-4 border-b border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)] lg:grid">
             <span>Görsel</span>
             <span>{labels.name}</span>
