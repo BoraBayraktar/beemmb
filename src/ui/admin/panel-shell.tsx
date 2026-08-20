@@ -59,6 +59,7 @@ import { cn } from "@/lib/utils";
 import { LogoutButton } from "@/ui/admin/logout-button";
 
 const SIDEBAR_COLLAPSED_STORAGE_KEY = "beemmb-admin-sidebar-collapsed";
+const ADMIN_THEME_STORAGE_KEY = "beemmb-admin-theme";
 
 export type MenuItem = {
   href: string;
@@ -907,6 +908,7 @@ export function AdminPanelShell({
   const [openMenuGroups, setOpenMenuGroups] = useState<Record<string, boolean>>({});
   const [menuSearch, setMenuSearch] = useState("");
   const [collapsed, setCollapsed] = useState(false);
+  const [isDark, setIsDark] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
@@ -918,11 +920,19 @@ export function AdminPanelShell({
       // eslint-disable-next-line react-hooks/set-state-in-effect -- must read the collapse preference after mount so SSR/hydration output stays identical (always expanded on first paint); a pre-hydration blocking script was ruled out as unnecessary complexity here.
       setCollapsed(true);
     }
+
+    if (window.localStorage.getItem(ADMIN_THEME_STORAGE_KEY) === "dark") {
+      setIsDark(true);
+    }
   }, []);
 
   useEffect(() => {
     window.localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, String(collapsed));
   }, [collapsed]);
+
+  useEffect(() => {
+    window.localStorage.setItem(ADMIN_THEME_STORAGE_KEY, isDark ? "dark" : "light");
+  }, [isDark]);
 
   async function loadNotifications() {
     if (loadingNotificationsRef.current) {
@@ -1263,9 +1273,10 @@ export function AdminPanelShell({
     .map((item) => filterMenuTree(item, menuSearch))
     .filter((item): item is MenuItem => item !== null);
   const activeGuide = getActiveAdminGuide(pathname, searchParams);
+  const userInitial = userName.trim().charAt(0).toUpperCase() || "?";
 
   return (
-    <main className="min-h-screen bg-[color:var(--color-bg-soft)]">
+    <main className={cn("min-h-screen bg-[color:var(--color-bg-soft)]", isDark && "dark")} style={{ colorScheme: isDark ? "dark" : "light" }}>
       <div className="mx-auto flex min-h-screen max-w-screen-2xl items-start gap-3 px-2 py-2">
         {mobileMenuOpen ? (
           <div className="fixed inset-0 z-50 lg:hidden">
@@ -1284,8 +1295,7 @@ export function AdminPanelShell({
                         <Store className="h-4 w-4 text-[color:var(--color-text-muted)]" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--color-text-muted)]">Backoffice</p>
-                        <CardTitle className="truncate text-base text-[color:var(--color-text)]">{title}</CardTitle>
+                        <CardTitle className="truncate text-base text-[color:var(--color-text)]">Backoffice</CardTitle>
                       </div>
                     </div>
                     <Button type="button" variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)} aria-label="Kapat">
@@ -1352,7 +1362,6 @@ export function AdminPanelShell({
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]">
                       <Store className="h-4 w-4 text-[color:var(--color-text-muted)]" />
                     </div>
-                    <ThemeToggle />
                     <Button
                       type="button"
                       variant="ghost"
@@ -1371,11 +1380,9 @@ export function AdminPanelShell({
                         <Store className="h-4 w-4 text-[color:var(--color-text-muted)]" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--color-text-muted)]">Backoffice</p>
-                        <CardTitle className="truncate text-base text-[color:var(--color-text)]">{title}</CardTitle>
+                        <CardTitle className="truncate text-base text-[color:var(--color-text)]">Backoffice</CardTitle>
                       </div>
                       <div className="flex shrink-0 items-center gap-1">
-                        <ThemeToggle />
                         <Button
                           type="button"
                           variant="ghost"
@@ -1400,13 +1407,41 @@ export function AdminPanelShell({
                   </>
                 )}
               </CardHeader>
-              <CardContent className="flex min-h-0 flex-1 px-0 pb-4 pt-0">
+              <CardContent className="flex min-h-0 flex-1 px-0 pb-0 pt-0">
                 <nav className="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-3 py-3 [scrollbar-width:thin]">
                   {collapsed
                     ? visibleMenuItems.map((item) => renderCollapsedMenuItem(item))
                     : visibleMenuItems.map((item) => renderMenuItem(item))}
                 </nav>
               </CardContent>
+              <div
+                className={cn(
+                  "shrink-0 border-t border-[color:var(--color-border)] p-3",
+                  collapsed ? "flex flex-col items-center gap-2 px-2" : "flex items-center gap-3",
+                )}
+              >
+                {collapsed ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[color:var(--color-brand)]/10 text-sm font-semibold text-[color:var(--color-brand)]">
+                        {userInitial}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">{userName}</TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <>
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[color:var(--color-brand)]/10 text-sm font-semibold text-[color:var(--color-brand)]">
+                      {userInitial}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-[color:var(--color-text)]">{userName}</p>
+                      <p className="truncate text-xs text-[color:var(--color-text-muted)]">{userRole}</p>
+                    </div>
+                  </>
+                )}
+                <LogoutButton locale={locale} label={logoutLabel} loadingLabel={loadingLabel} />
+              </div>
             </Card>
           </aside>
         </TooltipProvider>
@@ -1426,18 +1461,13 @@ export function AdminPanelShell({
                 </Button>
                 <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Menü</span>
               </div>
-              <div className="hidden min-w-0 lg:block">
-                <p className="truncate text-sm font-semibold leading-5 text-[color:var(--color-text)]">{userName}</p>
-                <div className="flex min-w-0 items-center gap-2 text-xs leading-4 text-[color:var(--color-text-muted)]">
-                <p className="truncate">{userEmail}</p>
-                <span aria-hidden="true" className="text-[color:var(--color-text-muted)]">•</span>
-                <p className="shrink-0 rounded-full bg-[color:var(--color-bg-soft)] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">
-                  {userRole}
-                </p>
-                </div>
-              </div>
             </div>
             <div className="flex shrink-0 items-center gap-2">
+              <ThemeToggle
+                isDark={isDark}
+                onToggle={() => setIsDark((current) => !current)}
+                className="border border-[color:var(--color-border)] bg-transparent text-[color:var(--color-text)]"
+              />
               <Button
                 type="button"
                 variant="outline"
@@ -1528,7 +1558,6 @@ export function AdminPanelShell({
                   <Store className="h-4 w-4" />
                 </Link>
               </Button>
-              <LogoutButton locale={locale} label={logoutLabel} loadingLabel={loadingLabel} />
             </div>
           </header>
 

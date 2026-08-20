@@ -146,6 +146,7 @@ export class IdentityService {
       email: created.email,
       name: created.name,
       role: created.role,
+      isSuperAdmin: created.isSuperAdmin,
     };
 
     return this.createSessionForUser(user);
@@ -169,6 +170,7 @@ export class IdentityService {
       email: account.email,
       name: account.name,
       role: account.role,
+      isSuperAdmin: account.isSuperAdmin,
     };
 
     return this.createSessionForUser(user);
@@ -203,6 +205,7 @@ export class IdentityService {
         email: account.email,
         name: account.name,
         role: account.role,
+        isSuperAdmin: account.isSuperAdmin,
       };
 
       await redisCache.set(
@@ -363,6 +366,7 @@ export class IdentityService {
         email: existing.email,
         name: existing.name,
         role: existing.role,
+        isSuperAdmin: existing.isSuperAdmin,
       });
     }
 

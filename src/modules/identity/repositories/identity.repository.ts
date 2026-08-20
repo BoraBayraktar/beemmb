@@ -12,6 +12,7 @@ export class IdentityRepository {
         email: true,
         name: true,
         role: true,
+        isSuperAdmin: true,
         passwordHash: true,
       },
     });
@@ -28,6 +29,7 @@ export class IdentityRepository {
         email: true,
         name: true,
         role: true,
+        isSuperAdmin: true,
       },
     });
   }
@@ -216,6 +218,7 @@ export class IdentityRepository {
         email: true,
         name: true,
         role: true,
+        isSuperAdmin: true,
       },
     });
   }
@@ -249,6 +252,7 @@ export class IdentityRepository {
             email: true,
             name: true,
             role: true,
+            isSuperAdmin: true,
           },
         },
       },
@@ -282,6 +286,7 @@ export class IdentityRepository {
         email: true,
         name: true,
         role: true,
+        isSuperAdmin: true,
       },
     });
   }

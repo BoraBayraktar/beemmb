@@ -37,6 +37,10 @@ function mapRole(role: Awaited<ReturnType<RbacRepository["listRoles"]>>[number])
   };
 }
 
+function getSuperAdminEffectivePermissions(): EffectiveRbac {
+  return { roleKeys: ["super-admin"], roleNames: ["Süper Yönetici"], permissionKeys: [...ALL_PERMISSION_KEYS] };
+}
+
 function getLegacyEffectivePermissions(user: { role: "ADMIN" | "EDITOR" | "CUSTOMER" }): EffectiveRbac {
   if (user.role === "ADMIN") {
     return { roleKeys: ["legacy-admin"], roleNames: ["Yönetici"], permissionKeys: [...ALL_PERMISSION_KEYS] };
@@ -65,7 +69,11 @@ export class RbacService {
     return roles.map(mapRole);
   }
 
-  async getEffectivePermissions(user: { id: string; role: "ADMIN" | "EDITOR" | "CUSTOMER" }): Promise<EffectiveRbac> {
+  async getEffectivePermissions(user: { id: string; role: "ADMIN" | "EDITOR" | "CUSTOMER"; isSuperAdmin?: boolean }): Promise<EffectiveRbac> {
+    if (user.isSuperAdmin) {
+      return getSuperAdminEffectivePermissions();
+    }
+
     let assignments: Awaited<ReturnType<RbacRepository["getEffectiveRolesForUser"]>>;
     try {
       assignments = await this.repository.getEffectiveRolesForUser(user.id);
@@ -99,7 +107,7 @@ export class RbacService {
     };
   }
 
-  async hasPermission(user: { id: string; role: "ADMIN" | "EDITOR" | "CUSTOMER" }, permissionKey: PermissionKey) {
+  async hasPermission(user: { id: string; role: "ADMIN" | "EDITOR" | "CUSTOMER"; isSuperAdmin?: boolean }, permissionKey: PermissionKey) {
     const effective = await this.getEffectivePermissions(user);
     return effective.permissionKeys.includes(permissionKey);
   }

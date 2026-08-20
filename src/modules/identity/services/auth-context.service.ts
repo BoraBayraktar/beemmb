@@ -29,7 +29,7 @@ export async function requireUserRoles(roles: UserRole[]): Promise<AuthUser> {
     throw new AuthContextError(401, "Unauthorized");
   }
 
-  if (!roles.includes(user.role)) {
+  if (!user.isSuperAdmin && !roles.includes(user.role)) {
     throw new AuthContextError(403, "Forbidden");
   }
 

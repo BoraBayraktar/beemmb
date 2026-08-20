@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "postinstall": "patch-package",
     "dev": "next dev",
     "prebuild": "prisma generate",
     "build": "next build --webpack",
@@ -14,6 +15,7 @@
     "db:migrate:manual": "bash scripts/db-manual-migrate.sh",
     "db:seed": "prisma db seed",
     "db:backfill:business-document-master-data": "tsx --tsconfig tsconfig.json scripts/backfill-business-document-master-data.ts",
+    "db:create-super-admin": "tsx --tsconfig tsconfig.json scripts/create-super-admin.ts",
     "db:repair:duplicate-skus": "node scripts/repair-duplicate-skus.mjs",
     "verify:rbac": "node scripts/verify-rbac.mjs",
     "verify:rbac:v2": "node scripts/verify-rbac-v2.mjs",
@@ -156,6 +158,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
+    "patch-package": "^8.0.1",
     "prisma": "^6.18.0",
     "tailwindcss": "^4.3.2",
     "tsx": "^4.23.0",
