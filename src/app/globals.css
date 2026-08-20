@@ -10,6 +10,7 @@
   --animate-carousel: carousel 60s linear infinite;
   --animate-fadeIn: fadeIn 500ms ease-in-out;
   --animate-auth-carousel: auth-carousel-image 12s infinite ease-in-out;
+  --animate-auth-progress: auth-progress-fill 12s infinite ease-in-out;
 
   @keyframes carousel {
     0% {
@@ -46,14 +47,15 @@
     }
   }
 
-  @keyframes auth-carousel-dot {
-    0%,
-    30% {
-      opacity: 1;
+  @keyframes auth-progress-fill {
+    0% {
+      transform: scaleX(0);
     }
-    33%,
+    30% {
+      transform: scaleX(1);
+    }
     100% {
-      opacity: 0.35;
+      transform: scaleX(1);
     }
   }
 }

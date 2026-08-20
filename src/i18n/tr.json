@@ -194,8 +194,25 @@
   },
   "admin": {
     "title": "Yönetim Paneli",
-    "loginTitle": "Admin Girişi",
+    "loginTitle": "Backoffice Girişi",
     "loginSubtitle": "Stok, ürün, sipariş ve entegrasyon operasyonlarına tek merkezden güvenli erişim sağla.",
+    "loginSlides": [
+      {
+        "title": "Stok ve Envanter",
+        "description": "Depo bazlı stok seviyelerini, kritik ürünleri ve tedarik durumunu tek ekrandan izleyin.",
+        "tag": "Canlı senkron"
+      },
+      {
+        "title": "Sipariş ve Kargo",
+        "description": "Pazaryeri siparişlerini karşılayın, kargo etiketlerini oluşturun ve teslimat durumunu takip edin.",
+        "tag": "Çoklu pazaryeri"
+      },
+      {
+        "title": "Fatura ve Finans",
+        "description": "Gelen ve giden faturaları, kasa hareketlerini ve mutabakatları güvenle yönetin.",
+        "tag": "RBAC korumalı"
+      }
+    ],
     "email": "E-posta",
     "password": "Şifre",
     "passwordOptional": "Yeni şifre",
@@ -205,7 +222,6 @@
     "logout": "Çıkış Yap",
     "userInfo": "Kullanıcı Bilgisi",
     "quickActions": "Hızlı İşlem",
-    "phase2Note": "Bir sonraki adım ürün yönetimi ekranları ve role dayalı yetkilendirme genişletmesidir.",
     "name": "Ad Soyad",
     "role": "Rol",
     "productManager": "Ürün Yönetimi",
