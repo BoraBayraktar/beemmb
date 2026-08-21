@@ -54,6 +54,7 @@ export class IdentityRepository {
     return prisma.user.findMany({
       where: {
         deleted: false,
+        isSuperAdmin: false,
         role: {
           in: roles,
         },
@@ -79,6 +80,7 @@ export class IdentityRepository {
     return prisma.user.findMany({
       where: {
         deleted: false,
+        isSuperAdmin: false,
         ...(args.search
           ? {
               OR: [
@@ -115,6 +117,7 @@ export class IdentityRepository {
     return prisma.user.count({
       where: {
         deleted: false,
+        isSuperAdmin: false,
         ...(args.search
           ? {
               OR: [
