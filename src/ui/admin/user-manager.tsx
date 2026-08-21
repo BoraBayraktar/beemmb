@@ -359,7 +359,6 @@ export function UserManager({ initialResult, labels, availableRoles = [], fixedR
                 <SelectItem value={ALL_ROLES}>{labels.allRoles}</SelectItem>
                 <SelectItem value="ADMIN">{labels.roleAdmin}</SelectItem>
                 <SelectItem value="EDITOR">{labels.roleEditor}</SelectItem>
-                <SelectItem value="CUSTOMER">{labels.roleCustomer}</SelectItem>
               </SelectContent>
             </Select>
           ) : null}

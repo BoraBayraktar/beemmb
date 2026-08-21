@@ -74,12 +74,17 @@ export class IdentityAdminService {
 
   async listUsers(query: AdminUserListQuery): Promise<AdminUserListResult> {
     const parsed = listUsersQuerySchema.parse(query);
+    // "Sistem Kullanıcıları" (system/staff users) is the default context: when no
+    // explicit role filter is given, scope to ADMIN/EDITOR so CUSTOMER accounts never
+    // leak into the staff user list. Callers that want customers pass role explicitly
+    // (see the /admin/customers page, which always sends role: "CUSTOMER").
+    const roleFilter = parsed.role ?? (["ADMIN", "EDITOR"] as Array<"ADMIN" | "EDITOR" | "CUSTOMER">);
 
     const [users, total] = await Promise.all([
-      this.repository.listUsers(parsed),
+      this.repository.listUsers({ ...parsed, role: roleFilter }),
       this.repository.countUsers({
         search: parsed.search,
-        role: parsed.role,
+        role: roleFilter,
       }),
     ]);
 

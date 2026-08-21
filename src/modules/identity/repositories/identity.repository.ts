@@ -73,7 +73,7 @@ export class IdentityRepository {
 
   async listUsers(args: {
     search?: string;
-    role?: "ADMIN" | "EDITOR" | "CUSTOMER";
+    role?: "ADMIN" | "EDITOR" | "CUSTOMER" | Array<"ADMIN" | "EDITOR" | "CUSTOMER">;
     page: number;
     pageSize: number;
   }) {
@@ -89,7 +89,7 @@ export class IdentityRepository {
               ],
             }
           : {}),
-        ...(args.role ? { role: args.role } : {}),
+        ...(args.role ? { role: Array.isArray(args.role) ? { in: args.role } : args.role } : {}),
       },
       select: {
         id: true,
@@ -113,7 +113,7 @@ export class IdentityRepository {
     });
   }
 
-  async countUsers(args: { search?: string; role?: "ADMIN" | "EDITOR" | "CUSTOMER" }) {
+  async countUsers(args: { search?: string; role?: "ADMIN" | "EDITOR" | "CUSTOMER" | Array<"ADMIN" | "EDITOR" | "CUSTOMER"> }) {
     return prisma.user.count({
       where: {
         deleted: false,
@@ -126,7 +126,7 @@ export class IdentityRepository {
               ],
             }
           : {}),
-        ...(args.role ? { role: args.role } : {}),
+        ...(args.role ? { role: Array.isArray(args.role) ? { in: args.role } : args.role } : {}),
       },
     });
   }
