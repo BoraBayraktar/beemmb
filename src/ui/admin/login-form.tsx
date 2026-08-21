@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, Shield } from "lucide-react";
 
 import { AppleIcon } from "@/components/icons/apple-icon";
-import { FacebookIcon } from "@/components/icons/facebook-icon";
 import { Button } from "@/components/ui/button";
 import { GoogleIcon } from "@/components/icons/google-icon";
 import { Input } from "@/components/ui/input";
@@ -18,7 +17,6 @@ type LoginFormProps = {
   redirectTo?: string;
   socialGoogleHref?: string | null;
   socialAppleHref?: string | null;
-  socialFacebookHref?: string | null;
   labels: {
     email: string;
     password: string;
@@ -32,7 +30,6 @@ type LoginFormProps = {
     socialDivider: string;
     socialGoogle: string;
     socialApple: string;
-    socialFacebook: string;
     socialComingSoon: string;
   };
 };
@@ -42,7 +39,6 @@ export function LoginForm({
   redirectTo,
   socialGoogleHref,
   socialAppleHref,
-  socialFacebookHref,
   labels,
 }: LoginFormProps) {
   const router = useRouter();
@@ -121,18 +117,6 @@ export function LoginForm({
               <button type="button" className={styles.authSocialButton} disabled>
                 <AppleIcon className="h-4 w-4" />
                 <span>{labels.socialApple}</span>
-                <small>{labels.socialComingSoon}</small>
-              </button>
-            )}
-            {socialFacebookHref ? (
-              <Link href={socialFacebookHref} className={styles.authSocialButton}>
-                <FacebookIcon className="h-4 w-4" />
-                <span>{labels.socialFacebook}</span>
-              </Link>
-            ) : (
-              <button type="button" className={styles.authSocialButton} disabled>
-                <FacebookIcon className="h-4 w-4" />
-                <span>{labels.socialFacebook}</span>
                 <small>{labels.socialComingSoon}</small>
               </button>
             )}

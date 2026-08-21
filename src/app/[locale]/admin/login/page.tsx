@@ -32,9 +32,6 @@ export default async function AdminLoginPage({
   const socialAppleHref = identityService.getAppleOAuthConfig()
     ? `/api/identity/oauth/apple/start?redirectTo=${encodeURIComponent(`/${locale}/admin`)}`
     : null;
-  const socialFacebookHref = identityService.getFacebookOAuthConfig()
-    ? `/api/identity/oauth/facebook/start?redirectTo=${encodeURIComponent(`/${locale}/admin`)}`
-    : null;
 
   if (user) {
     redirect(`/${locale}/admin`);
@@ -99,7 +96,6 @@ export default async function AdminLoginPage({
               redirectTo={safeRedirect}
               socialGoogleHref={socialGoogleHref}
               socialAppleHref={socialAppleHref}
-              socialFacebookHref={socialFacebookHref}
               labels={{
                 title: dictionary.admin.loginTitle,
                 subtitle: dictionary.admin.loginSubtitle,
@@ -113,7 +109,6 @@ export default async function AdminLoginPage({
                 socialDivider: dictionary.auth.socialDivider,
                 socialGoogle: dictionary.auth.socialGoogle,
                 socialApple: dictionary.auth.socialApple,
-                socialFacebook: dictionary.auth.socialFacebook,
                 socialComingSoon: dictionary.auth.socialComingSoon,
               }}
             />
