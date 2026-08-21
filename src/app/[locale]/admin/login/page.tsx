@@ -97,8 +97,6 @@ export default async function AdminLoginPage({
               socialGoogleHref={socialGoogleHref}
               socialAppleHref={socialAppleHref}
               labels={{
-                title: dictionary.admin.loginTitle,
-                subtitle: dictionary.admin.loginSubtitle,
                 email: dictionary.admin.email,
                 password: dictionary.admin.password,
                 submit: dictionary.admin.loginButton,
@@ -106,7 +104,6 @@ export default async function AdminLoginPage({
                 loading: dictionary.common.loading,
                 forgotPassword: dictionary.auth.forgotPassword,
                 rememberMe: dictionary.auth.rememberMe,
-                socialDivider: dictionary.auth.socialDivider,
                 socialGoogle: dictionary.auth.socialGoogle,
                 socialApple: dictionary.auth.socialApple,
                 socialComingSoon: dictionary.auth.socialComingSoon,

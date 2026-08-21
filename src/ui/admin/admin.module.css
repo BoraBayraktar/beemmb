@@ -14,16 +14,6 @@
   background: var(--background);
 }
 
-.loginTitle {
-  font-size: clamp(1.8rem, 3.6vw, 2.25rem);
-  line-height: 1.18;
-  letter-spacing: -0.025em;
-}
-
-.loginSubtitle {
-  max-width: 52ch;
-}
-
 .authStage {
   display: flex;
   flex: 1;
@@ -305,15 +295,6 @@
 .authSocialStack {
   display: grid;
   gap: 0.5rem;
-}
-
-.authSocialDivider {
-  margin: 0;
-  color: #687b92;
-  font-size: 0.82rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
 }
 
 .authSocialGrid {

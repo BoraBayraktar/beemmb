@@ -22,12 +22,9 @@ type LoginFormProps = {
     password: string;
     submit: string;
     invalidCredentials: string;
-    title: string;
-    subtitle: string;
     loading: string;
     forgotPassword: string;
     rememberMe: string;
-    socialDivider: string;
     socialGoogle: string;
     socialApple: string;
     socialComingSoon: string;
@@ -88,13 +85,10 @@ export function LoginForm({
           <Shield className="h-4 w-4" />
           <span>BEEMMB Admin</span>
         </div>
-        <h1 className={styles.loginTitle}>{labels.title}</h1>
-        <p className={styles.loginSubtitle}>{labels.subtitle}</p>
       </div>
 
       <form className={styles.authPanelForm} onSubmit={handleSubmit}>
         <div className={styles.authSocialStack}>
-          <p className={styles.authSocialDivider}>{labels.socialDivider}</p>
           <div className={styles.authSocialGrid}>
             {socialGoogleHref ? (
               <Link href={socialGoogleHref} className={styles.authSocialButton}>
