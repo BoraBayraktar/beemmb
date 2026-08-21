@@ -9,7 +9,8 @@
 .loginShell {
   min-height: 100dvh;
   padding: 0.6rem;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   background: var(--background);
 }
 
@@ -24,22 +25,23 @@
 }
 
 .authStage {
-  display: grid;
+  display: flex;
+  flex: 1;
 }
 
 .loginVisualFrame {
   position: relative;
   display: flex;
+  flex: 1;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1.75rem;
-  min-height: calc(100dvh - 1.2rem);
+  gap: 1.15rem;
   overflow: hidden;
   border-radius: 1.5rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: linear-gradient(160deg, #241d54 0%, #382a82 46%, #4c39cf 100%);
-  padding: 2.25rem 1.1rem;
+  padding: 1.4rem 1.1rem;
 }
 
 .loginVisualGrid {
@@ -68,7 +70,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1.1rem;
   width: 100%;
   max-width: 560px;
 }
@@ -76,7 +78,7 @@
 .slideStack {
   position: relative;
   width: 100%;
-  min-height: 172px;
+  min-height: 104px;
 }
 
 .authSlide {
@@ -102,10 +104,10 @@
   height: 100%;
   width: 100%;
   display: flex;
-  align-items: flex-start;
-  gap: 0.9rem;
+  align-items: center;
+  gap: 0.6rem;
   box-sizing: border-box;
-  padding: 1.2rem 1.3rem;
+  padding: 0.6rem 1rem;
   border-radius: 1.1rem;
   border: 1px solid rgba(255, 255, 255, 0.18);
   background: rgba(255, 255, 255, 0.09);
@@ -119,9 +121,9 @@
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  width: 2.9rem;
-  height: 2.9rem;
-  border-radius: 0.85rem;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 0.65rem;
   background: linear-gradient(155deg, #ffffff, rgba(255, 255, 255, 0.72));
   box-shadow:
     0 10px 22px rgba(8, 6, 35, 0.28),
@@ -141,36 +143,36 @@
 }
 
 .slideCardIcon {
-  width: 1.4rem;
-  height: 1.4rem;
+  width: 1.15rem;
+  height: 1.15rem;
   stroke-width: 2;
 }
 
 .slideCopy {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.3rem;
   min-width: 0;
 }
 
 .slideTag {
   align-self: flex-start;
-  font-size: 0.66rem;
+  font-size: 0.64rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.88);
   background: rgba(255, 255, 255, 0.14);
   border: 1px solid rgba(255, 255, 255, 0.22);
-  padding: 0.22rem 0.6rem;
+  padding: 0.16rem 0.55rem;
   border-radius: 999px;
 }
 
 .slideCardTitle {
   margin: 0;
-  font-size: clamp(0.98rem, 1.6vw, 1.08rem);
+  font-size: clamp(0.9rem, 1.6vw, 1rem);
   font-weight: 650;
-  line-height: 1.3;
+  line-height: 1.25;
   color: #ffffff;
   white-space: nowrap;
   overflow: hidden;
@@ -179,13 +181,13 @@
 
 .slideCardText {
   margin: 0;
-  font-size: 0.84rem;
-  line-height: 1.5;
+  font-size: 0.78rem;
+  line-height: 1.4;
   color: rgba(255, 255, 255, 0.72);
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
 }
 
@@ -271,15 +273,15 @@
   border: 1px solid rgba(27, 43, 63, 0.1);
   border-radius: 1.75rem;
   background: rgba(255, 255, 255, 0.86);
-  padding: 1.25rem;
+  padding: 0.95rem;
   box-shadow: 0 24px 64px rgba(16, 29, 48, 0.12);
   backdrop-filter: blur(12px);
 }
 
 .authPanelTop {
   display: grid;
-  gap: 0.7rem;
-  margin-bottom: 1rem;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .authPanelBadge {
@@ -297,12 +299,12 @@
 
 .authPanelForm {
   display: grid;
-  gap: 0.95rem;
+  gap: 0.7rem;
 }
 
 .authSocialStack {
   display: grid;
-  gap: 0.7rem;
+  gap: 0.5rem;
 }
 
 .authSocialDivider {
@@ -327,7 +329,7 @@
   border: 1px solid #d6e1f3;
   border-radius: 1rem;
   background: #f8fbff;
-  padding: 0.85rem 0.9rem;
+  padding: 0.6rem 0.9rem;
   color: #27466b;
   text-align: left;
   text-decoration: none;
@@ -408,7 +410,7 @@
 
 .authInput,
 .authInputWithButton {
-  min-height: 3.2rem;
+  min-height: 2.8rem;
   border-radius: 1rem;
   border-color: #d6e1f3;
   background: rgba(255, 255, 255, 0.96);
@@ -438,7 +440,7 @@
 
 .authPrimaryButton {
   display: inline-flex;
-  min-height: 3.25rem;
+  min-height: 2.9rem;
   width: 100%;
   align-items: center;
   justify-content: center;
@@ -519,12 +521,12 @@
 
 @media (min-width: 768px) {
   .loginShell {
-    padding: 1rem;
+    padding: 0.6rem;
   }
 
   .loginVisualFrame {
-    gap: 2.25rem;
-    padding: 3rem 2.5rem;
+    gap: 0.85rem;
+    padding: 0.85rem 2.5rem;
   }
 
   .card {
