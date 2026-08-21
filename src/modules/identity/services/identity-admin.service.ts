@@ -107,7 +107,7 @@ export class IdentityAdminService {
       passwordHash,
     });
 
-    if (parsed.roleIds && actorUserId) {
+    if (parsed.roleIds && parsed.roleIds.length > 0 && actorUserId) {
       await rbacService.assignRolesToUser({
         userId: created.id,
         roleIds: parsed.roleIds,
@@ -130,7 +130,7 @@ export class IdentityAdminService {
       passwordHash,
     });
 
-    if (parsed.roleIds && actorUserId) {
+    if (parsed.roleIds && parsed.roleIds.length > 0 && actorUserId) {
       await rbacService.assignRolesToUser({
         userId: parsed.id,
         roleIds: parsed.roleIds,
