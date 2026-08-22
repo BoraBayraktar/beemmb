@@ -9,6 +9,7 @@ import {
   AuthContextError,
   requirePermission,
 } from "@/modules/identity/services/auth-context.service";
+import { RbacPolicyError } from "@/modules/identity/services/rbac.service";
 import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 function permissionForRole(role: "ADMIN" | "EDITOR" | "CUSTOMER" | null): "customers.manage" | "systemUsers.manage" {
@@ -68,6 +69,10 @@ export async function PATCH(
 
     if (error instanceof ZodError) {
       return NextResponse.json({ message: error.issues[0]?.message ?? "Validation failed" }, { status: 400 });
+    }
+
+    if (error instanceof RbacPolicyError) {
+      return NextResponse.json({ message: error.message }, { status: 409 });
     }
 
     return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
