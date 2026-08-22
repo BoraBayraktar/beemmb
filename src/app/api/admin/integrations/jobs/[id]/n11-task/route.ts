@@ -8,7 +8,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requirePermission("integrations.read");
+    await requirePermission("integrationsN11.manage");
     const { id } = await params;
     const result = await n11StockSyncService.getTaskResultForJob(id);
     return NextResponse.json(result);

@@ -7,7 +7,7 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET() {
   try {
-    await requirePermission("finance.read");
+    await requirePermission("financeCollections.manage");
     const items = await collectionsService.listCollectionRecords();
     return NextResponse.json({ items });
   } catch (error) {
@@ -21,7 +21,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("finance.manage");
+    const user = await requirePermission("financeCollections.manage");
     const payload = await request.json();
     const created = await collectionsService.createCollectionRecord({
       ...payload,

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 import { ProductQuestionsManager } from "@/ui/admin/product-questions-manager";
 
 function getQuestionSlaHours() {
@@ -45,6 +46,10 @@ export default async function AdminProductQuestionsPage({
   const questionSlaHours = getQuestionSlaHours();
 
   if (!user) {
+    notFound();
+  }
+
+  if (!(await rbacService.hasPermission(user, "productQuestions.read"))) {
     notFound();
   }
 

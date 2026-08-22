@@ -7,7 +7,7 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requirePermission("documents.manage");
+    const user = await requirePermission("documentsPendingInvoices.manage");
     const { id } = await context.params;
     const created = await documentService.createInvoiceFromDeliveryNote(id);
 

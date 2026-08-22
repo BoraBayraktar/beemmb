@@ -10,7 +10,7 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("products.manage");
+    const user = await requirePermission("brands.manage");
     const { id } = await context.params;
     const payload = await request.json();
     const updated = await catalogAdminService.updateBrand({
@@ -48,7 +48,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("products.manage");
+    const user = await requirePermission("brands.manage");
     const { id } = await context.params;
     await catalogAdminService.softDeleteBrand(id, user.id);
 

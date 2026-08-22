@@ -4,6 +4,7 @@ import { cashTransactionsService } from "@/modules/finance/services/cash-transac
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { financialAccountsService } from "@/modules/finance/services/financial-accounts.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 import { CashTransactionsManager } from "@/ui/admin/cash-transactions-manager";
 
 export default async function AdminCashTransactionsPage({
@@ -22,6 +23,11 @@ export default async function AdminCashTransactionsPage({
 
   const user = await getCurrentUserFromContext();
   if (!user) {
+    notFound();
+  }
+
+  const effective = await rbacService.getEffectivePermissions(user);
+  if (!effective.permissionKeys.includes("financeTransactions.manage")) {
     notFound();
   }
 

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { payablesService } from "@/modules/finance/services/payables.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 import { SupplierPayablesManager } from "@/ui/admin/supplier-payables-manager";
 
 export default async function AdminSupplierPayablesPage({
@@ -21,6 +22,11 @@ export default async function AdminSupplierPayablesPage({
 
   const user = await getCurrentUserFromContext();
   if (!user) {
+    notFound();
+  }
+
+  const effective = await rbacService.getEffectivePermissions(user);
+  if (!effective.permissionKeys.includes("financePayables.read")) {
     notFound();
   }
 

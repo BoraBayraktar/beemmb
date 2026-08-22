@@ -26,6 +26,10 @@ export default async function AdminStorefrontPage({
     notFound();
   }
 
+  if (!(await rbacService.hasPermission(user, "storefront.manage"))) {
+    notFound();
+  }
+
   const [storefrontProductOptions, categories, storefrontItems] = await Promise.all([
     catalogAdminService.listProducts({
       page: 1,
@@ -40,7 +44,7 @@ export default async function AdminStorefrontPage({
       items={storefrontItems}
       productOptions={storefrontProductOptions.items}
       categoryOptions={categories}
-      canDelete={await rbacService.hasPermission(user, "products.manage")}
+      canDelete={await rbacService.hasPermission(user, "storefront.manage")}
       labels={{
         title: dictionary.admin.storefrontManager,
         createTitle: dictionary.admin.createStorefrontItem,

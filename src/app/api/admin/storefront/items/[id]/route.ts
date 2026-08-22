@@ -13,7 +13,7 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("products.manage");
+    const user = await requirePermission("storefront.manage");
     const { id } = await context.params;
     const payload = await request.json();
     const item = await storefrontService.upsertItem({ id, ...payload });
@@ -43,7 +43,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("products.manage");
+    const user = await requirePermission("storefront.manage");
     const { id } = await context.params;
     await storefrontService.softDeleteItem(id, user.id);
     await auditLogService.recordFromRequest(request, {

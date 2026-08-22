@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { documentService } from "@/modules/documents/services/document.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 import { PendingInvoiceManager } from "@/ui/admin/pending-invoice-manager";
 
 export default async function AdminPendingInvoicesPage({
@@ -21,6 +22,10 @@ export default async function AdminPendingInvoicesPage({
 
   const user = await getCurrentUserFromContext();
   if (!user) {
+    notFound();
+  }
+
+  if (!(await rbacService.hasPermission(user, "documentsPendingInvoices.manage"))) {
     notFound();
   }
 

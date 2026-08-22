@@ -16,7 +16,7 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("products.manage");
+    const user = await requirePermission("categories.manage");
     const { id } = await context.params;
     const payload = await request.json();
     const updated = await catalogAdminService.updateCategory({
@@ -49,7 +49,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("products.manage");
+    const user = await requirePermission("categories.manage");
     const { id } = await context.params;
     await catalogAdminService.softDeleteCategory(id, user.id);
     await auditLogService.recordFromRequest(request, {

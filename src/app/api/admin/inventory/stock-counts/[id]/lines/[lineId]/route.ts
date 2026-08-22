@@ -15,7 +15,7 @@ export async function PATCH(
   context: { params: Promise<{ id: string; lineId: string }> },
 ) {
   try {
-    const user = await requirePermission("inventory.manage");
+    const user = await requirePermission("inventoryCounts.manage");
     const { id, lineId } = await context.params;
     const payload = updateLineSchema.parse(await request.json());
 

@@ -6,6 +6,7 @@ import { commerceService } from "@/modules/commerce/services/commerce.service";
 import { cariService } from "@/modules/cari/services/cari.service";
 import { documentService } from "@/modules/documents/services/document.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 import { inventoryService } from "@/modules/inventory/services/inventory.service";
 import { DocumentManager } from "@/ui/admin/document-manager";
 
@@ -25,6 +26,10 @@ export default async function AdminDocumentsPage({
 
   const user = await getCurrentUserFromContext();
   if (!user) {
+    notFound();
+  }
+
+  if (!(await rbacService.hasPermission(user, "documents.read"))) {
     notFound();
   }
 

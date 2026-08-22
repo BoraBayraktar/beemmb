@@ -7,7 +7,7 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("finance.manage");
+    const user = await requirePermission("financeBankReconciliation.manage");
     const payload = await request.json();
     const workspace = await bankReconciliationService.confirmMatch({
       statementLineId: payload.statementLineId,

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { documentService } from "@/modules/documents/services/document.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 import { DocumentWebhookManager } from "@/ui/admin/document-webhook-manager";
 
 export default async function AdminDocumentWebhooksPage({
@@ -18,6 +19,11 @@ export default async function AdminDocumentWebhooksPage({
 
   const user = await getCurrentUserFromContext();
   if (!user) {
+    notFound();
+  }
+
+  const effective = await rbacService.getEffectivePermissions(user);
+  if (!effective.permissionKeys.includes("documentsWebhooks.manage")) {
     notFound();
   }
 

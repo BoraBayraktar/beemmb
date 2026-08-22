@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { counterpartyLedgerService } from "@/modules/finance/services/counterparty-ledger.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 import { CounterpartyLedgerManager } from "@/ui/admin/counterparty-ledger-manager";
 
 export default async function AdminCariLedgerPage({
@@ -18,6 +19,10 @@ export default async function AdminCariLedgerPage({
 
   const user = await getCurrentUserFromContext();
   if (!user) {
+    notFound();
+  }
+
+  if (!(await rbacService.hasPermission(user, "cari.manage"))) {
     notFound();
   }
 

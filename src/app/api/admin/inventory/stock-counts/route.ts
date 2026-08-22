@@ -14,7 +14,7 @@ const createStockCountSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("inventory.manage");
+    const user = await requirePermission("inventoryCounts.manage");
     const payload = createStockCountSchema.parse(await request.json());
 
     const created = await inventoryService.createStockCount(payload);

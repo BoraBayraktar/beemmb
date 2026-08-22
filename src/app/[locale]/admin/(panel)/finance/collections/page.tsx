@@ -4,6 +4,7 @@ import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { collectionsService } from "@/modules/finance/services/collections.service";
 import { financialAccountsService } from "@/modules/finance/services/financial-accounts.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 import { CollectionReadinessManager } from "@/ui/admin/collection-readiness-manager";
 
 export default async function AdminFinanceCollectionsPage({
@@ -19,6 +20,11 @@ export default async function AdminFinanceCollectionsPage({
 
   const user = await getCurrentUserFromContext();
   if (!user) {
+    notFound();
+  }
+
+  const effective = await rbacService.getEffectivePermissions(user);
+  if (!effective.permissionKeys.includes("financeCollections.manage")) {
     notFound();
   }
 

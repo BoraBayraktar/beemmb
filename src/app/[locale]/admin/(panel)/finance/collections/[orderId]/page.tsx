@@ -4,6 +4,7 @@ import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { collectionsService } from "@/modules/finance/services/collections.service";
 import { receivablesService } from "@/modules/finance/services/receivables.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 import { FinanceManualAllocationPanel } from "@/ui/admin/finance-manual-allocation-panel";
 import { ReceivableDetailManager } from "@/ui/admin/receivable-detail-manager";
 
@@ -20,6 +21,10 @@ export default async function AdminCollectionDetailPage({
 
   const user = await getCurrentUserFromContext();
   if (!user) {
+    notFound();
+  }
+
+  if (!(await rbacService.hasPermission(user, "financeCollections.manage"))) {
     notFound();
   }
 

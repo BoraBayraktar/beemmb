@@ -4,6 +4,7 @@ import { isLocale } from "@/lib/i18n";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { incomingInvoiceService } from "@/modules/incoming-invoices/services/incoming-invoice.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 import { IncomingInvoiceManager } from "@/ui/admin/incoming-invoice-manager";
 
 export default async function AdminIncomingInvoicesPage({
@@ -22,6 +23,10 @@ export default async function AdminIncomingInvoicesPage({
 
   const user = await getCurrentUserFromContext();
   if (!user) {
+    notFound();
+  }
+
+  if (!(await rbacService.hasPermission(user, "incomingInvoices.read"))) {
     notFound();
   }
 

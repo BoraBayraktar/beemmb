@@ -7,7 +7,7 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET(request: Request) {
   try {
-    await requirePermission("finance.read");
+    await requirePermission("financeTransactions.manage");
     const { searchParams } = new URL(request.url);
     const items = await cashTransactionsService.listTransactions({
       search: searchParams.get("search") ?? undefined,
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("finance.manage");
+    const user = await requirePermission("financeTransactions.manage");
     const payload = await request.json();
     const item = await cashTransactionsService.createTransaction({
       ...payload,

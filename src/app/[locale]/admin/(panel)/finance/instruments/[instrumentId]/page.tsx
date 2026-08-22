@@ -5,6 +5,7 @@ import { financialAccountsService } from "@/modules/finance/services/financial-a
 import { resolveNegotiableInstrumentCopy } from "@/modules/finance/services/negotiable-instrument-copy.resolver";
 import { negotiableInstrumentService } from "@/modules/finance/services/negotiable-instrument.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 import { NegotiableInstrumentsManager } from "@/ui/admin/negotiable-instruments-manager";
 
 export default async function AdminNegotiableInstrumentDetailPage({
@@ -20,6 +21,10 @@ export default async function AdminNegotiableInstrumentDetailPage({
 
   const user = await getCurrentUserFromContext();
   if (!user) {
+    notFound();
+  }
+
+  if (!(await rbacService.hasPermission(user, "financeInstruments.manage"))) {
     notFound();
   }
 

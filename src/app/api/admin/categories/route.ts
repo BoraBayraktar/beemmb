@@ -10,7 +10,7 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET(request: Request) {
   try {
-    await requirePermission("products.read");
+    await requirePermission("categories.manage");
     const { searchParams } = new URL(request.url);
 
     const categories = await catalogAdminService.listCategories({
@@ -39,7 +39,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("products.manage");
+    const user = await requirePermission("categories.manage");
     const payload = await request.json();
     const created = await catalogAdminService.createCategory(payload);
     await auditLogService.recordFromRequest(request, {

@@ -9,7 +9,7 @@ import {
 
 export async function GET(request: Request) {
   try {
-    await requirePermission("products.read");
+    await requirePermission("productQuestions.read");
     const { searchParams } = new URL(request.url);
 
     const result = await catalogAdminService.listProductQuestions({

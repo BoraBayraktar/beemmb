@@ -5,6 +5,7 @@ import { inventoryPayableSummaryService } from "@/modules/finance/services/inven
 import { payablesService } from "@/modules/finance/services/payables.service";
 import { paymentsService } from "@/modules/finance/services/payments.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 import { FinanceManualAllocationPanel } from "@/ui/admin/finance-manual-allocation-panel";
 import { SupplierPayableDetailManager } from "@/ui/admin/supplier-payable-detail-manager";
 
@@ -21,6 +22,10 @@ export default async function AdminPaymentDetailPage({
 
   const user = await getCurrentUserFromContext();
   if (!user) {
+    notFound();
+  }
+
+  if (!(await rbacService.hasPermission(user, "financePayments.manage"))) {
     notFound();
   }
 

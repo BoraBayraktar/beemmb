@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { documentService } from "@/modules/documents/services/document.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 import { DocumentProviderManager } from "@/ui/admin/document-provider-manager";
 
 export default async function AdminDocumentProvidersPage({
@@ -18,6 +19,10 @@ export default async function AdminDocumentProvidersPage({
 
   const user = await getCurrentUserFromContext();
   if (!user) {
+    notFound();
+  }
+
+  if (!(await rbacService.hasPermission(user, "documentsProviders.manage"))) {
     notFound();
   }
 

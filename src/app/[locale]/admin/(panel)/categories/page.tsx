@@ -24,6 +24,10 @@ export default async function AdminCategoriesPage({
     notFound();
   }
 
+  if (!(await rbacService.hasPermission(user, "categories.manage"))) {
+    notFound();
+  }
+
   const categoryResult = await catalogAdminService.listCategories({
     page: 1,
     pageSize: 10,
@@ -52,7 +56,7 @@ export default async function AdminCategoriesPage({
         name: item.name,
         parentId: item.parentId,
       }))}
-      canDelete={await rbacService.hasPermission(user, "products.manage")}
+      canDelete={await rbacService.hasPermission(user, "categories.manage")}
       labels={{
         title: dictionary.admin.categoryManager,
         marketplaceNote: dictionary.admin.categoriesMarketplaceNote,

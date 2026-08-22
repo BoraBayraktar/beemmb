@@ -10,7 +10,7 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("finance.manage");
+    const user = await requirePermission("cari.manage");
     const { id } = await context.params;
     const payload = await request.json();
     const updated = await cariService.updateCari({
@@ -52,7 +52,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("finance.manage");
+    const user = await requirePermission("cari.manage");
     const { id } = await context.params;
     await cariService.deleteCari(id, user.id);
 

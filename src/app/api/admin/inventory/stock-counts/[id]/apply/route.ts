@@ -9,7 +9,7 @@ export async function POST(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("inventory.manage");
+    const user = await requirePermission("inventoryCounts.manage");
     const { id } = await context.params;
     const applied = await inventoryService.applyStockCount(id);
 

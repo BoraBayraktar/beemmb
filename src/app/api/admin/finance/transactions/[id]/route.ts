@@ -9,7 +9,7 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requirePermission("finance.read");
+    await requirePermission("financeTransactions.manage");
     const { id } = await context.params;
     const item = await cashTransactionsService.getTransactionDetail(id);
 

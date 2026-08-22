@@ -16,7 +16,7 @@ function parseRole(value: string | null): CariRole | undefined {
 
 export async function GET(request: Request) {
   try {
-    await requirePermission("finance.read");
+    await requirePermission("cari.manage");
     const { searchParams } = new URL(request.url);
     const items = await cariService.listCari({
       role: parseRole(searchParams.get("role")),
@@ -34,7 +34,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("finance.manage");
+    const user = await requirePermission("cari.manage");
     const payload = await request.json();
     const created = await cariService.createCari(payload);
     await auditLogService.recordFromRequest(request, {

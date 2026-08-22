@@ -7,7 +7,7 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("finance.manage");
+    const user = await requirePermission("financeInstruments.manage");
     const payload = await request.json();
     const updated = await negotiableInstrumentService.applyLifecycle({
       instrumentId: payload.instrumentId,

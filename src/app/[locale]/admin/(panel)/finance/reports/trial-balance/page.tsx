@@ -5,6 +5,7 @@ import { resolveFinanceReportsCopy } from "@/modules/finance/services/finance-re
 import { parseFinanceReportDateRangeQuery } from "@/modules/finance/services/finance-report-date-range.util";
 import { reportsService } from "@/modules/finance/services/reports.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 import { FinanceReportPageShell } from "@/ui/admin/finance-report-page-shell";
 
 export default async function AdminFinanceTrialBalanceReportPage({
@@ -23,6 +24,11 @@ export default async function AdminFinanceTrialBalanceReportPage({
 
   const user = await getCurrentUserFromContext();
   if (!user) {
+    notFound();
+  }
+
+  const effective = await rbacService.getEffectivePermissions(user);
+  if (!effective.permissionKeys.includes("financeTrialBalance.read")) {
     notFound();
   }
 

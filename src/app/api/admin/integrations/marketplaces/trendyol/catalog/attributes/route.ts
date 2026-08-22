@@ -6,7 +6,7 @@ import { marketplaceIntegrationService } from "@/modules/integration/services/ma
 
 export async function GET(request: Request) {
   try {
-    await requirePermission("integrations.read");
+    await requirePermission("integrationsTrendyol.manage");
     const { searchParams } = new URL(request.url);
     const result = await marketplaceIntegrationService.listTrendyolCategoryAttributes({
       categoryId: searchParams.get("categoryId") ?? "",

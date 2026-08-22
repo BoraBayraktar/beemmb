@@ -13,7 +13,7 @@ import {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("finance.manage");
+    const user = await requirePermission("cari.manage");
     const formData = await request.formData();
     const file = formData.get("file");
     const slug = formData.get("slug");

@@ -7,7 +7,7 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET(request: Request) {
   try {
-    await requirePermission("products.read");
+    await requirePermission("productAttributes.manage");
     const { searchParams } = new URL(request.url);
     const channel = (searchParams.get("channel") as "TRENDYOL" | "N11" | "EDOCS_MOCK" | null) ?? "TRENDYOL";
     const items = await catalogAdminService.listAttributeValueMarketplaceMappings(channel);
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("products.manage");
+    const user = await requirePermission("productAttributes.manage");
     const payload = await request.json();
     const item = await catalogAdminService.upsertAttributeValueMarketplaceMapping(payload);
     await auditLogService.recordFromRequest(request, {

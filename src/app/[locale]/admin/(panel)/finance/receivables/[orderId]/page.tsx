@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { receivablesService } from "@/modules/finance/services/receivables.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 import { ReceivableDetailManager } from "@/ui/admin/receivable-detail-manager";
 
 export default async function AdminReceivableDetailPage({
@@ -18,6 +19,10 @@ export default async function AdminReceivableDetailPage({
 
   const user = await getCurrentUserFromContext();
   if (!user) {
+    notFound();
+  }
+
+  if (!(await rbacService.hasPermission(user, "financeReceivables.read"))) {
     notFound();
   }
 

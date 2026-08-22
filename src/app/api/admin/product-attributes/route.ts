@@ -7,7 +7,7 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET() {
   try {
-    await requirePermission("products.read");
+    await requirePermission("productAttributes.manage");
     const items = await catalogAdminService.listAttributeDefinitions();
     return NextResponse.json({ items });
   } catch (error) {
@@ -21,7 +21,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("products.manage");
+    const user = await requirePermission("productAttributes.manage");
     const payload = await request.json();
     const created = await catalogAdminService.createAttributeDefinition(payload);
     await auditLogService.recordFromRequest(request, {

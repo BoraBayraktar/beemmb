@@ -72,6 +72,11 @@ export class IdentityAdminService {
     return this.repository.listUsersByRoles(["ADMIN", "EDITOR"]);
   }
 
+  async getUserRole(id: string): Promise<"ADMIN" | "EDITOR" | "CUSTOMER" | null> {
+    const existing = await this.repository.findById(id);
+    return existing?.role ?? null;
+  }
+
   async listUsers(query: AdminUserListQuery): Promise<AdminUserListResult> {
     const parsed = listUsersQuerySchema.parse(query);
     // "Sistem Kullanıcıları" (system/staff users) is the default context: when no

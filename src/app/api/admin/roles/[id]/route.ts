@@ -7,7 +7,7 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requirePermission("users.manage");
+    const user = await requirePermission("roles.manage");
     const { id } = await context.params;
     const payload = await request.json();
     const role = await rbacService.updateRole(id, payload);
@@ -40,7 +40,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 
 export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requirePermission("users.manage");
+    const user = await requirePermission("roles.manage");
     const { id } = await context.params;
     await rbacService.deleteRole(id, user.id);
     await auditLogService.recordFromRequest(request, {

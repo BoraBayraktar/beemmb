@@ -17,7 +17,7 @@ function getQuestionSlaHours() {
 
 export async function GET() {
   try {
-    await requirePermission("products.read");
+    await requirePermission("productQuestions.read");
     const result = await catalogAdminService.getProductQuestionStats(getQuestionSlaHours());
 
     return NextResponse.json(result);

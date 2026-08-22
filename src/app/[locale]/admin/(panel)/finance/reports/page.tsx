@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { reportsService } from "@/modules/finance/services/reports.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 import { FinanceReportsManager } from "@/ui/admin/finance-reports-manager";
 
 export default async function AdminFinanceReportsPage({
@@ -18,6 +19,11 @@ export default async function AdminFinanceReportsPage({
 
   const user = await getCurrentUserFromContext();
   if (!user) {
+    notFound();
+  }
+
+  const effective = await rbacService.getEffectivePermissions(user);
+  if (!effective.permissionKeys.includes("financeReports.read")) {
     notFound();
   }
 

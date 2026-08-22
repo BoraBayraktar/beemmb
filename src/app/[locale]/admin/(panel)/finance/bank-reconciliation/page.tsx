@@ -4,6 +4,7 @@ import { isLocale } from "@/lib/i18n";
 import { bankReconciliationService } from "@/modules/finance/services/bank-reconciliation.service";
 import { resolveBankReconciliationCopy } from "@/modules/finance/services/bank-reconciliation-copy.resolver";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 import { BankReconciliationHubManager } from "@/ui/admin/bank-reconciliation-hub-manager";
 
 export default async function AdminBankReconciliationHubPage({
@@ -19,6 +20,11 @@ export default async function AdminBankReconciliationHubPage({
 
   const user = await getCurrentUserFromContext();
   if (!user) {
+    notFound();
+  }
+
+  const effective = await rbacService.getEffectivePermissions(user);
+  if (!effective.permissionKeys.includes("financeBankReconciliation.manage")) {
     notFound();
   }
 

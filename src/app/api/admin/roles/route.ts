@@ -7,7 +7,7 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET() {
   try {
-    await requirePermission("users.manage");
+    await requirePermission("roles.manage");
     const [roles, permissions] = await Promise.all([
       rbacService.listRoles(),
       rbacService.listPermissions(),
@@ -25,7 +25,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("users.manage");
+    const user = await requirePermission("roles.manage");
     const payload = await request.json();
     const role = await rbacService.createRole(payload);
     await auditLogService.recordFromRequest(request, {

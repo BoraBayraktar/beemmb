@@ -18,7 +18,7 @@ const adjustInventorySchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("inventory.manage");
+    const user = await requirePermission("inventoryQuickActions.manage");
     const payload = adjustInventorySchema.parse(await request.json());
 
     await inventoryService.syncProductInventoryState({

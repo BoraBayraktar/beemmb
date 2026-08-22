@@ -4,6 +4,7 @@ import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { payablesService } from "@/modules/finance/services/payables.service";
 import { inventoryPayableSummaryService } from "@/modules/finance/services/inventory-payable-summary.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 import { SupplierPayableDetailManager } from "@/ui/admin/supplier-payable-detail-manager";
 
 export default async function AdminSupplierPayableDetailPage({
@@ -19,6 +20,10 @@ export default async function AdminSupplierPayableDetailPage({
 
   const user = await getCurrentUserFromContext();
   if (!user) {
+    notFound();
+  }
+
+  if (!(await rbacService.hasPermission(user, "financePayables.read"))) {
     notFound();
   }
 

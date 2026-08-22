@@ -10,7 +10,7 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("products.manage");
+    const user = await requirePermission("productQuestions.manage");
     const payload = (await request.json().catch(() => null)) as {
       ids?: string[];
       action?: "answer" | "delete";

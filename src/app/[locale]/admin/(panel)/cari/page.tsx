@@ -28,7 +28,7 @@ export default async function AdminCariPage({
   return (
     <CariManager
       items={items}
-      canDelete={await rbacService.hasPermission(user, "finance.manage")}
+      canDelete={await rbacService.hasPermission(user, "cari.manage")}
       labels={{
         title: dictionary.admin.cariTitle,
         description: dictionary.admin.cariDescription,

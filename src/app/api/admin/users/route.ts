@@ -10,12 +10,13 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET(request: Request) {
   try {
-    await requirePermission("users.manage");
     const { searchParams } = new URL(request.url);
+    const roleFilter = (searchParams.get("role") as "ADMIN" | "EDITOR" | "CUSTOMER" | null) ?? undefined;
+    await requirePermission(roleFilter === "CUSTOMER" ? "customers.manage" : "systemUsers.manage");
 
     const users = await identityAdminService.listUsers({
       search: searchParams.get("search") ?? undefined,
-      role: (searchParams.get("role") as "ADMIN" | "EDITOR" | "CUSTOMER" | null) ?? undefined,
+      role: roleFilter,
       page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
       pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : 10,
     });
@@ -36,8 +37,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("users.manage");
     const payload = await request.json();
+    const targetRole = payload?.role as "ADMIN" | "EDITOR" | "CUSTOMER" | undefined;
+    const user = await requirePermission(targetRole === "CUSTOMER" ? "customers.manage" : "systemUsers.manage");
     const created = await identityAdminService.createUser(payload, user.id);
     await auditLogService.recordFromRequest(request, {
       entityType: "USER",

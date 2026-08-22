@@ -10,7 +10,7 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("inventory.manage");
+    const user = await requirePermission("warehouses.manage");
     const { id } = await context.params;
     const payload = await request.json();
     const updated = await inventoryService.updateWarehouse({

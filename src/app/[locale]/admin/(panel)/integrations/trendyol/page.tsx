@@ -51,7 +51,7 @@ export default async function AdminTrendyolIntegrationPage({
   return (
     <TrendyolIntegrationManager
       locale={locale}
-      canManage={await rbacService.hasPermission(user, "integrations.manage")}
+      canManage={await rbacService.hasPermission(user, "integrationsTrendyol.manage")}
       initialConfigs={dashboard.configs}
       initialPackages={dashboard.packages}
       capabilities={dashboard.capabilities}

@@ -29,12 +29,12 @@ export default async function AdminFinanceLedgerEntriesPage({
 
   const effective = await rbacService.getEffectivePermissions(user);
   const canView =
-    effective.permissionKeys.includes("finance.read") || effective.permissionKeys.includes("finance.audit.read");
+    effective.permissionKeys.includes("financeLedgerEntries.read") || effective.permissionKeys.includes("finance.audit.read");
   if (!canView) {
     notFound();
   }
 
-  const canBackfill = effective.permissionKeys.includes("finance.manage");
+  const canBackfill = effective.permissionKeys.includes("financeTransactions.manage") || effective.permissionKeys.includes("finance.manage");
   const query = {
     from: resolvedSearchParams.from,
     to: resolvedSearchParams.to,

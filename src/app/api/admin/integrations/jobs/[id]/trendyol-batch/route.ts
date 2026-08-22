@@ -8,7 +8,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requirePermission("integrations.read");
+    await requirePermission("integrationsTrendyol.manage");
     const { id } = await params;
     const result = await trendyolStockSyncService.getBatchResultForJob(id);
     return NextResponse.json(result);

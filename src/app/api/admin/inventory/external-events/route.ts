@@ -7,7 +7,7 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET() {
   try {
-    await requirePermission("inventory.read");
+    await requirePermission("inventoryExternalEvents.read");
     const result = await inventoryService.listRecentExternalStockEvents();
     return NextResponse.json(result);
   } catch (error) {
@@ -21,7 +21,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("inventory.manage");
+    const user = await requirePermission("inventoryExternalEvents.manage");
     const payload = await request.json();
     const result = await inventoryService.receiveExternalStockEvent(payload);
 

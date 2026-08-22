@@ -5,7 +5,7 @@ import { inventoryService } from "@/modules/inventory/services/inventory.service
 
 export async function GET(request: Request) {
   try {
-    await requirePermission("inventory.read");
+    await requirePermission("inventoryQuickActions.manage");
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query")?.trim() ?? "";
 

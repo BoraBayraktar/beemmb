@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { commerceService } from "@/modules/commerce/services/commerce.service";
+import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 
 export default async function AdminShippingReportPage({
   params,
@@ -12,6 +14,16 @@ export default async function AdminShippingReportPage({
   const { locale } = await params;
 
   if (!isLocale(locale)) {
+    notFound();
+  }
+
+  const user = await getCurrentUserFromContext();
+  if (!user) {
+    notFound();
+  }
+
+  const effective = await rbacService.getEffectivePermissions(user);
+  if (!effective.permissionKeys.includes("ordersShippingReport.read")) {
     notFound();
   }
 

@@ -8,7 +8,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requirePermission("integrations.read");
+    await requirePermission("integrationsHepsiburada.manage");
     const { id } = await params;
     const result = await hepsiburadaStockSyncService.getUploadResultForJob(id);
     return NextResponse.json(result);

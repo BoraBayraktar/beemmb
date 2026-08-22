@@ -106,13 +106,13 @@ export class FinanceOverviewService {
           title: copy.sectionInstrumentsTitle,
           description: copy.sectionInstrumentsDescription,
           href: `/${locale}/admin/finance/instruments`,
-          permissionKey: "finance.manage",
+          permissionKey: "financeInstruments.manage",
         },
         {
           title: copy.sectionBankReconciliationTitle,
           description: copy.sectionBankReconciliationDescription,
           href: `/${locale}/admin/finance/bank-reconciliation`,
-          permissionKey: "finance.manage",
+          permissionKey: "financeBankReconciliation.manage",
         },
         {
           title: copy.sectionExportsTitle,

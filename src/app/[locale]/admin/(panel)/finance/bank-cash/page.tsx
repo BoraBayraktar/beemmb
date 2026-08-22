@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { financialAccountsService } from "@/modules/finance/services/financial-accounts.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 import { FinancialAccountsManager } from "@/ui/admin/financial-accounts-manager";
 
 export default async function AdminFinancialAccountsPage({
@@ -21,6 +22,11 @@ export default async function AdminFinancialAccountsPage({
 
   const user = await getCurrentUserFromContext();
   if (!user) {
+    notFound();
+  }
+
+  const effective = await rbacService.getEffectivePermissions(user);
+  if (!effective.permissionKeys.includes("financeBankCash.manage")) {
     notFound();
   }
 

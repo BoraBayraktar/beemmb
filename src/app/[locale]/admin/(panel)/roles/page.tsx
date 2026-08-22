@@ -18,8 +18,8 @@ export default async function AdminRolesPage({ params }: { params: Promise<{ loc
     redirect(`/${locale}/admin/login`);
   }
 
-  const canManageUsers = await rbacService.hasPermission(user, "users.manage");
-  if (!canManageUsers) {
+  const canManageRoles = await rbacService.hasPermission(user, "roles.manage");
+  if (!canManageRoles) {
     redirect(`/${locale}/admin`);
   }
 

@@ -53,7 +53,7 @@ export default async function AdminPazaramaIntegrationPage({
   return (
     <N11IntegrationManager
       locale={locale}
-      canManage={await rbacService.hasPermission(user, "integrations.manage")}
+      canManage={await rbacService.hasPermission(user, "integrationsPazarama.manage")}
       channel="PAZARAMA"
       initialConfigs={dashboard.configs}
       initialPackages={dashboard.packages}

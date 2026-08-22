@@ -7,7 +7,7 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requirePermission("products.manage");
+    const user = await requirePermission("productAttributes.manage");
     const { id } = await context.params;
     const payload = await request.json();
     const updated = await catalogAdminService.updateAttributeDefinition({
@@ -42,7 +42,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 
 export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requirePermission("products.manage");
+    const user = await requirePermission("productAttributes.manage");
     const { id } = await context.params;
     const deleted = await catalogAdminService.deleteAttributeDefinition(id);
 

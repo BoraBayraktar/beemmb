@@ -53,7 +53,7 @@ export default async function AdminN11IntegrationPage({
   return (
     <N11IntegrationManager
       locale={locale}
-      canManage={await rbacService.hasPermission(user, "integrations.manage")}
+      canManage={await rbacService.hasPermission(user, "integrationsN11.manage")}
       initialConfigs={dashboard.configs}
       initialPackages={dashboard.packages}
       capabilities={dashboard.capabilities}

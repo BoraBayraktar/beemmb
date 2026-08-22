@@ -22,13 +22,17 @@ export default async function AdminBrandsPage({
     notFound();
   }
 
+  if (!(await rbacService.hasPermission(user, "brands.manage"))) {
+    notFound();
+  }
+
   const dictionary = getDictionary(locale as Locale);
   const items = await catalogAdminService.listBrands();
 
   return (
     <BrandDirectoryManager
       items={items}
-      canDelete={await rbacService.hasPermission(user, "products.manage")}
+      canDelete={await rbacService.hasPermission(user, "brands.manage")}
       labels={{
         title: dictionary.admin.brandsTitle,
         description: dictionary.admin.brandsDescription,

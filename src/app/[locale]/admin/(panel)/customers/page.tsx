@@ -23,7 +23,7 @@ export default async function AdminCustomersPage({
     redirect(`/${locale}/admin/login`);
   }
 
-  const canManageUsers = await rbacService.hasPermission(user, "users.manage");
+  const canManageUsers = await rbacService.hasPermission(user, "customers.manage");
   if (!canManageUsers) {
     redirect(`/${locale}/admin`);
   }

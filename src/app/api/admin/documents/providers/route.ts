@@ -22,7 +22,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("documents.manage");
+    const user = await requirePermission("documentsProviders.manage");
     const payload = await request.json();
     const item = await documentService.upsertProviderConfig(payload);
 

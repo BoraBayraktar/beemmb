@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
+import type { PermissionKey } from "@/modules/identity/contracts/rbac.contract";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 import type { AdminInventoryIntegrationSummary } from "@/modules/inventory/contracts/inventory.contract";
 import { inventoryService } from "@/modules/inventory/services/inventory.service";
 
@@ -42,6 +44,17 @@ export type InventoryRoutePageVariant =
   | "exports"
   | "external-events";
 
+const PAGE_VARIANT_PERMISSION: Record<InventoryRoutePageVariant, PermissionKey> = {
+  overview: "inventory.read",
+  "quick-actions": "inventoryQuickActions.manage",
+  "inventory-list": "inventoryProducts.read",
+  transactions: "inventoryTransactions.read",
+  counts: "inventoryCounts.manage",
+  warehouses: "warehouses.manage",
+  exports: "inventoryExports.read",
+  "external-events": "inventoryExternalEvents.read",
+};
+
 export async function loadInventoryRouteContext(
   localeValue: string,
   searchParams: InventoryRouteSearchParams,
@@ -56,6 +69,11 @@ export async function loadInventoryRouteContext(
   const user = await getCurrentUserFromContext();
 
   if (!user) {
+    notFound();
+  }
+
+  const effective = await rbacService.getEffectivePermissions(user);
+  if (!effective.permissionKeys.includes(PAGE_VARIANT_PERMISSION[pageVariant])) {
     notFound();
   }
 

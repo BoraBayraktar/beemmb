@@ -6,7 +6,7 @@ import { AuthContextError, requirePermission } from "@/modules/identity/services
 
 export async function POST(request: Request) {
   try {
-    await requirePermission("finance.manage");
+    await requirePermission("financeBankReconciliation.manage");
     const payload = await request.json();
     const workspace = await bankReconciliationService.assignMatch(payload);
     return NextResponse.json({ workspace });
