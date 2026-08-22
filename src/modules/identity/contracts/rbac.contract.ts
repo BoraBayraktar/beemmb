@@ -28,7 +28,7 @@ export const RBAC_SYSTEM_ROLES = [
   {
     key: "super-admin",
     name: "Süper Yönetici",
-    description: "BEEMMB genelindeki tüm menü, API ve güvenlik yönetimi yetkilerine sahiptir.",
+    description: "Beemmb genelindeki tüm menü, API ve güvenlik yönetimi yetkilerine sahiptir.",
     permissions: ALL_PERMISSION_KEYS,
     legacyRoles: ["ADMIN"],
   },

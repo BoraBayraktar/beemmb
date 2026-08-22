@@ -58,6 +58,7 @@ type Props = {
     menuAccessTitle: string;
     menuAccessHint: string;
     otherPermissionsTitle: string;
+    superAdminEditHint: string;
     save: string;
     create: string;
     cancel: string;
@@ -89,6 +90,7 @@ export function RoleManager({ initialRoles, permissions, menuTree, labels }: Pro
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const isEditingSuperAdmin = form.key === "super-admin";
   const menuPermissionKeys = collectMenuPermissionKeys(menuTree);
   const otherPermissions = permissions.filter((permission) => !menuPermissionKeys.has(permission.key));
   const groupedOtherPermissions = otherPermissions.reduce<Record<string, Permission[]>>((groups, permission) => {
@@ -227,7 +229,7 @@ export function RoleManager({ initialRoles, permissions, menuTree, labels }: Pro
                 </div>
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
-                {role.key !== "super-admin" ? <Button type="button" size="sm" variant="secondary" onClick={() => editRole(role)} disabled={loading}>{labels.edit}</Button> : null}
+                <Button type="button" size="sm" variant="secondary" onClick={() => editRole(role)} disabled={loading}>{labels.edit}</Button>
                 {!role.isSystem ? <Button type="button" size="sm" variant="destructive" onClick={() => deleteRole(role.id)} disabled={loading}>{labels.delete}</Button> : null}
               </div>
             </article>
@@ -264,8 +266,11 @@ export function RoleManager({ initialRoles, permissions, menuTree, labels }: Pro
                   <Label>{labels.description}</Label>
                   <Textarea value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} />
                 </div>
+                {isEditingSuperAdmin ? (
+                  <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700">{labels.superAdminEditHint}</p>
+                ) : null}
                 <label className="flex items-center gap-2 text-sm font-medium text-[color:var(--color-text)]">
-                  <input type="checkbox" checked={form.isActive} onChange={(event) => setForm((prev) => ({ ...prev, isActive: event.target.checked }))} />
+                  <input type="checkbox" checked={form.isActive} onChange={(event) => setForm((prev) => ({ ...prev, isActive: event.target.checked }))} disabled={isEditingSuperAdmin} />
                   {labels.active}
                 </label>
                 <div className="grid gap-3">
@@ -283,7 +288,7 @@ export function RoleManager({ initialRoles, permissions, menuTree, labels }: Pro
                               type="checkbox"
                               checked={Boolean(item.permissionKey) && form.permissionKeys.includes(item.permissionKey!)}
                               onChange={() => item.permissionKey && togglePermission(item.permissionKey)}
-                              disabled={!item.permissionKey}
+                              disabled={!item.permissionKey || isEditingSuperAdmin}
                             />
                             {item.label}
                           </label>
@@ -303,7 +308,7 @@ export function RoleManager({ initialRoles, permissions, menuTree, labels }: Pro
                           <div className="grid gap-2">
                             {modulePermissions.map((permission) => (
                               <label key={permission.key} className="flex items-center gap-2 text-sm text-[color:var(--color-text)]">
-                                <input type="checkbox" checked={form.permissionKeys.includes(permission.key)} onChange={() => togglePermission(permission.key)} />
+                                <input type="checkbox" checked={form.permissionKeys.includes(permission.key)} onChange={() => togglePermission(permission.key)} disabled={isEditingSuperAdmin} />
                                 {permission.name}
                               </label>
                             ))}

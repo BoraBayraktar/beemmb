@@ -45,6 +45,7 @@ export default async function AdminRolesPage({ params }: { params: Promise<{ loc
         menuAccessTitle: dictionary.admin.menuAccessTitle,
         menuAccessHint: dictionary.admin.menuAccessHint,
         otherPermissionsTitle: dictionary.admin.otherPermissionsTitle,
+        superAdminEditHint: dictionary.admin.superAdminEditHint,
         save: dictionary.admin.save,
         create: dictionary.admin.create,
         cancel: dictionary.admin.cancel,

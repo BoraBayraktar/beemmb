@@ -802,6 +802,7 @@
     "menuAccessTitle": "Menü Erişimi",
     "menuAccessHint": "Bu rolün yönetim panelinde hangi menüleri göreceğini seçin.",
     "otherPermissionsTitle": "Diğer Teknik Yetkiler",
+    "superAdminEditHint": "Süper Yönetici rolünün yetkileri ve aktif durumu değiştirilemez; yalnızca ad ve açıklama güncellenebilir.",
     "permissionModules": {
       "admin": "Admin paneli",
       "audit": "İşlem kayıtları",
