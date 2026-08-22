@@ -31,7 +31,7 @@ export class AccountsService {
         counterpartyLedgerHref: group.supplierId
           ? `/${locale}/admin/finance/accounts/${encodeURIComponent(group.supplierId)}`
           : group.supplierSlug
-            ? `/${locale}/admin/finance/suppliers/${encodeURIComponent(group.supplierSlug)}`
+            ? `/${locale}/admin/finance/cari/${encodeURIComponent(group.supplierSlug)}`
             : null,
         sourceNumber: document.documentNumber,
         sourceDate: document.issueDate,

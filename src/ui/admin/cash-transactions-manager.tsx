@@ -329,11 +329,11 @@ export function CashTransactionsManager({
               <p className="text-sm text-[color:var(--color-text-muted)]">{formatDate(item.transactionAt)}</p>
               <div className="text-sm text-[color:var(--color-text-muted)]">
                 {item.customerAccountSlug ? (
-                  <Link href={`/${locale}/admin/finance/customers/${encodeURIComponent(item.customerAccountSlug)}`} className="text-[color:var(--color-text)] no-underline hover:text-[color:var(--color-text)]">
+                  <Link href={`/${locale}/admin/finance/cari/${encodeURIComponent(item.customerAccountSlug)}`} className="text-[color:var(--color-text)] no-underline hover:text-[color:var(--color-text)]">
                     {item.counterpartyName ?? labels.openLedger}
                   </Link>
                 ) : item.supplierSlug ? (
-                  <Link href={`/${locale}/admin/finance/suppliers/${encodeURIComponent(item.supplierSlug)}`} className="text-[color:var(--color-text)] no-underline hover:text-[color:var(--color-text)]">
+                  <Link href={`/${locale}/admin/finance/cari/${encodeURIComponent(item.supplierSlug)}`} className="text-[color:var(--color-text)] no-underline hover:text-[color:var(--color-text)]">
                     {item.counterpartyName ?? labels.openLedger}
                   </Link>
                 ) : (

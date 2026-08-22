@@ -1,5 +1,6 @@
 import type { AdminCounterpartyLedgerResult } from "@/modules/finance/contracts/counterparty-ledger.contract";
 import { financeRepository } from "@/modules/finance/repositories/finance.repository";
+import { cariService } from "@/modules/cari/services/cari.service";
 import {
   attachCounterpartyRunningBalances,
   resolveCounterpartySignedAmount,
@@ -29,16 +30,16 @@ function finalizeCounterpartyMovements(items: CounterpartyLedgerDraftItem[], per
 export class CounterpartyLedgerService {
   async getCustomerLedger(locale: string, slug: string): Promise<AdminCounterpartyLedgerResult | null> {
     const copy = resolveCounterpartyLedgerCopy(locale);
-    const customer = await financeRepository.findCustomerAccountBySlug(slug);
+    const customer = await cariService.getCariBySlug(slug);
 
-    if (!customer) {
+    if (!customer || !customer.isCustomer) {
       return null;
     }
 
     const [orders, cashTransactions, documents, receivables] = await Promise.all([
-      financeRepository.listOrdersForCustomerAccount(customer.id),
-      financeRepository.listCashTransactionsForCustomerAccount(customer.id),
-      financeRepository.listBusinessDocumentsForCustomerAccount(customer.id),
+      financeRepository.listOrdersForCari(customer.id),
+      financeRepository.listCashTransactionsForCari(customer.id),
+      financeRepository.listBusinessDocumentsForCari(customer.id),
       receivablesService.listOperationalReceivables({ page: 1, pageSize: 200, locale }),
     ]);
 
@@ -122,7 +123,7 @@ export class CounterpartyLedgerService {
         financeTerms: financeCounterpartyFinanceTermsService.buildTermsFromProfile({
           locale,
           defaultPaymentTermDays: customer.defaultPaymentTermDays,
-          creditLimit: customer.creditLimit ? customer.creditLimit.toNumber() : null,
+          creditLimit: customer.creditLimit,
           currency: orders[0]?.currency ?? "TRY",
           kind: "customer",
         }),
@@ -133,15 +134,15 @@ export class CounterpartyLedgerService {
 
   async getSupplierLedger(locale: string, slug: string): Promise<AdminCounterpartyLedgerResult | null> {
     const copy = resolveCounterpartyLedgerCopy(locale);
-    const supplier = await financeRepository.findSupplierBySlug(slug);
+    const supplier = await cariService.getCariBySlug(slug);
 
-    if (!supplier) {
+    if (!supplier || !supplier.isSupplier) {
       return null;
     }
 
     const [cashTransactions, documents, paymentRecords, payables] = await Promise.all([
-      financeRepository.listCashTransactionsForSupplier(supplier.id),
-      financeRepository.listBusinessDocumentsForSupplier(supplier.id),
+      financeRepository.listCashTransactionsForCari(supplier.id),
+      financeRepository.listBusinessDocumentsForCari(supplier.id),
       financeRepository.listPaymentRecords([supplier.id]),
       payablesService.listSupplierPayables().then((result) => result.items),
     ]);
@@ -229,13 +230,37 @@ export class CounterpartyLedgerService {
         financeTerms: financeCounterpartyFinanceTermsService.buildTermsFromProfile({
           locale,
           defaultPaymentTermDays: supplier.defaultPaymentTermDays,
-          creditLimit: supplier.creditLimit ? supplier.creditLimit.toNumber() : null,
+          creditLimit: supplier.creditLimit,
           currency: payable?.currency ?? documents[0]?.currency ?? "TRY",
           kind: "supplier",
         }),
       },
       items: enrichedItems,
     };
+  }
+
+  async getCariLedger(locale: string, slug: string): Promise<AdminCounterpartyLedgerResult | null> {
+    const cari = await cariService.getCariBySlug(slug);
+
+    if (!cari) {
+      return null;
+    }
+
+    if (cari.isCustomer) {
+      const result = await this.getCustomerLedger(locale, slug);
+      if (result) {
+        return result;
+      }
+    }
+
+    if (cari.isSupplier) {
+      const result = await this.getSupplierLedger(locale, slug);
+      if (result) {
+        return result;
+      }
+    }
+
+    return null;
   }
 }
 

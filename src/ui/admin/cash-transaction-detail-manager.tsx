@@ -50,9 +50,9 @@ function formatDate(value: string) {
 
 export function CashTransactionDetailManager({ locale, detail, labels }: Props) {
   const ledgerHref = detail.customerAccountSlug
-    ? `/${locale}/admin/finance/customers/${encodeURIComponent(detail.customerAccountSlug)}`
+    ? `/${locale}/admin/finance/cari/${encodeURIComponent(detail.customerAccountSlug)}`
     : detail.supplierSlug
-      ? `/${locale}/admin/finance/suppliers/${encodeURIComponent(detail.supplierSlug)}`
+      ? `/${locale}/admin/finance/cari/${encodeURIComponent(detail.supplierSlug)}`
       : null;
 
   return (

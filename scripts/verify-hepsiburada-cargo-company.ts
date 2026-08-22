@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
-import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
+import { cariService } from "@/modules/cari/services/cari.service";
 import { hepsiburadaPackageStatusService } from "@/modules/integration/services/hepsiburada-package-status.service";
 import { syncOrderShipmentFromPackageStatus } from "@/modules/integration/services/marketplace-package-shipment-sync.service";
 
@@ -48,24 +48,29 @@ async function main() {
   const unique = Date.now();
 
   // --- Bolum 1: CarrierCompany.externalCodeHepsiburada CRUD round-trip ---
-  const carrierWithCode = await catalogAdminService.createCarrierCompany({
+  const carrierWithCode = await cariService.createCari({
     slug: `hb-carrier-with-code-${unique}`,
     name: `HB Carrier With Code ${unique}`,
+    isCarrier: true,
     externalCodeHepsiburada: "aras",
   });
-  assert(carrierWithCode.externalCodeHepsiburada === "aras", "externalCodeHepsiburada olusturma sirasinda kaydedilmeli");
+  assert(carrierWithCode.carrierProfile?.externalCodeHepsiburada === "aras", "externalCodeHepsiburada olusturma sirasinda kaydedilmeli");
 
-  const updated = await catalogAdminService.updateCarrierCompany({
+  const updated = await cariService.updateCari({
     id: carrierWithCode.id,
+    slug: carrierWithCode.slug,
+    name: carrierWithCode.name,
+    isCarrier: true,
     externalCodeHepsiburada: "yurtici",
   });
-  assert(updated.externalCodeHepsiburada === "yurtici", "externalCodeHepsiburada guncelleme ile degismeli");
+  assert(updated.carrierProfile?.externalCodeHepsiburada === "yurtici", "externalCodeHepsiburada guncelleme ile degismeli");
 
-  const carrierWithoutCode = await catalogAdminService.createCarrierCompany({
+  const carrierWithoutCode = await cariService.createCari({
     slug: `hb-carrier-no-code-${unique}`,
     name: `HB Carrier No Code ${unique}`,
+    isCarrier: true,
   });
-  assert(carrierWithoutCode.externalCodeHepsiburada === null, "externalCodeHepsiburada varsayilan olarak null olmali");
+  assert(carrierWithoutCode.carrierProfile?.externalCodeHepsiburada == null, "externalCodeHepsiburada varsayilan olarak null olmali");
 
   // --- Bolum 2: changeCargoCompany, ShortName tanimli olmayan carrier icin ONCE hata vermeli (dis API'ye hic gitmeden) ---
   const fakePackage = await prisma.marketplaceOrderPackage.findFirst({ where: { channel: "HEPSIBURADA" } });
@@ -126,7 +131,7 @@ async function main() {
     carrierCompanyId: carrierWithCode.id,
   });
   const afterCarrierChange = await prisma.order.findUnique({ where: { id: order.id } });
-  assert(afterCarrierChange?.carrierCompanyId === carrierWithCode.id, "carrierCompanyId guncellenmeli");
+  assert(afterCarrierChange?.carrierCariId === carrierWithCode.id, "carrierCariId guncellenmeli");
   assert(afterCarrierChange?.shipmentStatus === "NOT_SHIPPED", "Sadece carrier degisince shipmentStatus degismemeli");
 
   // Intransit -> SHIPPED okuma senaryosu
@@ -182,8 +187,8 @@ async function main() {
   await prisma.orderItem.deleteMany({ where: { orderId: order.id } });
   await prisma.order.delete({ where: { id: order.id } });
   await prisma.product.delete({ where: { id: product.id } });
-  await catalogAdminService.softDeleteCarrierCompany(carrierWithCode.id, "system");
-  await catalogAdminService.softDeleteCarrierCompany(carrierWithoutCode.id, "system");
+  await cariService.deleteCari(carrierWithCode.id, "system");
+  await cariService.deleteCari(carrierWithoutCode.id, "system");
 
   console.log("Hepsiburada kargo firmasi degistirme / takip bilgisi okuma dogrulamasi gecti");
 }

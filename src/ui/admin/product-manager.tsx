@@ -3210,7 +3210,7 @@ export function ProductManager({
                           searchPlaceholder={labels.searchSupplier}
                           emptyLabel={labels.noSupplierResults}
                         />
-                        <Link href={`/${locale}/admin/suppliers`} className="text-xs font-medium text-[color:var(--color-text-muted)] underline underline-offset-4">
+                        <Link href={`/${locale}/admin/cari`} className="text-xs font-medium text-[color:var(--color-text-muted)] underline underline-offset-4">
                           {labels.manageSuppliers}
                         </Link>
                       </div>

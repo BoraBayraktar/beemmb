@@ -635,7 +635,7 @@ export function OrderDetailManager({ locale, order, labels, canManage, accountOp
             <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{order.customerAccountEmail}</p>
           ) : null}
           {order.customerAccountId ? (
-            <Link href={`/${locale}/admin/customer-accounts`} className="mt-2 inline-flex text-sm text-[color:var(--color-text)] underline underline-offset-4">
+            <Link href={`/${locale}/admin/cari`} className="mt-2 inline-flex text-sm text-[color:var(--color-text)] underline underline-offset-4">
               {labels.customerAccount}
             </Link>
           ) : null}

@@ -49,79 +49,63 @@ model Brand {
   @@index([pazaramaBrandId])
 }
 
-model CarrierCompany {
-  id                      String    @id @default(cuid())
-  slug                    String    @unique
-  name                    String
-  taxNumber               String?
-  trackingUrlTemplate     String?
-  externalCodeTrendyol    Int?
-  externalCodePazarama    String?
-  externalCodeHepsiburada String?
-  isActive                Boolean   @default(true)
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
-  deleted                 Boolean   @default(false)
-  deletedDate             DateTime?
-  deletedUserId           String?
-  orders                  Order[]
-
-  @@index([deleted, isActive])
-}
-
-model Supplier {
-  id                     String                 @id @default(cuid())
-  slug                   String                 @unique
-  name                   String
-  taxNumber              String?
-  email                  String?
-  phone                  String?
-  defaultPaymentTermDays Int?
-  creditLimit            Decimal?               @db.Decimal(12, 2)
-  isActive               Boolean                @default(true)
-  createdAt              DateTime               @default(now())
-  updatedAt              DateTime               @updatedAt
-  deleted                Boolean                @default(false)
-  deletedDate            DateTime?
-  deletedUserId          String?
-  paymentRecords         PaymentRecord[]
-  primaryProducts        Product[]
-  businessDocuments      BusinessDocument[]
-  cashTransactions       CashTransaction[]
-  negotiableInstruments  NegotiableInstrument[]
-  financeAccountEntries  FinanceAccountEntry[]
-  incomingInvoices       IncomingInvoice[]
-
-  @@index([deleted, isActive])
-  @@index([taxNumber])
-}
-
-model CustomerAccount {
+model Cari {
   id                     String                 @id @default(cuid())
   slug                   String                 @unique
   name                   String
   email                  String?
   phone                  String?
   taxNumber              String?
+  taxOffice              String?
+  photoUrl               String?
+  iban                   String?
+  bankName               String?
+  bankAccountHolder      String?
+  contactPersonName      String?
+  contactPersonPhone     String?
+  contactPersonEmail     String?
   address                String?
   note                   String?
   defaultPaymentTermDays Int?
   creditLimit            Decimal?               @db.Decimal(12, 2)
+  isCustomer             Boolean                @default(false)
+  isSupplier             Boolean                @default(false)
+  isCarrier              Boolean                @default(false)
   isActive               Boolean                @default(true)
   createdAt              DateTime               @default(now())
   updatedAt              DateTime               @updatedAt
   deleted                Boolean                @default(false)
   deletedDate            DateTime?
   deletedUserId          String?
-  orders                 Order[]
+  carrierProfile         CariCarrierProfile?
+  orders                 Order[]                @relation("OrderCari")
+  carrierOrders          Order[]                @relation("OrderCarrierCari")
   businessDocuments      BusinessDocument[]
   cashTransactions       CashTransaction[]
   negotiableInstruments  NegotiableInstrument[]
   financeAccountEntries  FinanceAccountEntry[]
+  paymentRecords         PaymentRecord[]
+  incomingInvoices       IncomingInvoice[]
+  primaryProducts        Product[]
 
   @@index([deleted, isActive])
-  @@index([email])
+  @@index([isCustomer])
+  @@index([isSupplier])
+  @@index([isCarrier])
   @@index([taxNumber])
+  @@index([email])
+}
+
+model CariCarrierProfile {
+  id                      String    @id @default(cuid())
+  cariId                  String    @unique
+  trackingUrlTemplate     String?
+  externalCodeTrendyol    Int?
+  externalCodePazarama    String?
+  externalCodeHepsiburada String?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  cari                    Cari      @relation(fields: [cariId], references: [id])
 }
 
 model FinancialAccount {
@@ -162,8 +146,7 @@ model CashTransaction {
   note                 String?
   sourceReferenceId    String?
   counterpartyKind     CashTransactionCounterpartyKind @default(UNREGISTERED)
-  customerAccountId    String?
-  supplierId           String?
+  cariId               String?
   counterpartyName     String?
   createdByUserId      String?
   createdAt            DateTime                        @default(now())
@@ -172,8 +155,7 @@ model CashTransaction {
   deletedDate          DateTime?
   deletedUserId        String?
   account              FinancialAccount                @relation(fields: [accountId], references: [id])
-  customerAccount      CustomerAccount?                @relation(fields: [customerAccountId], references: [id])
-  supplier             Supplier?                       @relation(fields: [supplierId], references: [id])
+  cari                 Cari?                            @relation(fields: [cariId], references: [id])
   reconciliationMatch  BankReconciliationMatch?
   negotiableInstrument NegotiableInstrument?
 
@@ -181,8 +163,7 @@ model CashTransaction {
   @@index([status, transactionAt])
   @@index([deleted, transactionAt])
   @@index([sourceType, sourceReferenceId])
-  @@index([customerAccountId, transactionAt])
-  @@index([supplierId, transactionAt])
+  @@index([cariId, transactionAt])
 }
 
 model BankStatementImport {
@@ -247,8 +228,7 @@ model NegotiableInstrument {
   dueDate            DateTime
   issueDate          DateTime?
   counterpartyKind   CashTransactionCounterpartyKind @default(UNREGISTERED)
-  customerAccountId  String?
-  supplierId         String?
+  cariId             String?
   counterpartyName   String?
   endorserName       String?
   note               String?
@@ -260,16 +240,14 @@ model NegotiableInstrument {
   deleted            Boolean                         @default(false)
   deletedDate        DateTime?
   deletedUserId      String?
-  customerAccount    CustomerAccount?                @relation(fields: [customerAccountId], references: [id])
-  supplier           Supplier?                       @relation(fields: [supplierId], references: [id])
+  cari               Cari?                            @relation(fields: [cariId], references: [id])
   financialAccount   FinancialAccount?               @relation(fields: [financialAccountId], references: [id])
   cashTransaction    CashTransaction?                @relation(fields: [cashTransactionId], references: [id])
 
   @@index([status, dueDate])
   @@index([direction, dueDate])
   @@index([deleted, dueDate])
-  @@index([customerAccountId])
-  @@index([supplierId])
+  @@index([cariId])
 }
 
 model ProductAttributeDefinition {
@@ -331,7 +309,7 @@ model Product {
   imageUrls                    String[]                      @default([])
   categoryId                   String?
   brandId                      String?
-  primarySupplierId            String?
+  primaryCariId                String?
   status                       ProductStatus                 @default(ACTIVE)
   salesEnabled                 Boolean                       @default(true)
   purchaseEnabled              Boolean                       @default(true)
@@ -352,7 +330,7 @@ model Product {
   category                     Category?                     @relation(fields: [categoryId], references: [id])
   inventoryItem                InventoryItem?
   interaction                  ProductInteraction?
-  primarySupplier              Supplier?                     @relation(fields: [primarySupplierId], references: [id])
+  primaryCari                  Cari?                         @relation(fields: [primaryCariId], references: [id])
   preferredSalesWarehouse      Warehouse?                    @relation("PreferredSalesWarehouseProducts", fields: [preferredSalesWarehouseId], references: [id])
   preferredPurchaseWarehouse   Warehouse?                    @relation("PreferredPurchaseWarehouseProducts", fields: [preferredPurchaseWarehouseId], references: [id])
   reviews                      ProductReview[]
@@ -369,7 +347,7 @@ model Product {
 
   @@index([categoryId])
   @@index([brandId])
-  @@index([primarySupplierId])
+  @@index([primaryCariId])
   @@index([barcode])
   @@index([deleted])
   @@index([status, salesEnabled])
@@ -530,7 +508,7 @@ model Order {
   deleted                Boolean                     @default(false)
   deletedDate            DateTime?
   deletedUserId          String?
-  customerAccountId      String?
+  cariId                 String?
   discountTotal          Decimal                     @default(0) @db.Decimal(10, 2)
   paymentStatus          PaymentStatus               @default(PENDING)
   promotionCode          String?
@@ -547,7 +525,7 @@ model Order {
   invoiceCity            String?
   invoiceDistrict        String?
   invoicePostalCode      String?
-  carrierCompanyId       String?
+  carrierCariId          String?
   cargoTrackingNumber    String?
   cargoShippedAt         DateTime?
   cargoDeliveredAt       DateTime?
@@ -562,15 +540,15 @@ model Order {
   businessDocuments      BusinessDocument[]
   marketplacePackages    MarketplaceOrderPackage[]
   financeAllocationLinks FinanceAllocationLink[]
-  customerAccount        CustomerAccount?            @relation(fields: [customerAccountId], references: [id])
-  carrierCompany         CarrierCompany?             @relation(fields: [carrierCompanyId], references: [id])
+  cari                   Cari?                       @relation("OrderCari", fields: [cariId], references: [id])
+  carrierCari            Cari?                       @relation("OrderCarrierCari", fields: [carrierCariId], references: [id])
 
   @@index([deleted])
   @@index([createdAt])
   @@index([paymentStatus])
   @@index([status])
-  @@index([customerAccountId])
-  @@index([carrierCompanyId])
+  @@index([cariId])
+  @@index([carrierCariId])
   @@index([shipmentStatus])
 }
 
@@ -675,7 +653,7 @@ model CollectionRecord {
 
 model PaymentRecord {
   id                 String                  @id @default(cuid())
-  supplierId         String
+  cariId             String?
   financialAccountId String?
   amount             Decimal                 @db.Decimal(10, 2)
   currency           String                  @default("TRY")
@@ -688,11 +666,11 @@ model PaymentRecord {
   deleted            Boolean                 @default(false)
   deletedDate        DateTime?
   deletedUserId      String?
-  supplier           Supplier                @relation(fields: [supplierId], references: [id])
+  cari               Cari?                   @relation(fields: [cariId], references: [id])
   financialAccount   FinancialAccount?       @relation(fields: [financialAccountId], references: [id])
   allocationLinks    FinanceAllocationLink[]
 
-  @@index([supplierId, paidAt])
+  @@index([cariId, paidAt])
   @@index([financialAccountId, paidAt])
   @@index([status, paidAt])
   @@index([deleted, paidAt])
@@ -728,20 +706,17 @@ model FinanceAccountEntry {
   sourceReference    String?
   title              String
   note               String?
-  customerAccountId  String?
-  supplierId         String?
+  cariId             String?
   financialAccountId String?
   createdAt          DateTime                      @default(now())
   ledgerAccount      FinanceLedgerAccount          @relation(fields: [ledgerAccountId], references: [id])
-  customerAccount    CustomerAccount?              @relation(fields: [customerAccountId], references: [id])
-  supplier           Supplier?                     @relation(fields: [supplierId], references: [id])
+  cari               Cari?                          @relation(fields: [cariId], references: [id])
   financialAccount   FinancialAccount?             @relation(fields: [financialAccountId], references: [id])
 
   @@index([entryAt])
   @@index([sourceType, sourceId])
   @@index([ledgerAccountId, entryAt])
-  @@index([customerAccountId])
-  @@index([supplierId])
+  @@index([cariId])
 }
 
 model FinanceAllocationLink {
@@ -791,8 +766,7 @@ model BusinessDocument {
   counterpartyEmail      String?
   counterpartyAddress    String?
   note                   String?
-  supplierId             String?
-  customerAccountId      String?
+  cariId                 String?
   orderId                String?
   inventoryTransactionId String?
   createdAt              DateTime                             @default(now())
@@ -805,8 +779,7 @@ model BusinessDocument {
   lifecycleEvents        BusinessDocumentLifecycleEvent[]
   integrationMessages    BusinessDocumentIntegrationMessage[]
   lines                  BusinessDocumentLine[]
-  supplier               Supplier?                            @relation(fields: [supplierId], references: [id])
-  customerAccount        CustomerAccount?                     @relation(fields: [customerAccountId], references: [id])
+  cari                   Cari?                                 @relation(fields: [cariId], references: [id])
   order                  Order?                               @relation(fields: [orderId], references: [id])
   inventoryTransaction   InventoryTransaction?                @relation(fields: [inventoryTransactionId], references: [id])
   providerConfig         DocumentProviderConfig?              @relation(fields: [providerConfigId], references: [id])
@@ -815,8 +788,7 @@ model BusinessDocument {
   @@index([documentType, issueDate])
   @@index([status, issueDate])
   @@index([providerConfigId])
-  @@index([supplierId])
-  @@index([customerAccountId])
+  @@index([cariId])
   @@index([orderId])
   @@index([inventoryTransactionId])
   @@index([deleted, issueDate])
@@ -1029,7 +1001,7 @@ model IncomingInvoice {
   counterpartyEmail     String?
   counterpartyAddress   String?
   note                  String?
-  supplierId            String?
+  cariId                String?
   providerConfigId      String?
   externalReference     String?
   postedFinanceEntryAt  DateTime?
@@ -1039,7 +1011,7 @@ model IncomingInvoice {
   deleted               Boolean                         @default(false)
   deletedDate           DateTime?
   deletedUserId         String?
-  supplier              Supplier?                       @relation(fields: [supplierId], references: [id])
+  cari                  Cari?                            @relation(fields: [cariId], references: [id])
   providerConfig        IncomingInvoiceProviderConfig?  @relation(fields: [providerConfigId], references: [id])
   lines                 IncomingInvoiceLine[]
   xmlArtifact           IncomingInvoiceXmlArtifact?
@@ -1048,7 +1020,7 @@ model IncomingInvoice {
   @@unique([providerConfigId, externalReference])
   @@index([status, issueDate])
   @@index([source, issueDate])
-  @@index([supplierId])
+  @@index([cariId])
   @@index([counterpartyTaxNumber])
   @@index([deleted, issueDate])
 }

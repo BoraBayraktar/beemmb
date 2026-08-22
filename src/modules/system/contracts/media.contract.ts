@@ -12,3 +12,18 @@ export type UploadProductImageResult = {
   size: number;
   url: string;
 };
+
+export type UploadCariPhotoInput = {
+  bytes: Buffer;
+  fileName: string;
+  contentType: string;
+  cariSlug?: string;
+};
+
+export type UploadCariPhotoResult = {
+  bucket: string;
+  objectKey: string;
+  contentType: string;
+  size: number;
+  url: string;
+};

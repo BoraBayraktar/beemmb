@@ -27,7 +27,7 @@ const createPaymentRecordSchema = z.object({
 function mapPaymentRecord(item: Awaited<ReturnType<typeof financeRepository.listPaymentRecords>>[number]): AdminPaymentRecordItem {
   return {
     id: item.id,
-    supplierId: item.supplierId,
+    supplierId: item.cariId,
     financialAccountId: (item as { financialAccountId?: string | null }).financialAccountId ?? null,
     amount: item.amount.toNumber(),
     currency: item.currency,
@@ -46,6 +46,10 @@ export class PaymentsService {
     const paymentRecordTotals = new Map<string, AdminPaymentRecordItem[]>();
 
     for (const record of paymentRecords.map(mapPaymentRecord)) {
+      if (!record.supplierId) {
+        continue;
+      }
+
       const current = paymentRecordTotals.get(record.supplierId) ?? [];
       current.push(record);
       paymentRecordTotals.set(record.supplierId, current);

@@ -33,7 +33,7 @@ export type AdminPaymentsResult = {
 
 export type AdminPaymentRecordItem = {
   id: string;
-  supplierId: string;
+  supplierId: string | null;
   financialAccountId: string | null;
   amount: number;
   currency: string;

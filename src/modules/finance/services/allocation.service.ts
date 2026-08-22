@@ -375,7 +375,7 @@ export class FinanceAllocationService {
     for (const item of parsed.items) {
       const line = await financeRepository.findBusinessDocumentLineById(item.businessDocumentLineId);
 
-      if (!line?.businessDocument || line.businessDocument.supplierId !== record.supplierId) {
+      if (!line?.businessDocument || line.businessDocument.cariId !== record.cariId) {
         throw new Error(errors.paymentLineSupplierMismatch);
       }
 

@@ -2,7 +2,7 @@ import { redisCache } from "@/lib/redis";
 import type { CommerceLineQuote } from "@/modules/commerce/contracts/commerce.contract";
 import { CommerceRepository } from "@/modules/commerce/repositories/commerce.repository";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
-import { customerAccountService } from "@/modules/customers/services/customer-account.service";
+import { cariService } from "@/modules/cari/services/cari.service";
 
 export type MarketplaceOrderLineInput = {
   productId: string;
@@ -169,7 +169,7 @@ export class MarketplaceOrderService {
 
     const subtotal = quoteLines.reduce((sum, line) => sum + line.lineTotal, 0);
     const customerAccount = input.customerName?.trim()
-      ? await customerAccountService.ensureCustomerAccountFromContact({
+      ? await cariService.ensureCariFromContact({
           name: input.customerName,
           email: input.customerEmail ?? null,
         })

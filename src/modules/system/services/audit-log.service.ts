@@ -24,6 +24,7 @@ export const auditLogEntityLabels: Record<AuditLogEntityType, string> = {
   SUPPLIER: "Tedarikçi",
   PRODUCT_ATTRIBUTE: "Ürün Özelliği",
   CUSTOMER_ACCOUNT: "Cari Müşteri Kartı",
+  CARI: "Cari Kart",
   CATEGORY: "Kategori",
   ORDER: "Sipariş",
   BUSINESS_DOCUMENT: "Belge",

@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
-import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
+import { cariService } from "@/modules/cari/services/cari.service";
 import { marketplaceOrderService } from "@/modules/commerce/services/marketplace-order.service";
 
 const prisma = new PrismaClient();
@@ -28,9 +28,10 @@ async function createTestProduct(unique: number) {
 async function main() {
   const unique = Date.now();
 
-  const carrier = await catalogAdminService.createCarrierCompany({
+  const carrier = await cariService.createCari({
     slug: `marketplace-shipment-carrier-${unique}`,
     name: `Yurtici Kargo Test ${unique}`,
+    isCarrier: true,
   });
 
   // Senaryo 1: eşleşen kargo firması + Trendyol tarzı adres alan adları (fullAddress/city/district/postalCode/fullName/phone)
@@ -69,7 +70,7 @@ async function main() {
   assert(orderARow!.shipmentContactPhone === "+905551112233", `shipmentContactPhone mismatch: ${orderARow!.shipmentContactPhone}`);
   assert(orderARow!.invoiceAddressLine === "Fatura Mah. Fatura Sk. No:2", `invoiceAddressLine mismatch: ${orderARow!.invoiceAddressLine}`);
   assert(orderARow!.invoiceCity === "Ankara", `invoiceCity mismatch: ${orderARow!.invoiceCity}`);
-  assert(orderARow!.carrierCompanyId === carrier.id, "carrierCompanyId should match resolved carrier");
+  assert(orderARow!.carrierCariId === carrier.id, "carrierCariId should match resolved carrier");
   assert(orderARow!.externalCarrierNameRaw === null, "externalCarrierNameRaw should be null when carrier matched");
   assert(orderARow!.cargoTrackingNumber === "TRK-A-1", "cargoTrackingNumber should be persisted");
   assert(orderARow!.shipmentSourceChannel === "TRENDYOL", "shipmentSourceChannel should record source channel");
@@ -103,7 +104,7 @@ async function main() {
   assert(orderBRow!.shipmentPostalCode === "35000", `shipmentPostalCode (zipCode) mismatch: ${orderBRow!.shipmentPostalCode}`);
   assert(orderBRow!.shipmentContactName === "Test Alici B", `shipmentContactName (name) mismatch: ${orderBRow!.shipmentContactName}`);
   assert(orderBRow!.shipmentContactPhone === "+905559998877", `shipmentContactPhone (gsm) mismatch: ${orderBRow!.shipmentContactPhone}`);
-  assert(orderBRow!.carrierCompanyId === null, "carrierCompanyId should stay null when no carrier matches");
+  assert(orderBRow!.carrierCariId === null, "carrierCariId should stay null when no carrier matches");
   assert(orderBRow!.externalCarrierNameRaw === "Bilinmeyen Kargo Firmasi XYZ", "externalCarrierNameRaw should preserve unmatched raw name");
 
   // Senaryo 3: hiç adres/kargo bilgisi gelmeyen kanal - Order sorunsuz oluşmalı, tüm alanlar null kalmalı
@@ -117,7 +118,7 @@ async function main() {
   const orderCRow = await prisma.order.findUnique({ where: { orderNumber: orderC.orderNumber } });
   assert(orderCRow, "Order C should exist");
   assert(orderCRow!.shipmentAddressLine === null, "Order C shipmentAddressLine should be null");
-  assert(orderCRow!.carrierCompanyId === null, "Order C carrierCompanyId should be null");
+  assert(orderCRow!.carrierCariId === null, "Order C carrierCariId should be null");
   assert(orderCRow!.externalCarrierNameRaw === null, "Order C externalCarrierNameRaw should be null");
   assert(orderCRow!.shipmentStatus === "NOT_SHIPPED", "Order C shipmentStatus should default to NOT_SHIPPED");
 
@@ -127,7 +128,7 @@ async function main() {
   await prisma.orderPaymentStatusHistory.deleteMany({ where: { orderId: { in: orderIds } } });
   await prisma.order.deleteMany({ where: { id: { in: orderIds } } });
   await prisma.product.deleteMany({ where: { id: { in: [productA.id, productB.id, productC.id] } } });
-  await catalogAdminService.softDeleteCarrierCompany(carrier.id, "system");
+  await cariService.deleteCari(carrier.id, "system");
 
   console.log("Marketplace order shipment/address import verification passed");
 }

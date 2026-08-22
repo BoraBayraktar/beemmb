@@ -281,51 +281,6 @@ export type AdminCarrierCompanyItem = {
   orderCount: number;
 };
 
-export type AdminCreateCarrierCompanyInput = {
-  slug: string;
-  name: string;
-  taxNumber?: string | null;
-  trackingUrlTemplate?: string | null;
-  externalCodeTrendyol?: number | null;
-  externalCodePazarama?: string | null;
-  externalCodeHepsiburada?: string | null;
-  isActive?: boolean;
-};
-
-export type AdminUpdateCarrierCompanyInput = {
-  id: string;
-  slug?: string;
-  name?: string;
-  taxNumber?: string | null;
-  trackingUrlTemplate?: string | null;
-  externalCodeTrendyol?: number | null;
-  externalCodePazarama?: string | null;
-  externalCodeHepsiburada?: string | null;
-  isActive?: boolean;
-};
-
-export type AdminCreateSupplierInput = {
-  slug: string;
-  name: string;
-  taxNumber?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  defaultPaymentTermDays?: number | null;
-  creditLimit?: number | null;
-  isActive?: boolean;
-};
-
-export type AdminUpdateSupplierInput = {
-  id: string;
-  slug?: string;
-  name?: string;
-  taxNumber?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  defaultPaymentTermDays?: number | null;
-  creditLimit?: number | null;
-  isActive?: boolean;
-};
 
 export type AdminProductImportRow = {
   slug: string;

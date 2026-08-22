@@ -10,7 +10,7 @@ export class EDocumentRepository {
         lines: { orderBy: { createdAt: "asc" } },
         order: {
           select: {
-            carrierCompany: {
+            carrierCari: {
               select: {
                 name: true,
                 taxNumber: true,

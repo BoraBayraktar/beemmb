@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
-import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
+import { cariService } from "@/modules/cari/services/cari.service";
 import { eDocumentService } from "@/modules/edocument/services/edocument.service";
 
 const prisma = new PrismaClient();
@@ -53,15 +53,17 @@ async function main() {
   process.env.EDOCUMENT_SHIPMENT_DRIVER_NAME = "Env Soför";
   process.env.EDOCUMENT_SHIPMENT_DRIVER_TCKN = "11111111110";
 
-  const carrierWithTax = await catalogAdminService.createCarrierCompany({
+  const carrierWithTax = await cariService.createCari({
     slug: `edoc-carrier-with-tax-${unique}`,
     name: `Gercek Kargo Firmasi ${unique}`,
+    isCarrier: true,
     taxNumber: "5551112233",
   });
 
-  const carrierWithoutTax = await catalogAdminService.createCarrierCompany({
+  const carrierWithoutTax = await cariService.createCari({
     slug: `edoc-carrier-no-tax-${unique}`,
     name: `Vergisiz Kargo Firmasi ${unique}`,
+    isCarrier: true,
   });
 
   const orderWithCarrier = await prisma.order.create({
@@ -70,7 +72,7 @@ async function main() {
       status: "CONFIRMED",
       subtotal: 10,
       total: 10,
-      carrierCompanyId: carrierWithTax.id,
+      carrierCariId: carrierWithTax.id,
       cargoTrackingNumber: "TRK-EDOC-1",
     },
     select: { id: true },
@@ -82,7 +84,7 @@ async function main() {
       status: "CONFIRMED",
       subtotal: 10,
       total: 10,
-      carrierCompanyId: carrierWithoutTax.id,
+      carrierCariId: carrierWithoutTax.id,
     },
     select: { id: true },
   });
@@ -130,8 +132,8 @@ async function main() {
   await prisma.businessDocumentLine.deleteMany({ where: { businessDocumentId: { in: [docNoOrder.id, docOrderNoCarrier.id, docOrderWithCarrier.id, docOrderCarrierNoTax.id] } } });
   await prisma.businessDocument.deleteMany({ where: { id: { in: [docNoOrder.id, docOrderNoCarrier.id, docOrderWithCarrier.id, docOrderCarrierNoTax.id] } } });
   await prisma.order.deleteMany({ where: { id: { in: [orderWithCarrier.id, orderWithCarrierNoTax.id, orderWithoutCarrier.id] } } });
-  await catalogAdminService.softDeleteCarrierCompany(carrierWithTax.id, "system");
-  await catalogAdminService.softDeleteCarrierCompany(carrierWithoutTax.id, "system");
+  await cariService.deleteCari(carrierWithTax.id, "system");
+  await cariService.deleteCari(carrierWithoutTax.id, "system");
 
   console.log("E-Irsaliye siparis/kargo firmasi tasiyici baglama dogrulamasi gecti");
 }

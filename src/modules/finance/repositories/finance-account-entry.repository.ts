@@ -25,8 +25,24 @@ export class FinanceAccountEntryRepository {
       return { created: 0 };
     }
 
+    const data = lines.map((line) => ({
+      lineKey: line.lineKey,
+      entryAt: line.entryAt,
+      ledgerAccountId: line.ledgerAccountId,
+      side: line.side,
+      amount: line.amount,
+      currency: line.currency,
+      sourceType: line.sourceType,
+      sourceId: line.sourceId,
+      sourceReference: line.sourceReference ?? null,
+      title: line.title,
+      note: line.note ?? null,
+      cariId: line.customerAccountId ?? line.supplierId ?? null,
+      financialAccountId: line.financialAccountId ?? null,
+    }));
+
     const result = await (prisma as any).financeAccountEntry.createMany({
-      data: lines,
+      data,
       skipDuplicates: true,
     });
 
@@ -63,8 +79,7 @@ export class FinanceAccountEntryRepository {
       },
       include: {
         ledgerAccount: { select: { code: true, name: true } },
-        customerAccount: { select: { name: true } },
-        supplier: { select: { name: true } },
+        cari: { select: { name: true } },
       },
       orderBy: [{ entryAt: "desc" }, { createdAt: "desc" }],
       take: args.take ?? 500,

@@ -12,10 +12,8 @@ import type {
   AdminCategoryListQuery,
   AdminCategoryListResult,
   AdminCreateBrandInput,
-  AdminCreateCarrierCompanyInput,
   AdminCreateCategoryInput,
   AdminCreateProductInput,
-  AdminCreateSupplierInput,
   AdminProductAttributeDefinitionItem,
   AdminProductAttributeValueMarketplaceMappingItem,
   AdminProductAttributeLinkInput,
@@ -31,14 +29,13 @@ import type {
   AdminSupplierItem,
   AdminTopInteractionItem,
   AdminUpdateBrandInput,
-  AdminUpdateCarrierCompanyInput,
   AdminUpdateCategoryInput,
   AdminUpdateProductInput,
   AdminUpdateProductVariantsInput,
   AdminUpsertProductAttributeValueMarketplaceMappingInput,
-  AdminUpdateSupplierInput,
 } from "@/modules/catalog/contracts/catalog-admin.contract";
 import { CatalogAdminRepository } from "@/modules/catalog/repositories/catalog-admin.repository";
+import { cariService } from "@/modules/cari/services/cari.service";
 import { inventoryService } from "@/modules/inventory/services/inventory.service";
 import {
   decodeProductDescriptionWithFeatures,
@@ -178,52 +175,6 @@ const updateBrandSchema = z.object({
   name: z.string().trim().min(2).max(120).optional(),
   trendyolBrandId: z.coerce.number().int().positive().optional().nullable(),
   pazaramaBrandId: z.string().trim().min(1).max(120).optional().nullable(),
-  isActive: z.boolean().optional(),
-});
-
-const createCarrierCompanySchema = z.object({
-  slug: z.string().trim().min(2).max(120),
-  name: z.string().trim().min(2).max(120),
-  taxNumber: z.string().trim().max(64).optional().nullable(),
-  trackingUrlTemplate: z.string().trim().max(500).optional().nullable(),
-  externalCodeTrendyol: z.coerce.number().int().positive().optional().nullable(),
-  externalCodePazarama: z.string().trim().max(120).optional().nullable(),
-  externalCodeHepsiburada: z.string().trim().max(120).optional().nullable(),
-  isActive: z.boolean().default(true),
-});
-
-const updateCarrierCompanySchema = z.object({
-  id: z.string().trim().min(1),
-  slug: z.string().trim().min(2).max(120).optional(),
-  name: z.string().trim().min(2).max(120).optional(),
-  taxNumber: z.string().trim().max(64).optional().nullable(),
-  trackingUrlTemplate: z.string().trim().max(500).optional().nullable(),
-  externalCodeTrendyol: z.coerce.number().int().positive().optional().nullable(),
-  externalCodePazarama: z.string().trim().max(120).optional().nullable(),
-  externalCodeHepsiburada: z.string().trim().max(120).optional().nullable(),
-  isActive: z.boolean().optional(),
-});
-
-const createSupplierSchema = z.object({
-  slug: z.string().trim().min(2).max(120),
-  name: z.string().trim().min(2).max(120),
-  taxNumber: z.string().trim().max(64).optional().nullable(),
-  email: z.string().trim().email().max(160).optional().nullable(),
-  phone: z.string().trim().max(40).optional().nullable(),
-  defaultPaymentTermDays: z.coerce.number().int().min(0).max(365).optional().nullable(),
-  creditLimit: z.coerce.number().nonnegative().optional().nullable(),
-  isActive: z.boolean().default(true),
-});
-
-const updateSupplierSchema = z.object({
-  id: z.string().trim().min(1),
-  slug: z.string().trim().min(2).max(120).optional(),
-  name: z.string().trim().min(2).max(120).optional(),
-  taxNumber: z.string().trim().max(64).optional().nullable(),
-  email: z.string().trim().email().max(160).optional().nullable(),
-  phone: z.string().trim().max(40).optional().nullable(),
-  defaultPaymentTermDays: z.coerce.number().int().min(0).max(365).optional().nullable(),
-  creditLimit: z.coerce.number().nonnegative().optional().nullable(),
   isActive: z.boolean().optional(),
 });
 
@@ -501,8 +452,8 @@ function mapProduct(product: {
   searchKeywords: string[];
   brandId: string | null;
   brand: { name: string } | null;
-  primarySupplierId: string | null;
-  primarySupplier: { name: string } | null;
+  primaryCariId: string | null;
+  primaryCari: { name: string } | null;
   preferredSalesWarehouseId: string | null;
   preferredPurchaseWarehouseId: string | null;
   imageUrl: string;
@@ -602,8 +553,8 @@ function mapProduct(product: {
     searchKeywords: product.searchKeywords ?? [],
     brandId: product.brandId,
     brandName: product.brand?.name ?? null,
-    primarySupplierId: product.primarySupplierId,
-    primarySupplierName: product.primarySupplier?.name ?? null,
+    primarySupplierId: product.primaryCariId,
+    primarySupplierName: product.primaryCari?.name ?? null,
     preferredSalesWarehouseId: product.preferredSalesWarehouseId,
     preferredPurchaseWarehouseId: product.preferredPurchaseWarehouseId,
     imageUrl: product.imageUrl,
@@ -760,7 +711,7 @@ export class CatalogAdminService {
         ? this.repository.findActiveBrandById(args.brandId)
         : Promise.resolve(args.skipMissingValues ? { id: "skip" } : null),
       args.primarySupplierId
-        ? this.repository.findActiveSupplierById(args.primarySupplierId)
+        ? cariService.getCariById(args.primarySupplierId).then((cari) => (cari?.isSupplier && cari.isActive ? cari : null))
         : Promise.resolve(args.skipMissingValues ? { id: "skip" } : null),
       args.attributeDefinitionIds?.length
         ? this.repository.findActiveAttributeDefinitionsByIds(args.attributeDefinitionIds)
@@ -1357,69 +1308,6 @@ export class CatalogAdminService {
 
   async findCarrierCompanyByName(name: string): Promise<{ id: string; name: string } | null> {
     return this.repository.findActiveCarrierCompanyByName(name);
-  }
-
-  async createCarrierCompany(input: AdminCreateCarrierCompanyInput): Promise<AdminCarrierCompanyItem> {
-    const parsed = createCarrierCompanySchema.parse(input);
-    const created = await this.repository.createCarrierCompany(parsed);
-    return mapCarrierCompany(created);
-  }
-
-  async updateCarrierCompany(input: AdminUpdateCarrierCompanyInput): Promise<AdminCarrierCompanyItem> {
-    const parsed = updateCarrierCompanySchema.parse(input);
-    const existing = await this.repository.findActiveCarrierCompanyById(parsed.id);
-
-    if (!existing) {
-      throw new Error("Carrier company not found");
-    }
-
-    const updated = await this.repository.updateCarrierCompany(parsed);
-    return mapCarrierCompany(updated);
-  }
-
-  async softDeleteCarrierCompany(carrierCompanyId: string, deletedUserId: string) {
-    const existing = await this.repository.findActiveCarrierCompanyById(carrierCompanyId);
-
-    if (!existing) {
-      throw new Error("Carrier company not found");
-    }
-
-    await this.repository.softDeleteCarrierCompany(carrierCompanyId, deletedUserId);
-  }
-
-  async createSupplier(input: AdminCreateSupplierInput): Promise<AdminSupplierItem> {
-    const parsed = createSupplierSchema.parse(input);
-    const created = await this.repository.createSupplier(parsed);
-    await invalidateCatalogCache();
-    return mapSupplier(created);
-  }
-
-  async updateSupplier(input: AdminUpdateSupplierInput): Promise<AdminSupplierItem> {
-    const parsed = updateSupplierSchema.parse(input);
-    const existing = await this.repository.findActiveSupplierById(parsed.id);
-
-    if (!existing) {
-      throw new Error("Supplier not found");
-    }
-
-    const updated = await this.repository.updateSupplier(parsed);
-    await invalidateCatalogCache();
-    return mapSupplier(updated);
-  }
-
-  async softDeleteSupplier(supplierId: string, deletedUserId: string) {
-    const existing = await this.repository.findActiveSupplierById(supplierId);
-
-    if (!existing) {
-      throw new Error("Supplier not found");
-    }
-
-    if (existing._count.primaryProducts > 0) {
-      throw new Error("Bu tedarikçi aktif ürünlerde kullanıldığı için silinemez.");
-    }
-
-    await this.repository.softDeleteSupplier(supplierId, deletedUserId);
-    await invalidateCatalogCache();
   }
 
   async listAttributeDefinitions(): Promise<AdminProductAttributeDefinitionItem[]> {

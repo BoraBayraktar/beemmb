@@ -3,10 +3,12 @@ import { z } from "zod";
 
 import { redisCache } from "@/lib/redis";
 import type {
+  AdminFinanceCounterpartyKind,
   AdminFinanceCounterpartyLookupQuery,
   AdminFinanceCounterpartyLookupResult,
 } from "@/modules/finance/contracts/counterparty-lookup.contract";
-import { financeRepository } from "@/modules/finance/repositories/finance.repository";
+import { cariService } from "@/modules/cari/services/cari.service";
+import { CARI_LOOKUP_CACHE_PREFIX, type CariRole } from "@/modules/cari/contracts/cari.contract";
 
 const lookupQuerySchema = z.object({
   search: z.string().trim().optional(),
@@ -15,6 +17,10 @@ const lookupQuerySchema = z.object({
 });
 
 const CACHE_TTL_SECONDS = 60;
+const CARI_ROLE_BY_KIND: Record<AdminFinanceCounterpartyKind, CariRole> = {
+  CUSTOMER: "CUSTOMER",
+  SUPPLIER: "SUPPLIER",
+};
 
 function buildCacheKey(parsed: z.infer<typeof lookupQuerySchema>) {
   const fingerprint = createHash("sha256")
@@ -26,7 +32,7 @@ function buildCacheKey(parsed: z.infer<typeof lookupQuerySchema>) {
     .digest("hex")
     .slice(0, 16);
 
-  return `finance:counterparties:${fingerprint}`;
+  return `${CARI_LOOKUP_CACHE_PREFIX}${fingerprint}`;
 }
 
 export class CounterpartyLookupService {
@@ -41,46 +47,31 @@ export class CounterpartyLookupService {
 
     const search = parsed.search?.trim() ?? "";
     const normalizedSearch = search.toLocaleLowerCase("tr-TR");
+    const kinds: AdminFinanceCounterpartyKind[] = parsed.kind === "all"
+      ? ["CUSTOMER", "SUPPLIER"]
+      : [parsed.kind];
+
     const items: AdminFinanceCounterpartyLookupResult["items"] = [];
+    const seenIds = new Set<string>();
 
-    if (parsed.kind === "all" || parsed.kind === "CUSTOMER") {
-      const customers = await financeRepository.searchCustomerAccounts({
+    for (const kind of kinds) {
+      const cariItems = await cariService.listCari({
+        role: CARI_ROLE_BY_KIND[kind],
         search,
-        limit: parsed.limit,
       });
 
-      for (const customer of customers) {
-        if (!customer.isActive) {
+      for (const cari of cariItems) {
+        if (!cari.isActive || seenIds.has(cari.id)) {
           continue;
         }
 
+        seenIds.add(cari.id);
         items.push({
-          id: customer.id,
-          kind: "CUSTOMER",
-          slug: customer.slug,
-          label: customer.name,
-          subtitle: customer.email ?? customer.taxNumber,
-        });
-      }
-    }
-
-    if (parsed.kind === "all" || parsed.kind === "SUPPLIER") {
-      const suppliers = await financeRepository.searchSuppliers({
-        search,
-        limit: parsed.limit,
-      });
-
-      for (const supplier of suppliers) {
-        if (!supplier.isActive) {
-          continue;
-        }
-
-        items.push({
-          id: supplier.id,
-          kind: "SUPPLIER",
-          slug: supplier.slug,
-          label: supplier.name,
-          subtitle: supplier.taxNumber,
+          id: cari.id,
+          kind,
+          slug: cari.slug,
+          label: cari.name,
+          subtitle: cari.email ?? cari.taxNumber,
         });
       }
     }
@@ -103,7 +94,7 @@ export class CounterpartyLookupService {
   }
 
   async invalidateLookupCache() {
-    await redisCache.delByPrefix("finance:counterparties:");
+    await redisCache.delByPrefix(CARI_LOOKUP_CACHE_PREFIX);
   }
 }
 

@@ -49,7 +49,7 @@ async function main() {
 
   const unique = Date.now();
 
-  const carrierResponse = await authFetch("/api/admin/carriers", adminCookie, {
+  const carrierResponse = await authFetch("/api/admin/cari", adminCookie, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -57,6 +57,7 @@ async function main() {
     body: JSON.stringify({
       slug: `order-shipment-carrier-${unique}`,
       name: `Order Shipment Carrier ${unique}`,
+      isCarrier: true,
       trackingUrlTemplate: "https://kargo.example.com/takip?kod={trackingNumber}",
     }),
   });
@@ -173,7 +174,7 @@ async function main() {
       method: "DELETE",
     });
 
-    await authFetch(`/api/admin/carriers/${carrierId}`, adminCookie, {
+    await authFetch(`/api/admin/cari/${carrierId}`, adminCookie, {
       method: "DELETE",
     });
   }

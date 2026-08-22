@@ -45,7 +45,7 @@ type ReceivableSource = {
   total: { toNumber: () => number };
   currency: string;
   createdAt: Date;
-    customerAccount?: { name: string | null; id?: string | null; slug?: string | null; defaultPaymentTermDays?: number | null } | null;
+  cari?: { name: string | null; id?: string | null; slug?: string | null; defaultPaymentTermDays?: number | null } | null;
   items: Array<{ quantity: number }>;
   businessDocuments: Array<{
     id: string;
@@ -60,7 +60,7 @@ type ReceivableSource = {
 
 function mapReceivable(item: ReceivableSource, unlinkedCustomerLabel: string): AdminReceivableListItem {
   const latestDocument = item.businessDocuments[0] ?? null;
-  const resolvedCounterpartyName = item.customerAccount?.name?.trim()
+  const resolvedCounterpartyName = item.cari?.name?.trim()
     || latestDocument?.counterpartyName?.trim()
     || unlinkedCustomerLabel;
 
@@ -68,15 +68,15 @@ function mapReceivable(item: ReceivableSource, unlinkedCustomerLabel: string): A
     orderCreatedAtIso: item.createdAt.toISOString(),
     latestDocumentIssueDateIso: latestDocument?.issueDate.toISOString() ?? null,
     latestDocumentDueDateIso: latestDocument?.dueDate ? latestDocument.dueDate.toISOString() : null,
-    customerDefaultPaymentTermDays: item.customerAccount?.defaultPaymentTermDays ?? null,
+    customerDefaultPaymentTermDays: item.cari?.defaultPaymentTermDays ?? null,
   });
   const daysUntilDue = computeDaysUntilDue(effectiveDueDate);
 
   return {
     orderId: item.id,
     orderNumber: item.orderNumber,
-    customerAccountId: item.customerAccount?.id ?? null,
-    customerAccountSlug: item.customerAccount?.slug ?? null,
+    customerAccountId: item.cari?.id ?? null,
+    customerAccountSlug: item.cari?.slug ?? null,
     counterpartyName: resolvedCounterpartyName,
     paymentStatus: item.paymentStatus as AdminReceivableStatus,
     totalAmount: item.total.toNumber(),
@@ -187,7 +187,7 @@ export class ReceivablesService {
           latestDocumentDueDateIso: item.businessDocuments[0]?.dueDate
             ? item.businessDocuments[0].dueDate.toISOString()
             : null,
-          customerDefaultPaymentTermDays: item.customerAccount?.defaultPaymentTermDays ?? null,
+          customerDefaultPaymentTermDays: item.cari?.defaultPaymentTermDays ?? null,
         }),
         currency: item.currency,
       })),

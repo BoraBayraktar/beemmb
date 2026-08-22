@@ -263,11 +263,12 @@ export class AuditLogRepository {
       return [];
     }
 
-    return prisma.supplier.findMany({
+    return prisma.cari.findMany({
       where: {
         id: {
           in: ids,
         },
+        isSupplier: true,
       },
       select: {
         id: true,
@@ -388,7 +389,7 @@ export class AuditLogRepository {
         id: true,
         amount: true,
         currency: true,
-        supplierId: true,
+        cariId: true,
       },
     });
   }
@@ -437,11 +438,12 @@ export class AuditLogRepository {
       return [];
     }
 
-    return prisma.customerAccount.findMany({
+    return prisma.cari.findMany({
       where: {
         id: {
           in: ids,
         },
+        isCustomer: true,
       },
       select: {
         id: true,

@@ -85,8 +85,7 @@ const adminMenuIcons: Array<{ route: string; icon: LucideIcon }> = [
   { route: "/admin/storefront", icon: LayoutGrid },
   { route: "/admin/orders", icon: ReceiptText },
   { route: "/admin/brands", icon: Users },
-  { route: "/admin/suppliers", icon: Users },
-  { route: "/admin/customer-accounts", icon: Users },
+  { route: "/admin/cari", icon: Users },
   { route: "/admin/product-attributes", icon: ClipboardList },
   { route: "/admin/documents/pending-invoices", icon: FileClock },
   { route: "/admin/documents/providers", icon: PlugZap },
@@ -400,32 +399,6 @@ function getActiveAdminGuide(pathname: string, searchParams: Pick<URLSearchParam
     });
   }
 
-  if (adminPath === "/admin/suppliers") {
-    return createGuide({
-      eyebrow: "Tedarikçi rehberi",
-      title: "Tedarikçi yönetimi nasıl kullanılır?",
-      description: "Bu ekran ürünlerin satın alma, stok girişi, belge ve borç akışında kullanılan tedarikçi kayıtlarını yönetir.",
-      sections: [
-        {
-          title: "Önerilen sıra",
-          items: [
-            "Önce tedarikçi adını ve iletişim bilgilerini oluşturun.",
-            "Vergi ve e-posta gibi belge için gerekli alanları tamamlayın.",
-            "Satın alma veya stok girişinde bu tedarikçiyi kaynak olarak kullanın.",
-          ],
-        },
-        {
-          title: "Bağlı modüller",
-          items: [
-            "Ürünler ekranında ana tedarikçi seçilir.",
-            "Envanter stok girişlerinde tedarikçi bilgisi kullanılabilir.",
-            "Belgeler ve Finans ekranları tedarikçiye bağlı borç ve belge akışını gösterir.",
-          ],
-        },
-      ],
-    });
-  }
-
   if (adminPath === "/admin/product-attributes") {
     return createGuide({
       eyebrow: "Ürün özellikleri rehberi",
@@ -477,11 +450,11 @@ function getActiveAdminGuide(pathname: string, searchParams: Pick<URLSearchParam
     });
   }
 
-  if (adminPath === "/admin/customer-accounts" || adminPath === "/admin/customers") {
+  if (adminPath === "/admin/cari" || adminPath === "/admin/customers") {
     return createGuide({
-      eyebrow: "Müşteri hesabı rehberi",
-      title: "Müşteri hesapları nasıl kullanılır?",
-      description: "Bu ekran sipariş, belge ve tahsilat akışında kullanılan merkezi müşteri kayıtlarını yönetir.",
+      eyebrow: "Cari kart rehberi",
+      title: "Cari kartlar nasıl kullanılır?",
+      description: "Bu ekran müşteri, tedarikçi ve nakliyeci kayıtlarını tek bir cari kart üzerinden; sipariş, belge, ödeme ve tahsilat akışında kullanılacak şekilde yönetir.",
       sections: [
         {
           title: "Önerilen sıra",

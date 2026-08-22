@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { commerceService } from "@/modules/commerce/services/commerce.service";
-import { customerAccountService } from "@/modules/customers/services/customer-account.service";
+import { cariService } from "@/modules/cari/services/cari.service";
 import { documentService } from "@/modules/documents/services/document.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { inventoryService } from "@/modules/inventory/services/inventory.service";
@@ -37,7 +37,7 @@ export default async function AdminDocumentsPage({
     }),
     documentService.listProviderConfigs(),
     catalogAdminService.listSuppliers(),
-    customerAccountService.listCustomerAccounts(),
+    cariService.listCari({ role: "CUSTOMER" }),
     commerceService.listOrders({
       page: 1,
       pageSize: 50,

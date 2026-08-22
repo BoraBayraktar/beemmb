@@ -74,7 +74,7 @@ function mapDetail(item: Awaited<ReturnType<DocumentRepository["findBusinessDocu
     item.issueDate.toISOString(),
     item.dueDate ? item.dueDate.toISOString() : null,
     new Date(),
-    item.supplier?.defaultPaymentTermDays ?? item.customerAccount?.defaultPaymentTermDays ?? null,
+    item.cari?.defaultPaymentTermDays ?? null,
   );
 
   return {
@@ -93,8 +93,8 @@ function mapDetail(item: Awaited<ReturnType<DocumentRepository["findBusinessDocu
     externalSystemStatus: item.externalSystemStatus,
     providerConfigId: item.providerConfig?.id ?? null,
     providerDisplayName: item.providerConfig?.displayName ?? null,
-    supplierId: item.supplier?.id ?? null,
-    customerAccountId: item.customerAccount?.id ?? null,
+    supplierId: (item.documentType === "PURCHASE_DOCUMENT" || item.documentType === "DELIVERY_NOTE") ? item.cari?.id ?? null : null,
+    customerAccountId: (item.documentType === "E_INVOICE" || item.documentType === "E_DISPATCH") ? item.cari?.id ?? null : null,
     counterpartyName: item.counterpartyName,
     orderId: item.order?.id ?? null,
     orderNumber: item.order?.orderNumber ?? null,

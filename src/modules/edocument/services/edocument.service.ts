@@ -27,7 +27,7 @@ type BusinessDocumentForXml = Prisma.BusinessDocumentGetPayload<{
     lines: true;
     order: {
       select: {
-        carrierCompany: {
+        carrierCari: {
           select: {
             name: true;
             taxNumber: true;
@@ -98,8 +98,8 @@ function mapDocument(item: BusinessDocumentForXml): UblBusinessDocumentInput {
     sender: eDocumentSenderConfigService.resolveSender(),
     tax: eDocumentTaxConfigService.resolveTaxConfig(),
     shipment: eDocumentShipmentConfigService.resolveShipment(item.order ? {
-      carrierCompanyName: item.order.carrierCompany?.name ?? null,
-      carrierCompanyTaxNumber: item.order.carrierCompany?.taxNumber ?? null,
+      carrierCompanyName: item.order.carrierCari?.name ?? null,
+      carrierCompanyTaxNumber: item.order.carrierCari?.taxNumber ?? null,
     } : null),
     lines: item.lines.map((line) => ({
       id: line.id,

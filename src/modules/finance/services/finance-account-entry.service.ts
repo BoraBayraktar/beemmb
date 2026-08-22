@@ -35,10 +35,9 @@ function toNumber(value: { toNumber(): number } | number) {
 }
 
 function resolveCounterpartyName(record: {
-  customerAccount?: { name: string } | null;
-  supplier?: { name: string } | null;
+  cari?: { name: string } | null;
 }) {
-  return record.customerAccount?.name ?? record.supplier?.name ?? null;
+  return record.cari?.name ?? null;
 }
 
 function mapEntry(record: Awaited<ReturnType<typeof financeAccountEntryRepository.listEntries>>[number]): AdminFinanceLedgerEntryListItem {
@@ -184,7 +183,7 @@ export class FinanceAccountEntryService {
       sourceId: paymentRecordId,
       sourceReference: `payment:${paymentRecordId}`,
       note: record.note,
-      supplierId: record.supplierId,
+      supplierId: record.cariId,
       financialAccountId: record.financialAccountId,
     });
 
@@ -236,8 +235,7 @@ export class FinanceAccountEntryService {
       sourceId: cashTransactionId,
       sourceReference: record.sourceReferenceId,
       note: record.note,
-      customerAccountId: record.customerAccountId,
-      supplierId: record.supplierId,
+      customerAccountId: record.cariId,
       financialAccountId: record.accountId,
     });
 
@@ -282,8 +280,7 @@ export class FinanceAccountEntryService {
       sourceId: document.id,
       sourceReference: `document:${document.documentNumber}`,
       note: document.note,
-      customerAccountId: document.customerAccountId,
-      supplierId: document.supplierId,
+      customerAccountId: document.cariId,
     });
 
     return { created: result.created, skipped: result.created === 0 };
@@ -327,7 +324,7 @@ export class FinanceAccountEntryService {
       sourceId: invoice.id,
       sourceReference: `incoming-invoice:${invoice.documentNumber}`,
       note: invoice.note,
-      supplierId: invoice.supplierId,
+      supplierId: invoice.cariId,
     });
 
     return { created: result.created, skipped: result.created === 0 };

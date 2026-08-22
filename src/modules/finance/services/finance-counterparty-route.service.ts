@@ -1,20 +1,14 @@
-import { financeRepository } from "@/modules/finance/repositories/finance.repository";
+import { cariService } from "@/modules/cari/services/cari.service";
 
 export class FinanceCounterpartyRouteService {
   async resolveCounterpartyLedgerPath(id: string): Promise<string | null> {
-    const customer = await financeRepository.findCustomerAccountById(id);
+    const cari = await cariService.getCariById(id);
 
-    if (customer) {
-      return `/admin/finance/customers/${encodeURIComponent(customer.slug)}`;
+    if (!cari) {
+      return null;
     }
 
-    const supplier = await financeRepository.findSupplierById(id);
-
-    if (supplier?.slug) {
-      return `/admin/finance/suppliers/${encodeURIComponent(supplier.slug)}`;
-    }
-
-    return null;
+    return `/admin/finance/cari/${encodeURIComponent(cari.slug)}`;
   }
 }
 

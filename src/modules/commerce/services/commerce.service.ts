@@ -25,7 +25,7 @@ import type {
   UpdateOrderShipmentInput,
 } from "@/modules/commerce/contracts/commerce.contract";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
-import { customerAccountService } from "@/modules/customers/services/customer-account.service";
+import { cariService } from "@/modules/cari/services/cari.service";
 import { CommerceRepository } from "@/modules/commerce/repositories/commerce.repository";
 import { integrationService } from "@/modules/integration/services/integration.service";
 import { inventoryService } from "@/modules/inventory/services/inventory.service";
@@ -244,12 +244,12 @@ function mapRestockStatus(args: {
 function mapOrderDetail(order: {
   id: string;
   orderNumber: string;
-  customerAccount: {
+  cari: {
     id: string;
     name: string;
     email: string | null;
   } | null;
-  carrierCompany: {
+  carrierCari?: {
     id: string;
     name: string;
   } | null;
@@ -459,8 +459,8 @@ function mapOrderDetail(order: {
     invoiceCity: order.invoiceCity,
     invoiceDistrict: order.invoiceDistrict,
     invoicePostalCode: order.invoicePostalCode,
-    carrierCompanyId: order.carrierCompany?.id ?? null,
-    carrierCompanyName: order.carrierCompany?.name ?? null,
+    carrierCompanyId: order.carrierCari?.id ?? null,
+    carrierCompanyName: order.carrierCari?.name ?? null,
     cargoTrackingNumber: order.cargoTrackingNumber,
     cargoShippedAt: order.cargoShippedAt?.toISOString() ?? null,
     cargoDeliveredAt: order.cargoDeliveredAt?.toISOString() ?? null,
@@ -469,9 +469,9 @@ function mapOrderDetail(order: {
   return {
     id: order.id,
     orderNumber: order.orderNumber,
-    customerAccountId: order.customerAccount?.id ?? null,
-    customerAccountName: order.customerAccount?.name ?? null,
-    customerAccountEmail: order.customerAccount?.email ?? null,
+    customerAccountId: order.cari?.id ?? null,
+    customerAccountName: order.cari?.name ?? null,
+    customerAccountEmail: order.cari?.email ?? null,
     status: order.status,
     paymentStatus: order.paymentStatus,
     subtotal: order.subtotal.toNumber(),
@@ -587,7 +587,7 @@ export class CommerceService {
     const orderNumber = `ARV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     let createdOrderNumber = orderNumber;
     const customerAccount = customerProfile
-      ? await customerAccountService.ensureCustomerAccountFromUserProfile(customerProfile)
+      ? await cariService.ensureCariFromContact(customerProfile)
       : null;
 
     try {
@@ -655,15 +655,15 @@ export class CommerceService {
     const items: AdminOrderListItem[] = orders.map((order: {
       id: string;
       orderNumber: string;
-      customerAccount?: {
+      cari?: {
         id: string;
         name: string;
         email: string | null;
       } | null;
-      carrierCompany?: {
+      carrierCari?: {
         id: string;
         name: string;
-        trackingUrlTemplate: string | null;
+        carrierProfile?: { trackingUrlTemplate: string | null } | null;
       } | null;
       status: AdminOrderListItem["status"];
       paymentStatus: AdminOrderListItem["paymentStatus"];
@@ -686,14 +686,14 @@ export class CommerceService {
     }) => ({
       id: order.id,
       orderNumber: order.orderNumber,
-      customerAccountId: order.customerAccount?.id ?? null,
-      customerAccountName: order.customerAccount?.name ?? null,
+      customerAccountId: order.cari?.id ?? null,
+      customerAccountName: order.cari?.name ?? null,
       status: order.status,
       paymentStatus: order.paymentStatus,
       shipmentStatus: order.shipmentStatus,
-      carrierCompanyId: order.carrierCompany?.id ?? null,
-      carrierCompanyName: order.carrierCompany?.name ?? null,
-      carrierTrackingUrlTemplate: order.carrierCompany?.trackingUrlTemplate ?? null,
+      carrierCompanyId: order.carrierCari?.id ?? null,
+      carrierCompanyName: order.carrierCari?.name ?? null,
+      carrierTrackingUrlTemplate: order.carrierCari?.carrierProfile?.trackingUrlTemplate ?? null,
       cargoTrackingNumber: order.cargoTrackingNumber,
       restockStatus: mapRestockStatus({
         reservationCount: order.stockReservations.length,
@@ -750,10 +750,10 @@ export class CommerceService {
     }>();
 
     for (const row of rows) {
-      const key = row.carrierCompanyId ?? "__unassigned__";
+      const key = row.carrierCariId ?? "__unassigned__";
       const group = groups.get(key) ?? {
-        carrierCompanyId: row.carrierCompanyId,
-        carrierCompanyName: row.carrierCompany?.name ?? null,
+        carrierCompanyId: row.carrierCariId,
+        carrierCompanyName: row.carrierCari?.name ?? null,
         orderCount: 0,
         shippedCount: 0,
         deliveredCount: 0,
@@ -934,8 +934,8 @@ export class CommerceService {
       return null;
     }
 
-    if (order.customerAccount?.id) {
-      return order.customerAccount.id;
+    if (order.cari?.id) {
+      return order.cari.id;
     }
 
     const document = await this.repository.findLatestBusinessDocumentForOrder(orderId);
@@ -944,7 +944,7 @@ export class CommerceService {
       return null;
     }
 
-    const account = await customerAccountService.ensureCustomerAccountFromContact({
+    const account = await cariService.ensureCariFromContact({
       name: document.counterpartyName,
       email: document.counterpartyEmail,
     });

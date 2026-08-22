@@ -1,21 +1,15 @@
-import { Prisma } from "@prisma/client";
-
 import { prisma } from "@/lib/prisma";
 import type {
   AdminAnswerProductQuestionInput,
   AdminCreateProductAttributeDefinitionInput,
   AdminCreateBrandInput,
-  AdminCreateCarrierCompanyInput,
-  AdminCreateSupplierInput,
   AdminCategoryListQuery,
   AdminProductQuestionListQuery,
   AdminProductListQuery,
   AdminUpdateBrandInput,
-  AdminUpdateCarrierCompanyInput,
   AdminUpdateCategoryInput,
   AdminUpdateProductAttributeDefinitionInput,
   AdminUpsertProductAttributeValueMarketplaceMappingInput,
-  AdminUpdateSupplierInput,
 } from "@/modules/catalog/contracts/catalog-admin.contract";
 
 type AdminCreateProductRecordInput = {
@@ -145,14 +139,14 @@ function buildWhere(args: {
             { sku: { contains: args.search, mode: "insensitive" as const } },
             { barcode: { contains: args.search, mode: "insensitive" as const } },
             { brand: { name: { contains: args.search, mode: "insensitive" as const } } },
-            { primarySupplier: { name: { contains: args.search, mode: "insensitive" as const } } },
+            { primaryCari: { name: { contains: args.search, mode: "insensitive" as const } } },
           ],
         }
       : {}),
     ...(args.categoryId ? { categoryId: args.categoryId } : {}),
     ...(args.status && args.status !== "all" ? { status: args.status } : {}),
     ...(args.brandId ? { brandId: args.brandId } : {}),
-    ...(args.supplierId ? { primarySupplierId: args.supplierId } : {}),
+    ...(args.supplierId ? { primaryCariId: args.supplierId } : {}),
   };
 }
 
@@ -185,6 +179,34 @@ function buildQuestionOrderBy(args: AdminProductQuestionListQuery) {
     default:
       return [{ answeredAt: "asc" as const }, { createdAt: "desc" as const }];
   }
+}
+
+function flattenCariCarrierRow(row: {
+  id: string;
+  slug: string;
+  name: string;
+  taxNumber: string | null;
+  isActive: boolean;
+  carrierProfile: {
+    trackingUrlTemplate: string | null;
+    externalCodeTrendyol: number | null;
+    externalCodePazarama: string | null;
+    externalCodeHepsiburada: string | null;
+  } | null;
+  _count: { carrierOrders: number };
+}) {
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    taxNumber: row.taxNumber,
+    trackingUrlTemplate: row.carrierProfile?.trackingUrlTemplate ?? null,
+    externalCodeTrendyol: row.carrierProfile?.externalCodeTrendyol ?? null,
+    externalCodePazarama: row.carrierProfile?.externalCodePazarama ?? null,
+    externalCodeHepsiburada: row.carrierProfile?.externalCodeHepsiburada ?? null,
+    isActive: row.isActive,
+    _count: { orders: row._count.carrierOrders },
+  };
 }
 
 export class CatalogAdminRepository {
@@ -314,7 +336,7 @@ export class CatalogAdminRepository {
             },
           },
         },
-        primarySupplier: true,
+        primaryCari: true,
         variants: {
           where: {
             deleted: false,
@@ -448,7 +470,7 @@ export class CatalogAdminRepository {
         internalNote: input.internalNote ?? null,
         searchKeywords: input.searchKeywords ?? [],
         brandId: input.brandId ?? null,
-        primarySupplierId: input.primarySupplierId ?? null,
+        primaryCariId: input.primarySupplierId ?? null,
         preferredSalesWarehouseId: input.preferredSalesWarehouseId ?? null,
         preferredPurchaseWarehouseId: input.preferredPurchaseWarehouseId ?? null,
         imageUrl: input.imageUrl,
@@ -515,7 +537,7 @@ export class CatalogAdminRepository {
             },
           },
         },
-        primarySupplier: true,
+        primaryCari: true,
         variants: {
           where: {
             deleted: false,
@@ -562,7 +584,7 @@ export class CatalogAdminRepository {
         ...(input.internalNote !== undefined ? { internalNote: input.internalNote } : {}),
         ...(input.searchKeywords !== undefined ? { searchKeywords: input.searchKeywords } : {}),
         ...(input.brandId !== undefined ? { brandId: input.brandId } : {}),
-        ...(input.primarySupplierId !== undefined ? { primarySupplierId: input.primarySupplierId } : {}),
+        ...(input.primarySupplierId !== undefined ? { primaryCariId: input.primarySupplierId } : {}),
         ...(input.preferredSalesWarehouseId !== undefined ? { preferredSalesWarehouseId: input.preferredSalesWarehouseId } : {}),
         ...(input.preferredPurchaseWarehouseId !== undefined ? { preferredPurchaseWarehouseId: input.preferredPurchaseWarehouseId } : {}),
         ...(input.imageUrl !== undefined ? { imageUrl: input.imageUrl } : {}),
@@ -635,7 +657,7 @@ export class CatalogAdminRepository {
             },
           },
         },
-        primarySupplier: true,
+        primaryCari: true,
         variants: {
           where: {
             deleted: false,
@@ -815,7 +837,7 @@ export class CatalogAdminRepository {
             },
           },
         },
-        primarySupplier: true,
+        primaryCari: true,
         variants: {
           where: {
             deleted: false,
@@ -891,14 +913,16 @@ export class CatalogAdminRepository {
   }
 
   async listCarrierCompanies() {
-    return prisma.carrierCompany.findMany({
+    const rows = await prisma.cari.findMany({
       where: {
         deleted: false,
+        isCarrier: true,
       },
       include: {
+        carrierProfile: true,
         _count: {
           select: {
-            orders: {
+            carrierOrders: {
               where: {
                 deleted: false,
               },
@@ -910,82 +934,22 @@ export class CatalogAdminRepository {
         name: "asc",
       },
     });
-  }
 
-  async createCarrierCompany(input: AdminCreateCarrierCompanyInput) {
-    return prisma.carrierCompany.create({
-      data: {
-        slug: input.slug,
-        name: input.name,
-        taxNumber: input.taxNumber ?? null,
-        trackingUrlTemplate: input.trackingUrlTemplate ?? null,
-        externalCodeTrendyol: input.externalCodeTrendyol ?? null,
-        externalCodePazarama: input.externalCodePazarama ?? null,
-        externalCodeHepsiburada: input.externalCodeHepsiburada ?? null,
-        isActive: input.isActive ?? true,
-      },
-      include: {
-        _count: {
-          select: {
-            orders: {
-              where: {
-                deleted: false,
-              },
-            },
-          },
-        },
-      },
-    });
-  }
-
-  async updateCarrierCompany(input: AdminUpdateCarrierCompanyInput) {
-    return prisma.carrierCompany.update({
-      where: {
-        id: input.id,
-      },
-      data: {
-        ...(input.slug !== undefined ? { slug: input.slug } : {}),
-        ...(input.name !== undefined ? { name: input.name } : {}),
-        ...(input.taxNumber !== undefined ? { taxNumber: input.taxNumber } : {}),
-        ...(input.trackingUrlTemplate !== undefined ? { trackingUrlTemplate: input.trackingUrlTemplate } : {}),
-        ...(input.externalCodeTrendyol !== undefined ? { externalCodeTrendyol: input.externalCodeTrendyol } : {}),
-        ...(input.externalCodePazarama !== undefined ? { externalCodePazarama: input.externalCodePazarama } : {}),
-        ...(input.externalCodeHepsiburada !== undefined ? { externalCodeHepsiburada: input.externalCodeHepsiburada } : {}),
-        ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
-      },
-      include: {
-        _count: {
-          select: {
-            orders: {
-              where: {
-                deleted: false,
-              },
-            },
-          },
-        },
-      },
-    });
+    return rows.map(flattenCariCarrierRow);
   }
 
   async findActiveCarrierCompanyById(id: string) {
-    return prisma.carrierCompany.findFirst({
+    const row = await prisma.cari.findFirst({
       where: {
         id,
         deleted: false,
+        isCarrier: true,
       },
-      select: {
-        id: true,
-        slug: true,
-        name: true,
-        taxNumber: true,
-        trackingUrlTemplate: true,
-        externalCodeTrendyol: true,
-        externalCodePazarama: true,
-        externalCodeHepsiburada: true,
-        isActive: true,
+      include: {
+        carrierProfile: true,
         _count: {
           select: {
-            orders: {
+            carrierOrders: {
               where: {
                 deleted: false,
               },
@@ -994,29 +958,19 @@ export class CatalogAdminRepository {
         },
       },
     });
-  }
 
-  async softDeleteCarrierCompany(id: string, deletedUserId: string) {
-    return prisma.carrierCompany.update({
-      where: {
-        id,
-      },
-      data: {
-        deleted: true,
-        deletedDate: new Date(),
-        deletedUserId,
-      },
-    });
+    return row ? flattenCariCarrierRow(row) : null;
   }
 
   async findActiveCarrierCompanyByName(name: string) {
-    return prisma.carrierCompany.findFirst({
+    return prisma.cari.findFirst({
       where: {
         name: {
           equals: name,
           mode: "insensitive",
         },
         deleted: false,
+        isCarrier: true,
         isActive: true,
       },
       select: {
@@ -1027,9 +981,10 @@ export class CatalogAdminRepository {
   }
 
   async listSuppliers() {
-    return prisma.supplier.findMany({
+    return prisma.cari.findMany({
       where: {
         deleted: false,
+        isSupplier: true,
       },
       include: {
         _count: {
@@ -1087,61 +1042,6 @@ export class CatalogAdminRepository {
         _count: {
           select: {
             products: {
-              where: {
-                deleted: false,
-              },
-            },
-          },
-        },
-      },
-    });
-  }
-
-  async createSupplier(input: AdminCreateSupplierInput) {
-    return prisma.supplier.create({
-      data: {
-        slug: input.slug,
-        name: input.name,
-        taxNumber: input.taxNumber ?? null,
-        email: input.email ?? null,
-        phone: input.phone ?? null,
-        defaultPaymentTermDays: input.defaultPaymentTermDays ?? null,
-        creditLimit: input.creditLimit != null ? new Prisma.Decimal(input.creditLimit) : null,
-        isActive: input.isActive ?? true,
-      },
-      include: {
-        _count: {
-          select: {
-            primaryProducts: {
-              where: {
-                deleted: false,
-              },
-            },
-          },
-        },
-      },
-    });
-  }
-
-  async updateSupplier(input: AdminUpdateSupplierInput) {
-    return prisma.supplier.update({
-      where: {
-        id: input.id,
-      },
-      data: {
-        ...(input.slug !== undefined ? { slug: input.slug } : {}),
-        ...(input.name !== undefined ? { name: input.name } : {}),
-        ...(input.taxNumber !== undefined ? { taxNumber: input.taxNumber ?? null } : {}),
-        ...(input.email !== undefined ? { email: input.email ?? null } : {}),
-        ...(input.phone !== undefined ? { phone: input.phone ?? null } : {}),
-        ...(input.defaultPaymentTermDays !== undefined ? { defaultPaymentTermDays: input.defaultPaymentTermDays ?? null } : {}),
-        ...(input.creditLimit !== undefined ? { creditLimit: input.creditLimit != null ? new Prisma.Decimal(input.creditLimit) : null } : {}),
-        ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
-      },
-      include: {
-        _count: {
-          select: {
-            primaryProducts: {
               where: {
                 deleted: false,
               },
@@ -1388,10 +1288,11 @@ export class CatalogAdminRepository {
   }
 
   async findActiveSupplierById(id: string) {
-    return prisma.supplier.findFirst({
+    return prisma.cari.findFirst({
       where: {
         id,
         deleted: false,
+        isSupplier: true,
         isActive: true,
       },
       select: {
@@ -1413,19 +1314,6 @@ export class CatalogAdminRepository {
             },
           },
         },
-      },
-    });
-  }
-
-  async softDeleteSupplier(id: string, deletedUserId: string) {
-    return prisma.supplier.update({
-      where: {
-        id,
-      },
-      data: {
-        deleted: true,
-        deletedDate: new Date(),
-        deletedUserId,
       },
     });
   }
@@ -1464,19 +1352,6 @@ export class CatalogAdminRepository {
         deleted: true,
         deletedDate: new Date(),
         deletedUserId,
-      },
-    });
-  }
-
-  async findActiveSupplierBySlug(slug: string) {
-    return prisma.supplier.findFirst({
-      where: {
-        slug,
-        deleted: false,
-        isActive: true,
-      },
-      select: {
-        id: true,
       },
     });
   }

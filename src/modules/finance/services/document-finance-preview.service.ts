@@ -50,8 +50,8 @@ export class DocumentFinancePreviewService {
         occurredAt: link.createdAt.toISOString(),
         financeHref: document.orderId
           ? `/${locale}/admin/finance/collections/${document.orderId}`
-          : document.supplierId
-            ? `/${locale}/admin/finance/payments/${encodeURIComponent(document.supplierId)}`
+          : document.cariId
+            ? `/${locale}/admin/finance/payments/${encodeURIComponent(document.cariId)}`
             : null,
       });
 
@@ -131,8 +131,8 @@ export class DocumentFinancePreviewService {
         amount: record.amount.toNumber(),
         currency: record.currency,
         occurredAt: record.paidAt.toISOString(),
-        financeHref: document.supplierId
-          ? `/${locale}/admin/finance/payments/${encodeURIComponent(document.supplierId)}`
+        financeHref: document.cariId
+          ? `/${locale}/admin/finance/payments/${encodeURIComponent(document.cariId)}`
           : null,
       });
 

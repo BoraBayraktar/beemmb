@@ -73,10 +73,10 @@ function mapTransaction(
     note: item.note,
     counterpartyKind: item.counterpartyKind,
     counterpartyName: item.counterpartyName,
-    customerAccountId: item.customerAccountId,
-    supplierId: item.supplierId,
-    customerAccountSlug: item.customerAccount?.slug ?? null,
-    supplierSlug: item.supplier?.slug ?? null,
+    customerAccountId: item.counterpartyKind === "CUSTOMER" ? item.cariId : null,
+    supplierId: item.counterpartyKind === "SUPPLIER" ? item.cariId : null,
+    customerAccountSlug: item.counterpartyKind === "CUSTOMER" ? item.cari?.slug ?? null : null,
+    supplierSlug: item.counterpartyKind === "SUPPLIER" ? item.cari?.slug ?? null : null,
     sourceReferenceId: item.sourceReferenceId,
   };
 }

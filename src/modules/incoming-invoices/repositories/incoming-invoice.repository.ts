@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import type { AdminIncomingInvoiceListQuery } from "@/modules/incoming-invoices/contracts/incoming-invoice.contract";
 
 const detailInclude = {
-  supplier: { select: { id: true, name: true } },
+  cari: { select: { id: true, name: true } },
   providerConfig: { select: { id: true, displayName: true } },
   lines: { orderBy: { createdAt: "asc" as const } },
   xmlArtifact: true,
@@ -33,7 +33,7 @@ export class IncomingInvoiceRepository {
       skip: (args.page - 1) * args.pageSize,
       take: args.pageSize,
       include: {
-        supplier: { select: { id: true, name: true } },
+        cari: { select: { id: true, name: true } },
         xmlArtifact: { select: { id: true } },
         _count: { select: { lines: true } },
       },
@@ -68,8 +68,8 @@ export class IncomingInvoiceRepository {
   }
 
   async findSupplierByTaxNumber(taxNumber: string) {
-    return prisma.supplier.findFirst({
-      where: { taxNumber, deleted: false },
+    return prisma.cari.findFirst({
+      where: { taxNumber, isSupplier: true, deleted: false },
       select: { id: true, name: true },
     });
   }
@@ -128,7 +128,7 @@ export class IncomingInvoiceRepository {
         dueDate: args.dueDate ?? null,
         currency: args.currency,
         totalAmount: new Prisma.Decimal(args.totalAmount),
-        supplierId: args.supplierId ?? null,
+        cariId: args.supplierId ?? null,
         counterpartyName: args.counterpartyName,
         counterpartyTaxNumber: args.counterpartyTaxNumber ?? null,
         counterpartyTaxOffice: args.counterpartyTaxOffice ?? null,
@@ -194,7 +194,7 @@ export class IncomingInvoiceRepository {
         issueDate: args.issueDate,
         currency: args.currency,
         totalAmount: new Prisma.Decimal(args.totalAmount),
-        supplierId: args.supplierId ?? null,
+        cariId: args.supplierId ?? null,
         providerConfigId: args.providerConfigId ?? null,
         externalReference: args.externalReference ?? null,
         counterpartyName: args.counterpartyName,
@@ -370,7 +370,7 @@ export class IncomingInvoiceRepository {
         issueDate: true,
         currency: true,
         status: true,
-        supplierId: true,
+        cariId: true,
         note: true,
         lines: {
           select: { id: true, productName: true, lineTotal: true, unitPrice: true, quantity: true },

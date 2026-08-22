@@ -81,19 +81,14 @@ function computeDueMetrics(dueDate: Date, status: NegotiableInstrumentStatus) {
 
 function resolveCounterpartyDisplayName(record: {
   counterpartyName: string | null;
-  customerAccount?: { name?: string; slug: string } | null;
-  supplier?: { name?: string; slug: string } | null;
+  cari?: { name?: string; slug: string } | null;
 }) {
   if (record.counterpartyName) {
     return record.counterpartyName;
   }
 
-  if (record.customerAccount?.name) {
-    return record.customerAccount.name;
-  }
-
-  if (record.supplier?.name) {
-    return record.supplier.name;
+  if (record.cari?.name) {
+    return record.cari.name;
   }
 
   return null;
@@ -114,8 +109,8 @@ function mapListItem(record: Awaited<ReturnType<typeof negotiableInstrumentRepos
     dueDate: record.dueDate.toISOString(),
     issueDate: record.issueDate ? record.issueDate.toISOString() : null,
     counterpartyName: resolveCounterpartyDisplayName(record),
-    customerAccountSlug: record.customerAccount?.slug ?? null,
-    supplierSlug: record.supplier?.slug ?? null,
+    customerAccountSlug: record.counterpartyKind === "CUSTOMER" ? record.cari?.slug ?? null : null,
+    supplierSlug: record.counterpartyKind === "SUPPLIER" ? record.cari?.slug ?? null : null,
     isOverdue: dueMetrics.isOverdue,
     daysUntilDue: dueMetrics.daysUntilDue,
     detailHref: `/${locale}/admin/finance/instruments/${record.id}`,

@@ -32,8 +32,7 @@ export class NegotiableInstrumentRepository {
           : {}),
       },
       include: {
-        customerAccount: { select: { slug: true, name: true } },
-        supplier: { select: { slug: true, name: true } },
+        cari: { select: { slug: true, name: true } },
       },
       orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
       take: 500,
@@ -47,8 +46,7 @@ export class NegotiableInstrumentRepository {
         deleted: false,
       },
       include: {
-        customerAccount: { select: { slug: true, name: true } },
-        supplier: { select: { slug: true, name: true } },
+        cari: { select: { slug: true, name: true } },
         financialAccount: { select: { id: true, name: true, currency: true, isActive: true } },
         cashTransaction: { select: { id: true } },
       },
@@ -72,10 +70,23 @@ export class NegotiableInstrumentRepository {
     createdByUserId?: string | null;
   }) {
     return (prisma as any).negotiableInstrument.create({
-      data,
+      data: {
+        instrumentNumber: data.instrumentNumber,
+        instrumentType: data.instrumentType,
+        direction: data.direction,
+        amount: data.amount,
+        currency: data.currency,
+        dueDate: data.dueDate,
+        issueDate: data.issueDate ?? null,
+        counterpartyKind: data.counterpartyKind,
+        cariId: data.customerAccountId ?? data.supplierId ?? null,
+        counterpartyName: data.counterpartyName ?? null,
+        endorserName: data.endorserName ?? null,
+        note: data.note ?? null,
+        createdByUserId: data.createdByUserId ?? null,
+      },
       include: {
-        customerAccount: { select: { slug: true, name: true } },
-        supplier: { select: { slug: true, name: true } },
+        cari: { select: { slug: true, name: true } },
       },
     });
   }
@@ -94,8 +105,7 @@ export class NegotiableInstrumentRepository {
         ...(args.cashTransactionId !== undefined ? { cashTransactionId: args.cashTransactionId } : {}),
       },
       include: {
-        customerAccount: { select: { slug: true, name: true } },
-        supplier: { select: { slug: true, name: true } },
+        cari: { select: { slug: true, name: true } },
         financialAccount: { select: { id: true, name: true } },
         cashTransaction: { select: { id: true } },
       },
@@ -137,8 +147,7 @@ export class NegotiableInstrumentRepository {
           title: args.cashTransaction.title,
           note: args.cashTransaction.note ?? null,
           counterpartyKind: args.cashTransaction.counterpartyKind ?? "UNREGISTERED",
-          customerAccountId: args.cashTransaction.customerAccountId ?? null,
-          supplierId: args.cashTransaction.supplierId ?? null,
+          cariId: args.cashTransaction.customerAccountId ?? args.cashTransaction.supplierId ?? null,
           counterpartyName: args.cashTransaction.counterpartyName ?? null,
           sourceReferenceId: args.cashTransaction.sourceReferenceId ?? null,
           createdByUserId: args.cashTransaction.createdByUserId ?? null,
@@ -153,8 +162,7 @@ export class NegotiableInstrumentRepository {
           cashTransactionId: cash.id,
         },
         include: {
-          customerAccount: { select: { slug: true, name: true } },
-          supplier: { select: { slug: true, name: true } },
+          cari: { select: { slug: true, name: true } },
           financialAccount: { select: { id: true, name: true } },
           cashTransaction: { select: { id: true } },
         },

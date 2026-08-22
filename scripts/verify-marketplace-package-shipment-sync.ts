@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
-import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
+import { cariService } from "@/modules/cari/services/cari.service";
 import { syncOrderShipmentFromPackageStatus } from "@/modules/integration/services/marketplace-package-shipment-sync.service";
 
 const baseUrl = process.env.APP_URL || "http://localhost:3001";
@@ -48,9 +48,10 @@ async function main() {
 
   // --- Bolum 1: syncOrderShipmentFromPackageStatus dogrudan servis testi (dis API cagrisi yok) ---
 
-  const carrier = await catalogAdminService.createCarrierCompany({
+  const carrier = await cariService.createCari({
     slug: `shipment-sync-carrier-${unique}`,
     name: `Shipment Sync Carrier ${unique}`,
+    isCarrier: true,
   });
 
   const product = await prisma.product.create({
@@ -106,7 +107,7 @@ async function main() {
   });
   const afterInvoiced = await prisma.order.findUnique({ where: { id: order.id } });
   assert(afterInvoiced?.shipmentStatus === "SHIPPED", `Invoiced sonrasi SHIPPED beklenirdi, ${afterInvoiced?.shipmentStatus} geldi`);
-  assert(afterInvoiced?.carrierCompanyId === carrier.id, "carrierCompanyId eslesmeli");
+  assert(afterInvoiced?.carrierCariId === carrier.id, "carrierCariId eslesmeli");
   assert(afterInvoiced?.cargoTrackingNumber === "TRK-SYNC-1", "cargoTrackingNumber eslesmeli");
   assert(afterInvoiced?.cargoShippedAt !== null, "cargoShippedAt set edilmeli");
 
@@ -165,7 +166,7 @@ async function main() {
   await prisma.orderItem.deleteMany({ where: { orderId: order.id } });
   await prisma.order.delete({ where: { id: order.id } });
   await prisma.product.delete({ where: { id: product.id } });
-  await catalogAdminService.softDeleteCarrierCompany(carrier.id, "system");
+  await cariService.deleteCari(carrier.id, "system");
 
   console.log("Marketplace package shipment sync verification passed");
 }

@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
-import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
+import { cariService } from "@/modules/cari/services/cari.service";
 import { commerceService } from "@/modules/commerce/services/commerce.service";
 
 const baseUrl = process.env.APP_URL || "http://localhost:3001";
@@ -46,9 +46,10 @@ async function authFetch(path: string, cookie: string, options: RequestInit = {}
 async function main() {
   const unique = Date.now();
 
-  const carrier = await catalogAdminService.createCarrierCompany({
+  const carrier = await cariService.createCari({
     slug: `report-carrier-${unique}`,
     name: `Report Carrier ${unique}`,
+    isCarrier: true,
     trackingUrlTemplate: "https://kargo.example.com/takip?kod={trackingNumber}",
   });
 
@@ -62,7 +63,7 @@ async function main() {
       status: "CONFIRMED",
       subtotal: 10,
       total: 10,
-      carrierCompanyId: carrier.id,
+      carrierCariId: carrier.id,
       shipmentStatus: "DELIVERED",
       cargoTrackingNumber: "TRK-REPORT-1",
       cargoShippedAt: shippedAt,
@@ -77,7 +78,7 @@ async function main() {
       status: "CONFIRMED",
       subtotal: 10,
       total: 10,
-      carrierCompanyId: carrier.id,
+      carrierCariId: carrier.id,
       shipmentStatus: "DELIVERED",
       cargoTrackingNumber: "TRK-REPORT-2",
       cargoShippedAt: shippedAt,
@@ -92,7 +93,7 @@ async function main() {
       status: "CONFIRMED",
       subtotal: 10,
       total: 10,
-      carrierCompanyId: carrier.id,
+      carrierCariId: carrier.id,
       shipmentStatus: "SHIPPED",
       cargoTrackingNumber: "TRK-REPORT-3",
     },
@@ -133,7 +134,7 @@ async function main() {
 
     const deliveredItem = filteredByShipmentStatus.items.find((item) => item.id === orderDelivered1.id);
     assert(deliveredItem, "Filtrelenen sonuclar arasinda beklenen siparis bulunmali");
-    assert(deliveredItem!.carrierTrackingUrlTemplate === carrier.trackingUrlTemplate, "Liste ogesi carrier takip linki sablonunu tasimali");
+    assert(deliveredItem!.carrierTrackingUrlTemplate === carrier.carrierProfile?.trackingUrlTemplate, "Liste ogesi carrier takip linki sablonunu tasimali");
 
     // --- Bolum 3: HTTP katmani (API route + query param gecisi) ---
     const adminCookie = await login("admin@beemmb.local", "Admin123!");
@@ -169,7 +170,7 @@ async function main() {
     await prisma.orderStatusHistory.deleteMany({ where: { orderId: { in: orderIds } } });
     await prisma.orderPaymentStatusHistory.deleteMany({ where: { orderId: { in: orderIds } } });
     await prisma.order.deleteMany({ where: { id: { in: orderIds } } });
-    await catalogAdminService.softDeleteCarrierCompany(carrier.id, "system");
+    await cariService.deleteCari(carrier.id, "system");
   }
 }
 

@@ -14,7 +14,7 @@ export class FinanceRepository {
       where: {
         deleted: false,
         status: "CONFIRMED",
-        customerAccountId: {
+        cariId: {
           not: null,
         },
         paymentStatus: {
@@ -30,7 +30,7 @@ export class FinanceRepository {
           : {}),
       },
       include: {
-        customerAccount: {
+        cari: {
           select: {
             id: true,
             name: true,
@@ -79,7 +79,7 @@ export class FinanceRepository {
         id: orderId,
         deleted: false,
         status: "CONFIRMED",
-        customerAccountId: {
+        cariId: {
           not: null,
         },
         paymentStatus: {
@@ -87,7 +87,7 @@ export class FinanceRepository {
         },
       },
       include: {
-        customerAccount: {
+        cari: {
           select: {
             id: true,
             name: true,
@@ -130,7 +130,7 @@ export class FinanceRepository {
       where: {
         deleted: false,
         status: "CONFIRMED",
-        customerAccountId: {
+        cariId: {
           not: null,
         },
         paymentStatus: {
@@ -152,7 +152,7 @@ export class FinanceRepository {
     const baseWhere = {
       deleted: false,
       status: "CONFIRMED" as const,
-      customerAccountId: {
+      cariId: {
         not: null,
       },
     };
@@ -203,7 +203,7 @@ export class FinanceRepository {
       where: {
         deleted: false,
         status: "CONFIRMED",
-        customerAccountId: {
+        cariId: {
           not: null,
         },
         paymentStatus: {
@@ -214,7 +214,7 @@ export class FinanceRepository {
         total: true,
         currency: true,
         createdAt: true,
-        customerAccount: {
+        cari: {
           select: {
             defaultPaymentTermDays: true,
           },
@@ -303,11 +303,11 @@ export class FinanceRepository {
     });
   }
 
-  async listPaymentRecords(supplierIds?: string[]) {
+  async listPaymentRecords(cariIds?: string[]) {
     return prisma.paymentRecord.findMany({
       where: {
         deleted: false,
-        ...(supplierIds && supplierIds.length > 0 ? { supplierId: { in: supplierIds } } : {}),
+        ...(cariIds && cariIds.length > 0 ? { cariId: { in: cariIds } } : {}),
       },
       orderBy: [
         { paidAt: "desc" },
@@ -327,21 +327,22 @@ export class FinanceRepository {
   }) {
     return prisma.paymentRecord.create({
       data: {
-        supplierId: args.supplierId,
+        cariId: args.supplierId,
         financialAccountId: args.financialAccountId ?? null,
         amount: args.amount,
         currency: args.currency,
         paidAt: args.paidAt,
         note: args.note ?? null,
         recordedByUserId: args.recordedByUserId,
-      } as any,
+      },
     });
   }
 
   async findSupplierById(id: string) {
-    return prisma.supplier.findFirst({
+    return prisma.cari.findFirst({
       where: {
         id,
+        isSupplier: true,
         deleted: false,
       },
       select: {
@@ -354,169 +355,23 @@ export class FinanceRepository {
     });
   }
 
-  async findSupplierByName(name: string) {
-    return prisma.supplier.findFirst({
-      where: {
-        name,
-        deleted: false,
-      },
-      select: {
-        id: true,
-        name: true,
-      },
-    });
+  async listCollectionRecordsForOrders(orderIds: string[]) {
+    if (orderIds.length === 0) {
+      return [];
+    }
+
+    return this.listCollectionRecords(orderIds);
   }
 
-  async listSuppliers() {
-    return prisma.supplier.findMany({
-      where: {
-        deleted: false,
-      },
-      select: {
-        id: true,
-        slug: true,
-        name: true,
-        taxNumber: true,
-        isActive: true,
-      },
-      orderBy: {
-        name: "asc",
-      },
-    });
+  async listBusinessDocumentsForSupplier(supplierId: string) {
+    return this.listBusinessDocumentsForCari(supplierId);
   }
 
-  async searchSuppliers(args: { search?: string; limit?: number }) {
-    const search = args.search?.trim();
-    return prisma.supplier.findMany({
-      where: {
-        deleted: false,
-        ...(search
-          ? {
-              OR: [
-                { name: { contains: search, mode: "insensitive" as const } },
-                { slug: { contains: search, mode: "insensitive" as const } },
-                { taxNumber: { contains: search, mode: "insensitive" as const } },
-              ],
-            }
-          : {}),
-      },
-      select: {
-        id: true,
-        slug: true,
-        name: true,
-        taxNumber: true,
-        isActive: true,
-      },
-      orderBy: {
-        name: "asc",
-      },
-      take: args.limit ?? 20,
-    });
-  }
-
-  async searchCustomerAccounts(args: { search?: string; limit?: number }) {
-    const search = args.search?.trim();
-    return prisma.customerAccount.findMany({
-      where: {
-        deleted: false,
-        ...(search
-          ? {
-              OR: [
-                { name: { contains: search, mode: "insensitive" as const } },
-                { slug: { contains: search, mode: "insensitive" as const } },
-                { email: { contains: search, mode: "insensitive" as const } },
-                { taxNumber: { contains: search, mode: "insensitive" as const } },
-              ],
-            }
-          : {}),
-      },
-      select: {
-        id: true,
-        slug: true,
-        name: true,
-        email: true,
-        taxNumber: true,
-        isActive: true,
-      },
-      orderBy: [
-        { isActive: "desc" },
-        { name: "asc" },
-      ],
-      take: args.limit ?? 20,
-    });
-  }
-
-  async findCustomerAccountBySlug(slug: string) {
-    return prisma.customerAccount.findFirst({
-      where: {
-        slug,
-        deleted: false,
-      },
-    });
-  }
-
-  async findCustomerAccountById(id: string) {
-    return prisma.customerAccount.findFirst({
-      where: {
-        id,
-        deleted: false,
-      },
-    });
-  }
-
-  async findSupplierBySlug(slug: string) {
-    return prisma.supplier.findFirst({
-      where: {
-        slug,
-        deleted: false,
-      },
-      select: {
-        id: true,
-        slug: true,
-        name: true,
-        taxNumber: true,
-        isActive: true,
-        defaultPaymentTermDays: true,
-        creditLimit: true,
-      },
-    });
-  }
-
-  async listCashTransactionsForCustomerAccount(customerAccountId: string) {
-    return ((prisma as any).cashTransaction).findMany({
-      where: {
-        deleted: false,
-        status: "RECORDED",
-        customerAccountId,
-      },
-      orderBy: [
-        { transactionAt: "desc" },
-        { createdAt: "desc" },
-      ],
-      take: 200,
-    });
-  }
-
-  async listCashTransactionsForSupplier(supplierId: string) {
-    return ((prisma as any).cashTransaction).findMany({
-      where: {
-        deleted: false,
-        status: "RECORDED",
-        supplierId,
-      },
-      orderBy: [
-        { transactionAt: "desc" },
-        { createdAt: "desc" },
-      ],
-      take: 200,
-    });
-  }
-
-  async listOrdersForCustomerAccount(customerAccountId: string) {
+  async listOrdersForCari(cariId: string) {
     return prisma.order.findMany({
       where: {
         deleted: false,
-        customerAccountId,
+        cariId,
         status: "CONFIRMED",
       },
       orderBy: {
@@ -534,41 +389,26 @@ export class FinanceRepository {
     });
   }
 
-  async listCollectionRecordsForOrders(orderIds: string[]) {
-    if (orderIds.length === 0) {
-      return [];
-    }
-
-    return this.listCollectionRecords(orderIds);
-  }
-
-  async listBusinessDocumentsForCustomerAccount(customerAccountId: string) {
-    return prisma.businessDocument.findMany({
+  async listCashTransactionsForCari(cariId: string) {
+    return ((prisma as any).cashTransaction).findMany({
       where: {
         deleted: false,
-        customerAccountId,
+        status: "RECORDED",
+        cariId,
       },
-      orderBy: {
-        issueDate: "desc",
-      },
-      take: 100,
-      select: {
-        id: true,
-        documentNumber: true,
-        documentType: true,
-        status: true,
-        issueDate: true,
-        totalAmount: true,
-        currency: true,
-      },
+      orderBy: [
+        { transactionAt: "desc" },
+        { createdAt: "desc" },
+      ],
+      take: 200,
     });
   }
 
-  async listBusinessDocumentsForSupplier(supplierId: string) {
+  async listBusinessDocumentsForCari(cariId: string) {
     return prisma.businessDocument.findMany({
       where: {
         deleted: false,
-        supplierId,
+        cariId,
       },
       orderBy: {
         issueDate: "desc",
@@ -593,11 +433,11 @@ export class FinanceRepository {
         deleted: false,
       },
       select: {
-        customerAccountId: true,
+        cariId: true,
       },
     });
 
-    return order?.customerAccountId ?? null;
+    return order?.cariId ?? null;
   }
 
   async listFinancialAccounts(args: { search?: string; type?: "CASH" | "BANK" }) {
@@ -702,12 +542,7 @@ export class FinanceRepository {
             name: true,
           },
         },
-        customerAccount: {
-          select: {
-            slug: true,
-          },
-        },
-        supplier: {
+        cari: {
           select: {
             slug: true,
           },
@@ -760,12 +595,7 @@ export class FinanceRepository {
             name: true,
           },
         },
-        customerAccount: {
-          select: {
-            slug: true,
-          },
-        },
-        supplier: {
+        cari: {
           select: {
             slug: true,
           },
@@ -807,8 +637,7 @@ export class FinanceRepository {
         title: args.title,
         note: args.note ?? null,
         counterpartyKind: args.counterpartyKind ?? "UNREGISTERED",
-        customerAccountId: args.customerAccountId ?? null,
-        supplierId: args.supplierId ?? null,
+        cariId: args.customerAccountId ?? args.supplierId ?? null,
         counterpartyName: args.counterpartyName ?? null,
         sourceReferenceId: args.sourceReferenceId ?? null,
         createdByUserId: args.createdByUserId ?? null,
@@ -820,12 +649,7 @@ export class FinanceRepository {
             name: true,
           },
         },
-        customerAccount: {
-          select: {
-            slug: true,
-          },
-        },
-        supplier: {
+        cari: {
           select: {
             slug: true,
           },
@@ -978,7 +802,7 @@ export class FinanceRepository {
       where: {
         businessDocument: {
           deleted: false,
-          supplierId,
+          cariId: supplierId,
         },
       },
       include: {
@@ -1010,7 +834,7 @@ export class FinanceRepository {
             id: true,
             documentNumber: true,
             orderId: true,
-            supplierId: true,
+            cariId: true,
             currency: true,
           },
         },
@@ -1028,7 +852,7 @@ export class FinanceRepository {
         id: true,
         documentNumber: true,
         orderId: true,
-        supplierId: true,
+        cariId: true,
         totalAmount: true,
         currency: true,
         issueDate: true,
@@ -1186,7 +1010,7 @@ export class FinanceRepository {
       where: {
         deleted: false,
         paymentRecord: {
-          supplierId,
+          cariId: supplierId,
         },
       },
       include: {
@@ -1228,13 +1052,7 @@ export class FinanceRepository {
             type: true,
           },
         },
-        customerAccount: {
-          select: {
-            slug: true,
-            name: true,
-          },
-        },
-        supplier: {
+        cari: {
           select: {
             slug: true,
             name: true,

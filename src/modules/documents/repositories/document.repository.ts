@@ -60,8 +60,7 @@ export class DocumentRepository {
         ],
       },
       include: {
-        supplier: { select: { id: true } },
-        customerAccount: { select: { id: true } },
+        cari: { select: { id: true } },
         order: { select: { id: true, orderNumber: true } },
         inventoryTransaction: { select: { id: true, transactionNumber: true } },
         providerConfig: { select: { id: true, displayName: true } },
@@ -171,8 +170,7 @@ export class DocumentRepository {
       skip: (args.page - 1) * args.pageSize,
       take: args.pageSize,
       include: {
-        supplier: { select: { id: true } },
-        customerAccount: { select: { id: true } },
+        cari: { select: { id: true } },
         order: { select: { id: true, orderNumber: true } },
         inventoryTransaction: { select: { id: true, transactionNumber: true } },
         providerConfig: { select: { id: true, displayName: true } },
@@ -251,8 +249,7 @@ export class DocumentRepository {
       },
       orderBy: [{ issueDate: "desc" }, { createdAt: "desc" }],
       include: {
-        supplier: { select: { id: true } },
-        customerAccount: { select: { id: true } },
+        cari: { select: { id: true } },
         order: { select: { id: true, orderNumber: true } },
         inventoryTransaction: { select: { id: true, transactionNumber: true } },
         providerConfig: { select: { id: true, displayName: true } },
@@ -298,8 +295,7 @@ export class DocumentRepository {
       },
       orderBy: [{ counterpartyName: "asc" }, { issueDate: "desc" }],
       include: {
-        supplier: { select: { id: true } },
-        customerAccount: { select: { id: true } },
+        cari: { select: { id: true } },
         order: { select: { id: true, orderNumber: true } },
         inventoryTransaction: { select: { id: true, transactionNumber: true } },
         providerConfig: { select: { id: true, displayName: true } },
@@ -312,6 +308,7 @@ export class DocumentRepository {
     return (prisma.businessDocument as any).findFirst({
       where: { id, deleted: false },
       include: {
+        cari: { select: { id: true, defaultPaymentTermDays: true } },
         order: { select: { id: true, orderNumber: true } },
         inventoryTransaction: { select: { id: true, transactionNumber: true } },
         providerConfig: { select: { id: true, displayName: true } },
@@ -518,8 +515,7 @@ export class DocumentRepository {
         externalReference: args.input.externalReference ?? null,
         externalSystemStatus: args.input.externalSystemStatus ?? "NOT_SENT",
         providerConfigId: args.resolvedProviderConfigId ?? null,
-        supplierId: args.resolvedSupplierId ?? null,
-        customerAccountId: args.resolvedCustomerAccountId ?? null,
+        cariId: args.resolvedSupplierId ?? args.resolvedCustomerAccountId ?? null,
         counterpartyName: args.resolvedCounterpartyName,
         counterpartyTaxNumber: args.resolvedCounterpartyTaxNumber ?? null,
         counterpartyTaxOffice: args.input.counterpartyTaxOffice ?? null,
@@ -545,8 +541,7 @@ export class DocumentRepository {
         },
       },
       include: {
-        supplier: { select: { id: true } },
-        customerAccount: { select: { id: true } },
+        cari: { select: { id: true } },
         order: { select: { id: true, orderNumber: true } },
         inventoryTransaction: { select: { id: true, transactionNumber: true } },
         providerConfig: { select: { id: true, displayName: true } },
@@ -627,8 +622,7 @@ export class DocumentRepository {
         externalReference: sourceDocument.externalReference,
         externalSystemStatus: "NOT_SENT",
         providerConfigId: sourceDocument.providerConfigId,
-        supplierId: sourceDocument.supplierId,
-        customerAccountId: sourceDocument.customerAccountId,
+        cariId: sourceDocument.cariId,
         counterpartyName: sourceDocument.counterpartyName,
         counterpartyTaxNumber: sourceDocument.counterpartyTaxNumber,
         counterpartyTaxOffice: sourceDocument.counterpartyTaxOffice,
@@ -666,8 +660,7 @@ export class DocumentRepository {
         },
       },
       include: {
-        supplier: { select: { id: true } },
-        customerAccount: { select: { id: true } },
+        cari: { select: { id: true } },
         order: { select: { id: true, orderNumber: true } },
         inventoryTransaction: { select: { id: true, transactionNumber: true } },
         providerConfig: { select: { id: true, displayName: true } },
@@ -699,8 +692,7 @@ export class DocumentRepository {
         ...(args.note !== undefined ? { note: args.note } : {}),
       },
       include: {
-        supplier: { select: { id: true } },
-        customerAccount: { select: { id: true } },
+        cari: { select: { id: true } },
         order: { select: { id: true, orderNumber: true } },
         inventoryTransaction: { select: { id: true, transactionNumber: true } },
         providerConfig: { select: { id: true, displayName: true } },

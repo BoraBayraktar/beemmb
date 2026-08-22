@@ -3,7 +3,7 @@ import { z } from "zod";
 import { buildDocumentDueFields } from "@/modules/finance/services/finance-due-date.util";
 
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
-import { customerAccountService } from "@/modules/customers/services/customer-account.service";
+import { cariService } from "@/modules/cari/services/cari.service";
 import type {
   AdminBusinessDocumentDetail,
   AdminBusinessDocumentListItem,
@@ -161,10 +161,9 @@ function toNumber(value: { toNumber: () => number } | null | undefined) {
 }
 
 function resolveDocumentPaymentTermDays(item: {
-  supplier?: { defaultPaymentTermDays?: number | null } | null;
-  customerAccount?: { defaultPaymentTermDays?: number | null } | null;
+  cari?: { defaultPaymentTermDays?: number | null } | null;
 }) {
-  return item.supplier?.defaultPaymentTermDays ?? item.customerAccount?.defaultPaymentTermDays ?? null;
+  return item.cari?.defaultPaymentTermDays ?? null;
 }
 
 function mapDocument(item: Awaited<ReturnType<DocumentRepository["findBusinessDocumentById"]>> extends infer T ? NonNullable<T> : never): AdminBusinessDocumentDetail {
@@ -191,8 +190,8 @@ function mapDocument(item: Awaited<ReturnType<DocumentRepository["findBusinessDo
     externalSystemStatus: item.externalSystemStatus,
     providerConfigId: item.providerConfig?.id ?? null,
     providerDisplayName: item.providerConfig?.displayName ?? null,
-    supplierId: item.supplier?.id ?? null,
-    customerAccountId: item.customerAccount?.id ?? null,
+    supplierId: (item.documentType === "PURCHASE_DOCUMENT" || item.documentType === "DELIVERY_NOTE") ? item.cari?.id ?? null : null,
+    customerAccountId: (item.documentType === "E_INVOICE" || item.documentType === "E_DISPATCH") ? item.cari?.id ?? null : null,
     counterpartyName: item.counterpartyName,
     counterpartyTaxNumber: item.counterpartyTaxNumber,
     counterpartyTaxOffice: item.counterpartyTaxOffice,
@@ -391,8 +390,8 @@ function mapDocumentListItem(item: Awaited<ReturnType<DocumentRepository["listBu
     externalSystemStatus: item.externalSystemStatus,
     providerConfigId: item.providerConfig?.id ?? null,
     providerDisplayName: item.providerConfig?.displayName ?? null,
-    supplierId: item.supplier?.id ?? null,
-    customerAccountId: item.customerAccount?.id ?? null,
+    supplierId: (item.documentType === "PURCHASE_DOCUMENT" || item.documentType === "DELIVERY_NOTE") ? item.cari?.id ?? null : null,
+    customerAccountId: (item.documentType === "E_INVOICE" || item.documentType === "E_DISPATCH") ? item.cari?.id ?? null : null,
     counterpartyName: item.counterpartyName,
     orderId: item.order?.id ?? null,
     orderNumber: item.order?.orderNumber ?? null,
@@ -569,7 +568,7 @@ export class DocumentService {
       ? (await catalogAdminService.listSuppliers()).find((item) => item.id === parsed.supplierId) ?? null
       : null;
     const selectedCustomerAccount = !requiresSupplier && parsed.customerAccountId
-      ? await customerAccountService.getCustomerAccountById(parsed.customerAccountId)
+      ? await cariService.getCariById(parsed.customerAccountId)
       : null;
 
     if (parsed.orderNumber && !orderSource) {

@@ -1,6 +1,6 @@
 import type { AdminCounterpartyFinanceTerms } from "@/modules/finance/contracts/counterparty-finance-terms.contract";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
-import { customerAccountService } from "@/modules/customers/services/customer-account.service";
+import { cariService } from "@/modules/cari/services/cari.service";
 import { resolveEffectivePaymentTermDays } from "@/modules/finance/services/finance-due-date.util";
 import { resolveCounterpartyFinanceTermsCopy } from "@/modules/finance/services/finance-counterparty-finance-terms-copy.resolver";
 
@@ -42,7 +42,7 @@ export class FinanceCounterpartyFinanceTermsService {
       return null;
     }
 
-    const customer = await customerAccountService.getCustomerAccountById(customerAccountId);
+    const customer = await cariService.getCariById(customerAccountId);
     if (!customer) {
       return null;
     }

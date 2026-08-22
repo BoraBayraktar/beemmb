@@ -480,7 +480,7 @@ export class CommerceRepository {
       const order = await (tx.order as any).create({
         data: {
           orderNumber: args.orderNumber,
-          customerAccountId: args.customerAccountId ?? null,
+          cariId: args.customerAccountId ?? null,
           status: "CONFIRMED",
           paymentStatus: "PENDING",
           subtotal: args.subtotal,
@@ -498,7 +498,7 @@ export class CommerceRepository {
           invoiceCity: args.invoiceCity ?? null,
           invoiceDistrict: args.invoiceDistrict ?? null,
           invoicePostalCode: args.invoicePostalCode ?? null,
-          carrierCompanyId: args.carrierCompanyId ?? null,
+          carrierCariId: args.carrierCompanyId ?? null,
           cargoTrackingNumber: args.cargoTrackingNumber ?? null,
           shipmentSourceChannel: args.shipmentSourceChannel ?? null,
           externalCarrierNameRaw: args.externalCarrierNameRaw ?? null,
@@ -632,21 +632,25 @@ export class CommerceRepository {
         ...(args.status ? { status: args.status } : {}),
         ...(args.paymentStatus ? { paymentStatus: args.paymentStatus } : {}),
         ...(args.shipmentStatus ? { shipmentStatus: args.shipmentStatus } : {}),
-        ...(args.carrierCompanyId ? { carrierCompanyId: args.carrierCompanyId } : {}),
+        ...(args.carrierCompanyId ? { carrierCariId: args.carrierCompanyId } : {}),
       },
       include: {
-        customerAccount: {
+        cari: {
           select: {
             id: true,
             name: true,
             email: true,
           },
         },
-        carrierCompany: {
+        carrierCari: {
           select: {
             id: true,
             name: true,
-            trackingUrlTemplate: true,
+            carrierProfile: {
+              select: {
+                trackingUrlTemplate: true,
+              },
+            },
           },
         },
         items: {
@@ -694,7 +698,7 @@ export class CommerceRepository {
         ...(args.status ? { status: args.status } : {}),
         ...(args.paymentStatus ? { paymentStatus: args.paymentStatus } : {}),
         ...(args.shipmentStatus ? { shipmentStatus: args.shipmentStatus } : {}),
-        ...(args.carrierCompanyId ? { carrierCompanyId: args.carrierCompanyId } : {}),
+        ...(args.carrierCompanyId ? { carrierCariId: args.carrierCompanyId } : {}),
       },
     });
   }
@@ -705,8 +709,8 @@ export class CommerceRepository {
         deleted: false,
       },
       select: {
-        carrierCompanyId: true,
-        carrierCompany: {
+        carrierCariId: true,
+        carrierCari: {
           select: {
             name: true,
           },
@@ -763,14 +767,14 @@ export class CommerceRepository {
         deleted: false,
       },
       include: {
-        customerAccount: {
+        cari: {
           select: {
             id: true,
             name: true,
             email: true,
           },
         },
-        carrierCompany: {
+        carrierCari: {
           select: {
             id: true,
             name: true,
@@ -893,7 +897,7 @@ export class CommerceRepository {
         ...(args.invoiceCity !== undefined ? { invoiceCity: args.invoiceCity } : {}),
         ...(args.invoiceDistrict !== undefined ? { invoiceDistrict: args.invoiceDistrict } : {}),
         ...(args.invoicePostalCode !== undefined ? { invoicePostalCode: args.invoicePostalCode } : {}),
-        ...(args.carrierCompanyId !== undefined ? { carrierCompanyId: args.carrierCompanyId } : {}),
+        ...(args.carrierCompanyId !== undefined ? { carrierCariId: args.carrierCompanyId } : {}),
         ...(args.cargoTrackingNumber !== undefined ? { cargoTrackingNumber: args.cargoTrackingNumber } : {}),
         ...(args.cargoShippedAt !== undefined ? { cargoShippedAt: args.cargoShippedAt } : {}),
         ...(args.cargoDeliveredAt !== undefined ? { cargoDeliveredAt: args.cargoDeliveredAt } : {}),
@@ -1268,7 +1272,7 @@ export class CommerceRepository {
         id: orderId,
       },
       data: {
-        customerAccountId,
+        cariId: customerAccountId,
       },
     });
   }
