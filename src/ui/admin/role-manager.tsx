@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import type { AdminMenuItem } from "@/ui/admin/admin-menu";
 
 type Permission = {
   id: string;
@@ -14,6 +15,23 @@ type Permission = {
   module: string;
   name: string;
 };
+
+function collectMenuPermissionKeys(items: AdminMenuItem[]): Set<string> {
+  const keys = new Set<string>();
+
+  for (const item of items) {
+    if (item.permissionKey) {
+      keys.add(item.permissionKey);
+    }
+    if (item.children) {
+      for (const key of collectMenuPermissionKeys(item.children)) {
+        keys.add(key);
+      }
+    }
+  }
+
+  return keys;
+}
 
 type Role = {
   id: string;
@@ -29,6 +47,7 @@ type Role = {
 type Props = {
   initialRoles: Role[];
   permissions: Permission[];
+  menuTree: AdminMenuItem[];
   labels: {
     title: string;
     subtitle: string;
@@ -36,7 +55,9 @@ type Props = {
     key: string;
     name: string;
     description: string;
-    permissions: string;
+    menuAccessTitle: string;
+    menuAccessHint: string;
+    otherPermissionsTitle: string;
     save: string;
     create: string;
     cancel: string;
@@ -60,7 +81,7 @@ const emptyForm = {
   permissionKeys: [] as string[],
 };
 
-export function RoleManager({ initialRoles, permissions, labels }: Props) {
+export function RoleManager({ initialRoles, permissions, menuTree, labels }: Props) {
   const [roles, setRoles] = useState(initialRoles);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -68,7 +89,9 @@ export function RoleManager({ initialRoles, permissions, labels }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const groupedPermissions = permissions.reduce<Record<string, Permission[]>>((groups, permission) => {
+  const menuPermissionKeys = collectMenuPermissionKeys(menuTree);
+  const otherPermissions = permissions.filter((permission) => !menuPermissionKeys.has(permission.key));
+  const groupedOtherPermissions = otherPermissions.reduce<Record<string, Permission[]>>((groups, permission) => {
     groups[permission.module] = [...(groups[permission.module] ?? []), permission];
     return groups;
   }, {});
@@ -246,21 +269,50 @@ export function RoleManager({ initialRoles, permissions, labels }: Props) {
                   {labels.active}
                 </label>
                 <div className="grid gap-3">
-                  <p className="text-sm font-semibold text-[color:var(--color-text)]">{labels.permissions}</p>
-                  {Object.entries(groupedPermissions).map(([module, modulePermissions]) => (
-                    <div key={module} className="rounded-xl border border-[color:var(--color-border)] p-3">
-                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.permissionModules[module] ?? module}</p>
+                  <div>
+                    <p className="text-sm font-semibold text-[color:var(--color-text)]">{labels.menuAccessTitle}</p>
+                    <p className="mt-0.5 text-xs text-[color:var(--color-text-muted)]">{labels.menuAccessHint}</p>
+                  </div>
+                  {menuTree.map((group) => (
+                    <div key={group.href} className="rounded-xl border border-[color:var(--color-border)] p-3">
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{group.label}</p>
                       <div className="grid gap-2">
-                        {modulePermissions.map((permission) => (
-                          <label key={permission.key} className="flex items-center gap-2 text-sm text-[color:var(--color-text)]">
-                            <input type="checkbox" checked={form.permissionKeys.includes(permission.key)} onChange={() => togglePermission(permission.key)} />
-                            {permission.name}
+                        {(group.children ?? [group]).map((item) => (
+                          <label key={`${group.href}-${item.href}-${item.permissionKey}`} className="flex items-center gap-2 text-sm text-[color:var(--color-text)]">
+                            <input
+                              type="checkbox"
+                              checked={Boolean(item.permissionKey) && form.permissionKeys.includes(item.permissionKey!)}
+                              onChange={() => item.permissionKey && togglePermission(item.permissionKey)}
+                              disabled={!item.permissionKey}
+                            />
+                            {item.label}
                           </label>
                         ))}
                       </div>
                     </div>
                   ))}
                 </div>
+
+                {otherPermissions.length > 0 ? (
+                  <details className="rounded-xl border border-[color:var(--color-border)] p-3">
+                    <summary className="cursor-pointer select-none text-sm font-semibold text-[color:var(--color-text)]">{labels.otherPermissionsTitle}</summary>
+                    <div className="mt-3 grid gap-3">
+                      {Object.entries(groupedOtherPermissions).map(([module, modulePermissions]) => (
+                        <div key={module} className="rounded-xl border border-[color:var(--color-border)] p-3">
+                          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.permissionModules[module] ?? module}</p>
+                          <div className="grid gap-2">
+                            {modulePermissions.map((permission) => (
+                              <label key={permission.key} className="flex items-center gap-2 text-sm text-[color:var(--color-text)]">
+                                <input type="checkbox" checked={form.permissionKeys.includes(permission.key)} onChange={() => togglePermission(permission.key)} />
+                                {permission.name}
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                ) : null}
               </div>
               <div className="flex shrink-0 justify-end gap-2 border-t border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-5">
                 <Button type="button" variant="secondary" onClick={closeDrawer} disabled={loading}>{labels.cancel}</Button>

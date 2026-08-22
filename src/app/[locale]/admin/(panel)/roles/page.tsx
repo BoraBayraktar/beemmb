@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
+import { buildAdminMenuTree } from "@/ui/admin/admin-menu";
 import { RoleManager } from "@/ui/admin/role-manager";
 
 export default async function AdminRolesPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -27,11 +28,13 @@ export default async function AdminRolesPage({ params }: { params: Promise<{ loc
     rbacService.listRoles(),
     rbacService.listPermissions(),
   ]);
+  const menuTree = buildAdminMenuTree(dictionary, locale as Locale);
 
   return (
     <RoleManager
       initialRoles={roles}
       permissions={permissions}
+      menuTree={menuTree}
       labels={{
         title: dictionary.admin.roleManager,
         subtitle: dictionary.admin.roleManagerSubtitle,
@@ -39,7 +42,9 @@ export default async function AdminRolesPage({ params }: { params: Promise<{ loc
         key: dictionary.admin.roleKey,
         name: dictionary.admin.name,
         description: dictionary.admin.description,
-        permissions: dictionary.admin.permissions,
+        menuAccessTitle: dictionary.admin.menuAccessTitle,
+        menuAccessHint: dictionary.admin.menuAccessHint,
+        otherPermissionsTitle: dictionary.admin.otherPermissionsTitle,
         save: dictionary.admin.save,
         create: dictionary.admin.create,
         cancel: dictionary.admin.cancel,

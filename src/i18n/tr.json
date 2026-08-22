@@ -799,7 +799,9 @@
     "newRole": "Yeni Rol",
     "roleKey": "Rol Anahtarı",
     "roles": "Roller",
-    "permissions": "Yetkiler",
+    "menuAccessTitle": "Menü Erişimi",
+    "menuAccessHint": "Bu rolün yönetim panelinde hangi menüleri göreceğini seçin.",
+    "otherPermissionsTitle": "Diğer Teknik Yetkiler",
     "permissionModules": {
       "admin": "Admin paneli",
       "audit": "İşlem kayıtları",
