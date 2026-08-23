@@ -179,8 +179,7 @@ export class PaymentsService {
       transactionAt: parsed.paidAt,
       title: `Ödeme • ${payable.supplierName}`,
       note: parsed.note ?? `Tedarikçi ödemesi • ${payable.supplierName}`,
-      counterpartyKind: "SUPPLIER",
-      supplierId: supplier.id,
+      cariId: supplier.id,
       counterpartyName: payable.supplierName,
       recordedByUserId: parsed.recordedByUserId,
     });

@@ -6,11 +6,15 @@ import { useEffect, useState, useTransition } from "react";
 import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MoneyInput } from "@/components/ui/money-input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Textarea } from "@/components/ui/textarea";
 import type {
   AdminCashTransactionCategory,
-  AdminCashTransactionCounterpartyKind,
   AdminCashTransactionDirection,
   AdminCashTransactionSourceType,
   AdminCashTransactionsResult,
@@ -44,12 +48,10 @@ type Labels = {
   category: string;
   note: string;
   counterparty: string;
-  counterpartyKind: string;
-  counterpartyCustomer: string;
-  counterpartySupplier: string;
   counterpartyUnregistered: string;
   counterpartySearch: string;
-  counterpartySelected: string;
+  counterpartySelectPlaceholder: string;
+  counterpartyEmpty: string;
   openLedger: string;
   createTitle: string;
   createAction: string;
@@ -69,6 +71,8 @@ type Props = {
   initialAccountId: string;
   labels: Labels;
 };
+
+const ALL_ACCOUNTS = "__all_accounts__";
 
 function formatMoney(value: number, currency: string) {
   return new Intl.NumberFormat("tr-TR", {
@@ -125,6 +129,7 @@ export function CashTransactionsManager({
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [filterAccountId, setFilterAccountId] = useState(initialAccountId || ALL_ACCOUNTS);
   const [form, setForm] = useState({
     accountId: initialAccountId || accountOptions[0]?.id || "",
     targetAccountId: "",
@@ -134,15 +139,13 @@ export function CashTransactionsManager({
     amount: "",
     title: "",
     note: "",
-    counterpartyKind: "CUSTOMER" as AdminCashTransactionCounterpartyKind,
-    customerAccountId: "",
-    supplierId: "",
+    cariId: "",
     counterpartyName: "",
     useUnregisteredCounterparty: false,
   });
   const [counterpartySearch, setCounterpartySearch] = useState("");
   const [counterpartyOptions, setCounterpartyOptions] = useState<AdminFinanceCounterpartyOption[]>([]);
-  const [selectedCounterparty, setSelectedCounterparty] = useState<AdminFinanceCounterpartyOption | null>(null);
+  const [counterpartyLoading, setCounterpartyLoading] = useState(false);
 
   useEffect(() => {
     if (!drawerOpen || form.direction === "TRANSFER" || form.useUnregisteredCounterparty) {
@@ -150,18 +153,22 @@ export function CashTransactionsManager({
     }
 
     const timeout = window.setTimeout(async () => {
-      const kind = form.counterpartyKind === "CUSTOMER" ? "CUSTOMER" : form.counterpartyKind === "SUPPLIER" ? "SUPPLIER" : "all";
-      const response = await fetch(`/api/admin/finance/counterparties?search=${encodeURIComponent(counterpartySearch)}&kind=${kind}`);
-      if (!response.ok) {
-        return;
-      }
+      setCounterpartyLoading(true);
+      try {
+        const response = await fetch(`/api/admin/finance/counterparties?search=${encodeURIComponent(counterpartySearch)}`);
+        if (!response.ok) {
+          return;
+        }
 
-      const payload = await response.json() as { items: AdminFinanceCounterpartyOption[] };
-      setCounterpartyOptions(payload.items ?? []);
+        const payload = await response.json() as { items: AdminFinanceCounterpartyOption[] };
+        setCounterpartyOptions(payload.items ?? []);
+      } finally {
+        setCounterpartyLoading(false);
+      }
     }, 250);
 
     return () => window.clearTimeout(timeout);
-  }, [counterpartySearch, drawerOpen, form.counterpartyKind, form.direction, form.useUnregisteredCounterparty]);
+  }, [counterpartySearch, drawerOpen, form.direction, form.useUnregisteredCounterparty]);
 
   function resetForm() {
     setForm((current) => ({
@@ -174,15 +181,12 @@ export function CashTransactionsManager({
       amount: "",
       title: "",
       note: "",
-      counterpartyKind: "CUSTOMER",
-      customerAccountId: "",
-      supplierId: "",
+      cariId: "",
       counterpartyName: "",
       useUnregisteredCounterparty: false,
     }));
     setCounterpartySearch("");
     setCounterpartyOptions([]);
-    setSelectedCounterparty(null);
   }
 
   function openCreateDrawer() {
@@ -220,9 +224,7 @@ export function CashTransactionsManager({
             amount: Number(form.amount || "0"),
             title: form.title,
             note: form.note.trim() || null,
-            counterpartyKind: form.useUnregisteredCounterparty ? "UNREGISTERED" : form.counterpartyKind,
-            customerAccountId: form.useUnregisteredCounterparty ? null : form.counterpartyKind === "CUSTOMER" ? form.customerAccountId || null : null,
-            supplierId: form.useUnregisteredCounterparty ? null : form.counterpartyKind === "SUPPLIER" ? form.supplierId || null : null,
+            cariId: form.useUnregisteredCounterparty ? null : form.cariId || null,
             counterpartyName: form.useUnregisteredCounterparty ? form.counterpartyName.trim() || null : null,
           }),
         });
@@ -258,12 +260,18 @@ export function CashTransactionsManager({
       <div className="p-5">
         <form action={`/${locale}/admin/finance/transactions`} className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_280px_auto]">
           <Input type="search" name="search" defaultValue={initialSearch} placeholder={labels.search} />
-          <select name="accountId" defaultValue={initialAccountId} className="h-10 rounded-xl border border-[color:var(--color-border)] px-3 text-sm text-[color:var(--color-text)]">
-            <option value="">{labels.account}</option>
-            {accountOptions.map((option) => (
-              <option key={option.id} value={option.id}>{option.label}</option>
-            ))}
-          </select>
+          <input type="hidden" name="accountId" value={filterAccountId === ALL_ACCOUNTS ? "" : filterAccountId} />
+          <Select value={filterAccountId} onValueChange={setFilterAccountId}>
+            <SelectTrigger>
+              <SelectValue placeholder={labels.account} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_ACCOUNTS}>{labels.account}</SelectItem>
+              {accountOptions.map((option) => (
+                <SelectItem key={option.id} value={option.id}>{option.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button type="submit" variant="secondary">
             {labels.search}
           </Button>
@@ -363,84 +371,102 @@ export function CashTransactionsManager({
             <form className="grid gap-4 p-5" onSubmit={submitTransaction}>
               <div className="grid gap-2">
                 <Label>{labels.account}</Label>
-                <select value={form.accountId} onChange={(event) => setForm((current) => ({ ...current, accountId: event.target.value }))} className="h-10 rounded-xl border border-[color:var(--color-border)] px-3 text-sm text-[color:var(--color-text)]">
-                  <option value="">{labels.account}</option>
-                  {accountOptions.map((option) => (
-                    <option key={option.id} value={option.id}>{option.label}</option>
-                  ))}
-                </select>
+                <Select value={form.accountId} onValueChange={(value) => setForm((current) => ({ ...current, accountId: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={labels.account} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {accountOptions.map((option) => (
+                      <SelectItem key={option.id} value={option.id}>{option.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
                 <Label>{labels.allDirections}</Label>
-                <select
+                <Select
                   value={form.direction}
-                  onChange={(event) => {
-                    const nextDirection = event.target.value as AdminCashTransactionDirection;
+                  onValueChange={(value) => {
+                    const nextDirection = value as AdminCashTransactionDirection;
                     setForm((current) => ({
                       ...current,
                       direction: nextDirection,
                       sourceType: nextDirection === "TRANSFER" ? "TRANSFER" : nextDirection === "OUT" ? current.sourceType : "MANUAL",
                       category: nextDirection === "TRANSFER" ? "TRANSFER" : nextDirection === "IN" ? "GENERAL_INCOME" : current.sourceType === "REFUND" ? "REFUND" : "GENERAL_EXPENSE",
-                      counterpartyKind: nextDirection === "OUT" ? "SUPPLIER" : nextDirection === "IN" ? "CUSTOMER" : current.counterpartyKind,
-                      customerAccountId: "",
-                      supplierId: "",
+                      cariId: "",
                     }));
-                    setSelectedCounterparty(null);
                   }}
-                  className="h-10 rounded-xl border border-[color:var(--color-border)] px-3 text-sm text-[color:var(--color-text)]"
                 >
-                  <option value="IN">{labels.incoming}</option>
-                  <option value="OUT">{labels.outgoing}</option>
-                  <option value="TRANSFER">{labels.transfer}</option>
-                </select>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="IN">{labels.incoming}</SelectItem>
+                    <SelectItem value="OUT">{labels.outgoing}</SelectItem>
+                    <SelectItem value="TRANSFER">{labels.transfer}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
                 <Label>{labels.sourceType}</Label>
-                <select
+                <Select
                   value={form.sourceType}
-                  onChange={(event) => {
-                    const nextSourceType = event.target.value as AdminCashTransactionSourceType;
+                  onValueChange={(value) => {
+                    const nextSourceType = value as AdminCashTransactionSourceType;
                     setForm((current) => ({
                       ...current,
                       sourceType: nextSourceType,
                       category: nextSourceType === "REFUND" ? "REFUND" : nextSourceType === "TRANSFER" ? "TRANSFER" : current.direction === "IN" ? "GENERAL_INCOME" : current.category === "REFUND" ? "GENERAL_EXPENSE" : current.category,
                     }));
                   }}
-                  className="h-10 rounded-xl border border-[color:var(--color-border)] px-3 text-sm text-[color:var(--color-text)]"
                 >
-                  <option value="MANUAL">{labels.sourceType}</option>
-                  <option value="REFUND">{labels.refund}</option>
-                  <option value="TRANSFER">{labels.transfer}</option>
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder={labels.sourceType} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="MANUAL">{labels.sourceType}</SelectItem>
+                    <SelectItem value="REFUND">{labels.refund}</SelectItem>
+                    <SelectItem value="TRANSFER">{labels.transfer}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               {form.direction === "OUT" ? (
                 <div className="grid gap-2">
                   <Label>{labels.category}</Label>
-                  <select value={form.category} onChange={(event) => setForm((current) => ({ ...current, category: event.target.value as AdminCashTransactionCategory }))} className="h-10 rounded-xl border border-[color:var(--color-border)] px-3 text-sm text-[color:var(--color-text)]">
-                    <option value="GENERAL_EXPENSE">{labels.category}</option>
-                    <option value="MARKETPLACE_COMMISSION">Pazaryeri komisyonu</option>
-                    <option value="SHIPPING_EXPENSE">Kargo gideri</option>
-                    <option value="SERVICE_FEE">Hizmet bedeli</option>
-                    <option value="REFUND">{labels.refund}</option>
-                  </select>
+                  <Select value={form.category} onValueChange={(value) => setForm((current) => ({ ...current, category: value as AdminCashTransactionCategory }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={labels.category} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="GENERAL_EXPENSE">{labels.category}</SelectItem>
+                      <SelectItem value="MARKETPLACE_COMMISSION">Pazaryeri komisyonu</SelectItem>
+                      <SelectItem value="SHIPPING_EXPENSE">Kargo gideri</SelectItem>
+                      <SelectItem value="SERVICE_FEE">Hizmet bedeli</SelectItem>
+                      <SelectItem value="REFUND">{labels.refund}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               ) : null}
               {form.direction === "TRANSFER" ? (
                 <div className="grid gap-2">
                   <Label>{labels.targetAccount}</Label>
-                  <select value={form.targetAccountId} onChange={(event) => setForm((current) => ({ ...current, targetAccountId: event.target.value }))} className="h-10 rounded-xl border border-[color:var(--color-border)] px-3 text-sm text-[color:var(--color-text)]">
-                    <option value="">{labels.targetAccount}</option>
-                    {accountOptions
-                      .filter((option) => option.id !== form.accountId)
-                      .map((option) => (
-                        <option key={option.id} value={option.id}>{option.label}</option>
-                      ))}
-                  </select>
+                  <Select value={form.targetAccountId} onValueChange={(value) => setForm((current) => ({ ...current, targetAccountId: value }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={labels.targetAccount} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {accountOptions
+                        .filter((option) => option.id !== form.accountId)
+                        .map((option) => (
+                          <SelectItem key={option.id} value={option.id}>{option.label}</SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               ) : null}
               <div className="grid gap-2">
                 <Label>{labels.amount}</Label>
-                <Input type="number" step="0.01" value={form.amount} onChange={(event) => setForm((current) => ({ ...current, amount: event.target.value }))} required />
+                <MoneyInput value={form.amount} onValueChange={(value) => setForm((current) => ({ ...current, amount: value }))} required />
               </div>
               <div className="grid gap-2">
                 <Label>{labels.titleField}</Label>
@@ -451,21 +477,16 @@ export function CashTransactionsManager({
                 {form.direction !== "TRANSFER" ? (
                   <>
                     <label className="flex items-center gap-2 text-sm text-[color:var(--color-text)]">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={form.useUnregisteredCounterparty}
-                        onChange={(event) => {
-                          const checked = event.target.checked;
+                        onCheckedChange={(checked) => {
+                          const isChecked = checked === true;
                           setForm((current) => ({
                             ...current,
-                            useUnregisteredCounterparty: checked,
-                            customerAccountId: "",
-                            supplierId: "",
-                            counterpartyName: checked ? current.counterpartyName : "",
+                            useUnregisteredCounterparty: isChecked,
+                            cariId: "",
+                            counterpartyName: isChecked ? current.counterpartyName : "",
                           }));
-                          if (checked) {
-                            setSelectedCounterparty(null);
-                          }
                         }}
                       />
                       {labels.counterpartyUnregistered}
@@ -473,55 +494,20 @@ export function CashTransactionsManager({
                     {form.useUnregisteredCounterparty ? (
                       <Input value={form.counterpartyName} onChange={(event) => setForm((current) => ({ ...current, counterpartyName: event.target.value }))} placeholder={labels.counterpartyUnregistered} />
                     ) : (
-                      <>
-                        <Label className="text-xs text-[color:var(--color-text-muted)]">{labels.counterpartyKind}</Label>
-                        <select
-                          value={form.counterpartyKind}
-                          onChange={(event) => {
-                            const nextKind = event.target.value as AdminCashTransactionCounterpartyKind;
-                            setForm((current) => ({
-                              ...current,
-                              counterpartyKind: nextKind,
-                              customerAccountId: "",
-                              supplierId: "",
-                            }));
-                            setSelectedCounterparty(null);
-                          }}
-                          className="h-10 rounded-xl border border-[color:var(--color-border)] px-3 text-sm text-[color:var(--color-text)]"
-                        >
-                          <option value="CUSTOMER">{labels.counterpartyCustomer}</option>
-                          <option value="SUPPLIER">{labels.counterpartySupplier}</option>
-                        </select>
-                        <Input value={counterpartySearch} onChange={(event) => setCounterpartySearch(event.target.value)} placeholder={labels.counterpartySearch} />
-                        {selectedCounterparty ? (
-                          <p className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-2 text-sm text-[color:var(--color-text)]">
-                            {labels.counterpartySelected}: <span className="font-medium text-[color:var(--color-text)]">{selectedCounterparty.label}</span>
-                          </p>
-                        ) : null}
-                        <div className="max-h-40 overflow-y-auto rounded-xl border border-[color:var(--color-border)]">
-                          {counterpartyOptions.length === 0 ? (
-                            <p className="p-3 text-sm text-[color:var(--color-text-muted)]">{labels.counterpartySearch}</p>
-                          ) : counterpartyOptions.map((option) => (
-                            <button
-                              key={`${option.kind}:${option.id}`}
-                              type="button"
-                              className="flex w-full flex-col items-start border-b border-[color:var(--color-border)] px-3 py-2 text-left last:border-b-0 hover:bg-[color:var(--color-bg-soft)]"
-                              onClick={() => {
-                                setSelectedCounterparty(option);
-                                setForm((current) => ({
-                                  ...current,
-                                  counterpartyKind: option.kind,
-                                  customerAccountId: option.kind === "CUSTOMER" ? option.id : "",
-                                  supplierId: option.kind === "SUPPLIER" ? option.id : "",
-                                }));
-                              }}
-                            >
-                              <span className="text-sm font-medium text-[color:var(--color-text)]">{option.label}</span>
-                              {option.subtitle ? <span className="text-xs text-[color:var(--color-text-muted)]">{option.subtitle}</span> : null}
-                            </button>
-                          ))}
-                        </div>
-                      </>
+                      <SearchableSelect
+                        value={form.cariId}
+                        onValueChange={(value) => setForm((current) => ({ ...current, cariId: value }))}
+                        options={counterpartyOptions.map((option) => ({
+                          value: option.id,
+                          label: option.label,
+                          description: option.slug,
+                        }))}
+                        placeholder={labels.counterpartySelectPlaceholder}
+                        searchPlaceholder={labels.counterpartySearch}
+                        emptyLabel={labels.counterpartyEmpty}
+                        onSearchChange={setCounterpartySearch}
+                        loading={counterpartyLoading}
+                      />
                     )}
                   </>
                 ) : (
@@ -530,7 +516,7 @@ export function CashTransactionsManager({
               </div>
               <div className="grid gap-2">
                 <Label>{labels.note}</Label>
-                <Input value={form.note} onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))} />
+                <Textarea value={form.note} onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))} rows={3} />
               </div>
               <div className="mt-2 flex items-center justify-end gap-2">
                 <Button type="button" variant="secondary" onClick={closeDrawer} disabled={isPending}>

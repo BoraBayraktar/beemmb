@@ -12,9 +12,10 @@ const SelectValue = SelectPrimitive.Value;
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
+>(({ className, children, type = "button", ...props }, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
+    type={type}
     className={cn(
       "flex h-11 w-full items-center justify-between rounded-[var(--radius-md)] border border-[color:var(--color-border)] bg-[color:var(--color-surface)]/90 px-4 py-2 text-sm text-[color:var(--color-text)] outline-none focus:border-[color:var(--color-brand)] focus:ring-2 focus:ring-[color:var(--color-brand)]/15",
       className,

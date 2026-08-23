@@ -620,8 +620,7 @@ export class FinanceRepository {
     note?: string | null;
     counterpartyName?: string | null;
     counterpartyKind?: "CUSTOMER" | "SUPPLIER" | "UNREGISTERED";
-    customerAccountId?: string | null;
-    supplierId?: string | null;
+    cariId?: string | null;
     sourceReferenceId?: string | null;
     createdByUserId?: string | null;
   }) {
@@ -637,7 +636,7 @@ export class FinanceRepository {
         title: args.title,
         note: args.note ?? null,
         counterpartyKind: args.counterpartyKind ?? "UNREGISTERED",
-        cariId: args.customerAccountId ?? args.supplierId ?? null,
+        cariId: args.cariId ?? null,
         counterpartyName: args.counterpartyName ?? null,
         sourceReferenceId: args.sourceReferenceId ?? null,
         createdByUserId: args.createdByUserId ?? null,

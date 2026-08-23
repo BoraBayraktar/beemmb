@@ -63,6 +63,7 @@ export class CariRepository {
       ? {
         OR: [
           { name: { contains: filter.search.trim(), mode: Prisma.QueryMode.insensitive } },
+          { slug: { contains: filter.search.trim(), mode: Prisma.QueryMode.insensitive } },
           { taxNumber: { contains: filter.search.trim(), mode: Prisma.QueryMode.insensitive } },
           { email: { contains: filter.search.trim(), mode: Prisma.QueryMode.insensitive } },
         ],

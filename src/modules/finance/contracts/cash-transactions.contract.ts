@@ -71,8 +71,6 @@ export type AdminCreateCashTransactionInput = {
   transactionAt?: string;
   title: string;
   note?: string | null;
-  counterpartyKind?: AdminCashTransactionCounterpartyKind;
-  customerAccountId?: string | null;
-  supplierId?: string | null;
+  cariId?: string | null;
   counterpartyName?: string | null;
 };

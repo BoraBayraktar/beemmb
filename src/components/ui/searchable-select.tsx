@@ -17,6 +17,15 @@ type Props = {
   placeholder: string;
   searchPlaceholder: string;
   emptyLabel: string;
+  /**
+   * Sağlanırsa filtreleme bu component içinde (client-side) yapılmaz —
+   * arama metni burada çağrılır ve `options` listesinin çağıran tarafından
+   * (örn. debounce'lu bir API isteğiyle) güncellenmesi beklenir.
+   */
+  onSearchChange?: (query: string) => void;
+  /** onSearchChange sağlandığında sunucu tarafı sonuçlar yüklenirken gösterilir. */
+  loading?: boolean;
+  loadingLabel?: string;
 };
 
 export function SearchableSelect({
@@ -26,13 +35,21 @@ export function SearchableSelect({
   placeholder,
   searchPlaceholder,
   emptyLabel,
+  onSearchChange,
+  loading = false,
+  loadingLabel,
 }: Props) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const isServerFiltered = Boolean(onSearchChange);
 
   const selected = options.find((item) => item.value === value) ?? null;
   const filteredOptions = useMemo(() => {
+    if (isServerFiltered) {
+      return options;
+    }
+
     const normalizedQuery = query.trim().toLocaleLowerCase("tr-TR");
     if (!normalizedQuery) {
       return options;
@@ -42,7 +59,22 @@ export function SearchableSelect({
       item.label.toLocaleLowerCase("tr-TR").includes(normalizedQuery)
       || item.description?.toLocaleLowerCase("tr-TR").includes(normalizedQuery),
     );
-  }, [options, query]);
+  }, [options, query, isServerFiltered]);
+
+  function handleQueryChange(nextQuery: string) {
+    setQuery(nextQuery);
+    onSearchChange?.(nextQuery);
+  }
+
+  function handleOpen() {
+    setOpen((current) => {
+      const next = !current;
+      if (next) {
+        onSearchChange?.(query);
+      }
+      return next;
+    });
+  }
 
   useEffect(() => {
     function handlePointer(event: MouseEvent) {
@@ -61,7 +93,7 @@ export function SearchableSelect({
     <div ref={rootRef} className="relative">
       <button
         type="button"
-        onClick={() => setOpen((current) => !current)}
+        onClick={handleOpen}
         className="flex h-11 w-full items-center justify-between rounded-2xl border border-neutral-300 bg-white px-3 text-left text-sm text-neutral-950"
       >
         <span className={selected ? "text-neutral-950" : "text-neutral-400"}>
@@ -74,12 +106,15 @@ export function SearchableSelect({
         <div className="absolute z-20 mt-2 w-full rounded-2xl border border-neutral-200 bg-white p-3 shadow-xl">
           <Input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => handleQueryChange(event.target.value)}
             placeholder={searchPlaceholder}
             className="h-10"
+            autoFocus
           />
           <div className="mt-3 max-h-64 space-y-1 overflow-y-auto">
-            {filteredOptions.length === 0 ? (
+            {loading ? (
+              <p className="px-2 py-3 text-sm text-neutral-500">{loadingLabel ?? emptyLabel}</p>
+            ) : filteredOptions.length === 0 ? (
               <p className="px-2 py-3 text-sm text-neutral-500">{emptyLabel}</p>
             ) : filteredOptions.map((item) => (
               <button

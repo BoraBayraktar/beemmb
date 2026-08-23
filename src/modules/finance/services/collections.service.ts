@@ -170,8 +170,7 @@ export class CollectionsService {
       transactionAt: parsed.collectedAt,
       title: `Tahsilat • ${receivable.orderNumber}`,
       note: parsed.note ?? `Sipariş tahsilatı • ${receivable.orderNumber}`,
-      counterpartyKind: customerAccountId ? "CUSTOMER" : "UNREGISTERED",
-      customerAccountId,
+      cariId: customerAccountId,
       counterpartyName: receivable.counterpartyName,
       recordedByUserId: parsed.recordedByUserId,
     });

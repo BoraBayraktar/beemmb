@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const result = await counterpartyLookupService.searchCounterparties({
       search: searchParams.get("search") ?? undefined,
-      kind: (searchParams.get("kind") as "all" | "CUSTOMER" | "SUPPLIER" | null) ?? undefined,
+      kind: (searchParams.get("kind") as "all" | "CUSTOMER" | "SUPPLIER" | "CARRIER" | null) ?? undefined,
     });
     return NextResponse.json(result);
   } catch (error) {

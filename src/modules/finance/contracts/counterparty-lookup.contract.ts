@@ -1,4 +1,4 @@
-export type AdminFinanceCounterpartyKind = "CUSTOMER" | "SUPPLIER";
+export type AdminFinanceCounterpartyKind = "CUSTOMER" | "SUPPLIER" | "CARRIER";
 
 export type AdminFinanceCounterpartyOption = {
   id: string;

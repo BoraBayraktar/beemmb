@@ -11,6 +11,7 @@ import type {
 } from "@/modules/finance/contracts/cash-transactions.contract";
 import type { AdminFinanceReportDateRangeQuery } from "@/modules/finance/contracts/finance-report-date-range.contract";
 import { financeRepository } from "@/modules/finance/repositories/finance.repository";
+import { cariService } from "@/modules/cari/services/cari.service";
 import { financeAllocationService } from "@/modules/finance/services/allocation.service";
 import { parseFinanceMovementReference } from "@/modules/finance/services/finance-movement-reference.service";
 import { parseFinanceReportDateRangeQuery } from "@/modules/finance/services/finance-report-date-range.util";
@@ -41,6 +42,7 @@ const createCashTransactionSchema = z.object({
   transactionAt: z.string().datetime().optional(),
   title: z.string().trim().min(2).max(160),
   note: z.string().trim().max(500).optional().nullable(),
+  cariId: z.string().trim().optional().nullable(),
   counterpartyName: z.string().trim().max(160).optional().nullable(),
   recordedByUserId: z.string().trim().min(1).optional().nullable(),
 });
@@ -263,6 +265,16 @@ export class CashTransactionsService {
       return mapTransaction(createdTarget);
     }
 
+    let counterpartyKind: "CUSTOMER" | "SUPPLIER" | "UNREGISTERED" = "UNREGISTERED";
+    if (parsed.cariId) {
+      const cari = await cariService.getCariById(parsed.cariId);
+      if (!cari) {
+        throw new Error("Geçerli bir cari kart seçin.");
+      }
+
+      counterpartyKind = cari.isSupplier ? "SUPPLIER" : "CUSTOMER";
+    }
+
     const created = await financeRepository.createCashTransaction({
       accountId: parsed.accountId,
       direction: parsed.direction,
@@ -273,6 +285,8 @@ export class CashTransactionsService {
       transactionAt,
       title: parsed.title,
       note: parsed.note ?? null,
+      counterpartyKind,
+      cariId: parsed.cariId ?? null,
       counterpartyName: parsed.counterpartyName ?? null,
       sourceReferenceId: parsed.sourceReferenceId ?? null,
       createdByUserId: parsed.recordedByUserId ?? null,
