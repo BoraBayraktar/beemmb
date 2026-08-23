@@ -1,22 +1,93 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 
-declare global {
-  var prismaClient: PrismaClient | undefined;
+import { getTenantContext } from "@/lib/tenant-context";
+
+/**
+ * Bu is-verisi modelleri, merkezi tenant-isolation extension'i uzerinden her
+ * sorguya otomatik tenantId filtresi/degeri enjekte edilerek erisilir. Faz 0'da
+ * bilincli olarak BOS birakildi (no-op) -- once altyapi kurulur, davranis
+ * degisikligi Faz 1'de modul modul, ayri onayla acilir. Yeni bir model bu
+ * listeye eklenmeden production'da tenant-scoped sayilamaz (DEVELOPMENT_RULES.md
+ * madde 7).
+ */
+const TENANT_SCOPED_MODELS = new Set<Prisma.ModelName>([]);
+
+const WHERE_MANY_OPERATIONS = new Set([
+  "findMany",
+  "findFirst",
+  "findFirstOrThrow",
+  "count",
+  "aggregate",
+  "groupBy",
+  "updateMany",
+  "deleteMany",
+]);
+const WHERE_UNIQUE_OPERATIONS = new Set(["findUnique", "findUniqueOrThrow", "update", "delete"]);
+const CREATE_OPERATIONS = new Set(["create", "upsert"]);
+
+type OperationArgs = Record<string, unknown>;
+
+function applyTenantScope(operation: string, args: OperationArgs, tenantId: string): OperationArgs {
+  if (WHERE_MANY_OPERATIONS.has(operation) || WHERE_UNIQUE_OPERATIONS.has(operation)) {
+    return { ...args, where: { ...(args.where as OperationArgs | undefined), tenantId } };
+  }
+
+  if (CREATE_OPERATIONS.has(operation)) {
+    return { ...args, data: { ...(args.data as OperationArgs | undefined), tenantId } };
+  }
+
+  if (operation === "createMany" && Array.isArray(args.data)) {
+    return { ...args, data: (args.data as OperationArgs[]).map((row) => ({ ...row, tenantId })) };
+  }
+
+  return args;
 }
 
-function createPrismaClient() {
-  return new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["query", "warn", "error"] : ["error"],
+function withTenantScope(client: PrismaClient) {
+  return client.$extends({
+    name: "tenant-isolation",
+    query: {
+      $allModels: {
+        async $allOperations({ model, operation, args, query }) {
+          if (!TENANT_SCOPED_MODELS.has(model)) {
+            return query(args);
+          }
+
+          const ctx = getTenantContext();
+          if (!ctx) {
+            throw new Error(`Tenant context olmadan tenant-scoped model erisimi engellendi: ${model}.${operation}`);
+          }
+
+          return query(applyTenantScope(operation, args, ctx.tenantId));
+        },
+      },
+    },
   });
 }
 
-function hasRequiredDelegates(client: PrismaClient | undefined): client is PrismaClient {
+type TenantScopedPrismaClient = ReturnType<typeof withTenantScope>;
+
+/** $transaction((tx) => ...) callback'lerinde kullanilacak tx parametre tipi -- extension'li client'in kendi transaction-client tipi, plain Prisma.TransactionClient DEGIL. */
+export type PrismaTransactionClient = Omit<TenantScopedPrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$extends" | "$use">;
+
+declare global {
+  var prismaClient: TenantScopedPrismaClient | undefined;
+}
+
+function createPrismaClient(): TenantScopedPrismaClient {
+  const client = new PrismaClient({
+    log: process.env.NODE_ENV === "development" ? ["query", "warn", "error"] : ["error"],
+  });
+  return withTenantScope(client);
+}
+
+function hasRequiredDelegates(client: TenantScopedPrismaClient | undefined): client is TenantScopedPrismaClient {
   if (!client) {
     return false;
   }
 
   // In dev, schema/client can change while global cache still holds an older instance.
-  const delegateCheck = client as PrismaClient & {
+  const delegateCheck = client as unknown as {
     productReview?: unknown;
     productQuestion?: unknown;
     inventoryAlert?: unknown;

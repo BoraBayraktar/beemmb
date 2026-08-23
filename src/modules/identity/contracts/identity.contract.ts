@@ -2,6 +2,7 @@ export type UserRole = "ADMIN" | "EDITOR" | "CUSTOMER";
 
 export type AuthUser = {
   id: string;
+  tenantId: string;
   email: string;
   name: string;
   role: UserRole;

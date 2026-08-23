@@ -57,6 +57,36 @@ Tum yeni gelistirmeler ve refactor islemleri bu kurallara uygun yapilmalidir.
   - Degilse varsayilan yuzey yerine detay katmanina alinmalidir.
 - Modul tasariminda “kucuk isletme / buyuk isletme” gibi kullaniciya acik etiketlemeler yapilmaz; sade deneyim varsayilan olur, derinlik ihtiyac halinde acilir.
 
+## 7) Multi-Tenant ve Veri Izolasyonu Kurallari
+
+- Beemmb, tek kod tabaninda hem kendi ic admin paneli hem de modul bazinda
+  baska sirketlere satilabilen bir SaaS platformu olarak calisir. Her sirket
+  bir Tenant'tir; her kullanici tam olarak bir Tenant'a aittir (coklu-tenant
+  uyelik yoktur).
+- Menude bir ogenin gorunmesi icin IKI kontrol de gecmelidir: (1) kullanicinin
+  rolunde o menu ogesine ait izin VE (2) tenant'in aboneliginde o modulun
+  entitlement'i acik. Ikisinden biri eksikse menu ogesi hic gorunmez.
+- Her yeni is-verisi modeli tenantId alani tasimak ZORUNDADIR.
+- Global @unique alan tanimlamak YASAKTIR; her unique kisit @@unique([tenantId, ...])
+  seklinde tenant-composite olmalidir. Istisna: Tenant, ModuleCatalog, Permission gibi
+  platform-geneli katalog modelleri.
+- Tum Prisma sorgulari src/lib/prisma.ts'teki merkezi tenant-isolation extension'i
+  uzerinden gecer; hicbir modul kendi PrismaClient ornegini olusturamaz.
+- Yeni bir is-verisi modeli TENANT_SCOPED_MODELS listesine eklenmeden production'a
+  alinamaz; bu liste kod incelemesinde zorunlu kontrol noktasidir.
+- Redis cache key'leri src/lib/cache-key.ts icindeki buildTenantCacheKey() uzerinden
+  uretilir; ham string concat ile tenant-scoped cache key yazmak YASAKTIR.
+- Yeni bir satilabilir modul eklenirken admin-menu.ts'teki node'a moduleKey atanmasi ve
+  ModuleCatalog'a karsilik gelen kaydin seed edilmesi ZORUNLUDUR.
+- isSuperAdmin bayragi yalnizca RBAC izin kontrolunde gecerlidir (Beemmb'nin platform
+  operatoru oldugunu gosterir); veri sorgusu seviyesinde hicbir modul bu bayragi
+  izolasyon bypass sebebi olarak kullanamaz.
+- Platform yonetimi (Tenant/ModuleCatalog/TenantModuleEntitlement CRUD) sadece
+  src/modules/platform icinden, requirePlatformOperator() guard'i ile yapilir; bu
+  modul asla is-verisi modeli sorgulamaz.
+- Postgres Row-Level Security (RLS) gelecekteki bir sertlestirme fazidir; RLS gelene
+  kadar uygulama-katmani izolasyonu (Prisma extension) tek guvenlik sinirdir.
+
 ## Uygulama Notu
 
 - Kod incelemesi, lint ve mimari kontroller bu dosyaya gore yapilir.

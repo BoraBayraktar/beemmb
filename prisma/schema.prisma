@@ -1589,8 +1589,67 @@ model StorefrontItem {
   @@index([targetType])
 }
 
+model Tenant {
+  id               String                    @id @default(cuid())
+  slug             String                    @unique
+  name             String
+  legalName        String?
+  taxNumber        String?
+  contactEmail     String
+  contactPhone     String?
+  status           TenantStatus              @default(ACTIVE)
+  isPlatformTenant Boolean                   @default(false)
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  deleted          Boolean                   @default(false)
+  deletedDate      DateTime?
+  deletedUserId    String?
+  users            User[]
+  entitlements     TenantModuleEntitlement[]
+
+  @@index([deleted, status])
+}
+
+enum TenantStatus {
+  ACTIVE
+  TRIAL
+  SUSPENDED
+  ARCHIVED
+}
+
+model ModuleCatalog {
+  id           String                    @id @default(cuid())
+  key          String                    @unique
+  name         String
+  description  String?
+  sortOrder    Int                       @default(0)
+  isActive     Boolean                   @default(true)
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+  entitlements TenantModuleEntitlement[]
+}
+
+model TenantModuleEntitlement {
+  id              String        @id @default(cuid())
+  tenantId        String
+  moduleKey       String
+  isEnabled       Boolean       @default(true)
+  validFrom       DateTime?
+  validUntil      DateTime?
+  grantedByUserId String?
+  note            String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  module          ModuleCatalog @relation(fields: [moduleKey], references: [key], onDelete: Restrict)
+
+  @@unique([tenantId, moduleKey])
+  @@index([tenantId, isEnabled])
+}
+
 model User {
   id                       String                   @id @default(cuid())
+  tenantId                 String
   email                    String                   @unique
   name                     String
   passwordHash             String
@@ -1601,6 +1660,7 @@ model User {
   deleted                  Boolean                  @default(false)
   deletedDate              DateTime?
   deletedUserId            String?
+  tenant                   Tenant                   @relation(fields: [tenantId], references: [id])
   notifications            UserNotification[]
   socialAccounts           SocialAccount[]
   inventoryPreference      UserInventoryPreference?
@@ -1608,6 +1668,7 @@ model User {
   roleAssignments          UserRoleAssignment[]
 
   @@index([deleted])
+  @@index([tenantId])
 }
 
 model Role {

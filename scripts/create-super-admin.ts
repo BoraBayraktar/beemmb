@@ -33,6 +33,9 @@ async function main() {
       deletedUserId: null,
     },
     create: {
+      // "tenant-beemmb-platform" -- prisma/migrations/20260823120000_add_tenant_saas_foundation
+      // migration'inda seed edilen varsayilan platform tenant'inin sabit id'si.
+      tenantId: "tenant-beemmb-platform",
       email,
       name,
       passwordHash,

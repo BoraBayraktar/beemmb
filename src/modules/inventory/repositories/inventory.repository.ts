@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 
-import { prisma } from "@/lib/prisma";
+import { prisma, type PrismaTransactionClient } from "@/lib/prisma";
 import type {
   AdminInventoryExportHistoryItem,
   AdminInventoryListPreferences,
@@ -77,7 +77,7 @@ export class InventoryRepository {
   private readonly serializableRetryCount = 3;
 
   private async resolveInventoryTarget(
-    tx: Prisma.TransactionClient,
+    tx: PrismaTransactionClient,
     args: { productId: string; variantId?: string },
   ) {
     const product = await tx.product.findFirst({
@@ -183,7 +183,7 @@ export class InventoryRepository {
   }
 
   private async runSerializableTransaction<T>(
-    operation: (tx: Prisma.TransactionClient) => Promise<T>,
+    operation: (tx: PrismaTransactionClient) => Promise<T>,
   ): Promise<T> {
     for (let attempt = 1; attempt <= this.serializableRetryCount; attempt += 1) {
       try {
@@ -207,7 +207,7 @@ export class InventoryRepository {
   }
 
   private async createInventoryTransaction(
-    tx: Prisma.TransactionClient,
+    tx: PrismaTransactionClient,
     args: {
       type: "MANUAL_ADJUSTMENT" | "STOCK_IN" | "STOCK_OUT" | "TRANSFER" | "STOCK_COUNT";
       reference?: string | null;
@@ -247,7 +247,7 @@ export class InventoryRepository {
   }
 
   // Product.stock is a legacy summary. Aggregate truth always comes from active inventory levels.
-  private async recalculateProductStock(tx: Prisma.TransactionClient, productId: string) {
+  private async recalculateProductStock(tx: PrismaTransactionClient, productId: string) {
     const activeLevels = await tx.inventoryLevel.findMany({
       where: {
         inventoryItem: {

@@ -98,6 +98,7 @@ async function main() {
       deletedUserId: null,
     },
     create: {
+      tenantId: "tenant-beemmb-platform",
       email: "admin@beemmb.local",
       name: "Admin User",
       role: "ADMIN",
@@ -116,6 +117,7 @@ async function main() {
       deletedUserId: null,
     },
     create: {
+      tenantId: "tenant-beemmb-platform",
       email: "editor@beemmb.local",
       name: "Editor User",
       role: "EDITOR",

@@ -50,6 +50,7 @@ async function main() {
       deletedUserId: null,
     },
     create: {
+      tenantId: "tenant-beemmb-platform",
       email: "admin@beemmb.local",
       name: "BEEMMB Admin",
       passwordHash: adminPasswordHash,
@@ -70,6 +71,7 @@ async function main() {
       deletedUserId: null,
     },
     create: {
+      tenantId: "tenant-beemmb-platform",
       email: "customer@beemmb.local",
       name: "BEEMMB Customer",
       passwordHash: customerPasswordHash,
@@ -90,6 +92,7 @@ async function main() {
       deletedUserId: null,
     },
     create: {
+      tenantId: "tenant-beemmb-platform",
       email: "editor@beemmb.local",
       name: "BEEMMB Editor",
       passwordHash: editorPasswordHash,

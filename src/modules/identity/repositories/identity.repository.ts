@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { PLATFORM_TENANT_ID } from "@/lib/tenant-defaults";
 
 export class IdentityRepository {
   async findByEmail(email: string) {
@@ -9,6 +10,7 @@ export class IdentityRepository {
       },
       select: {
         id: true,
+        tenantId: true,
         email: true,
         name: true,
         role: true,
@@ -26,6 +28,7 @@ export class IdentityRepository {
       },
       select: {
         id: true,
+        tenantId: true,
         email: true,
         name: true,
         role: true,
@@ -139,6 +142,7 @@ export class IdentityRepository {
   }) {
     return prisma.user.create({
       data: {
+        tenantId: PLATFORM_TENANT_ID,
         email: input.email,
         name: input.name,
         role: input.role,
@@ -211,6 +215,7 @@ export class IdentityRepository {
   async createCustomer(input: { email: string; name: string; passwordHash: string }) {
     return prisma.user.create({
       data: {
+        tenantId: PLATFORM_TENANT_ID,
         email: input.email,
         name: input.name,
         role: "CUSTOMER",
@@ -218,6 +223,7 @@ export class IdentityRepository {
       },
       select: {
         id: true,
+        tenantId: true,
         email: true,
         name: true,
         role: true,
@@ -252,6 +258,7 @@ export class IdentityRepository {
         user: {
           select: {
             id: true,
+            tenantId: true,
             email: true,
             name: true,
             role: true,
@@ -272,6 +279,7 @@ export class IdentityRepository {
   }) {
     return prisma.user.create({
       data: {
+        tenantId: PLATFORM_TENANT_ID,
         email: input.email,
         name: input.name,
         role: "CUSTOMER",
@@ -286,6 +294,7 @@ export class IdentityRepository {
       },
       select: {
         id: true,
+        tenantId: true,
         email: true,
         name: true,
         role: true,

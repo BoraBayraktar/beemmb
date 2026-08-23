@@ -143,6 +143,7 @@ export class IdentityService {
 
     const user: AuthUser = {
       id: created.id,
+      tenantId: created.tenantId,
       email: created.email,
       name: created.name,
       role: created.role,
@@ -167,6 +168,7 @@ export class IdentityService {
 
     const user: AuthUser = {
       id: account.id,
+      tenantId: account.tenantId,
       email: account.email,
       name: account.name,
       role: account.role,
@@ -202,6 +204,7 @@ export class IdentityService {
 
       const user: AuthUser = {
         id: account.id,
+        tenantId: account.tenantId,
         email: account.email,
         name: account.name,
         role: account.role,
@@ -363,6 +366,7 @@ export class IdentityService {
 
       return this.createSessionForUser({
         id: existing.id,
+        tenantId: existing.tenantId,
         email: existing.email,
         name: existing.name,
         role: existing.role,

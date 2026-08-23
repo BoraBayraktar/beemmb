@@ -63,6 +63,7 @@ async function main() {
       deletedUserId: null,
     },
     create: {
+      tenantId: "tenant-beemmb-platform",
       email: "admin@beemmb.local",
       name: "Admin User",
       role: "ADMIN",

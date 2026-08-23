@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 
-import { prisma } from "@/lib/prisma";
+import { prisma, type PrismaTransactionClient } from "@/lib/prisma";
 import type { AdminOrderListQuery, CommerceLineQuote } from "@/modules/commerce/contracts/commerce.contract";
 
 export class CommerceRepository {
@@ -11,7 +11,7 @@ export class CommerceRepository {
   }
 
   private async runSerializableTransaction<T>(
-    operation: (tx: Prisma.TransactionClient) => Promise<T>,
+    operation: (tx: PrismaTransactionClient) => Promise<T>,
   ): Promise<T> {
     for (let attempt = 1; attempt <= this.serializableRetryCount; attempt += 1) {
       try {
@@ -43,7 +43,7 @@ export class CommerceRepository {
     return levels.reduce((sum, level) => sum + this.toAvailableStock(level.onHand, level.reserved), 0);
   }
 
-  private async getOrCreateDefaultWarehouse(tx: Prisma.TransactionClient) {
+  private async getOrCreateDefaultWarehouse(tx: PrismaTransactionClient) {
     const defaultWarehouse = await tx.warehouse.findFirst({
       where: {
         isActive: true,
@@ -78,7 +78,7 @@ export class CommerceRepository {
     });
   }
 
-  private async ensureInventoryState(tx: Prisma.TransactionClient, productId: string) {
+  private async ensureInventoryState(tx: PrismaTransactionClient, productId: string) {
     const product = await tx.product.findFirst({
       where: {
         id: productId,
@@ -203,7 +203,7 @@ export class CommerceRepository {
   }
 
   private async recalculateProductStockSummary(
-    tx: Prisma.TransactionClient,
+    tx: PrismaTransactionClient,
     productId: string,
     inventoryItemId: string,
   ) {
@@ -236,7 +236,7 @@ export class CommerceRepository {
   }
 
   private async getActiveLevelSnapshot(
-    tx: Prisma.TransactionClient,
+    tx: PrismaTransactionClient,
     inventoryItemId: string,
     warehouseId: string,
   ) {

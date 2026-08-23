@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 
 import { AUTH_COOKIE_NAME, LEGACY_AUTH_COOKIE_NAME } from "@/lib/auth";
+import { enterTenantContext } from "@/lib/tenant-context";
 import type { AuthUser, UserRole } from "@/modules/identity/contracts/identity.contract";
 import type { PermissionKey } from "@/modules/identity/contracts/rbac.contract";
 import { identityService } from "@/modules/identity/services/identity.service";
@@ -19,7 +20,32 @@ export class AuthContextError extends Error {
 export async function getCurrentUserFromContext() {
   const cookieStore = await cookies();
   const token = cookieStore.get(AUTH_COOKIE_NAME)?.value ?? cookieStore.get(LEGACY_AUTH_COOKIE_NAME)?.value;
-  return identityService.getAuthenticatedUser(token);
+  const user = await identityService.getAuthenticatedUser(token);
+
+  if (user) {
+    enterTenantContext({ tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin });
+  }
+
+  return user;
+}
+
+/** Platformun kendi ekibi (Beemmb) icin -- tenant/entitlement yonetimi gibi platform-geneli islemler. */
+export async function requirePlatformOperator(): Promise<AuthUser> {
+  const user = await getCurrentUserFromContext();
+
+  if (!user) {
+    throw new AuthContextError(401, "Unauthorized");
+  }
+
+  if (!user.isSuperAdmin) {
+    throw new AuthContextError(403, "Forbidden");
+  }
+
+  return user;
+}
+
+export function getCurrentTenantId(user: Pick<AuthUser, "tenantId">): string {
+  return user.tenantId;
 }
 
 export async function requireUserRoles(roles: UserRole[]): Promise<AuthUser> {
