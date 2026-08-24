@@ -6,34 +6,35 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET(request: Request) {
   try {
-    const user = await requirePermission("products.read");
-    const { searchParams } = new URL(request.url);
+    return await requirePermission("products.read", async (user) => {
+      const { searchParams } = new URL(request.url);
 
-    const exported = await catalogExportService.exportProducts({
-      search: searchParams.get("search") ?? undefined,
-      categoryId: searchParams.get("categoryId") ?? undefined,
-      status: searchParams.get("status") as "all" | "DRAFT" | "ACTIVE" | "ARCHIVED" | null ?? undefined,
-      brandId: searchParams.get("brandId") ?? undefined,
-      supplierId: searchParams.get("supplierId") ?? undefined,
-    });
+      const exported = await catalogExportService.exportProducts({
+        search: searchParams.get("search") ?? undefined,
+        categoryId: searchParams.get("categoryId") ?? undefined,
+        status: searchParams.get("status") as "all" | "DRAFT" | "ACTIVE" | "ARCHIVED" | null ?? undefined,
+        brandId: searchParams.get("brandId") ?? undefined,
+        supplierId: searchParams.get("supplierId") ?? undefined,
+      });
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "PRODUCT",
-      action: "EXPORT",
-      actorUserId: user.id,
-      summary: `ÜRÜN_DIŞA_AKTARIM | ${exported.total} satır dışa aktarıldı`,
-      metadata: {
-        scope: "product_export",
-        total: exported.total,
-      },
-    });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "PRODUCT",
+        action: "EXPORT",
+        actorUserId: user.id,
+        summary: `ÜRÜN_DIŞA_AKTARIM | ${exported.total} satır dışa aktarıldı`,
+        metadata: {
+          scope: "product_export",
+          total: exported.total,
+        },
+      });
 
-    return new NextResponse(exported.content, {
-      status: 200,
-      headers: {
-        "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="${exported.filename}"`,
-      },
+      return new NextResponse(exported.content, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="${exported.filename}"`,
+        },
+      });
     });
   } catch (error) {
     if (error instanceof AuthContextError) {

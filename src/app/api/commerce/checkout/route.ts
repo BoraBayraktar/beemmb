@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
+import { runWithTenantContext } from "@/lib/tenant-context";
+import { PLATFORM_TENANT_ID } from "@/lib/tenant-defaults";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { CommerceCheckoutError, commerceService } from "@/modules/commerce/services/commerce.service";
 import { auditLogService } from "@/modules/system/services/audit-log.service";
@@ -9,14 +11,17 @@ export async function POST(request: Request) {
   try {
     const payload = await request.json();
     const user = await getCurrentUserFromContext();
-    const result = await commerceService.checkout(
-      payload,
-      user?.role === "CUSTOMER"
-        ? {
-            email: user.email,
-            name: user.name,
-          }
-        : null,
+    const result = await runWithTenantContext(
+      { tenantId: user?.tenantId ?? PLATFORM_TENANT_ID, isPlatformOperator: false },
+      () => commerceService.checkout(
+        payload,
+        user?.role === "CUSTOMER"
+          ? {
+              email: user.email,
+              name: user.name,
+            }
+          : null,
+      ),
     );
     await auditLogService.recordFromRequest(request, {
       entityType: "ORDER",

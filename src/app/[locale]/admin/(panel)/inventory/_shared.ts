@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import type { PermissionKey } from "@/modules/identity/contracts/rbac.contract";
@@ -77,7 +78,9 @@ export async function loadInventoryRouteContext(
     notFound();
   }
 
-  const [result, transactionResult, warehouses, suppliers] = await Promise.all([
+  const [result, transactionResult, warehouses, suppliers] = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => Promise.all([
     inventoryService.listInventoryOverview({
       search: searchParams.search,
       stockStatusFilter:
@@ -130,7 +133,8 @@ export async function loadInventoryRouteContext(
     }),
     inventoryService.listWarehouses(),
     catalogAdminService.listSuppliers(),
-  ]);
+    ]),
+  );
 
   const [alertResult, stockCounts, reports] = await Promise.all([
     inventoryService.listInventoryAlerts(),

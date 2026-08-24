@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 
 import { prisma, type PrismaTransactionClient } from "@/lib/prisma";
+import { requireTenantId } from "@/lib/tenant-context";
 import type {
   AdminInventoryExportHistoryItem,
   AdminInventoryListPreferences,
@@ -1297,6 +1298,7 @@ export class InventoryRepository {
 
       return tx.warehouse.create({
         data: {
+          tenantId: requireTenantId(),
           code: input.code,
           name: input.name,
           description: input.description ?? null,
@@ -1390,15 +1392,17 @@ export class InventoryRepository {
       }
 
       if (!warehouse) {
+        const tenantId = requireTenantId();
         warehouse = await tx.warehouse.upsert({
           where: {
-            code: "MAIN",
+            tenantId_code: { tenantId, code: "MAIN" },
           },
           update: {
             isActive: true,
             isDefault: true,
           },
           create: {
+            tenantId,
             code: "MAIN",
             name: "Main Warehouse",
             isActive: true,

@@ -36,21 +36,22 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("products.manage");
-    const { id } = await context.params;
-    const payload = await request.json();
-    const updated = await catalogAdminService.updateProduct({
-      id,
-      ...payload,
+    return await requirePermission("products.manage", async (user) => {
+      const { id } = await context.params;
+      const payload = await request.json();
+      const updated = await catalogAdminService.updateProduct({
+        id,
+        ...payload,
+      });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "PRODUCT",
+        entityId: updated.id,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: `Ürün güncellendi: ${updated.slug}`,
+      });
+      return NextResponse.json({ item: updated });
     });
-    await auditLogService.recordFromRequest(request, {
-      entityType: "PRODUCT",
-      entityId: updated.id,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: `Ürün güncellendi: ${updated.slug}`,
-    });
-    return NextResponse.json({ item: updated });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

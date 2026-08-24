@@ -14,24 +14,25 @@ const createStockCountSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("inventoryCounts.manage");
-    const payload = createStockCountSchema.parse(await request.json());
+    return await requirePermission("inventoryCounts.manage", async (user) => {
+      const payload = createStockCountSchema.parse(await request.json());
 
-    const created = await inventoryService.createStockCount(payload);
+      const created = await inventoryService.createStockCount(payload);
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "STOCK_COUNT",
-      entityId: created.id,
-      action: "CREATE",
-      actorUserId: user.id,
-      summary: `Stok sayımı oluşturuldu: ${created.countNumber}`,
-      metadata: {
-        warehouseCode: created.warehouseCode,
-        lineCount: created.lineCount,
-      },
+      await auditLogService.recordFromRequest(request, {
+        entityType: "STOCK_COUNT",
+        entityId: created.id,
+        action: "CREATE",
+        actorUserId: user.id,
+        summary: `Stok sayımı oluşturuldu: ${created.countNumber}`,
+        metadata: {
+          warehouseCode: created.warehouseCode,
+          lineCount: created.lineCount,
+        },
+      });
+
+      return NextResponse.json({ item: created }, { status: 201 });
     });
-
-    return NextResponse.json({ item: created }, { status: 201 });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

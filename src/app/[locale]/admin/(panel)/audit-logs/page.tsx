@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
 import {
@@ -184,15 +185,18 @@ export default async function AdminAuditLogsPage({ params, searchParams }: Audit
     ? query.action as AuditLogAction
     : undefined;
 
-  const result = await auditLogService.list({
-    search: query.search,
-    entityType: selectedEntityType,
-    action: selectedAction,
-    startDate: query.startDate,
-    endDate: query.endDate,
-    page: query.page ? Number(query.page) : 1,
-    pageSize: 20,
-  });
+  const result = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => auditLogService.list({
+      search: query.search,
+      entityType: selectedEntityType,
+      action: selectedAction,
+      startDate: query.startDate,
+      endDate: query.endDate,
+      page: query.page ? Number(query.page) : 1,
+      pageSize: 20,
+    }),
+  );
 
   const prevPage = result.page > 1 ? result.page - 1 : null;
   const nextPage = result.page < result.totalPages ? result.page + 1 : null;

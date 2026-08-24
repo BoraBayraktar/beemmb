@@ -17,34 +17,35 @@ const transferInventorySchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("inventoryQuickActions.manage");
-    const payload = transferInventorySchema.parse(await request.json());
+    return await requirePermission("inventoryQuickActions.manage", async (user) => {
+      const payload = transferInventorySchema.parse(await request.json());
 
-    await inventoryService.transferProductInventory({
-      productId: payload.productId,
-      variantId: payload.variantId,
-      sku: payload.sku,
-      fromWarehouseCode: payload.fromWarehouseCode,
-      toWarehouseCode: payload.toWarehouseCode,
-      quantity: payload.quantity,
-      note: payload.note ?? "Inventory manager warehouse transfer",
-    });
-
-    await auditLogService.recordFromRequest(request, {
-      entityType: "INVENTORY",
-      entityId: payload.productId,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: `Stok transferi uygulandı: ${payload.sku}`,
-      metadata: {
+      await inventoryService.transferProductInventory({
+        productId: payload.productId,
+        variantId: payload.variantId,
+        sku: payload.sku,
         fromWarehouseCode: payload.fromWarehouseCode,
         toWarehouseCode: payload.toWarehouseCode,
-        variantId: payload.variantId ?? null,
         quantity: payload.quantity,
-      },
-    });
+        note: payload.note ?? "Inventory manager warehouse transfer",
+      });
 
-    return NextResponse.json({ ok: true });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "INVENTORY",
+        entityId: payload.productId,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: `Stok transferi uygulandı: ${payload.sku}`,
+        metadata: {
+          fromWarehouseCode: payload.fromWarehouseCode,
+          toWarehouseCode: payload.toWarehouseCode,
+          variantId: payload.variantId ?? null,
+          quantity: payload.quantity,
+        },
+      });
+
+      return NextResponse.json({ ok: true });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

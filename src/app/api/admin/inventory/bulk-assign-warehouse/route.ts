@@ -11,21 +11,22 @@ const schema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("inventory.manage");
-    const payload = schema.parse(await request.json());
-    const result = await inventoryService.bulkAssignPreferredSalesWarehouse(
-      inventoryService.parseBulkPreferredWarehouseCsv(payload.csv),
-    );
+    return await requirePermission("inventory.manage", async (user) => {
+      const payload = schema.parse(await request.json());
+      const result = await inventoryService.bulkAssignPreferredSalesWarehouse(
+        inventoryService.parseBulkPreferredWarehouseCsv(payload.csv),
+      );
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "INVENTORY",
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: `Toplu tercih edilen depo ataması işlendi: ${result.successCount}/${result.total}`,
-      metadata: result,
+      await auditLogService.recordFromRequest(request, {
+        entityType: "INVENTORY",
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: `Toplu tercih edilen depo ataması işlendi: ${result.successCount}/${result.total}`,
+        metadata: result,
+      });
+
+      return NextResponse.json(result);
     });
-
-    return NextResponse.json(result);
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

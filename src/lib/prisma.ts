@@ -10,7 +10,7 @@ import { getTenantContext } from "@/lib/tenant-context";
  * listeye eklenmeden production'da tenant-scoped sayilamaz (DEVELOPMENT_RULES.md
  * madde 7).
  */
-const TENANT_SCOPED_MODELS = new Set<Prisma.ModelName>([]);
+const TENANT_SCOPED_MODELS = new Set<Prisma.ModelName>(["Warehouse"]);
 
 const WHERE_MANY_OPERATIONS = new Set([
   "findMany",
@@ -23,7 +23,6 @@ const WHERE_MANY_OPERATIONS = new Set([
   "deleteMany",
 ]);
 const WHERE_UNIQUE_OPERATIONS = new Set(["findUnique", "findUniqueOrThrow", "update", "delete"]);
-const CREATE_OPERATIONS = new Set(["create", "upsert"]);
 
 type OperationArgs = Record<string, unknown>;
 
@@ -32,8 +31,19 @@ function applyTenantScope(operation: string, args: OperationArgs, tenantId: stri
     return { ...args, where: { ...(args.where as OperationArgs | undefined), tenantId } };
   }
 
-  if (CREATE_OPERATIONS.has(operation)) {
+  if (operation === "create") {
     return { ...args, data: { ...(args.data as OperationArgs | undefined), tenantId } };
+  }
+
+  // upsert'in args sekli { where, create, update } -- "data" alani yok. where'e tenantId
+  // eklenir (composite-unique lookup icin), create dalina da eklenir; update dalina
+  // DOKUNULMAZ (mevcut bir kaydin tenantId'si asla update ile degistirilemez).
+  if (operation === "upsert") {
+    return {
+      ...args,
+      where: { ...(args.where as OperationArgs | undefined), tenantId },
+      create: { ...(args.create as OperationArgs | undefined), tenantId },
+    };
   }
 
   if (operation === "createMany" && Array.isArray(args.data)) {

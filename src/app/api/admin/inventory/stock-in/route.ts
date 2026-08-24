@@ -24,46 +24,47 @@ const stockInSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("inventoryQuickActions.manage");
-    const payload = stockInSchema.parse(await request.json());
+    return await requirePermission("inventoryQuickActions.manage", async (user) => {
+      const payload = stockInSchema.parse(await request.json());
 
-    await inventoryService.recordProductInventoryMovement({
-      productId: payload.productId,
-      variantId: payload.variantId,
-      sku: payload.sku,
-      warehouseCode: payload.warehouseCode,
-      quantity: payload.quantity,
-      type: "PURCHASE_RECEIPT",
-      note: payload.note ?? "Stok yöneticisi stok girişi",
-      documentType: payload.documentType,
-      sourceDocumentNumber: payload.sourceDocumentNumber,
-      sourceDocumentDate: payload.sourceDocumentDate,
-      sourceDocumentSupplierId: payload.sourceDocumentSupplierId,
-      sourceDocumentSupplier: payload.sourceDocumentSupplier,
-      sourceDocumentReference: payload.sourceDocumentReference,
-      externalSystemStatus: payload.externalSystemStatus,
-      unitCost: payload.unitCost ?? null,
-    });
-
-    await auditLogService.recordFromRequest(request, {
-      entityType: "INVENTORY",
-      entityId: payload.productId,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: `Stok girişi uygulandı: ${payload.sku}`,
-      metadata: {
+      await inventoryService.recordProductInventoryMovement({
+        productId: payload.productId,
+        variantId: payload.variantId,
+        sku: payload.sku,
         warehouseCode: payload.warehouseCode,
-        variantId: payload.variantId ?? null,
         quantity: payload.quantity,
-        documentType: payload.documentType ?? null,
-        sourceDocumentNumber: payload.sourceDocumentNumber ?? null,
-        sourceDocumentSupplierId: payload.sourceDocumentSupplierId ?? null,
-        sourceDocumentSupplier: payload.sourceDocumentSupplier ?? null,
-        externalSystemStatus: payload.externalSystemStatus ?? null,
-      },
-    });
+        type: "PURCHASE_RECEIPT",
+        note: payload.note ?? "Stok yöneticisi stok girişi",
+        documentType: payload.documentType,
+        sourceDocumentNumber: payload.sourceDocumentNumber,
+        sourceDocumentDate: payload.sourceDocumentDate,
+        sourceDocumentSupplierId: payload.sourceDocumentSupplierId,
+        sourceDocumentSupplier: payload.sourceDocumentSupplier,
+        sourceDocumentReference: payload.sourceDocumentReference,
+        externalSystemStatus: payload.externalSystemStatus,
+        unitCost: payload.unitCost ?? null,
+      });
 
-    return NextResponse.json({ ok: true });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "INVENTORY",
+        entityId: payload.productId,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: `Stok girişi uygulandı: ${payload.sku}`,
+        metadata: {
+          warehouseCode: payload.warehouseCode,
+          variantId: payload.variantId ?? null,
+          quantity: payload.quantity,
+          documentType: payload.documentType ?? null,
+          sourceDocumentNumber: payload.sourceDocumentNumber ?? null,
+          sourceDocumentSupplierId: payload.sourceDocumentSupplierId ?? null,
+          sourceDocumentSupplier: payload.sourceDocumentSupplier ?? null,
+          externalSystemStatus: payload.externalSystemStatus ?? null,
+        },
+      });
+
+      return NextResponse.json({ ok: true });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

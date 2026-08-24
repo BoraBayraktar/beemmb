@@ -1072,7 +1072,8 @@ model IncomingInvoiceLifecycleEvent {
 
 model Warehouse {
   id                            String                        @id @default(cuid())
-  code                          String                        @unique
+  tenantId                      String
+  code                          String
   name                          String
   description                   String?
   address                       String?
@@ -1086,6 +1087,7 @@ model Warehouse {
   deletedUserId                 String?
   createdAt                     DateTime                      @default(now())
   updatedAt                     DateTime                      @updatedAt
+  tenant                        Tenant                        @relation(fields: [tenantId], references: [id])
   inventoryLevels               InventoryLevel[]
   inventoryAlerts               InventoryAlert[]
   incomingInventoryTransactions InventoryTransactionLine[]    @relation("InventoryTransactionLineToWarehouse")
@@ -1101,7 +1103,8 @@ model Warehouse {
   purchaseReceipts              PurchaseReceipt[]
   inventoryHistoryEvents        InventoryHistoryEvent[]
 
-  @@index([isActive, isDefault])
+  @@unique([tenantId, code])
+  @@index([tenantId, isActive, isDefault])
   @@index([priority])
   @@index([deleted])
 }
@@ -1606,6 +1609,7 @@ model Tenant {
   deletedUserId    String?
   users            User[]
   entitlements     TenantModuleEntitlement[]
+  warehouses       Warehouse[]
 
   @@index([deleted, status])
 }

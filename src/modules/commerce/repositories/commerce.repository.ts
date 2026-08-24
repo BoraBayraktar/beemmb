@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 
 import { prisma, type PrismaTransactionClient } from "@/lib/prisma";
+import { requireTenantId } from "@/lib/tenant-context";
 import type { AdminOrderListQuery, CommerceLineQuote } from "@/modules/commerce/contracts/commerce.contract";
 
 export class CommerceRepository {
@@ -44,6 +45,7 @@ export class CommerceRepository {
   }
 
   private async getOrCreateDefaultWarehouse(tx: PrismaTransactionClient) {
+    const tenantId = requireTenantId();
     const defaultWarehouse = await tx.warehouse.findFirst({
       where: {
         isActive: true,
@@ -60,13 +62,14 @@ export class CommerceRepository {
 
     return tx.warehouse.upsert({
       where: {
-        code: "MAIN",
+        tenantId_code: { tenantId, code: "MAIN" },
       },
       update: {
         isActive: true,
         isDefault: true,
       },
       create: {
+        tenantId,
         code: "MAIN",
         name: "Main Warehouse",
         isActive: true,

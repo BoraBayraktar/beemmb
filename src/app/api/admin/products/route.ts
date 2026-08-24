@@ -37,17 +37,18 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("products.manage");
-    const payload = await request.json();
-    const created = await catalogAdminService.createProduct(payload);
-    await auditLogService.recordFromRequest(request, {
-      entityType: "PRODUCT",
-      entityId: created.id,
-      action: "CREATE",
-      actorUserId: user.id,
-      summary: `Ürün oluşturuldu: ${created.slug}`,
+    return await requirePermission("products.manage", async (user) => {
+      const payload = await request.json();
+      const created = await catalogAdminService.createProduct(payload);
+      await auditLogService.recordFromRequest(request, {
+        entityType: "PRODUCT",
+        entityId: created.id,
+        action: "CREATE",
+        actorUserId: user.id,
+        summary: `Ürün oluşturuldu: ${created.slug}`,
+      });
+      return NextResponse.json({ item: created }, { status: 201 });
     });
-    return NextResponse.json({ item: created }, { status: 201 });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

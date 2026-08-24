@@ -21,27 +21,28 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("inventory.manage");
-    const payload = await request.json();
-    const result = await inventoryService.upsertInventoryIntegrationMapping(payload);
+    return await requirePermission("inventory.manage", async (user) => {
+      const payload = await request.json();
+      const result = await inventoryService.upsertInventoryIntegrationMapping(payload);
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "INVENTORY",
-      entityId: result.productId,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: `Entegrasyon eşlemesi güncellendi: ${result.channel} / ${result.productSku}`,
-      metadata: {
-        channel: result.channel,
-        externalProductId: result.externalProductId,
-        externalSku: result.externalSku,
-        externalWarehouseCode: result.externalWarehouseCode,
-        warehouseCode: result.warehouseCode,
-        allowInboundUpdates: result.allowInboundUpdates,
-      },
+      await auditLogService.recordFromRequest(request, {
+        entityType: "INVENTORY",
+        entityId: result.productId,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: `Entegrasyon eşlemesi güncellendi: ${result.channel} / ${result.productSku}`,
+        metadata: {
+          channel: result.channel,
+          externalProductId: result.externalProductId,
+          externalSku: result.externalSku,
+          externalWarehouseCode: result.externalWarehouseCode,
+          warehouseCode: result.warehouseCode,
+          allowInboundUpdates: result.allowInboundUpdates,
+        },
+      });
+
+      return NextResponse.json(result, { status: 201 });
     });
-
-    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

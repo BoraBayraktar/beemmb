@@ -18,36 +18,37 @@ const adjustInventorySchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("inventoryQuickActions.manage");
-    const payload = adjustInventorySchema.parse(await request.json());
+    return await requirePermission("inventoryQuickActions.manage", async (user) => {
+      const payload = adjustInventorySchema.parse(await request.json());
 
-    await inventoryService.syncProductInventoryState({
-      productId: payload.productId,
-      variantId: payload.variantId,
-      sku: payload.sku,
-      warehouseCode: payload.warehouseCode,
-      targetOnHandStock: payload.targetOnHandStock,
-      reorderPoint: payload.reorderPoint,
-      safetyStock: payload.safetyStock,
-      note: payload.note ?? "Inventory manager manual adjustment",
-    });
-
-    await auditLogService.recordFromRequest(request, {
-      entityType: "INVENTORY",
-      entityId: payload.productId,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: `Manuel stok düzeltmesi uygulandı: ${payload.sku}`,
-      metadata: {
-        warehouseCode: payload.warehouseCode ?? null,
-        variantId: payload.variantId ?? null,
+      await inventoryService.syncProductInventoryState({
+        productId: payload.productId,
+        variantId: payload.variantId,
+        sku: payload.sku,
+        warehouseCode: payload.warehouseCode,
         targetOnHandStock: payload.targetOnHandStock,
-        reorderPoint: payload.reorderPoint ?? null,
-        safetyStock: payload.safetyStock ?? null,
-      },
-    });
+        reorderPoint: payload.reorderPoint,
+        safetyStock: payload.safetyStock,
+        note: payload.note ?? "Inventory manager manual adjustment",
+      });
 
-    return NextResponse.json({ ok: true });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "INVENTORY",
+        entityId: payload.productId,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: `Manuel stok düzeltmesi uygulandı: ${payload.sku}`,
+        metadata: {
+          warehouseCode: payload.warehouseCode ?? null,
+          variantId: payload.variantId ?? null,
+          targetOnHandStock: payload.targetOnHandStock,
+          reorderPoint: payload.reorderPoint ?? null,
+          safetyStock: payload.safetyStock ?? null,
+        },
+      });
+
+      return NextResponse.json({ ok: true });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

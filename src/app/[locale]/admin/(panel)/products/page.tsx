@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { catalogService } from "@/modules/catalog/services/catalog.service";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
@@ -36,22 +37,25 @@ export default async function AdminProductsPage({
   }
 
   const query = await searchParams;
-  const [productResult, categories, warehouses, brands, suppliers, attributeDefinitions] = await Promise.all([
-    catalogAdminService.listProducts({
-      search: query.search,
-      categoryId: query.categoryId,
-      status: (query.status as "all" | "DRAFT" | "ACTIVE" | "ARCHIVED" | undefined) ?? "all",
-      brandId: query.brandId,
-      supplierId: query.supplierId,
-      page: query.page ? Number(query.page) : 1,
-      pageSize: 10,
-    }),
-    catalogService.listCategories(),
-    inventoryService.listWarehouses(),
-    catalogAdminService.listBrands(),
-    catalogAdminService.listSuppliers(),
-    catalogAdminService.listAttributeDefinitions(),
-  ]);
+  const [productResult, categories, warehouses, brands, suppliers, attributeDefinitions] = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => Promise.all([
+      catalogAdminService.listProducts({
+        search: query.search,
+        categoryId: query.categoryId,
+        status: (query.status as "all" | "DRAFT" | "ACTIVE" | "ARCHIVED" | undefined) ?? "all",
+        brandId: query.brandId,
+        supplierId: query.supplierId,
+        page: query.page ? Number(query.page) : 1,
+        pageSize: 10,
+      }),
+      catalogService.listCategories(),
+      inventoryService.listWarehouses(),
+      catalogAdminService.listBrands(),
+      catalogAdminService.listSuppliers(),
+      catalogAdminService.listAttributeDefinitions(),
+    ]),
+  );
 
   return (
     <ProductManager
