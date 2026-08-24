@@ -30,25 +30,26 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("financeTransactions.manage");
-    const payload = await request.json();
-    const item = await cashTransactionsService.createTransaction({
-      ...payload,
-      recordedByUserId: user.id,
+    return await requirePermission("financeTransactions.manage", async (user) => {
+      const payload = await request.json();
+      const item = await cashTransactionsService.createTransaction({
+        ...payload,
+        recordedByUserId: user.id,
+      });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "FINANCE_COLLECTION",
+        entityId: item.id,
+        action: "CREATE",
+        actorUserId: user.id,
+        summary: "Kasa/banka hareketi oluşturuldu",
+        metadata: {
+          direction: item.direction,
+          amount: item.amount,
+          currency: item.currency,
+        },
+      });
+      return NextResponse.json({ item }, { status: 201 });
     });
-    await auditLogService.recordFromRequest(request, {
-      entityType: "FINANCE_COLLECTION",
-      entityId: item.id,
-      action: "CREATE",
-      actorUserId: user.id,
-      summary: "Kasa/banka hareketi oluşturuldu",
-      metadata: {
-        direction: item.direction,
-        amount: item.amount,
-        currency: item.currency,
-      },
-    });
-    return NextResponse.json({ item }, { status: 201 });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

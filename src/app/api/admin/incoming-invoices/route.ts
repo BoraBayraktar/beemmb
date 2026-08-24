@@ -37,25 +37,26 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("incomingInvoices.manage");
-    const payload = await request.json();
-    const created = await incomingInvoiceService.createManualIncomingInvoice(payload, user.id);
+    return await requirePermission("incomingInvoices.manage", async (user) => {
+      const payload = await request.json();
+      const created = await incomingInvoiceService.createManualIncomingInvoice(payload, user.id);
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "INCOMING_INVOICE",
-      entityId: created.id,
-      action: "CREATE",
-      actorUserId: user.id,
-      summary: `Gelen fatura manuel olarak kaydedildi: ${created.documentNumber}`,
-      metadata: {
-        incomingInvoiceId: created.id,
-        documentNumber: created.documentNumber,
-        source: created.source,
-        totalAmount: created.totalAmount,
-      },
+      await auditLogService.recordFromRequest(request, {
+        entityType: "INCOMING_INVOICE",
+        entityId: created.id,
+        action: "CREATE",
+        actorUserId: user.id,
+        summary: `Gelen fatura manuel olarak kaydedildi: ${created.documentNumber}`,
+        metadata: {
+          incomingInvoiceId: created.id,
+          documentNumber: created.documentNumber,
+          source: created.source,
+          totalAmount: created.totalAmount,
+        },
+      });
+
+      return noStoreJson({ item: created }, { status: 201 });
     });
-
-    return noStoreJson({ item: created }, { status: 201 });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return noStoreJson({ message: error.message }, { status: error.status });

@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
@@ -25,11 +26,14 @@ export default async function AdminN11IntegrationPage({
     redirect(`/${locale}/admin/login`);
   }
 
-  const [dashboard, productResult, carrierCompanies] = await Promise.all([
-    marketplaceIntegrationService.getDashboard({ channel: "N11" }),
-    catalogAdminService.listProducts({ page: 1, pageSize: 50, status: "ACTIVE" }),
-    catalogAdminService.listCarrierCompanies(),
-  ]);
+  const [dashboard, productResult, carrierCompanies] = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => Promise.all([
+      marketplaceIntegrationService.getDashboard({ channel: "N11" }),
+      catalogAdminService.listProducts({ page: 1, pageSize: 50, status: "ACTIVE" }),
+      catalogAdminService.listCarrierCompanies(),
+    ]),
+  );
 
   const productOptions = productResult.items.flatMap((product) => {
     const baseOption = {

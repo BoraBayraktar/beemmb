@@ -11,17 +11,18 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("integrations.manage");
-    const { id } = await params;
-    const result = await marketplaceIntegrationService.createOrderFromPackage({ packageId: id });
-    await auditLogService.recordFromRequest(request, {
-      entityType: "MARKETPLACE_PACKAGE",
-      entityId: id,
-      action: "CREATE",
-      actorUserId: user.id,
-      summary: "Pazaryeri paketinden sipariş oluşturuldu",
+    return await requirePermission("integrations.manage", async (user) => {
+      const { id } = await params;
+      const result = await marketplaceIntegrationService.createOrderFromPackage({ packageId: id });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "MARKETPLACE_PACKAGE",
+        entityId: id,
+        action: "CREATE",
+        actorUserId: user.id,
+        summary: "Pazaryeri paketinden sipariş oluşturuldu",
+      });
+      return NextResponse.json(result, { status: 201 });
     });
-    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

@@ -10,26 +10,27 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("cari.manage");
-    const { id } = await context.params;
-    const payload = await request.json();
-    const updated = await cariService.updateCari({
-      id,
-      ...payload,
-    });
+    return await requirePermission("cari.manage", async (user) => {
+      const { id } = await context.params;
+      const payload = await request.json();
+      const updated = await cariService.updateCari({
+        id,
+        ...payload,
+      });
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "CARI",
-      entityId: updated.id,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: `Cari kart güncellendi: ${updated.name}`,
-      metadata: {
-        scope: "cari",
-      },
-    });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "CARI",
+        entityId: updated.id,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: `Cari kart güncellendi: ${updated.name}`,
+        metadata: {
+          scope: "cari",
+        },
+      });
 
-    return NextResponse.json({ item: updated });
+      return NextResponse.json({ item: updated });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });
@@ -52,22 +53,23 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("cari.manage");
-    const { id } = await context.params;
-    await cariService.deleteCari(id, user.id);
+    return await requirePermission("cari.manage", async (user) => {
+      const { id } = await context.params;
+      await cariService.deleteCari(id, user.id);
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "CARI",
-      entityId: id,
-      action: "DELETE",
-      actorUserId: user.id,
-      summary: "Cari kart silindi",
-      metadata: {
-        scope: "cari",
-      },
+      await auditLogService.recordFromRequest(request, {
+        entityType: "CARI",
+        entityId: id,
+        action: "DELETE",
+        actorUserId: user.id,
+        summary: "Cari kart silindi",
+        metadata: {
+          scope: "cari",
+        },
+      });
+
+      return NextResponse.json({ ok: true });
     });
-
-    return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

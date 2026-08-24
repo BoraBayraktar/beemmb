@@ -3,6 +3,8 @@ import { createHmac } from "node:crypto";
 import { ZodError, z } from "zod";
 
 import { noStoreJson } from "@/lib/no-store-json-response";
+import { runWithTenantContext } from "@/lib/tenant-context";
+import { PLATFORM_TENANT_ID } from "@/lib/tenant-defaults";
 import { documentProviderCryptoService } from "@/modules/documents/services/document-provider-crypto.service";
 import { incomingInvoiceProviderConfigService } from "@/modules/incoming-invoices/services/incoming-invoice-provider-config.service";
 import { incomingInvoiceService } from "@/modules/incoming-invoices/services/incoming-invoice.service";
@@ -50,40 +52,47 @@ function verifySignature(rawBody: string, signature: string | null, webhookSecre
 
 export async function POST(request: Request, context: { params: Promise<{ providerCode: string }> }) {
   try {
-    const { providerCode } = await context.params;
-    const config = await incomingInvoiceProviderConfigService.resolveActiveProviderForWebhook(providerCode);
+    return await runWithTenantContext(
+      // Oturumsuz webhook (HMAC imza ile korunuyor). Provider config'ler henuz
+      // tenant-scoped olmadigindan platform tenant'ina sabitlenir.
+      { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: false },
+      async () => {
+        const { providerCode } = await context.params;
+        const config = await incomingInvoiceProviderConfigService.resolveActiveProviderForWebhook(providerCode);
 
-    if (!config) {
-      return noStoreJson({ message: "Sağlayıcı bulunamadı veya aktif değil." }, { status: 404 });
-    }
+        if (!config) {
+          return noStoreJson({ message: "Sağlayıcı bulunamadı veya aktif değil." }, { status: 404 });
+        }
 
-    const rawBody = await request.text();
-    const signature = request.headers.get("x-incoming-invoice-signature");
+        const rawBody = await request.text();
+        const signature = request.headers.get("x-incoming-invoice-signature");
 
-    if (!verifySignature(rawBody, signature, config.webhookSecret)) {
-      return noStoreJson({ message: "Webhook imzası doğrulanamadı." }, { status: 401 });
-    }
+        if (!verifySignature(rawBody, signature, config.webhookSecret)) {
+          return noStoreJson({ message: "Webhook imzası doğrulanamadı." }, { status: 401 });
+        }
 
-    const payload = webhookPayloadSchema.parse(JSON.parse(rawBody));
-    const item = await incomingInvoiceService.ingestIntegratorInvoice({
-      providerConfigId: config.id,
-      invoice: payload,
-    });
+        const payload = webhookPayloadSchema.parse(JSON.parse(rawBody));
+        const item = await incomingInvoiceService.ingestIntegratorInvoice({
+          providerConfigId: config.id,
+          invoice: payload,
+        });
 
-    if (!item) {
-      return noStoreJson({ message: "Fatura zaten alınmış.", duplicate: true });
-    }
+        if (!item) {
+          return noStoreJson({ message: "Fatura zaten alınmış.", duplicate: true });
+        }
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "INCOMING_INVOICE",
-      entityId: item.id,
-      action: "IMPORT",
-      actorType: "INTEGRATION",
-      summary: `Gelen fatura entegratör webhook'u ile alındı: ${item.documentNumber}`,
-      metadata: { incomingInvoiceId: item.id, providerCode },
-    });
+        await auditLogService.recordFromRequest(request, {
+          entityType: "INCOMING_INVOICE",
+          entityId: item.id,
+          action: "IMPORT",
+          actorType: "INTEGRATION",
+          summary: `Gelen fatura entegratör webhook'u ile alındı: ${item.documentNumber}`,
+          metadata: { incomingInvoiceId: item.id, providerCode },
+        });
 
-    return noStoreJson({ item }, { status: 201 });
+        return noStoreJson({ item }, { status: 201 });
+      },
+    );
   } catch (error) {
     if (error instanceof ZodError) {
       return noStoreJson({ message: error.issues[0]?.message ?? "Webhook doğrulama hatası oluştu." }, { status: 400 });

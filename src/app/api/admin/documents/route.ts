@@ -39,26 +39,27 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("documents.manage");
-    const payload = await request.json();
-    const created = await documentService.createBusinessDocument(payload);
+    return await requirePermission("documents.manage", async (user) => {
+      const payload = await request.json();
+      const created = await documentService.createBusinessDocument(payload);
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "BUSINESS_DOCUMENT",
-      entityId: created.id,
-      action: "CREATE",
-      actorUserId: user.id,
-      summary: `Belge oluşturuldu: ${created.documentNumber}`,
-      metadata: {
-        documentId: created.id,
-        orderId: created.orderId,
-        documentNumber: created.documentNumber,
-        documentType: created.documentType,
-        inventoryTransactionId: created.inventoryTransactionId,
-      },
+      await auditLogService.recordFromRequest(request, {
+        entityType: "BUSINESS_DOCUMENT",
+        entityId: created.id,
+        action: "CREATE",
+        actorUserId: user.id,
+        summary: `Belge oluşturuldu: ${created.documentNumber}`,
+        metadata: {
+          documentId: created.id,
+          orderId: created.orderId,
+          documentNumber: created.documentNumber,
+          documentType: created.documentType,
+          inventoryTransactionId: created.inventoryTransactionId,
+        },
+      });
+
+      return adminDocumentsJson({ item: created }, { status: 201 });
     });
-
-    return adminDocumentsJson({ item: created }, { status: 201 });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return adminDocumentsJson({ message: error.message }, { status: error.status });

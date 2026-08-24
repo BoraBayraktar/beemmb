@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { commerceService } from "@/modules/commerce/services/commerce.service";
 import { cariService } from "@/modules/cari/services/cari.service";
@@ -34,24 +35,27 @@ export default async function AdminDocumentsPage({
   }
 
   const dictionary = getDictionary(locale as Locale);
-  const [result, providerConfigs, suppliers, customerAccounts, orders, transactions] = await Promise.all([
-    documentService.listBusinessDocuments({
-      search: resolvedSearchParams.search,
-      page: 1,
-      pageSize: 50,
-    }),
-    documentService.listProviderConfigs(),
-    catalogAdminService.listSuppliers(),
-    cariService.listCari({ role: "CUSTOMER" }),
-    commerceService.listOrders({
-      page: 1,
-      pageSize: 50,
-    }),
-    inventoryService.listInventoryTransactions({
-      page: 1,
-      pageSize: 20,
-    }),
-  ]);
+  const [result, providerConfigs, suppliers, customerAccounts, orders, transactions] = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => Promise.all([
+      documentService.listBusinessDocuments({
+        search: resolvedSearchParams.search,
+        page: 1,
+        pageSize: 50,
+      }),
+      documentService.listProviderConfigs(),
+      catalogAdminService.listSuppliers(),
+      cariService.listCari({ role: "CUSTOMER" }),
+      commerceService.listOrders({
+        page: 1,
+        pageSize: 50,
+      }),
+      inventoryService.listInventoryTransactions({
+        page: 1,
+        pageSize: 20,
+      }),
+    ]),
+  );
 
   return (
     <DocumentManager

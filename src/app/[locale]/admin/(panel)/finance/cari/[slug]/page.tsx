@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { counterpartyLedgerService } from "@/modules/finance/services/counterparty-ledger.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
@@ -27,7 +28,10 @@ export default async function AdminCariLedgerPage({
   }
 
   const decodedSlug = decodeURIComponent(slug);
-  const result = await counterpartyLedgerService.getCariLedger(locale, decodedSlug);
+  const result = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => counterpartyLedgerService.getCariLedger(locale, decodedSlug),
+  );
 
   if (!result) {
     notFound();

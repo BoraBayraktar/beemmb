@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { payablesService } from "@/modules/finance/services/payables.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
@@ -34,10 +35,13 @@ export default async function AdminSupplierPayablesPage({
   const overdueOnly =
     resolvedSearchParams.overdueOnly === "1" || resolvedSearchParams.overdueOnly === "true";
 
-  const { items, dueKpi } = await payablesService.listSupplierPayables({
-    search: resolvedSearchParams.search,
-    overdueOnly,
-  });
+  const { items, dueKpi } = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => payablesService.listSupplierPayables({
+      search: resolvedSearchParams.search,
+      overdueOnly,
+    }),
+  );
 
   return (
     <SupplierPayablesManager

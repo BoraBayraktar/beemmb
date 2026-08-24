@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { receivablesService } from "@/modules/finance/services/receivables.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
@@ -26,7 +27,10 @@ export default async function AdminReceivableDetailPage({
     notFound();
   }
 
-  const item = await receivablesService.getReceivableByOrderId(orderId, locale);
+  const item = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => receivablesService.getReceivableByOrderId(orderId, locale),
+  );
   if (!item) {
     notFound();
   }

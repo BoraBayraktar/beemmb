@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { CommerceOrderAdminError, commerceService } from "@/modules/commerce/services/commerce.service";
 import { financialAccountsService } from "@/modules/finance/services/financial-accounts.service";
@@ -27,11 +28,19 @@ export default async function AdminOrderDetailPage({
   }
 
   let order;
-  const accountOptions = await financialAccountsService.listAccountOptions();
-  const carrierCompanies = await catalogAdminService.listCarrierCompanies();
+  const [accountOptions, carrierCompanies] = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => Promise.all([
+      financialAccountsService.listAccountOptions(),
+      catalogAdminService.listCarrierCompanies(),
+    ]),
+  );
 
   try {
-    order = await commerceService.getOrderById(id);
+    order = await runWithTenantContext(
+      { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+      () => commerceService.getOrderById(id),
+    );
   } catch (error) {
     if (error instanceof CommerceOrderAdminError) {
       notFound();

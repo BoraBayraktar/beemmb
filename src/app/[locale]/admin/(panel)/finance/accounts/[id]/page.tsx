@@ -1,6 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 
 import { isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { financeCounterpartyRouteService } from "@/modules/finance/services/finance-counterparty-route.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
@@ -25,7 +26,10 @@ export default async function AdminFinanceAccountCounterpartyPage({
     notFound();
   }
 
-  const path = await financeCounterpartyRouteService.resolveCounterpartyLedgerPath(id);
+  const path = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => financeCounterpartyRouteService.resolveCounterpartyLedgerPath(id),
+  );
 
   if (!path) {
     notFound();

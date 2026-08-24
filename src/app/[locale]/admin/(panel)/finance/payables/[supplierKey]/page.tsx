@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { payablesService } from "@/modules/finance/services/payables.service";
 import { inventoryPayableSummaryService } from "@/modules/finance/services/inventory-payable-summary.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
@@ -27,7 +28,10 @@ export default async function AdminSupplierPayableDetailPage({
     notFound();
   }
 
-  const item = await payablesService.getSupplierPayableByKey(decodeURIComponent(supplierKey));
+  const item = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => payablesService.getSupplierPayableByKey(decodeURIComponent(supplierKey)),
+  );
   if (!item) {
     notFound();
   }

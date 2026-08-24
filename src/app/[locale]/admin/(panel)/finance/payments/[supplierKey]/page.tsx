@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { inventoryPayableSummaryService } from "@/modules/finance/services/inventory-payable-summary.service";
 import { payablesService } from "@/modules/finance/services/payables.service";
 import { paymentsService } from "@/modules/finance/services/payments.service";
@@ -30,18 +31,24 @@ export default async function AdminPaymentDetailPage({
   }
 
   const decodedSupplierKey = decodeURIComponent(supplierKey);
-  const payableItem = await payablesService.getSupplierPayableByKey(decodedSupplierKey);
+  const payableItem = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => payablesService.getSupplierPayableByKey(decodedSupplierKey),
+  );
 
   if (!payableItem) {
     notFound();
   }
 
-  const [paymentItem, allocationContexts] = await Promise.all([
-    paymentsService.getPaymentReadinessBySupplierKey(locale, decodedSupplierKey),
-    payableItem.supplierId
-      ? paymentsService.listSupplierAllocationContexts(payableItem.supplierId, locale)
-      : Promise.resolve([]),
-  ]);
+  const [paymentItem, allocationContexts] = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => Promise.all([
+      paymentsService.getPaymentReadinessBySupplierKey(locale, decodedSupplierKey),
+      payableItem.supplierId
+        ? paymentsService.listSupplierAllocationContexts(payableItem.supplierId, locale)
+        : Promise.resolve([]),
+    ]),
+  );
 
   if (!paymentItem) {
     notFound();

@@ -2,8 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { commerceService } from "@/modules/commerce/services/commerce.service";
+import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 
 type OrderStatusFilter = "CONFIRMED" | "CANCELLED";
 type PaymentStatusFilter = "PENDING" | "AUTHORIZED" | "PAID" | "FAILED" | "REFUNDED";
@@ -124,6 +126,11 @@ export default async function AdminOrdersPage({ params, searchParams }: OrdersPa
     notFound();
   }
 
+  const user = await getCurrentUserFromContext();
+  if (!user) {
+    notFound();
+  }
+
   const dictionary = getDictionary(locale as Locale);
   const query = await searchParams;
   const statusFilter = ORDER_STATUS_VALUES.includes(query.status as OrderStatusFilter) ? (query.status as OrderStatusFilter) : undefined;
@@ -132,18 +139,21 @@ export default async function AdminOrdersPage({ params, searchParams }: OrdersPa
   const carrierCompanyIdFilter = query.carrierCompanyId?.trim() || undefined;
   const hasActiveFilters = Boolean(statusFilter || paymentStatusFilter || shipmentStatusFilter || carrierCompanyIdFilter);
 
-  const [result, carrierCompanies] = await Promise.all([
-    commerceService.listOrders({
-      search: query.search,
-      status: statusFilter,
-      paymentStatus: paymentStatusFilter,
-      shipmentStatus: shipmentStatusFilter,
-      carrierCompanyId: carrierCompanyIdFilter,
-      page: query.page ? Number(query.page) : 1,
-      pageSize: 10,
-    }),
-    catalogAdminService.listCarrierCompanies(),
-  ]);
+  const [result, carrierCompanies] = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => Promise.all([
+      commerceService.listOrders({
+        search: query.search,
+        status: statusFilter,
+        paymentStatus: paymentStatusFilter,
+        shipmentStatus: shipmentStatusFilter,
+        carrierCompanyId: carrierCompanyIdFilter,
+        page: query.page ? Number(query.page) : 1,
+        pageSize: 10,
+      }),
+      catalogAdminService.listCarrierCompanies(),
+    ]),
+  );
 
   const prevPage = result.page > 1 ? result.page - 1 : null;
   const nextPage = result.page < result.totalPages ? result.page + 1 : null;

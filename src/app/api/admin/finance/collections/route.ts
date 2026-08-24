@@ -21,28 +21,29 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("financeCollections.manage");
-    const payload = await request.json();
-    const created = await collectionsService.createCollectionRecord({
-      ...payload,
-      recordedByUserId: user.id,
-    });
+    return await requirePermission("financeCollections.manage", async (user) => {
+      const payload = await request.json();
+      const created = await collectionsService.createCollectionRecord({
+        ...payload,
+        recordedByUserId: user.id,
+      });
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "FINANCE_COLLECTION",
-      entityId: created.id,
-      action: "CREATE",
-      actorUserId: user.id,
-      summary: "Tahsilat kaydı oluşturuldu",
-      metadata: {
-        collectionRecordId: created.id,
-        orderId: created.orderId,
-        amount: created.amount,
-        currency: created.currency,
-      },
-    });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "FINANCE_COLLECTION",
+        entityId: created.id,
+        action: "CREATE",
+        actorUserId: user.id,
+        summary: "Tahsilat kaydı oluşturuldu",
+        metadata: {
+          collectionRecordId: created.id,
+          orderId: created.orderId,
+          amount: created.amount,
+          currency: created.currency,
+        },
+      });
 
-    return NextResponse.json({ item: created }, { status: 201 });
+      return NextResponse.json({ item: created }, { status: 201 });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

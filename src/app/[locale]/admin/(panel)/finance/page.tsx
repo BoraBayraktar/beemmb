@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { financeOverviewService } from "@/modules/finance/services/finance-overview.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
@@ -24,7 +25,10 @@ export default async function AdminFinancePage({
 
   const dictionary = getDictionary(locale as Locale);
   const effectiveRbac = await rbacService.getEffectivePermissions(user);
-  const overview = await financeOverviewService.getOverview(locale);
+  const overview = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => financeOverviewService.getOverview(locale),
+  );
   const visibleSections = overview.sections.filter((section) => {
     if (!section.permissionKey) {
       return true;

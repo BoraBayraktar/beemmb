@@ -6,13 +6,14 @@ import { AuthContextError, requirePermission } from "@/modules/identity/services
 
 export async function GET(request: Request) {
   try {
-    await requirePermission("finance.read");
-    const { searchParams } = new URL(request.url);
-    const result = await counterpartyLookupService.searchCounterparties({
-      search: searchParams.get("search") ?? undefined,
-      kind: (searchParams.get("kind") as "all" | "CUSTOMER" | "SUPPLIER" | "CARRIER" | null) ?? undefined,
+    return await requirePermission("finance.read", async () => {
+      const { searchParams } = new URL(request.url);
+      const result = await counterpartyLookupService.searchCounterparties({
+        search: searchParams.get("search") ?? undefined,
+        kind: (searchParams.get("kind") as "all" | "CUSTOMER" | "SUPPLIER" | "CARRIER" | null) ?? undefined,
+      });
+      return NextResponse.json(result);
     });
-    return NextResponse.json(result);
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

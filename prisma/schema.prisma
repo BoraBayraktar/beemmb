@@ -57,7 +57,8 @@ model Brand {
 
 model Cari {
   id                     String                 @id @default(cuid())
-  slug                   String                 @unique
+  tenantId               String
+  slug                   String
   name                   String
   email                  String?
   phone                  String?
@@ -83,6 +84,7 @@ model Cari {
   deleted                Boolean                @default(false)
   deletedDate            DateTime?
   deletedUserId          String?
+  tenant                 Tenant                 @relation(fields: [tenantId], references: [id])
   carrierProfile         CariCarrierProfile?
   orders                 Order[]                @relation("OrderCari")
   carrierOrders          Order[]                @relation("OrderCarrierCari")
@@ -94,7 +96,8 @@ model Cari {
   incomingInvoices       IncomingInvoice[]
   primaryProducts        Product[]
 
-  @@index([deleted, isActive])
+  @@unique([tenantId, slug])
+  @@index([tenantId, deleted, isActive])
   @@index([isCustomer])
   @@index([isSupplier])
   @@index([isCarrier])
@@ -1618,6 +1621,7 @@ model Tenant {
   warehouses       Warehouse[]
   categories       Category[]
   brands           Brand[]
+  cariRecords      Cari[]
 
   @@index([deleted, status])
 }

@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { requireTenantId } from "@/lib/tenant-context";
 import type {
   AdminCreateCariInput,
   AdminListCariFilter,
@@ -87,6 +88,7 @@ export class CariRepository {
   async createCari(input: AdminCreateCariInput) {
     return prisma.cari.create({
       data: {
+        tenantId: requireTenantId(),
         slug: input.slug,
         name: input.name,
         email: input.email ?? null,

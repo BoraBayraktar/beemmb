@@ -18,32 +18,33 @@ export async function GET(
   context: { params: Promise<{ reportKey: string }> },
 ) {
   try {
-    await requirePermission("finance.read");
-    const { reportKey } = await context.params;
+    return await requirePermission("finance.read", async () => {
+      const { reportKey } = await context.params;
 
-    if (!exportKeys.has(reportKey as FinanceReportExportKey)) {
-      return NextResponse.json({ message: "Geçersiz rapor anahtarı." }, { status: 404 });
-    }
+      if (!exportKeys.has(reportKey as FinanceReportExportKey)) {
+        return NextResponse.json({ message: "Geçersiz rapor anahtarı." }, { status: 404 });
+      }
 
-    const { searchParams } = new URL(request.url);
-    const parsedQuery = exportQuerySchema.parse({
-      from: searchParams.get("from") ?? undefined,
-      to: searchParams.get("to") ?? undefined,
-      financialAccountId: searchParams.get("financialAccountId") ?? undefined,
-    });
+      const { searchParams } = new URL(request.url);
+      const parsedQuery = exportQuerySchema.parse({
+        from: searchParams.get("from") ?? undefined,
+        to: searchParams.get("to") ?? undefined,
+        financialAccountId: searchParams.get("financialAccountId") ?? undefined,
+      });
 
-    const exported = await financeReportExportService.exportReportTableCsv(
-      "tr",
-      reportKey as FinanceReportExportKey,
-      parsedQuery,
-    );
+      const exported = await financeReportExportService.exportReportTableCsv(
+        "tr",
+        reportKey as FinanceReportExportKey,
+        parsedQuery,
+      );
 
-    return new NextResponse(exported.content, {
-      status: 200,
-      headers: {
-        "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="${exported.filename}"`,
-      },
+      return new NextResponse(exported.content, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="${exported.filename}"`,
+        },
+      });
     });
   } catch (error) {
     if (error instanceof AuthContextError) {

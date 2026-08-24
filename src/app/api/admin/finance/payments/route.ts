@@ -7,9 +7,10 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET() {
   try {
-    await requirePermission("financePayments.manage");
-    const items = await paymentsService.listPaymentRecords();
-    return NextResponse.json({ items });
+    return await requirePermission("financePayments.manage", async () => {
+      const items = await paymentsService.listPaymentRecords();
+      return NextResponse.json({ items });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });
@@ -21,28 +22,29 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("financePayments.manage");
-    const payload = await request.json();
-    const created = await paymentsService.createPaymentRecord({
-      ...payload,
-      recordedByUserId: user.id,
-    });
+    return await requirePermission("financePayments.manage", async (user) => {
+      const payload = await request.json();
+      const created = await paymentsService.createPaymentRecord({
+        ...payload,
+        recordedByUserId: user.id,
+      });
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "FINANCE_PAYMENT",
-      entityId: created.id,
-      action: "CREATE",
-      actorUserId: user.id,
-      summary: "Ödeme kaydı oluşturuldu",
-      metadata: {
-        paymentRecordId: created.id,
-        supplierId: created.supplierId,
-        amount: created.amount,
-        currency: created.currency,
-      },
-    });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "FINANCE_PAYMENT",
+        entityId: created.id,
+        action: "CREATE",
+        actorUserId: user.id,
+        summary: "Ödeme kaydı oluşturuldu",
+        metadata: {
+          paymentRecordId: created.id,
+          supplierId: created.supplierId,
+          amount: created.amount,
+          currency: created.currency,
+        },
+      });
 
-    return NextResponse.json({ item: created }, { status: 201 });
+      return NextResponse.json({ item: created }, { status: 201 });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

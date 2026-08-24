@@ -10,23 +10,24 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("integrations.manage");
-    const { id } = await params;
-    const payload = await request.json();
-    const result = await marketplaceIntegrationService.changeHepsiburadaPackageCargoCompany({
-      packageId: id,
-      carrierCompanyId: payload?.carrierCompanyId,
-    });
+    return await requirePermission("integrations.manage", async (user) => {
+      const { id } = await params;
+      const payload = await request.json();
+      const result = await marketplaceIntegrationService.changeHepsiburadaPackageCargoCompany({
+        packageId: id,
+        carrierCompanyId: payload?.carrierCompanyId,
+      });
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "MARKETPLACE_PACKAGE",
-      entityId: id,
-      action: "SYNC",
-      actorUserId: user.id,
-      summary: "Hepsiburada paket kargo firması değiştirildi",
-    });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "MARKETPLACE_PACKAGE",
+        entityId: id,
+        action: "SYNC",
+        actorUserId: user.id,
+        summary: "Hepsiburada paket kargo firması değiştirildi",
+      });
 
-    return NextResponse.json(result);
+      return NextResponse.json(result);
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

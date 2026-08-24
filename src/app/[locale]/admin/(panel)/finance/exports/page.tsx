@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { isLocale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { financeAdvisorExportService } from "@/modules/finance/services/finance-advisor-export.service";
 import { resolveFinanceAdvisorExportCopy } from "@/modules/finance/services/finance-advisor-export-copy.resolver";
 import { parseFinanceReportDateRangeQuery } from "@/modules/finance/services/finance-report-date-range.util";
@@ -42,7 +43,10 @@ export default async function AdminFinanceExportsPage({
 
   let exportPackage;
   try {
-    exportPackage = await financeAdvisorExportService.getExportPackage(locale, query);
+    exportPackage = await runWithTenantContext(
+      { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+      () => financeAdvisorExportService.getExportPackage(locale, query),
+    );
   } catch {
     notFound();
   }

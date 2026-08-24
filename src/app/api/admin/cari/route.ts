@@ -16,13 +16,14 @@ function parseRole(value: string | null): CariRole | undefined {
 
 export async function GET(request: Request) {
   try {
-    await requirePermission("cari.manage");
-    const { searchParams } = new URL(request.url);
-    const items = await cariService.listCari({
-      role: parseRole(searchParams.get("role")),
-      search: searchParams.get("search") ?? undefined,
+    return await requirePermission("cari.manage", async () => {
+      const { searchParams } = new URL(request.url);
+      const items = await cariService.listCari({
+        role: parseRole(searchParams.get("role")),
+        search: searchParams.get("search") ?? undefined,
+      });
+      return NextResponse.json({ items });
     });
-    return NextResponse.json({ items });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });
@@ -34,20 +35,21 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("cari.manage");
-    const payload = await request.json();
-    const created = await cariService.createCari(payload);
-    await auditLogService.recordFromRequest(request, {
-      entityType: "CARI",
-      entityId: created.id,
-      action: "CREATE",
-      actorUserId: user.id,
-      summary: `Cari kart oluşturuldu: ${created.name}`,
-      metadata: {
-        scope: "cari",
-      },
+    return await requirePermission("cari.manage", async (user) => {
+      const payload = await request.json();
+      const created = await cariService.createCari(payload);
+      await auditLogService.recordFromRequest(request, {
+        entityType: "CARI",
+        entityId: created.id,
+        action: "CREATE",
+        actorUserId: user.id,
+        summary: `Cari kart oluşturuldu: ${created.name}`,
+        metadata: {
+          scope: "cari",
+        },
+      });
+      return NextResponse.json({ item: created }, { status: 201 });
     });
-    return NextResponse.json({ item: created }, { status: 201 });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });
