@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireTenantId } from "@/lib/tenant-context";
 import type {
   AdminAnswerProductQuestionInput,
   AdminCreateProductAttributeDefinitionInput,
@@ -1006,6 +1007,7 @@ export class CatalogAdminRepository {
   async createBrand(input: AdminCreateBrandInput) {
     return prisma.brand.create({
       data: {
+        tenantId: requireTenantId(),
         slug: input.slug,
         name: input.name,
         trendyolBrandId: input.trendyolBrandId ?? null,
@@ -1485,6 +1487,7 @@ export class CatalogAdminRepository {
   async createCategory(input: { slug: string; name: string; trendyolCategoryId?: number | null; pazaramaCategoryId?: string | null; parentId?: string | null }) {
     return prisma.category.create({
       data: {
+        tenantId: requireTenantId(),
         slug: input.slug,
         name: input.name,
         trendyolCategoryId: input.trendyolCategoryId ?? null,

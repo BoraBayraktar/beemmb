@@ -10,26 +10,27 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("brands.manage");
-    const { id } = await context.params;
-    const payload = await request.json();
-    const updated = await catalogAdminService.updateBrand({
-      id,
-      ...payload,
-    });
+    return await requirePermission("brands.manage", async (user) => {
+      const { id } = await context.params;
+      const payload = await request.json();
+      const updated = await catalogAdminService.updateBrand({
+        id,
+        ...payload,
+      });
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "BRAND",
-      entityId: updated.id,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: `Marka güncellendi: ${updated.name}`,
-      metadata: {
-        scope: "brand",
-      },
-    });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "BRAND",
+        entityId: updated.id,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: `Marka güncellendi: ${updated.name}`,
+        metadata: {
+          scope: "brand",
+        },
+      });
 
-    return NextResponse.json({ item: updated });
+      return NextResponse.json({ item: updated });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });
@@ -48,22 +49,23 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("brands.manage");
-    const { id } = await context.params;
-    await catalogAdminService.softDeleteBrand(id, user.id);
+    return await requirePermission("brands.manage", async (user) => {
+      const { id } = await context.params;
+      await catalogAdminService.softDeleteBrand(id, user.id);
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "BRAND",
-      entityId: id,
-      action: "DELETE",
-      actorUserId: user.id,
-      summary: "Marka silindi",
-      metadata: {
-        scope: "brand",
-      },
+      await auditLogService.recordFromRequest(request, {
+        entityType: "BRAND",
+        entityId: id,
+        action: "DELETE",
+        actorUserId: user.id,
+        summary: "Marka silindi",
+        metadata: {
+          scope: "brand",
+        },
+      });
+
+      return NextResponse.json({ ok: true });
     });
-
-    return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

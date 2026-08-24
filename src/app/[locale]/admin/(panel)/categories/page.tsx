@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
@@ -28,24 +29,31 @@ export default async function AdminCategoriesPage({
     notFound();
   }
 
-  const categoryResult = await catalogAdminService.listCategories({
-    page: 1,
-    pageSize: 10,
-  });
+  const { categoryResult, candidateItems } = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    async () => {
+      const categoryResult = await catalogAdminService.listCategories({
+        page: 1,
+        pageSize: 10,
+      });
 
-  const firstCandidatePage = await catalogAdminService.listCategories({
-    page: 1,
-    pageSize: 50,
-  });
+      const firstCandidatePage = await catalogAdminService.listCategories({
+        page: 1,
+        pageSize: 50,
+      });
 
-  const candidateItems = [...firstCandidatePage.items];
-  for (let page = 2; page <= firstCandidatePage.totalPages; page += 1) {
-    const nextPage = await catalogAdminService.listCategories({
-      page,
-      pageSize: 50,
-    });
-    candidateItems.push(...nextPage.items);
-  }
+      const candidateItems = [...firstCandidatePage.items];
+      for (let page = 2; page <= firstCandidatePage.totalPages; page += 1) {
+        const nextPage = await catalogAdminService.listCategories({
+          page,
+          pageSize: 50,
+        });
+        candidateItems.push(...nextPage.items);
+      }
+
+      return { categoryResult, candidateItems };
+    },
+  );
 
   return (
     <CategoryManager

@@ -108,25 +108,25 @@ async function main() {
 
   for (const category of categories) {
     await prisma.category.upsert({
-      where: { slug: category.slug },
+      where: { tenantId_slug: { tenantId: "tenant-beemmb-platform", slug: category.slug } },
       update: {
         name: category.name,
         deleted: false,
         deletedDate: null,
         deletedUserId: null,
       },
-      create: category,
+      create: { ...category, tenantId: "tenant-beemmb-platform" },
     });
   }
 
   const elektronik = await prisma.category.findUniqueOrThrow({
-    where: { slug: "elektronik" },
+    where: { tenantId_slug: { tenantId: "tenant-beemmb-platform", slug: "elektronik" } },
   });
   const evYasam = await prisma.category.findUniqueOrThrow({
-    where: { slug: "ev-yasam" },
+    where: { tenantId_slug: { tenantId: "tenant-beemmb-platform", slug: "ev-yasam" } },
   });
   const spor = await prisma.category.findUniqueOrThrow({
-    where: { slug: "spor" },
+    where: { tenantId_slug: { tenantId: "tenant-beemmb-platform", slug: "spor" } },
   });
 
   const subcategories = [
@@ -140,7 +140,7 @@ async function main() {
 
   for (const category of subcategories) {
     await prisma.category.upsert({
-      where: { slug: category.slug },
+      where: { tenantId_slug: { tenantId: "tenant-beemmb-platform", slug: category.slug } },
       update: {
         name: category.name,
         parentId: category.parentId,
@@ -148,7 +148,7 @@ async function main() {
         deletedDate: null,
         deletedUserId: null,
       },
-      create: category,
+      create: { ...category, tenantId: "tenant-beemmb-platform" },
     });
   }
 

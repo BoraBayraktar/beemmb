@@ -9,7 +9,8 @@ datasource db {
 
 model Category {
   id                 String           @id @default(cuid())
-  slug               String           @unique
+  tenantId           String
+  slug               String
   name               String
   trendyolCategoryId Int?
   pazaramaCategoryId String?
@@ -19,12 +20,14 @@ model Category {
   deletedDate        DateTime?
   deletedUserId      String?
   parentId           String?
+  tenant             Tenant           @relation(fields: [tenantId], references: [id])
   Category           Category?        @relation("CategoryToCategory", fields: [parentId], references: [id])
   other_Category     Category[]       @relation("CategoryToCategory")
   products           Product[]
   storefrontItems    StorefrontItem[]
 
-  @@index([deleted])
+  @@unique([tenantId, slug])
+  @@index([tenantId, deleted])
   @@index([parentId])
   @@index([trendyolCategoryId])
   @@index([pazaramaCategoryId])
@@ -32,7 +35,8 @@ model Category {
 
 model Brand {
   id              String    @id @default(cuid())
-  slug            String    @unique
+  tenantId        String
+  slug            String
   name            String
   trendyolBrandId Int?
   pazaramaBrandId String?
@@ -42,9 +46,11 @@ model Brand {
   deleted         Boolean   @default(false)
   deletedDate     DateTime?
   deletedUserId   String?
+  tenant          Tenant    @relation(fields: [tenantId], references: [id])
   products        Product[]
 
-  @@index([deleted, isActive])
+  @@unique([tenantId, slug])
+  @@index([tenantId, deleted, isActive])
   @@index([trendyolBrandId])
   @@index([pazaramaBrandId])
 }
@@ -1610,6 +1616,8 @@ model Tenant {
   users            User[]
   entitlements     TenantModuleEntitlement[]
   warehouses       Warehouse[]
+  categories       Category[]
+  brands           Brand[]
 
   @@index([deleted, status])
 }

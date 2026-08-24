@@ -2,6 +2,8 @@ import { z } from "zod";
 
 import tr from "@/i18n/tr.json";
 import { redisCache } from "@/lib/redis";
+import { runWithTenantContext } from "@/lib/tenant-context";
+import { PLATFORM_TENANT_ID } from "@/lib/tenant-defaults";
 import type {
   CategoryOption,
   ProductAttributeAxis,
@@ -558,6 +560,11 @@ export class CatalogService {
     return mapped;
   }
 
+  /**
+   * Public magaza tek-tenant'lidir (bkz. DEVELOPMENT_RULES.md madde 7) --
+   * bu servis anonim ziyaretcilerden de cagrildigi icin tenant context'i
+   * her zaman platform tenant'ina (Beemmb'nin kendi magazasi) sabitlenir.
+   */
   async listCategories(): Promise<CategoryOption[]> {
     const cacheKey = "catalog:categories";
     const cached = await redisCache.get<CategoryOption[]>(cacheKey);
@@ -565,7 +572,10 @@ export class CatalogService {
       return cached;
     }
 
-    const categories = await this.repository.listCategories();
+    const categories = await runWithTenantContext(
+      { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: false },
+      () => this.repository.listCategories(),
+    );
     await redisCache.set(cacheKey, categories, 600);
     return categories;
   }

@@ -8,25 +8,26 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
-    const user = await requirePermission("products.read");
-    const content = await catalogImportService.buildProductImportTemplate();
+    return await requirePermission("products.read", async (user) => {
+      const content = await catalogImportService.buildProductImportTemplate();
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "PRODUCT",
-      action: "EXPORT",
-      actorUserId: user.id,
-      summary: "ÜRÜN_IMPORT_ŞABLONU | Excel şablonu indirildi",
-      metadata: {
-        scope: "product_import_template",
-      },
-    });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "PRODUCT",
+        action: "EXPORT",
+        actorUserId: user.id,
+        summary: "ÜRÜN_IMPORT_ŞABLONU | Excel şablonu indirildi",
+        metadata: {
+          scope: "product_import_template",
+        },
+      });
 
-    return new NextResponse(Buffer.from(content), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": "attachment; filename=\"2bem-product-import-template.xlsx\"",
-      },
+      return new NextResponse(Buffer.from(content), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "Content-Disposition": "attachment; filename=\"2bem-product-import-template.xlsx\"",
+        },
+      });
     });
   } catch (error) {
     if (error instanceof AuthContextError) {
