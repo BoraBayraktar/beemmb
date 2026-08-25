@@ -1364,6 +1364,8 @@ export class InventoryRepository {
 
   async syncProductInventoryState(args: SyncInventoryStateArgs) {
     return this.runSerializableTransaction(async (tx) => {
+      const tenantId = requireTenantId();
+
       const target = await this.resolveInventoryTarget(tx, args);
       const { product, variant, inventoryItem, inventoryOwner } = target;
 
@@ -1392,7 +1394,6 @@ export class InventoryRepository {
       }
 
       if (!warehouse) {
-        const tenantId = requireTenantId();
         warehouse = await tx.warehouse.upsert({
           where: {
             tenantId_code: { tenantId, code: "MAIN" },
@@ -1418,6 +1419,7 @@ export class InventoryRepository {
       if (!inventoryItemId) {
         const inventoryItem = await tx.inventoryItem.create({
           data: {
+            tenantId,
             productId: inventoryOwner === "PRODUCT" ? product.id : null,
             productVariantId: variant?.id ?? null,
             skuSnapshot: args.sku,
@@ -1445,6 +1447,7 @@ export class InventoryRepository {
       if (!existingLevel) {
         await tx.inventoryLevel.create({
           data: {
+            tenantId,
             inventoryItemId,
             warehouseId: warehouse.id,
             onHand: onHandStock,
@@ -1457,6 +1460,7 @@ export class InventoryRepository {
         if (onHandStock > 0) {
           await tx.inventoryMovement.create({
             data: {
+              tenantId,
               inventoryItemId,
               warehouseId: warehouse.id,
               type: "INITIAL_LOAD",
@@ -1517,6 +1521,7 @@ export class InventoryRepository {
 
           await tx.inventoryMovement.create({
             data: {
+              tenantId,
               inventoryItemId,
               warehouseId: warehouse.id,
               transactionId: inventoryTransaction.id,
@@ -1540,6 +1545,8 @@ export class InventoryRepository {
 
   async transferProductInventory(args: TransferInventoryArgs) {
     return this.runSerializableTransaction(async (tx) => {
+      const tenantId = requireTenantId();
+
       if (args.fromWarehouseCode === args.toWarehouseCode) {
         throw new Error("WAREHOUSE_TRANSFER_SAME_SOURCE_TARGET");
       }
@@ -1582,6 +1589,7 @@ export class InventoryRepository {
       if (!inventoryItemId) {
         const inventoryItem = await tx.inventoryItem.create({
           data: {
+            tenantId,
             productId: inventoryOwner === "PRODUCT" ? product.id : null,
             productVariantId: variant?.id ?? null,
             skuSnapshot: args.sku,
@@ -1658,6 +1666,7 @@ export class InventoryRepository {
       } else {
         await tx.inventoryLevel.create({
           data: {
+            tenantId,
             inventoryItemId,
             warehouseId: toWarehouse.id,
             onHand: args.quantity,
@@ -1692,6 +1701,7 @@ export class InventoryRepository {
 
       await tx.inventoryMovement.create({
         data: {
+          tenantId,
           inventoryItemId,
           warehouseId: fromWarehouse.id,
           transactionId: inventoryTransaction.id,
@@ -1712,6 +1722,7 @@ export class InventoryRepository {
 
       await tx.inventoryMovement.create({
         data: {
+          tenantId,
           inventoryItemId,
           warehouseId: toWarehouse.id,
           transactionId: inventoryTransaction.id,
@@ -1736,6 +1747,8 @@ export class InventoryRepository {
 
   async recordProductInventoryMovement(args: RecordInventoryMovementArgs) {
     return this.runSerializableTransaction(async (tx) => {
+      const tenantId = requireTenantId();
+
       const target = await this.resolveInventoryTarget(tx, args);
       const { product, variant, inventoryItem, inventoryOwner } = target;
 
@@ -1758,6 +1771,7 @@ export class InventoryRepository {
       if (!inventoryItemId) {
         const inventoryItem = await tx.inventoryItem.create({
           data: {
+            tenantId,
             productId: inventoryOwner === "PRODUCT" ? product.id : null,
             productVariantId: variant?.id ?? null,
             skuSnapshot: args.sku,
@@ -1819,6 +1833,7 @@ export class InventoryRepository {
 
         await tx.inventoryLevel.create({
           data: {
+            tenantId,
             inventoryItemId,
             warehouseId: warehouse.id,
             onHand: args.quantity,
@@ -1940,6 +1955,7 @@ export class InventoryRepository {
 
       await tx.inventoryMovement.create({
         data: {
+          tenantId,
           inventoryItemId,
           warehouseId: warehouse.id,
           transactionId: inventoryTransaction.id,
@@ -2342,6 +2358,8 @@ export class InventoryRepository {
 
   async applyStockCount(stockCountId: string) {
     return this.runSerializableTransaction(async (tx) => {
+      const tenantId = requireTenantId();
+
       const stockCount = await tx.stockCount.findUnique({
         where: {
           id: stockCountId,
@@ -2457,6 +2475,7 @@ export class InventoryRepository {
 
           await tx.inventoryMovement.create({
             data: {
+              tenantId,
               inventoryItemId: line.inventoryItemId,
               warehouseId: line.warehouseId,
               transactionId: transaction.id,

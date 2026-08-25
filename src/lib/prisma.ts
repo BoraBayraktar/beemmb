@@ -21,6 +21,10 @@ const TENANT_SCOPED_MODELS = new Set<Prisma.ModelName>([
   "OrderItem",
   "OrderStatusHistory",
   "OrderPaymentStatusHistory",
+  "InventoryItem",
+  "InventoryLevel",
+  "StockReservation",
+  "InventoryMovement",
 ]);
 
 const WHERE_MANY_OPERATIONS = new Set([

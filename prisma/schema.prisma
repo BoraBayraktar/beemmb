@@ -1137,6 +1137,7 @@ model Warehouse {
 
 model InventoryItem {
   id                        String                     @id @default(cuid())
+  tenantId                  String
   productId                 String?
   productVariantId          String?                    @unique
   skuSnapshot               String
@@ -1156,15 +1157,17 @@ model InventoryItem {
   inventoryMovements        InventoryMovement[]
   stockCountLines           StockCountLine[]
   stockReservations         StockReservation[]
+  tenant                    Tenant                     @relation(fields: [tenantId], references: [id])
 
   @@unique([productId])
   @@index([productId])
   @@index([productVariantId])
-  @@index([deleted])
+  @@index([tenantId, deleted])
 }
 
 model InventoryLevel {
   id              String        @id @default(cuid())
+  tenantId        String
   inventoryItemId String
   warehouseId     String
   onHand          Int           @default(0)
@@ -1175,14 +1178,17 @@ model InventoryLevel {
   updatedAt       DateTime      @updatedAt
   inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])
   warehouse       Warehouse     @relation(fields: [warehouseId], references: [id])
+  tenant          Tenant        @relation(fields: [tenantId], references: [id])
 
   @@unique([inventoryItemId, warehouseId])
   @@index([warehouseId])
   @@index([onHand, reserved])
+  @@index([tenantId])
 }
 
 model StockReservation {
   id                 String                 @id @default(cuid())
+  tenantId           String
   inventoryItemId    String
   warehouseId        String
   orderId            String?
@@ -1196,15 +1202,18 @@ model StockReservation {
   warehouse          Warehouse              @relation(fields: [warehouseId], references: [id])
   order              Order?                 @relation(fields: [orderId], references: [id])
   inventoryMovements InventoryMovement[]
+  tenant             Tenant                 @relation(fields: [tenantId], references: [id])
 
   @@index([inventoryItemId, status])
   @@index([warehouseId, status])
   @@index([orderId])
   @@index([expiresAt])
+  @@index([tenantId])
 }
 
 model InventoryMovement {
   id              String                @id @default(cuid())
+  tenantId        String
   inventoryItemId String
   warehouseId     String
   orderId         String?
@@ -1222,6 +1231,7 @@ model InventoryMovement {
   warehouse       Warehouse             @relation(fields: [warehouseId], references: [id])
   order           Order?                @relation(fields: [orderId], references: [id])
   reservation     StockReservation?     @relation(fields: [reservationId], references: [id])
+  tenant          Tenant                @relation(fields: [tenantId], references: [id])
 
   @@index([inventoryItemId, createdAt])
   @@index([transactionId])
@@ -1229,6 +1239,7 @@ model InventoryMovement {
   @@index([orderId])
   @@index([reservationId])
   @@index([type, createdAt])
+  @@index([tenantId])
 }
 
 model StockCount {
@@ -1645,6 +1656,10 @@ model Tenant {
   orderItems                  OrderItem[]
   orderStatusHistories        OrderStatusHistory[]
   orderPaymentStatusHistories OrderPaymentStatusHistory[]
+  inventoryItems              InventoryItem[]
+  inventoryLevels             InventoryLevel[]
+  stockReservations           StockReservation[]
+  inventoryMovements          InventoryMovement[]
 
   @@index([deleted, status])
 }

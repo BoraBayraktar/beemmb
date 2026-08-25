@@ -78,9 +78,72 @@ export async function loadInventoryRouteContext(
     notFound();
   }
 
-  const [result, transactionResult, warehouses, suppliers] = await runWithTenantContext(
+  const {
+    result,
+    transactionResult,
+    warehouses,
+    suppliers,
+    alertResult,
+    stockCounts,
+    reports,
+    integrationSummary,
+    operationHistory,
+    exportHistory,
+    externalEventMonitoring,
+    inventoryPreferences,
+  } = await runWithTenantContext(
     { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
-    () => Promise.all([
+    () => loadInventoryRouteData(searchParams, pageVariant, user.id),
+  );
+
+  return {
+    locale,
+    dictionary,
+    result,
+    transactionResult,
+    warehouses,
+    suppliers,
+    alertResult,
+    stockCounts,
+    reports,
+    integrationSummary,
+    externalEventMonitoring,
+    operationHistory,
+    exportHistory,
+    inventoryPreferences,
+    query: {
+      search: searchParams.search ?? "",
+      stockStatusFilter: searchParams.stockStatusFilter ?? "all",
+      reservationFilter: searchParams.reservationFilter ?? "all",
+      warehouseFilter: searchParams.warehouseFilter ?? "all",
+      movementTypeFilter: searchParams.movementTypeFilter ?? "all",
+      transactionSearch: searchParams.transactionSearch ?? "",
+      transactionType: searchParams.transactionType ?? "all",
+      transactionWarehouse: searchParams.transactionWarehouse ?? "all",
+      transactionSku: searchParams.transactionSku ?? "",
+      transactionStartDate: searchParams.transactionStartDate ?? "",
+      transactionEndDate: searchParams.transactionEndDate ?? "",
+      transactionPage: searchParams.transactionPage ?? "1",
+      reportPeriodDays: searchParams.reportPeriodDays ?? "30",
+      reportComparePrevious: searchParams.reportComparePrevious ?? "1",
+      reportCostingMethod: searchParams.reportCostingMethod ?? "AVERAGE_COST",
+      reportCategoryFilter: searchParams.reportCategoryFilter ?? "all",
+      reportProductTypeFilter: searchParams.reportProductTypeFilter ?? "all",
+      reportWarehouseFilter: searchParams.reportWarehouseFilter ?? "all",
+      reportStockStatusFilter: searchParams.reportStockStatusFilter ?? "all",
+      reportReservationFilter: searchParams.reportReservationFilter ?? "all",
+      reportMovementTypeFilter: searchParams.reportMovementTypeFilter ?? "all",
+    },
+    labels: buildInventoryRouteLabels(dictionary),
+  };
+}
+
+async function loadInventoryRouteData(
+  searchParams: InventoryRouteSearchParams,
+  pageVariant: InventoryRoutePageVariant,
+  userId: string,
+) {
+  const [result, transactionResult, warehouses, suppliers] = await Promise.all([
     inventoryService.listInventoryOverview({
       search: searchParams.search,
       stockStatusFilter:
@@ -133,8 +196,7 @@ export async function loadInventoryRouteContext(
     }),
     inventoryService.listWarehouses(),
     catalogAdminService.listSuppliers(),
-    ]),
-  );
+  ]);
 
   const [alertResult, stockCounts, reports] = await Promise.all([
     inventoryService.listInventoryAlerts(),
@@ -247,11 +309,9 @@ export async function loadInventoryRouteContext(
       items: [],
     };
 
-  const inventoryPreferences = await inventoryService.getUserInventoryPreferences(user.id);
+  const inventoryPreferences = await inventoryService.getUserInventoryPreferences(userId);
 
   return {
-    locale,
-    dictionary,
     result,
     transactionResult,
     warehouses,
@@ -260,34 +320,15 @@ export async function loadInventoryRouteContext(
     stockCounts,
     reports,
     integrationSummary,
-    externalEventMonitoring,
     operationHistory,
     exportHistory,
+    externalEventMonitoring,
     inventoryPreferences,
-    query: {
-      search: searchParams.search ?? "",
-      stockStatusFilter: searchParams.stockStatusFilter ?? "all",
-      reservationFilter: searchParams.reservationFilter ?? "all",
-      warehouseFilter: searchParams.warehouseFilter ?? "all",
-      movementTypeFilter: searchParams.movementTypeFilter ?? "all",
-      transactionSearch: searchParams.transactionSearch ?? "",
-      transactionType: searchParams.transactionType ?? "all",
-      transactionWarehouse: searchParams.transactionWarehouse ?? "all",
-      transactionSku: searchParams.transactionSku ?? "",
-      transactionStartDate: searchParams.transactionStartDate ?? "",
-      transactionEndDate: searchParams.transactionEndDate ?? "",
-      transactionPage: searchParams.transactionPage ?? "1",
-      reportPeriodDays: searchParams.reportPeriodDays ?? "30",
-      reportComparePrevious: searchParams.reportComparePrevious ?? "1",
-      reportCostingMethod: searchParams.reportCostingMethod ?? "AVERAGE_COST",
-      reportCategoryFilter: searchParams.reportCategoryFilter ?? "all",
-      reportProductTypeFilter: searchParams.reportProductTypeFilter ?? "all",
-      reportWarehouseFilter: searchParams.reportWarehouseFilter ?? "all",
-      reportStockStatusFilter: searchParams.reportStockStatusFilter ?? "all",
-      reportReservationFilter: searchParams.reportReservationFilter ?? "all",
-      reportMovementTypeFilter: searchParams.reportMovementTypeFilter ?? "all",
-    },
-    labels: {
+  };
+}
+
+function buildInventoryRouteLabels(dictionary: ReturnType<typeof getDictionary>) {
+  return {
       title: dictionary.admin.inventoryManager,
       inventoryList: dictionary.admin.inventoryList,
       inventorySummary: dictionary.admin.inventorySummaryDescription,
@@ -559,6 +600,5 @@ export async function loadInventoryRouteContext(
       transactionFilterStartDate: dictionary.admin.inventoryTransactionStartDate,
       transactionFilterEndDate: dictionary.admin.inventoryTransactionEndDate,
       notSpecified: dictionary.common.notSpecified,
-    },
   };
 }

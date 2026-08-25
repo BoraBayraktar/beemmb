@@ -82,6 +82,8 @@ export class CommerceRepository {
   }
 
   private async ensureInventoryState(tx: PrismaTransactionClient, productId: string) {
+    const tenantId = requireTenantId();
+
     const product = await tx.product.findFirst({
       where: {
         id: productId,
@@ -129,6 +131,7 @@ export class CommerceRepository {
     if (!inventoryItemId) {
       const createdInventoryItem = await tx.inventoryItem.create({
         data: {
+          tenantId,
           productId: product.id,
           skuSnapshot: product.sku,
         },
@@ -160,6 +163,7 @@ export class CommerceRepository {
       // Legacy summary değerinden tek seferlik aggregate bootstrap yapılır; sonrasında otorite inventory level'dır.
       await tx.inventoryLevel.create({
         data: {
+          tenantId,
           inventoryItemId,
           warehouseId: defaultWarehouse.id,
           onHand: product.stock,
@@ -170,6 +174,7 @@ export class CommerceRepository {
       if (product.stock > 0) {
         await tx.inventoryMovement.create({
           data: {
+            tenantId,
             inventoryItemId,
             warehouseId: defaultWarehouse.id,
             type: "INITIAL_LOAD",
@@ -376,6 +381,8 @@ export class CommerceRepository {
     externalCarrierNameRaw?: string | null;
   }) {
     return this.runSerializableTransaction(async (tx) => {
+      const tenantId = requireTenantId();
+
       const holds: Array<{
         productId: string;
         variantId: string | null;
@@ -421,6 +428,7 @@ export class CommerceRepository {
 
           const reservation = await tx.stockReservation.create({
             data: {
+              tenantId,
               inventoryItemId: state.inventoryItemId,
               warehouseId: level.warehouseId,
               quantity: reservedQuantity,
@@ -445,6 +453,7 @@ export class CommerceRepository {
 
           await tx.inventoryMovement.create({
             data: {
+              tenantId,
               inventoryItemId: state.inventoryItemId,
               warehouseId: level.warehouseId,
               reservationId: reservation.id,
@@ -479,8 +488,6 @@ export class CommerceRepository {
           throw new Error(`INSUFFICIENT_STOCK:${line.productId}`);
         }
       }
-
-      const tenantId = requireTenantId();
 
       const order = await (tx.order as any).create({
         data: {
@@ -593,6 +600,7 @@ export class CommerceRepository {
 
         await tx.inventoryMovement.create({
           data: {
+            tenantId,
             inventoryItemId: hold.inventoryItemId,
             warehouseId: hold.warehouseId,
             orderId: order.id,
@@ -1135,6 +1143,8 @@ export class CommerceRepository {
     note: string;
   }) {
     await this.runSerializableTransaction(async (tx) => {
+      const tenantId = requireTenantId();
+
       const order = await tx.order.findFirst({
         where: {
           id: args.id,
@@ -1204,6 +1214,7 @@ export class CommerceRepository {
 
         await tx.inventoryMovement.create({
           data: {
+            tenantId,
             inventoryItemId: reservation.inventoryItemId,
             warehouseId: reservation.warehouseId,
             orderId: order.id,
