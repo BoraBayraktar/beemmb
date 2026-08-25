@@ -376,7 +376,7 @@ async function main() {
 
   for (const product of products) {
     const upserted = await prisma.product.upsert({
-      where: { slug: product.slug },
+      where: { tenantId_slug: { tenantId: "tenant-beemmb-platform", slug: product.slug } },
       update: {
         sku: product.sku,
         name: product.name,
@@ -391,6 +391,7 @@ async function main() {
         deletedUserId: null,
       },
       create: {
+        tenantId: "tenant-beemmb-platform",
         slug: product.slug,
         sku: product.sku,
         name: product.name,

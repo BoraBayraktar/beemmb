@@ -10,18 +10,19 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET(request: Request) {
   try {
-    await requirePermission("products.read");
-    const { searchParams } = new URL(request.url);
-    const products = await catalogAdminService.listProducts({
-      search: searchParams.get("search") ?? undefined,
-      categoryId: searchParams.get("categoryId") ?? undefined,
-      status: searchParams.get("status") as "all" | "DRAFT" | "ACTIVE" | "ARCHIVED" | null ?? undefined,
-      brandId: searchParams.get("brandId") ?? undefined,
-      supplierId: searchParams.get("supplierId") ?? undefined,
-      page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
-      pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : 10,
+    return await requirePermission("products.read", async () => {
+      const { searchParams } = new URL(request.url);
+      const products = await catalogAdminService.listProducts({
+        search: searchParams.get("search") ?? undefined,
+        categoryId: searchParams.get("categoryId") ?? undefined,
+        status: searchParams.get("status") as "all" | "DRAFT" | "ACTIVE" | "ARCHIVED" | null ?? undefined,
+        brandId: searchParams.get("brandId") ?? undefined,
+        supplierId: searchParams.get("supplierId") ?? undefined,
+        page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
+        pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : 10,
+      });
+      return NextResponse.json(products);
     });
-    return NextResponse.json(products);
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { catalogService } from "@/modules/catalog/services/catalog.service";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
@@ -30,14 +31,17 @@ export default async function AdminStorefrontPage({
     notFound();
   }
 
-  const [storefrontProductOptions, categories, storefrontItems] = await Promise.all([
-    catalogAdminService.listProducts({
-      page: 1,
-      pageSize: 50,
-    }),
-    catalogService.listCategories(),
-    storefrontService.listAdminItems(),
-  ]);
+  const [storefrontProductOptions, categories, storefrontItems] = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => Promise.all([
+      catalogAdminService.listProducts({
+        page: 1,
+        pageSize: 50,
+      }),
+      catalogService.listCategories(),
+      storefrontService.listAdminItems(),
+    ]),
+  );
 
   return (
     <StorefrontManager

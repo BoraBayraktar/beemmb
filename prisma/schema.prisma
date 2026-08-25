@@ -303,7 +303,8 @@ model ProductAttributeValueMarketplaceMapping {
 
 model Product {
   id                           String                        @id @default(cuid())
-  slug                         String                        @unique
+  tenantId                     String
+  slug                         String
   name                         String
   description                  String
   barcode                      String?
@@ -331,9 +332,10 @@ model Product {
   deleted                      Boolean                       @default(false)
   deletedDate                  DateTime?
   deletedUserId                String?
-  sku                          String                        @unique
+  sku                          String
   compareAtPrice               Decimal?                      @db.Decimal(10, 2)
   stock                        Int                           @default(0)
+  tenant                       Tenant                        @relation(fields: [tenantId], references: [id])
   orderItems                   OrderItem[]
   brand                        Brand?                        @relation(fields: [brandId], references: [id])
   category                     Category?                     @relation(fields: [categoryId], references: [id])
@@ -354,11 +356,13 @@ model Product {
   businessDocumentLines        BusinessDocumentLine[]
   inventoryHistoryEvents       InventoryHistoryEvent[]
 
+  @@unique([tenantId, slug])
+  @@unique([tenantId, sku])
   @@index([categoryId])
   @@index([brandId])
   @@index([primaryCariId])
   @@index([barcode])
-  @@index([deleted])
+  @@index([tenantId, deleted])
   @@index([status, salesEnabled])
   @@index([preferredSalesWarehouseId])
   @@index([preferredPurchaseWarehouseId])
@@ -383,9 +387,10 @@ model ProductAttributeLink {
 
 model ProductVariant {
   id                     String                         @id @default(cuid())
+  tenantId               String
   productId              String
-  slug                   String                         @unique
-  sku                    String                         @unique
+  slug                   String
+  sku                    String
   barcode                String?
   title                  String
   optionSummary          String
@@ -403,6 +408,7 @@ model ProductVariant {
   deleted                Boolean                        @default(false)
   deletedDate            DateTime?
   deletedUserId          String?
+  tenant                 Tenant                         @relation(fields: [tenantId], references: [id])
   product                Product                        @relation(fields: [productId], references: [id])
   attributeValues        ProductVariantAttributeValue[]
   inventoryItem          InventoryItem?
@@ -411,6 +417,8 @@ model ProductVariant {
   purchaseReceiptLines   PurchaseReceiptLine[]
   businessDocumentLines  BusinessDocumentLine[]
 
+  @@unique([tenantId, slug])
+  @@unique([tenantId, sku])
   @@index([productId, deleted, salesEnabled, sortOrder])
   @@index([barcode])
 }
@@ -1622,6 +1630,8 @@ model Tenant {
   categories       Category[]
   brands           Brand[]
   cariRecords      Cari[]
+  products         Product[]
+  productVariants  ProductVariant[]
 
   @@index([deleted, status])
 }

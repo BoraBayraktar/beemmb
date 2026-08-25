@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
@@ -25,10 +26,13 @@ export default async function AdminTrendyolIntegrationPage({
     redirect(`/${locale}/admin/login`);
   }
 
-  const [dashboard, productResult] = await Promise.all([
-    marketplaceIntegrationService.getDashboard({ channel: "TRENDYOL" }),
-    catalogAdminService.listProducts({ page: 1, pageSize: 50, status: "ACTIVE" }),
-  ]);
+  const [dashboard, productResult] = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => Promise.all([
+      marketplaceIntegrationService.getDashboard({ channel: "TRENDYOL" }),
+      catalogAdminService.listProducts({ page: 1, pageSize: 50, status: "ACTIVE" }),
+    ]),
+  );
   const productOptions = productResult.items.flatMap((product) => {
     const baseOption = {
       value: `${product.id}:`,

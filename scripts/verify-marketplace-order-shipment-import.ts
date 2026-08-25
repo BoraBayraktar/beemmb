@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { cariService } from "@/modules/cari/services/cari.service";
 import { marketplaceOrderService } from "@/modules/commerce/services/marketplace-order.service";
 
@@ -14,6 +15,7 @@ function assert(condition: unknown, message: string): asserts condition {
 async function createTestProduct(unique: number) {
   return prisma.product.create({
     data: {
+      tenantId: "tenant-beemmb-platform",
       slug: `marketplace-shipment-product-${unique}`,
       sku: `marketplace-shipment-sku-${unique}`,
       name: "Marketplace Shipment Test Product",
@@ -133,7 +135,7 @@ async function main() {
   console.log("Marketplace order shipment/address import verification passed");
 }
 
-main()
+runWithTenantContext({ tenantId: "tenant-beemmb-platform", isPlatformOperator: false }, main)
   .catch((error) => {
     console.error(error);
     process.exitCode = 1;

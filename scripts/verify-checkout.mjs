@@ -72,6 +72,7 @@ async function main() {
     const unique = Date.now();
     const created = await prisma.product.create({
       data: {
+        tenantId: "tenant-beemmb-platform",
         slug: `checkout-verify-${unique}`,
         sku: `checkout-verify-sku-${unique}`,
         name: "Checkout Verify Product",

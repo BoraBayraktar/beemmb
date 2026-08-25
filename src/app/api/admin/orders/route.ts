@@ -6,20 +6,21 @@ import { AuthContextError, requirePermission } from "@/modules/identity/services
 
 export async function GET(request: Request) {
   try {
-    await requirePermission("orders.read");
-    const { searchParams } = new URL(request.url);
+    return await requirePermission("orders.read", async () => {
+      const { searchParams } = new URL(request.url);
 
-    const orders = await commerceService.listOrders({
-      search: searchParams.get("search") ?? undefined,
-      status: (searchParams.get("status") as "CONFIRMED" | "CANCELLED" | null) ?? undefined,
-      paymentStatus: (searchParams.get("paymentStatus") as "PENDING" | "AUTHORIZED" | "PAID" | "FAILED" | "REFUNDED" | null) ?? undefined,
-      shipmentStatus: (searchParams.get("shipmentStatus") as "NOT_SHIPPED" | "PREPARING" | "SHIPPED" | "DELIVERED" | "RETURNED" | null) ?? undefined,
-      carrierCompanyId: searchParams.get("carrierCompanyId") ?? undefined,
-      page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
-      pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : 10,
+      const orders = await commerceService.listOrders({
+        search: searchParams.get("search") ?? undefined,
+        status: (searchParams.get("status") as "CONFIRMED" | "CANCELLED" | null) ?? undefined,
+        paymentStatus: (searchParams.get("paymentStatus") as "PENDING" | "AUTHORIZED" | "PAID" | "FAILED" | "REFUNDED" | null) ?? undefined,
+        shipmentStatus: (searchParams.get("shipmentStatus") as "NOT_SHIPPED" | "PREPARING" | "SHIPPED" | "DELIVERED" | "RETURNED" | null) ?? undefined,
+        carrierCompanyId: searchParams.get("carrierCompanyId") ?? undefined,
+        page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
+        pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : 10,
+      });
+
+      return NextResponse.json(orders);
     });
-
-    return NextResponse.json(orders);
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

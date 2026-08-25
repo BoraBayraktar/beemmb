@@ -8,10 +8,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requirePermission("integrationsN11.manage");
-    const { id } = await params;
-    const result = await n11StockSyncService.getTaskResultForJob(id);
-    return NextResponse.json(result);
+    return await requirePermission("integrationsN11.manage", async () => {
+      const { id } = await params;
+      const result = await n11StockSyncService.getTaskResultForJob(id);
+      return NextResponse.json(result);
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

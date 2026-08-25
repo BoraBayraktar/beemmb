@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { cariService } from "@/modules/cari/services/cari.service";
 import { syncOrderShipmentFromPackageStatus } from "@/modules/integration/services/marketplace-package-shipment-sync.service";
 
@@ -56,6 +57,7 @@ async function main() {
 
   const product = await prisma.product.create({
     data: {
+      tenantId: "tenant-beemmb-platform",
       slug: `shipment-sync-product-${unique}`,
       sku: `shipment-sync-sku-${unique}`,
       name: "Shipment Sync Test Product",
@@ -171,7 +173,7 @@ async function main() {
   console.log("Marketplace package shipment sync verification passed");
 }
 
-main()
+runWithTenantContext({ tenantId: "tenant-beemmb-platform", isPlatformOperator: false }, main)
   .catch((error) => {
     console.error(error);
     process.exitCode = 1;

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
+import { runWithTenantContext } from "@/lib/tenant-context";
+import { PLATFORM_TENANT_ID } from "@/lib/tenant-defaults";
 import { isMarketplaceSystemRequestAuthorized } from "@/modules/integration/services/marketplace-system-auth.service";
 import { marketplaceIntegrationService } from "@/modules/integration/services/marketplace-integration.service";
 
@@ -11,16 +13,19 @@ async function handle(request: Request) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const result = await marketplaceIntegrationService.scheduleActiveN11Imports({
-      processQueue: searchParams.get("processQueue") !== "false",
-      limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : 20,
-      followUpTasks: searchParams.get("followUpTasks") !== "false",
-      taskLimit: searchParams.get("taskLimit") ? Number(searchParams.get("taskLimit")) : undefined,
-      taskMinCheckIntervalMinutes: searchParams.get("taskMinCheckIntervalMinutes")
-        ? Number(searchParams.get("taskMinCheckIntervalMinutes"))
-        : undefined,
-      status: searchParams.get("status") ?? undefined,
-    });
+    const result = await runWithTenantContext(
+      { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: true },
+      () => marketplaceIntegrationService.scheduleActiveN11Imports({
+        processQueue: searchParams.get("processQueue") !== "false",
+        limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : 20,
+        followUpTasks: searchParams.get("followUpTasks") !== "false",
+        taskLimit: searchParams.get("taskLimit") ? Number(searchParams.get("taskLimit")) : undefined,
+        taskMinCheckIntervalMinutes: searchParams.get("taskMinCheckIntervalMinutes")
+          ? Number(searchParams.get("taskMinCheckIntervalMinutes"))
+          : undefined,
+        status: searchParams.get("status") ?? undefined,
+      }),
+    );
 
     return NextResponse.json(result);
   } catch (error) {

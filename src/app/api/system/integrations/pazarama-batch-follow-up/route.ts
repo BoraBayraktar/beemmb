@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { runWithTenantContext } from "@/lib/tenant-context";
+import { PLATFORM_TENANT_ID } from "@/lib/tenant-defaults";
 import { isMarketplaceSystemRequestAuthorized } from "@/modules/integration/services/marketplace-system-auth.service";
 import { pazaramaProductSyncService } from "@/modules/integration/services/pazarama-product-sync.service";
 
@@ -10,12 +12,15 @@ async function handle(request: Request) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const result = await pazaramaProductSyncService.followUpPendingBatches({
-      limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : undefined,
-      minCheckIntervalMinutes: searchParams.get("minCheckIntervalMinutes")
-        ? Number(searchParams.get("minCheckIntervalMinutes"))
-        : undefined,
-    });
+    const result = await runWithTenantContext(
+      { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: true },
+      () => pazaramaProductSyncService.followUpPendingBatches({
+        limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : undefined,
+        minCheckIntervalMinutes: searchParams.get("minCheckIntervalMinutes")
+          ? Number(searchParams.get("minCheckIntervalMinutes"))
+          : undefined,
+      }),
+    );
 
     return NextResponse.json(result);
   } catch {

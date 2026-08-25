@@ -8,10 +8,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requirePermission("integrationsPazarama.manage");
-    const { id } = await params;
-    const result = await pazaramaStockSyncService.getListingBatchResultForJob(id);
-    return NextResponse.json(result);
+    return await requirePermission("integrationsPazarama.manage", async () => {
+      const { id } = await params;
+      const result = await pazaramaStockSyncService.getListingBatchResultForJob(id);
+      return NextResponse.json(result);
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

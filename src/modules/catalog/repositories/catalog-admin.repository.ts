@@ -449,8 +449,10 @@ export class CatalogAdminRepository {
   }
 
   async createProduct(input: AdminCreateProductRecordInput) {
+    const tenantId = requireTenantId();
     return prisma.product.create({
       data: {
+        tenantId,
         slug: input.slug,
         sku: input.sku,
         barcode: input.barcode ?? null,
@@ -489,6 +491,7 @@ export class CatalogAdminRepository {
         variants: input.variants?.length
           ? {
               create: input.variants.map((variant, index) => ({
+                tenantId,
                 slug: variant.slug,
                 sku: variant.sku,
                 barcode: variant.barcode ?? null,
@@ -608,6 +611,7 @@ export class CatalogAdminRepository {
               variants: {
                 deleteMany: {},
                 create: input.variants.map((variant, index) => ({
+                  tenantId: requireTenantId(),
                   slug: variant.slug,
                   sku: variant.sku,
                   barcode: variant.barcode ?? null,
@@ -774,6 +778,7 @@ export class CatalogAdminRepository {
 
           await tx.productVariant.create({
             data: {
+              tenantId: requireTenantId(),
               productId: input.id,
               slug: variant.slug,
               sku: variant.sku,

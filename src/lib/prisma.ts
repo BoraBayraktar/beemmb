@@ -10,7 +10,7 @@ import { getTenantContext } from "@/lib/tenant-context";
  * listeye eklenmeden production'da tenant-scoped sayilamaz (DEVELOPMENT_RULES.md
  * madde 7).
  */
-const TENANT_SCOPED_MODELS = new Set<Prisma.ModelName>(["Warehouse", "Category", "Brand", "Cari"]);
+const TENANT_SCOPED_MODELS = new Set<Prisma.ModelName>(["Warehouse", "Category", "Brand", "Cari", "Product", "ProductVariant"]);
 
 const WHERE_MANY_OPERATIONS = new Set([
   "findMany",

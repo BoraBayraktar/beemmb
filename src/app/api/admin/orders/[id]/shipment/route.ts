@@ -7,23 +7,24 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requirePermission("orders.manage");
-    const { id } = await context.params;
-    const payload = await request.json();
-    const updated = await commerceService.updateOrderShipmentInfo({ id, ...payload });
+    return await requirePermission("orders.manage", async (user) => {
+      const { id } = await context.params;
+      const payload = await request.json();
+      const updated = await commerceService.updateOrderShipmentInfo({ id, ...payload });
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "ORDER",
-      entityId: id,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: `Sipariş kargo bilgisi güncellendi: ${updated.shipment.shipmentStatus}`,
-      metadata: {
-        scope: "orderShipment",
-      },
+      await auditLogService.recordFromRequest(request, {
+        entityType: "ORDER",
+        entityId: id,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: `Sipariş kargo bilgisi güncellendi: ${updated.shipment.shipmentStatus}`,
+        metadata: {
+          scope: "orderShipment",
+        },
+      });
+
+      return NextResponse.json({ item: updated });
     });
-
-    return NextResponse.json({ item: updated });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

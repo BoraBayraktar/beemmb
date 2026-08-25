@@ -11,18 +11,19 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requirePermission("integrations.read");
-    const { id } = await params;
-    const { searchParams } = new URL(request.url);
-    const channel = (searchParams.get("channel") as "TRENDYOL" | "N11" | "PAZARAMA" | "HEPSIBURADA" | null) ?? "TRENDYOL";
-    const result = channel === "N11"
-      ? await n11ProductSyncService.preflightProduct(id)
-      : channel === "PAZARAMA"
-        ? await pazaramaProductSyncService.preflightProduct(id)
-      : channel === "HEPSIBURADA"
-        ? await hepsiburadaProductSyncService.preflightProduct(id)
-        : await trendyolProductSyncService.preflightProduct(id);
-    return NextResponse.json(result);
+    return await requirePermission("integrations.read", async () => {
+      const { id } = await params;
+      const { searchParams } = new URL(request.url);
+      const channel = (searchParams.get("channel") as "TRENDYOL" | "N11" | "PAZARAMA" | "HEPSIBURADA" | null) ?? "TRENDYOL";
+      const result = channel === "N11"
+        ? await n11ProductSyncService.preflightProduct(id)
+        : channel === "PAZARAMA"
+          ? await pazaramaProductSyncService.preflightProduct(id)
+        : channel === "HEPSIBURADA"
+          ? await hepsiburadaProductSyncService.preflightProduct(id)
+          : await trendyolProductSyncService.preflightProduct(id);
+      return NextResponse.json(result);
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { cariService } from "@/modules/cari/services/cari.service";
 import { hepsiburadaPackageStatusService } from "@/modules/integration/services/hepsiburada-package-status.service";
 import { syncOrderShipmentFromPackageStatus } from "@/modules/integration/services/marketplace-package-shipment-sync.service";
@@ -93,6 +94,7 @@ async function main() {
   // --- Bolum 3: syncOrderShipmentFromPackageStatus - shipmentStatus/cargoDeliveredAt genellemesi ---
   const product = await prisma.product.create({
     data: {
+      tenantId: "tenant-beemmb-platform",
       slug: `hb-cargo-product-${unique}`,
       sku: `hb-cargo-sku-${unique}`,
       name: "HB Cargo Test Product",
@@ -193,7 +195,7 @@ async function main() {
   console.log("Hepsiburada kargo firmasi degistirme / takip bilgisi okuma dogrulamasi gecti");
 }
 
-main()
+runWithTenantContext({ tenantId: "tenant-beemmb-platform", isPlatformOperator: false }, main)
   .catch((error) => {
     console.error(error);
     process.exitCode = 1;

@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { cariService } from "@/modules/cari/services/cari.service";
 import { commerceService } from "@/modules/commerce/services/commerce.service";
 
@@ -174,7 +175,7 @@ async function main() {
   }
 }
 
-main()
+runWithTenantContext({ tenantId: "tenant-beemmb-platform", isPlatformOperator: false }, main)
   .catch((error) => {
     console.error(error);
     process.exitCode = 1;

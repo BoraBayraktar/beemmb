@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
+import { runWithTenantContext } from "@/lib/tenant-context";
+import { PLATFORM_TENANT_ID } from "@/lib/tenant-defaults";
 import { isMarketplaceSystemRequestAuthorized } from "@/modules/integration/services/marketplace-system-auth.service";
 import { marketplaceIntegrationService } from "@/modules/integration/services/marketplace-integration.service";
 import { hepsiburadaStockSyncService } from "@/modules/integration/services/hepsiburada-stock-sync.service";
@@ -12,18 +14,24 @@ async function handle(request: Request) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const result = await marketplaceIntegrationService.scheduleActiveHepsiburadaImports({
-      processQueue: searchParams.get("processQueue") !== "false",
-      limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : 20,
-    });
-    const uploadFollowUp = searchParams.get("followUpUploads") === "false"
-      ? null
-      : await hepsiburadaStockSyncService.followUpPendingUploads({
-          limit: searchParams.get("uploadLimit") ? Number(searchParams.get("uploadLimit")) : undefined,
-          minCheckIntervalMinutes: searchParams.get("uploadMinCheckIntervalMinutes")
-            ? Number(searchParams.get("uploadMinCheckIntervalMinutes"))
-            : undefined,
+    const { result, uploadFollowUp } = await runWithTenantContext(
+      { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: true },
+      async () => {
+        const result = await marketplaceIntegrationService.scheduleActiveHepsiburadaImports({
+          processQueue: searchParams.get("processQueue") !== "false",
+          limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : 20,
         });
+        const uploadFollowUp = searchParams.get("followUpUploads") === "false"
+          ? null
+          : await hepsiburadaStockSyncService.followUpPendingUploads({
+              limit: searchParams.get("uploadLimit") ? Number(searchParams.get("uploadLimit")) : undefined,
+              minCheckIntervalMinutes: searchParams.get("uploadMinCheckIntervalMinutes")
+                ? Number(searchParams.get("uploadMinCheckIntervalMinutes"))
+                : undefined,
+            });
+        return { result, uploadFollowUp };
+      },
+    );
 
     return NextResponse.json({
       ...result,

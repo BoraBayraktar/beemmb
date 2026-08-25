@@ -7,10 +7,11 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    await requirePermission("orders.read");
-    const { id } = await context.params;
-    const order = await commerceService.getOrderById(id);
-    return NextResponse.json(order);
+    return await requirePermission("orders.read", async () => {
+      const { id } = await context.params;
+      const order = await commerceService.getOrderById(id);
+      return NextResponse.json(order);
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });
@@ -30,18 +31,19 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requirePermission("orders.manage");
-    const { id } = await context.params;
-    const payload = await request.json();
-    const updated = await commerceService.updateOrderStatus({ id, changedByUserId: user.id, ...payload });
-    await auditLogService.recordFromRequest(request, {
-      entityType: "ORDER",
-      entityId: id,
-      action: "STATUS_UPDATE",
-      actorUserId: user.id,
-      summary: `Sipariş durumu güncellendi: ${updated.status} / ${updated.paymentStatus}`,
+    return await requirePermission("orders.manage", async (user) => {
+      const { id } = await context.params;
+      const payload = await request.json();
+      const updated = await commerceService.updateOrderStatus({ id, changedByUserId: user.id, ...payload });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "ORDER",
+        entityId: id,
+        action: "STATUS_UPDATE",
+        actorUserId: user.id,
+        summary: `Sipariş durumu güncellendi: ${updated.status} / ${updated.paymentStatus}`,
+      });
+      return NextResponse.json({ item: updated });
     });
-    return NextResponse.json({ item: updated });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });
@@ -61,17 +63,18 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 
 export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requirePermission("orders.manage");
-    const { id } = await context.params;
-    await commerceService.softDeleteOrder(id, user.id);
-    await auditLogService.recordFromRequest(request, {
-      entityType: "ORDER",
-      entityId: id,
-      action: "DELETE",
-      actorUserId: user.id,
-      summary: "Sipariş silindi",
+    return await requirePermission("orders.manage", async (user) => {
+      const { id } = await context.params;
+      await commerceService.softDeleteOrder(id, user.id);
+      await auditLogService.recordFromRequest(request, {
+        entityType: "ORDER",
+        entityId: id,
+        action: "DELETE",
+        actorUserId: user.id,
+        summary: "Sipariş silindi",
+      });
+      return NextResponse.json({ ok: true });
     });
-    return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

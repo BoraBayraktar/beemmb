@@ -13,15 +13,16 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requirePermission("products.read");
-    const { id } = await context.params;
-    const item = await catalogAdminService.getProductById(id);
+    return await requirePermission("products.read", async () => {
+      const { id } = await context.params;
+      const item = await catalogAdminService.getProductById(id);
 
-    if (!item) {
-      return NextResponse.json({ message: "Product not found" }, { status: 404 });
-    }
+      if (!item) {
+        return NextResponse.json({ message: "Product not found" }, { status: 404 });
+      }
 
-    return NextResponse.json({ item });
+      return NextResponse.json({ item });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });
@@ -70,17 +71,18 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("products.manage");
-    const { id } = await context.params;
-    await catalogAdminService.softDeleteProduct(id, user.id);
-    await auditLogService.recordFromRequest(request, {
-      entityType: "PRODUCT",
-      entityId: id,
-      action: "DELETE",
-      actorUserId: user.id,
-      summary: "Ürün silindi",
+    return await requirePermission("products.manage", async (user) => {
+      const { id } = await context.params;
+      await catalogAdminService.softDeleteProduct(id, user.id);
+      await auditLogService.recordFromRequest(request, {
+        entityType: "PRODUCT",
+        entityId: id,
+        action: "DELETE",
+        actorUserId: user.id,
+        summary: "Ürün silindi",
+      });
+      return NextResponse.json({ ok: true });
     });
-    return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

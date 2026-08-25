@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
+import { runWithTenantContext } from "@/lib/tenant-context";
+import { PLATFORM_TENANT_ID } from "@/lib/tenant-defaults";
 import { commerceService } from "@/modules/commerce/services/commerce.service";
 
 export async function POST(request: Request) {
   try {
     const payload = await request.json();
-    const quote = await commerceService.quote(payload);
+    const quote = await runWithTenantContext(
+      { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: false },
+      () => commerceService.quote(payload),
+    );
     return NextResponse.json(quote);
   } catch (error) {
     if (error instanceof ZodError) {

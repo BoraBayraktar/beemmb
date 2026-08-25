@@ -435,11 +435,14 @@ export class CatalogService {
 
     if (hasFeatureFilters || hasAggregateStockFilters) {
       const poolSize = Math.max(parsed.pageSize * 20, 240);
-      const pool = await this.repository.findMany({
-        ...repositoryBaseArgs,
-        skip: 0,
-        take: poolSize,
-      });
+      const pool = await runWithTenantContext(
+        { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: false },
+        () => this.repository.findMany({
+          ...repositoryBaseArgs,
+          skip: 0,
+          take: poolSize,
+        }),
+      );
 
       const mappedPool = pool.map(mapProduct);
       const filteredItems = mappedPool.filter((item) => (
@@ -469,33 +472,36 @@ export class CatalogService {
       return result;
     }
 
-    const [items, total, facetRows] = await Promise.all([
-      this.repository.findMany({
-        ...repositoryBaseArgs,
-        skip,
-        take: parsed.pageSize,
-      }),
-      parsed.includeTotal
-        ? this.repository.count({
-            search: repositoryBaseArgs.search,
-            categoryIds: repositoryBaseArgs.categoryIds,
-            inStockOnly: repositoryBaseArgs.inStockOnly,
-            outOfStockOnly: repositoryBaseArgs.outOfStockOnly,
-            lowStockOnly: repositoryBaseArgs.lowStockOnly,
-            newOnly: repositoryBaseArgs.newOnly,
-            discountedOnly: repositoryBaseArgs.discountedOnly,
-            minPrice: repositoryBaseArgs.minPrice,
-            maxPrice: repositoryBaseArgs.maxPrice,
-          })
-        : Promise.resolve(skip + parsed.pageSize + 1),
-      parsed.includeFacets
-        ? this.repository.findMany({
-            ...repositoryBaseArgs,
-            skip: 0,
-            take: 240,
-          })
-        : Promise.resolve([]),
-    ]);
+    const [items, total, facetRows] = await runWithTenantContext(
+      { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: false },
+      () => Promise.all([
+        this.repository.findMany({
+          ...repositoryBaseArgs,
+          skip,
+          take: parsed.pageSize,
+        }),
+        parsed.includeTotal
+          ? this.repository.count({
+              search: repositoryBaseArgs.search,
+              categoryIds: repositoryBaseArgs.categoryIds,
+              inStockOnly: repositoryBaseArgs.inStockOnly,
+              outOfStockOnly: repositoryBaseArgs.outOfStockOnly,
+              lowStockOnly: repositoryBaseArgs.lowStockOnly,
+              newOnly: repositoryBaseArgs.newOnly,
+              discountedOnly: repositoryBaseArgs.discountedOnly,
+              minPrice: repositoryBaseArgs.minPrice,
+              maxPrice: repositoryBaseArgs.maxPrice,
+            })
+          : Promise.resolve(skip + parsed.pageSize + 1),
+        parsed.includeFacets
+          ? this.repository.findMany({
+              ...repositoryBaseArgs,
+              skip: 0,
+              take: 240,
+            })
+          : Promise.resolve([]),
+      ]),
+    );
 
     const resolvedTotal = parsed.includeTotal ? total : items.length === parsed.pageSize ? skip + items.length + 1 : skip + items.length;
     const resolvedTotalPages = parsed.includeTotal
@@ -532,7 +538,10 @@ export class CatalogService {
       await redisCache.del(cacheKey);
     }
 
-    const product = await this.repository.findBySlug(slug);
+    const product = await runWithTenantContext(
+      { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: false },
+      () => this.repository.findBySlug(slug),
+    );
     if (!product) {
       return null;
     }
@@ -593,12 +602,16 @@ export class CatalogService {
     comment: string;
   }) {
     const parsed = createReviewSchema.parse(input);
-    const existingOwn = await this.repository.findOwnReviewByProductSlug(parsed.slug, input.userId);
+    const { existingOwn, product } = await runWithTenantContext(
+      { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: false },
+      async () => ({
+        existingOwn: await this.repository.findOwnReviewByProductSlug(parsed.slug, input.userId),
+        product: await this.repository.findActiveProductIdBySlug(parsed.slug),
+      }),
+    );
     if (existingOwn) {
       throw new Error("Review already exists");
     }
-
-    const product = await this.repository.findActiveProductIdBySlug(parsed.slug);
 
     if (!product) {
       throw new Error("Product not found");
@@ -674,7 +687,10 @@ export class CatalogService {
     question: string;
   }) {
     const parsed = createQuestionSchema.parse(input);
-    const product = await this.repository.findActiveProductIdBySlug(parsed.slug);
+    const product = await runWithTenantContext(
+      { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: false },
+      () => this.repository.findActiveProductIdBySlug(parsed.slug),
+    );
 
     if (!product) {
       throw new Error("Product not found");
