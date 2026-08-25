@@ -60,6 +60,7 @@ async function main() {
 
   const orderDelivered1 = await prisma.order.create({
     data: {
+      tenantId: "tenant-beemmb-platform",
       orderNumber: `REPORT-A-${unique}`,
       status: "CONFIRMED",
       subtotal: 10,
@@ -75,6 +76,7 @@ async function main() {
 
   const orderDelivered2 = await prisma.order.create({
     data: {
+      tenantId: "tenant-beemmb-platform",
       orderNumber: `REPORT-B-${unique}`,
       status: "CONFIRMED",
       subtotal: 10,
@@ -90,6 +92,7 @@ async function main() {
 
   const orderShippedOnly = await prisma.order.create({
     data: {
+      tenantId: "tenant-beemmb-platform",
       orderNumber: `REPORT-C-${unique}`,
       status: "CONFIRMED",
       subtotal: 10,
@@ -103,6 +106,7 @@ async function main() {
 
   const orderNoCarrier = await prisma.order.create({
     data: {
+      tenantId: "tenant-beemmb-platform",
       orderNumber: `REPORT-D-${unique}`,
       status: "CONFIRMED",
       subtotal: 10,

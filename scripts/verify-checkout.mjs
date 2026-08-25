@@ -134,7 +134,7 @@ async function main() {
     assert(checkoutPayload.total === checkoutPayload.subtotal - checkoutPayload.discountTotal, "Checkout total should match subtotal-discount");
     createdOrderNumber = checkoutPayload.orderNumber;
 
-    const savedOrder = await prisma.order.findUnique({
+    const savedOrder = await prisma.order.findFirst({
       where: {
         orderNumber: checkoutPayload.orderNumber,
       },

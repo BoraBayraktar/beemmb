@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { collectionsService } from "@/modules/finance/services/collections.service";
 import { receivablesService } from "@/modules/finance/services/receivables.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
@@ -28,11 +29,14 @@ export default async function AdminCollectionDetailPage({
     notFound();
   }
 
-  const [collectionItem, receivableItem, allocationContexts] = await Promise.all([
-    collectionsService.getCollectionReadinessByOrderId(locale, orderId),
-    receivablesService.getReceivableByOrderId(orderId, locale),
-    collectionsService.listOrderAllocationContexts(orderId, locale),
-  ]);
+  const [collectionItem, receivableItem, allocationContexts] = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => Promise.all([
+      collectionsService.getCollectionReadinessByOrderId(locale, orderId),
+      receivablesService.getReceivableByOrderId(orderId, locale),
+      collectionsService.listOrderAllocationContexts(orderId, locale),
+    ]),
+  );
 
   if (!collectionItem || !receivableItem) {
     notFound();

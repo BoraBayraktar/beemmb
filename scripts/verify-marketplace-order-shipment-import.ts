@@ -62,7 +62,7 @@ async function main() {
     lines: [{ productId: productA.id, productVariantId: null, quantity: 1, unitPrice: null, currency: "TRY" }],
   });
 
-  const orderARow = await prisma.order.findUnique({ where: { orderNumber: orderA.orderNumber } });
+  const orderARow = await prisma.order.findFirst({ where: { orderNumber: orderA.orderNumber } });
   assert(orderARow, "Order A should exist");
   assert(orderARow!.shipmentAddressLine === "Test Mah. Test Sk. No:1", `shipmentAddressLine mismatch: ${orderARow!.shipmentAddressLine}`);
   assert(orderARow!.shipmentCity === "Istanbul", `shipmentCity mismatch: ${orderARow!.shipmentCity}`);
@@ -98,7 +98,7 @@ async function main() {
     lines: [{ productId: productB.id, productVariantId: null, quantity: 1, unitPrice: null, currency: "TRY" }],
   });
 
-  const orderBRow = await prisma.order.findUnique({ where: { orderNumber: orderB.orderNumber } });
+  const orderBRow = await prisma.order.findFirst({ where: { orderNumber: orderB.orderNumber } });
   assert(orderBRow, "Order B should exist");
   assert(orderBRow!.shipmentAddressLine === "Baska Mah. Baska Sk. No:3", `shipmentAddressLine (alt keys) mismatch: ${orderBRow!.shipmentAddressLine}`);
   assert(orderBRow!.shipmentCity === "Izmir", `shipmentCity (il) mismatch: ${orderBRow!.shipmentCity}`);
@@ -117,7 +117,7 @@ async function main() {
     lines: [{ productId: productC.id, productVariantId: null, quantity: 1, unitPrice: null, currency: "TRY" }],
   });
 
-  const orderCRow = await prisma.order.findUnique({ where: { orderNumber: orderC.orderNumber } });
+  const orderCRow = await prisma.order.findFirst({ where: { orderNumber: orderC.orderNumber } });
   assert(orderCRow, "Order C should exist");
   assert(orderCRow!.shipmentAddressLine === null, "Order C shipmentAddressLine should be null");
   assert(orderCRow!.carrierCariId === null, "Order C carrierCariId should be null");

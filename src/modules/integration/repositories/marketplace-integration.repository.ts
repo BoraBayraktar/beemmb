@@ -660,7 +660,7 @@ export class MarketplaceIntegrationRepository {
   }
 
   async markPackageOrderCreated(args: { packageId: string; orderNumber: string }) {
-    const order = await prisma.order.findUnique({
+    const order = await prisma.order.findFirst({
       where: {
         orderNumber: args.orderNumber,
       },

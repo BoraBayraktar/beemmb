@@ -11,20 +11,21 @@ const bodySchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("finance.manage");
-    const payload = bodySchema.parse(await request.json().catch(() => ({})));
-    const result = await financeAccountEntryService.backfillRecentEntries(payload.limit ?? 200);
+    return await requirePermission("finance.manage", async (user) => {
+      const payload = bodySchema.parse(await request.json().catch(() => ({})));
+      const result = await financeAccountEntryService.backfillRecentEntries(payload.limit ?? 200);
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "FINANCE_COLLECTION",
-      entityId: "ledger-backfill",
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: "Finans defter geriye dönük projeksiyon çalıştırıldı",
-      metadata: result,
+      await auditLogService.recordFromRequest(request, {
+        entityType: "FINANCE_COLLECTION",
+        entityId: "ledger-backfill",
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: "Finans defter geriye dönük projeksiyon çalıştırıldı",
+        metadata: result,
+      });
+
+      return NextResponse.json(result);
     });
-
-    return NextResponse.json(result);
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

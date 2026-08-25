@@ -340,7 +340,7 @@ export class CommerceRepository {
   }
 
   async findOrderByNumber(orderNumber: string) {
-    return prisma.order.findUnique({
+    return prisma.order.findFirst({
       where: {
         orderNumber,
       },
@@ -480,8 +480,11 @@ export class CommerceRepository {
         }
       }
 
+      const tenantId = requireTenantId();
+
       const order = await (tx.order as any).create({
         data: {
+          tenantId,
           orderNumber: args.orderNumber,
           cariId: args.customerAccountId ?? null,
           status: "CONFIRMED",
@@ -507,6 +510,7 @@ export class CommerceRepository {
           externalCarrierNameRaw: args.externalCarrierNameRaw ?? null,
           statusHistory: {
             create: {
+              tenantId,
               fromStatus: null,
               toStatus: "CONFIRMED",
               source: "SYSTEM",
@@ -515,6 +519,7 @@ export class CommerceRepository {
           },
           paymentStatusHistory: {
             create: {
+              tenantId,
               fromStatus: null,
               toStatus: "PENDING",
               source: "SYSTEM",
@@ -523,6 +528,7 @@ export class CommerceRepository {
           },
           items: {
             create: args.lines.map((line) => ({
+              tenantId,
               productId: line.productId,
               productVariantId: line.variantId,
               productSlug: line.slug,
@@ -926,6 +932,7 @@ export class CommerceRepository {
         status: args.toStatus,
         statusHistory: {
           create: {
+            tenantId: requireTenantId(),
             fromStatus: args.fromStatus,
             toStatus: args.toStatus,
             source: "ADMIN",
@@ -1031,6 +1038,7 @@ export class CommerceRepository {
         paymentStatus: args.toStatus,
         paymentStatusHistory: {
           create: {
+            tenantId: requireTenantId(),
             fromStatus: args.fromStatus,
             toStatus: args.toStatus,
             source: "ADMIN",

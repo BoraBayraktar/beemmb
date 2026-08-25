@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { receivablesService } from "@/modules/finance/services/receivables.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
@@ -41,14 +42,17 @@ export default async function AdminCustomerReceivablesPage({
   const overdueOnly =
     resolvedSearchParams.overdueOnly === "1" || resolvedSearchParams.overdueOnly === "true";
 
-  const result = await receivablesService.listOperationalReceivables({
-    search: resolvedSearchParams.search,
-    paymentStatus,
-    overdueOnly,
-    page: resolvedSearchParams.page ? Number(resolvedSearchParams.page) : 1,
-    pageSize: 12,
-    locale,
-  });
+  const result = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => receivablesService.listOperationalReceivables({
+      search: resolvedSearchParams.search,
+      paymentStatus,
+      overdueOnly,
+      page: resolvedSearchParams.page ? Number(resolvedSearchParams.page) : 1,
+      pageSize: 12,
+      locale,
+    }),
+  );
 
   return (
     <CustomerReceivablesManager

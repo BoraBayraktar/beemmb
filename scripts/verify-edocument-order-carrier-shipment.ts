@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { cariService } from "@/modules/cari/services/cari.service";
 import { eDocumentService } from "@/modules/edocument/services/edocument.service";
 
@@ -68,6 +69,7 @@ async function main() {
 
   const orderWithCarrier = await prisma.order.create({
     data: {
+      tenantId: "tenant-beemmb-platform",
       orderNumber: `EDOC-SHIP-ORDER-A-${unique}`,
       status: "CONFIRMED",
       subtotal: 10,
@@ -80,6 +82,7 @@ async function main() {
 
   const orderWithCarrierNoTax = await prisma.order.create({
     data: {
+      tenantId: "tenant-beemmb-platform",
       orderNumber: `EDOC-SHIP-ORDER-B-${unique}`,
       status: "CONFIRMED",
       subtotal: 10,
@@ -91,6 +94,7 @@ async function main() {
 
   const orderWithoutCarrier = await prisma.order.create({
     data: {
+      tenantId: "tenant-beemmb-platform",
       orderNumber: `EDOC-SHIP-ORDER-C-${unique}`,
       status: "CONFIRMED",
       subtotal: 10,
@@ -138,7 +142,7 @@ async function main() {
   console.log("E-Irsaliye siparis/kargo firmasi tasiyici baglama dogrulamasi gecti");
 }
 
-main()
+runWithTenantContext({ tenantId: "tenant-beemmb-platform", isPlatformOperator: false }, main)
   .catch((error) => {
     console.error(error);
     process.exitCode = 1;

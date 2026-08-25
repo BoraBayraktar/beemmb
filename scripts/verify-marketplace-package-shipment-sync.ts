@@ -70,12 +70,14 @@ async function main() {
 
   const order = await prisma.order.create({
     data: {
+      tenantId: "tenant-beemmb-platform",
       orderNumber: `SHIP-SYNC-${unique}`,
       status: "CONFIRMED",
       subtotal: 40,
       total: 40,
       items: {
         create: {
+          tenantId: "tenant-beemmb-platform",
           productId: product.id,
           productSlug: product.slug,
           productSku: product.sku,

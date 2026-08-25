@@ -106,15 +106,15 @@ model Cari {
 }
 
 model CariCarrierProfile {
-  id                      String    @id @default(cuid())
-  cariId                  String    @unique
+  id                      String   @id @default(cuid())
+  cariId                  String   @unique
   trackingUrlTemplate     String?
   externalCodeTrendyol    Int?
   externalCodePazarama    String?
   externalCodeHepsiburada String?
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
-  cari                    Cari      @relation(fields: [cariId], references: [id])
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  cari                    Cari     @relation(fields: [cariId], references: [id])
 }
 
 model FinancialAccount {
@@ -164,7 +164,7 @@ model CashTransaction {
   deletedDate          DateTime?
   deletedUserId        String?
   account              FinancialAccount                @relation(fields: [accountId], references: [id])
-  cari                 Cari?                            @relation(fields: [cariId], references: [id])
+  cari                 Cari?                           @relation(fields: [cariId], references: [id])
   reconciliationMatch  BankReconciliationMatch?
   negotiableInstrument NegotiableInstrument?
 
@@ -249,7 +249,7 @@ model NegotiableInstrument {
   deleted            Boolean                         @default(false)
   deletedDate        DateTime?
   deletedUserId      String?
-  cari               Cari?                            @relation(fields: [cariId], references: [id])
+  cari               Cari?                           @relation(fields: [cariId], references: [id])
   financialAccount   FinancialAccount?               @relation(fields: [financialAccountId], references: [id])
   cashTransaction    CashTransaction?                @relation(fields: [cashTransactionId], references: [id])
 
@@ -516,7 +516,8 @@ model Promotion {
 
 model Order {
   id                     String                      @id @default(cuid())
-  orderNumber            String                      @unique
+  tenantId               String
+  orderNumber            String
   status                 OrderStatus                 @default(CONFIRMED)
   subtotal               Decimal                     @db.Decimal(10, 2)
   currency               String                      @default("TRY")
@@ -559,8 +560,10 @@ model Order {
   financeAllocationLinks FinanceAllocationLink[]
   cari                   Cari?                       @relation("OrderCari", fields: [cariId], references: [id])
   carrierCari            Cari?                       @relation("OrderCarrierCari", fields: [carrierCariId], references: [id])
+  tenant                 Tenant                      @relation(fields: [tenantId], references: [id])
 
-  @@index([deleted])
+  @@unique([tenantId, orderNumber])
+  @@index([tenantId, deleted])
   @@index([createdAt])
   @@index([paymentStatus])
   @@index([status])
@@ -571,6 +574,7 @@ model Order {
 
 model OrderItem {
   id                          String          @id @default(cuid())
+  tenantId                    String
   orderId                     String
   productId                   String?
   productVariantId            String?
@@ -595,15 +599,17 @@ model OrderItem {
   order                       Order           @relation(fields: [orderId], references: [id])
   product                     Product?        @relation(fields: [productId], references: [id])
   productVariant              ProductVariant? @relation(fields: [productVariantId], references: [id])
+  tenant                      Tenant          @relation(fields: [tenantId], references: [id])
 
   @@index([orderId])
   @@index([productId])
   @@index([productVariantId])
-  @@index([deleted])
+  @@index([tenantId, deleted])
 }
 
 model OrderStatusHistory {
   id              String                  @id @default(cuid())
+  tenantId        String
   orderId         String
   fromStatus      OrderStatus?
   toStatus        OrderStatus
@@ -616,13 +622,15 @@ model OrderStatusHistory {
   deletedDate     DateTime?
   deletedUserId   String?
   order           Order                   @relation(fields: [orderId], references: [id])
+  tenant          Tenant                  @relation(fields: [tenantId], references: [id])
 
-  @@index([deleted])
+  @@index([tenantId, deleted])
   @@index([orderId, createdAt])
 }
 
 model OrderPaymentStatusHistory {
   id              String                    @id @default(cuid())
+  tenantId        String
   orderId         String
   fromStatus      PaymentStatus?
   toStatus        PaymentStatus
@@ -635,8 +643,9 @@ model OrderPaymentStatusHistory {
   deletedDate     DateTime?
   deletedUserId   String?
   order           Order                     @relation(fields: [orderId], references: [id])
+  tenant          Tenant                    @relation(fields: [tenantId], references: [id])
 
-  @@index([deleted])
+  @@index([tenantId, deleted])
   @@index([orderId, createdAt])
 }
 
@@ -727,7 +736,7 @@ model FinanceAccountEntry {
   financialAccountId String?
   createdAt          DateTime                      @default(now())
   ledgerAccount      FinanceLedgerAccount          @relation(fields: [ledgerAccountId], references: [id])
-  cari               Cari?                          @relation(fields: [cariId], references: [id])
+  cari               Cari?                         @relation(fields: [cariId], references: [id])
   financialAccount   FinancialAccount?             @relation(fields: [financialAccountId], references: [id])
 
   @@index([entryAt])
@@ -796,7 +805,7 @@ model BusinessDocument {
   lifecycleEvents        BusinessDocumentLifecycleEvent[]
   integrationMessages    BusinessDocumentIntegrationMessage[]
   lines                  BusinessDocumentLine[]
-  cari                   Cari?                                 @relation(fields: [cariId], references: [id])
+  cari                   Cari?                                @relation(fields: [cariId], references: [id])
   order                  Order?                               @relation(fields: [orderId], references: [id])
   inventoryTransaction   InventoryTransaction?                @relation(fields: [inventoryTransactionId], references: [id])
   providerConfig         DocumentProviderConfig?              @relation(fields: [providerConfigId], references: [id])
@@ -1028,7 +1037,7 @@ model IncomingInvoice {
   deleted               Boolean                         @default(false)
   deletedDate           DateTime?
   deletedUserId         String?
-  cari                  Cari?                            @relation(fields: [cariId], references: [id])
+  cari                  Cari?                           @relation(fields: [cariId], references: [id])
   providerConfig        IncomingInvoiceProviderConfig?  @relation(fields: [providerConfigId], references: [id])
   lines                 IncomingInvoiceLine[]
   xmlArtifact           IncomingInvoiceXmlArtifact?
@@ -1610,28 +1619,32 @@ model StorefrontItem {
 }
 
 model Tenant {
-  id               String                    @id @default(cuid())
-  slug             String                    @unique
-  name             String
-  legalName        String?
-  taxNumber        String?
-  contactEmail     String
-  contactPhone     String?
-  status           TenantStatus              @default(ACTIVE)
-  isPlatformTenant Boolean                   @default(false)
-  createdAt        DateTime                  @default(now())
-  updatedAt        DateTime                  @updatedAt
-  deleted          Boolean                   @default(false)
-  deletedDate      DateTime?
-  deletedUserId    String?
-  users            User[]
-  entitlements     TenantModuleEntitlement[]
-  warehouses       Warehouse[]
-  categories       Category[]
-  brands           Brand[]
-  cariRecords      Cari[]
-  products         Product[]
-  productVariants  ProductVariant[]
+  id                          String                      @id @default(cuid())
+  slug                        String                      @unique
+  name                        String
+  legalName                   String?
+  taxNumber                   String?
+  contactEmail                String
+  contactPhone                String?
+  status                      TenantStatus                @default(ACTIVE)
+  isPlatformTenant            Boolean                     @default(false)
+  createdAt                   DateTime                    @default(now())
+  updatedAt                   DateTime                    @updatedAt
+  deleted                     Boolean                     @default(false)
+  deletedDate                 DateTime?
+  deletedUserId               String?
+  users                       User[]
+  entitlements                TenantModuleEntitlement[]
+  warehouses                  Warehouse[]
+  categories                  Category[]
+  brands                      Brand[]
+  cariRecords                 Cari[]
+  products                    Product[]
+  productVariants             ProductVariant[]
+  orders                      Order[]
+  orderItems                  OrderItem[]
+  orderStatusHistories        OrderStatusHistory[]
+  orderPaymentStatusHistories OrderPaymentStatusHistory[]
 
   @@index([deleted, status])
 }

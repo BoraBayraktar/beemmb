@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { commerceService } from "@/modules/commerce/services/commerce.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
@@ -28,7 +29,10 @@ export default async function AdminShippingReportPage({
   }
 
   const dictionary = getDictionary(locale as Locale);
-  const report = await commerceService.getShipmentCarrierReport();
+  const report = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => commerceService.getShipmentCarrierReport(),
+  );
 
   return (
     <section className="min-w-0 overflow-hidden rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
