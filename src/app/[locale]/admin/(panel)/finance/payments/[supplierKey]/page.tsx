@@ -56,15 +56,18 @@ export default async function AdminPaymentDetailPage({
 
   const dictionary = getDictionary(locale as Locale);
 
-  const inventorySummary = await inventoryPayableSummaryService.buildSummary(
-    locale,
-    payableItem.documents.map((document) => ({
-      id: document.id,
-      documentNumber: document.documentNumber,
-      inventoryTransactionId: document.inventoryTransactionId,
-      inventoryTransactionNumber: document.inventoryTransactionNumber,
-      lines: document.lines.map((line) => ({ quantity: line.quantity })),
-    })),
+  const inventorySummary = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => inventoryPayableSummaryService.buildSummary(
+      locale,
+      payableItem.documents.map((document) => ({
+        id: document.id,
+        documentNumber: document.documentNumber,
+        inventoryTransactionId: document.inventoryTransactionId,
+        inventoryTransactionNumber: document.inventoryTransactionNumber,
+        lines: document.lines.map((line) => ({ quantity: line.quantity })),
+      })),
+    ),
   );
 
   return (

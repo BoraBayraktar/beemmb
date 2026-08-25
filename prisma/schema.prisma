@@ -1244,7 +1244,8 @@ model InventoryMovement {
 
 model StockCount {
   id          String           @id @default(cuid())
-  countNumber String           @unique
+  tenantId    String
+  countNumber String
   warehouseId String?
   status      StockCountStatus @default(DRAFT)
   countedAt   DateTime
@@ -1253,13 +1254,17 @@ model StockCount {
   updatedAt   DateTime         @updatedAt
   warehouse   Warehouse?       @relation(fields: [warehouseId], references: [id])
   lines       StockCountLine[]
+  tenant      Tenant           @relation(fields: [tenantId], references: [id])
 
+  @@unique([tenantId, countNumber])
   @@index([status, countedAt])
   @@index([warehouseId])
+  @@index([tenantId])
 }
 
 model StockCountLine {
   id              String        @id @default(cuid())
+  tenantId        String
   stockCountId    String
   inventoryItemId String
   warehouseId     String
@@ -1271,14 +1276,17 @@ model StockCountLine {
   stockCount      StockCount    @relation(fields: [stockCountId], references: [id])
   inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])
   warehouse       Warehouse     @relation(fields: [warehouseId], references: [id])
+  tenant          Tenant        @relation(fields: [tenantId], references: [id])
 
   @@unique([stockCountId, inventoryItemId, warehouseId])
   @@index([warehouseId])
   @@index([inventoryItemId])
+  @@index([tenantId])
 }
 
 model InventoryAlert {
   id                 String               @id @default(cuid())
+  tenantId           String
   inventoryItemId    String
   warehouseId        String
   type               InventoryAlertType
@@ -1292,15 +1300,18 @@ model InventoryAlert {
   warehouse          Warehouse            @relation(fields: [warehouseId], references: [id])
   createdMovement    InventoryMovement?   @relation("InventoryAlertCreatedMovement", fields: [createdMovementId], references: [id])
   resolvedMovement   InventoryMovement?   @relation("InventoryAlertResolvedMovement", fields: [resolvedMovementId], references: [id])
+  tenant             Tenant               @relation(fields: [tenantId], references: [id])
 
   @@index([status, type, createdAt])
   @@index([warehouseId])
   @@index([inventoryItemId])
+  @@index([tenantId])
 }
 
 model InventoryTransaction {
   id                   String                     @id @default(cuid())
-  transactionNumber    String                     @unique
+  tenantId             String
+  transactionNumber    String
   type                 InventoryTransactionType
   reference            String?
   sourceDocumentType   String?
@@ -1318,9 +1329,12 @@ model InventoryTransaction {
   movements            InventoryMovement[]
   purchaseReceipt      PurchaseReceipt?
   businessDocuments    BusinessDocument[]
+  tenant               Tenant                     @relation(fields: [tenantId], references: [id])
 
+  @@unique([tenantId, transactionNumber])
   @@index([type, createdAt])
   @@index([sourceDocumentType, sourceDocumentNumber])
+  @@index([tenantId])
 }
 
 model PurchaseReceipt {
@@ -1367,6 +1381,7 @@ model PurchaseReceiptLine {
 
 model InventoryTransactionLine {
   id                   String               @id @default(cuid())
+  tenantId             String
   transactionId        String
   inventoryItemId      String
   fromWarehouseId      String?
@@ -1378,11 +1393,13 @@ model InventoryTransactionLine {
   inventoryTransaction InventoryTransaction @relation(fields: [transactionId], references: [id])
   fromWarehouse        Warehouse?           @relation("InventoryTransactionLineFromWarehouse", fields: [fromWarehouseId], references: [id])
   toWarehouse          Warehouse?           @relation("InventoryTransactionLineToWarehouse", fields: [toWarehouseId], references: [id])
+  tenant               Tenant               @relation(fields: [tenantId], references: [id])
 
   @@index([transactionId])
   @@index([inventoryItemId])
   @@index([fromWarehouseId])
   @@index([toWarehouseId])
+  @@index([tenantId])
 }
 
 model IntegrationSyncJob {
@@ -1569,8 +1586,9 @@ model InventoryIntegrationMapping {
 
 model ExternalStockEvent {
   id                    String                       @id @default(cuid())
+  tenantId              String
   channel               IntegrationChannel
-  eventKey              String                       @unique
+  eventKey              String
   eventType             ExternalStockEventType
   direction             ExternalStockEventDirection  @default(INBOUND)
   status                ExternalStockEventStatus     @default(RECEIVED)
@@ -1593,10 +1611,13 @@ model ExternalStockEvent {
   mapping               InventoryIntegrationMapping? @relation(fields: [mappingId], references: [id])
   product               Product?                     @relation(fields: [productId], references: [id])
   warehouse             Warehouse?                   @relation(fields: [warehouseId], references: [id])
+  tenant                Tenant                       @relation(fields: [tenantId], references: [id])
 
+  @@unique([tenantId, eventKey])
   @@index([channel, status, createdAt])
   @@index([mappingId])
   @@index([productId, warehouseId])
+  @@index([tenantId])
 }
 
 model StorefrontItem {
@@ -1660,6 +1681,12 @@ model Tenant {
   inventoryLevels             InventoryLevel[]
   stockReservations           StockReservation[]
   inventoryMovements          InventoryMovement[]
+  stockCounts                 StockCount[]
+  stockCountLines             StockCountLine[]
+  inventoryAlerts             InventoryAlert[]
+  inventoryTransactions       InventoryTransaction[]
+  inventoryTransactionLines   InventoryTransactionLine[]
+  externalStockEvents         ExternalStockEvent[]
 
   @@index([deleted, status])
 }

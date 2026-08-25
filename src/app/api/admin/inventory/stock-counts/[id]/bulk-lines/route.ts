@@ -14,24 +14,25 @@ export async function POST(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("inventoryCounts.manage");
-    const { id } = await context.params;
-    const payload = schema.parse(await request.json());
-    const result = await inventoryService.bulkUpdateStockCountLines(
-      id,
-      inventoryService.parseBulkStockCountCsv(payload.csv),
-    );
+    return await requirePermission("inventoryCounts.manage", async (user) => {
+      const { id } = await context.params;
+      const payload = schema.parse(await request.json());
+      const result = await inventoryService.bulkUpdateStockCountLines(
+        id,
+        inventoryService.parseBulkStockCountCsv(payload.csv),
+      );
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "STOCK_COUNT",
-      entityId: id,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: `Toplu stok sayım satırı güncellemesi işlendi: ${result.successCount}/${result.total}`,
-      metadata: result,
+      await auditLogService.recordFromRequest(request, {
+        entityType: "STOCK_COUNT",
+        entityId: id,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: `Toplu stok sayım satırı güncellemesi işlendi: ${result.successCount}/${result.total}`,
+        metadata: result,
+      });
+
+      return NextResponse.json(result);
     });
-
-    return NextResponse.json(result);
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

@@ -15,30 +15,31 @@ export async function PATCH(
   context: { params: Promise<{ id: string; lineId: string }> },
 ) {
   try {
-    const user = await requirePermission("inventoryCounts.manage");
-    const { id, lineId } = await context.params;
-    const payload = updateLineSchema.parse(await request.json());
+    return await requirePermission("inventoryCounts.manage", async (user) => {
+      const { id, lineId } = await context.params;
+      const payload = updateLineSchema.parse(await request.json());
 
-    await inventoryService.updateStockCountLine({
-      stockCountId: id,
-      lineId,
-      countedOnHand: payload.countedOnHand,
-      note: payload.note,
-    });
-
-    await auditLogService.recordFromRequest(request, {
-      entityType: "STOCK_COUNT",
-      entityId: lineId,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: "Stok sayım satırı güncellendi",
-      metadata: {
+      await inventoryService.updateStockCountLine({
         stockCountId: id,
+        lineId,
         countedOnHand: payload.countedOnHand,
-      },
-    });
+        note: payload.note,
+      });
 
-    return NextResponse.json({ ok: true });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "STOCK_COUNT",
+        entityId: lineId,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: "Stok sayım satırı güncellendi",
+        metadata: {
+          stockCountId: id,
+          countedOnHand: payload.countedOnHand,
+        },
+      });
+
+      return NextResponse.json({ ok: true });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

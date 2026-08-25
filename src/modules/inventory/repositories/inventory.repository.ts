@@ -227,6 +227,7 @@ export class InventoryRepository {
 
     return tx.inventoryTransaction.create({
       data: {
+        tenantId: requireTenantId(),
         transactionNumber,
         type: args.type,
         reference: args.reference ?? null,
@@ -1017,7 +1018,7 @@ export class InventoryRepository {
   }
 
   async createExternalStockEvent(args: CreateExternalStockEventArgs) {
-    const existing = await prisma.externalStockEvent.findUnique({
+    const existing = await prisma.externalStockEvent.findFirst({
       where: {
         eventKey: args.eventKey,
       },
@@ -1044,6 +1045,7 @@ export class InventoryRepository {
 
     const event = await prisma.externalStockEvent.create({
       data: {
+        tenantId: requireTenantId(),
         channel: args.channel,
         eventKey: args.eventKey,
         eventType: args.eventType,
@@ -1511,6 +1513,7 @@ export class InventoryRepository {
 
           await tx.inventoryTransactionLine.create({
             data: {
+              tenantId,
               transactionId: inventoryTransaction.id,
               inventoryItemId,
               toWarehouseId: warehouse.id,
@@ -1690,6 +1693,7 @@ export class InventoryRepository {
 
       await tx.inventoryTransactionLine.create({
         data: {
+          tenantId,
           transactionId: inventoryTransaction.id,
           inventoryItemId,
           fromWarehouseId: fromWarehouse.id,
@@ -1944,6 +1948,7 @@ export class InventoryRepository {
 
       await tx.inventoryTransactionLine.create({
         data: {
+          tenantId,
           transactionId: inventoryTransaction.id,
           inventoryItemId,
           toWarehouseId: args.type === "PURCHASE_RECEIPT" ? warehouse.id : null,
@@ -2063,6 +2068,8 @@ export class InventoryRepository {
   }
 
   async createStockCount(input: AdminCreateStockCountInput) {
+    const tenantId = requireTenantId();
+
     return prisma.$transaction(async (tx) => {
       const warehouse = input.warehouseCode
         ? await tx.warehouse.findFirst({
@@ -2135,6 +2142,7 @@ export class InventoryRepository {
       const countNumber = `SC-${Date.now()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
       const stockCount = await tx.stockCount.create({
         data: {
+          tenantId,
           countNumber,
           warehouseId: warehouse?.id ?? null,
           countedAt: new Date(input.countedAt),
@@ -2147,6 +2155,7 @@ export class InventoryRepository {
 
       await tx.stockCountLine.createMany({
         data: levels.map((level) => ({
+          tenantId,
           stockCountId: stockCount.id,
           inventoryItemId: level.inventoryItemId,
           warehouseId: level.warehouseId,
@@ -2465,6 +2474,7 @@ export class InventoryRepository {
         if (delta !== 0) {
           await tx.inventoryTransactionLine.create({
             data: {
+              tenantId,
               transactionId: transaction.id,
               inventoryItemId: line.inventoryItemId,
               toWarehouseId: line.warehouseId,
@@ -2548,6 +2558,8 @@ export class InventoryRepository {
     const uniqueTargets = Array.from(
       new Map(targets.map((target) => [`${target.inventoryItemId}:${target.warehouseId}`, target])).values(),
     );
+
+    const tenantId = requireTenantId();
 
     return prisma.$transaction(async (tx) => {
       const levels = await tx.inventoryLevel.findMany({
@@ -2659,6 +2671,7 @@ export class InventoryRepository {
 
         const created = await tx.inventoryAlert.create({
           data: {
+            tenantId,
             inventoryItemId: level.inventoryItemId,
             warehouseId: level.warehouseId,
             type: nextType,

@@ -28,24 +28,31 @@ export default async function AdminSupplierPayableDetailPage({
     notFound();
   }
 
-  const item = await runWithTenantContext(
+  const { item, inventorySummary } = await runWithTenantContext(
     { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
-    () => payablesService.getSupplierPayableByKey(decodeURIComponent(supplierKey)),
+    async () => {
+      const item = await payablesService.getSupplierPayableByKey(decodeURIComponent(supplierKey));
+      if (!item) {
+        return { item: null, inventorySummary: null };
+      }
+
+      const inventorySummary = await inventoryPayableSummaryService.buildSummary(
+        locale,
+        item.documents.map((document) => ({
+          id: document.id,
+          documentNumber: document.documentNumber,
+          inventoryTransactionId: document.inventoryTransactionId,
+          inventoryTransactionNumber: document.inventoryTransactionNumber,
+          lines: document.lines.map((line) => ({ quantity: line.quantity })),
+        })),
+      );
+
+      return { item, inventorySummary };
+    },
   );
   if (!item) {
     notFound();
   }
-
-  const inventorySummary = await inventoryPayableSummaryService.buildSummary(
-    locale,
-    item.documents.map((document) => ({
-      id: document.id,
-      documentNumber: document.documentNumber,
-      inventoryTransactionId: document.inventoryTransactionId,
-      inventoryTransactionNumber: document.inventoryTransactionNumber,
-      lines: document.lines.map((line) => ({ quantity: line.quantity })),
-    })),
-  );
 
   const dictionary = getDictionary(locale as Locale);
 

@@ -9,22 +9,23 @@ export async function POST(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("inventoryCounts.manage");
-    const { id } = await context.params;
-    const applied = await inventoryService.applyStockCount(id);
+    return await requirePermission("inventoryCounts.manage", async (user) => {
+      const { id } = await context.params;
+      const applied = await inventoryService.applyStockCount(id);
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "STOCK_COUNT",
-      entityId: id,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: `Stok sayımı uygulandı: ${applied.countNumber}`,
-      metadata: {
-        transactionNumber: applied.transactionNumber,
-      },
+      await auditLogService.recordFromRequest(request, {
+        entityType: "STOCK_COUNT",
+        entityId: id,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: `Stok sayımı uygulandı: ${applied.countNumber}`,
+        metadata: {
+          transactionNumber: applied.transactionNumber,
+        },
+      });
+
+      return NextResponse.json({ ok: true, ...applied });
     });
-
-    return NextResponse.json({ ok: true, ...applied });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

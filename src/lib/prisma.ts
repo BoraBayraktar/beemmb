@@ -25,6 +25,12 @@ const TENANT_SCOPED_MODELS = new Set<Prisma.ModelName>([
   "InventoryLevel",
   "StockReservation",
   "InventoryMovement",
+  "StockCount",
+  "StockCountLine",
+  "InventoryAlert",
+  "InventoryTransaction",
+  "InventoryTransactionLine",
+  "ExternalStockEvent",
 ]);
 
 const WHERE_MANY_OPERATIONS = new Set([
