@@ -7,22 +7,23 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("integrations.manage");
-    const payload = await request.json().catch(() => ({}));
-    const result = await integrationService.processQueue(payload);
-    await auditLogService.recordFromRequest(request, {
-      entityType: "INTEGRATION",
-      action: "SYNC",
-      actorUserId: user.id,
-      summary: "Entegrasyon kuyruğu işlendi",
-      metadata: {
-        processed: result.processed,
-        success: result.success,
-        failed: result.failed,
-        deadLetter: result.deadLetter,
-      },
+    return await requirePermission("integrations.manage", async (user) => {
+      const payload = await request.json().catch(() => ({}));
+      const result = await integrationService.processQueue(payload);
+      await auditLogService.recordFromRequest(request, {
+        entityType: "INTEGRATION",
+        action: "SYNC",
+        actorUserId: user.id,
+        summary: "Entegrasyon kuyruğu işlendi",
+        metadata: {
+          processed: result.processed,
+          success: result.success,
+          failed: result.failed,
+          deadLetter: result.deadLetter,
+        },
+      });
+      return NextResponse.json(result);
     });
-    return NextResponse.json(result);
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

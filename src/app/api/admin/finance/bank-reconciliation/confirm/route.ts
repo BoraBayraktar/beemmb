@@ -7,27 +7,28 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("financeBankReconciliation.manage");
-    const payload = await request.json();
-    const workspace = await bankReconciliationService.confirmMatch({
-      statementLineId: payload.statementLineId,
-      cashTransactionId: payload.cashTransactionId,
-      createCashTransactionIfMissing: payload.createCashTransactionIfMissing,
-      confirmedByUserId: user.id,
-    });
+    return await requirePermission("financeBankReconciliation.manage", async (user) => {
+      const payload = await request.json();
+      const workspace = await bankReconciliationService.confirmMatch({
+        statementLineId: payload.statementLineId,
+        cashTransactionId: payload.cashTransactionId,
+        createCashTransactionIfMissing: payload.createCashTransactionIfMissing,
+        confirmedByUserId: user.id,
+      });
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "FINANCE_COLLECTION",
-      entityId: payload.statementLineId,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: "Banka mutabakat satırı onaylandı",
-      metadata: {
-        createCashTransactionIfMissing: Boolean(payload.createCashTransactionIfMissing),
-      },
-    });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "FINANCE_COLLECTION",
+        entityId: payload.statementLineId,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: "Banka mutabakat satırı onaylandı",
+        metadata: {
+          createCashTransactionIfMissing: Boolean(payload.createCashTransactionIfMissing),
+        },
+      });
 
-    return NextResponse.json({ workspace });
+      return NextResponse.json({ workspace });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

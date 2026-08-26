@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireTenantId } from "@/lib/tenant-context";
 
 export class BankReconciliationRepository {
   async findFinancialAccountById(id: string) {
@@ -83,8 +84,11 @@ export class BankReconciliationRepository {
       balanceAfter?: number | null;
     }>;
   }) {
+    const tenantId = requireTenantId();
+
     return (prisma as any).bankStatementImport.create({
       data: {
+        tenantId,
         financialAccountId: args.financialAccountId,
         fileName: args.fileName ?? null,
         periodStart: args.periodStart ?? null,
@@ -93,6 +97,7 @@ export class BankReconciliationRepository {
         importedByUserId: args.importedByUserId ?? null,
         lines: {
           create: args.lines.map((line) => ({
+            tenantId,
             lineIndex: line.lineIndex,
             transactionAt: line.transactionAt,
             description: line.description,
@@ -163,6 +168,7 @@ export class BankReconciliationRepository {
     return (prisma as any).bankReconciliationMatch.upsert({
       where: { statementLineId: args.statementLineId },
       create: {
+        tenantId: requireTenantId(),
         statementLineId: args.statementLineId,
         cashTransactionId: args.cashTransactionId,
         status: "SUGGESTED",

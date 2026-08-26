@@ -6,10 +6,11 @@ import { AuthContextError, requirePermission } from "@/modules/identity/services
 
 export async function POST(request: Request) {
   try {
-    await requirePermission("financeBankReconciliation.manage");
-    const payload = await request.json();
-    const workspace = await bankReconciliationService.assignMatch(payload);
-    return NextResponse.json({ workspace });
+    return await requirePermission("financeBankReconciliation.manage", async () => {
+      const payload = await request.json();
+      const workspace = await bankReconciliationService.assignMatch(payload);
+      return NextResponse.json({ workspace });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

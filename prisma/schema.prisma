@@ -183,6 +183,7 @@ model CashTransaction {
 
 model BankStatementImport {
   id                 String                    @id @default(cuid())
+  tenantId           String
   financialAccountId String
   fileName           String?
   periodStart        DateTime?
@@ -193,13 +194,16 @@ model BankStatementImport {
   updatedAt          DateTime                  @updatedAt
   financialAccount   FinancialAccount          @relation(fields: [financialAccountId], references: [id])
   lines              BankStatementLine[]
+  tenant             Tenant                    @relation(fields: [tenantId], references: [id])
 
   @@index([financialAccountId, createdAt])
   @@index([status])
+  @@index([tenantId])
 }
 
 model BankStatementLine {
   id            String                       @id @default(cuid())
+  tenantId      String
   importId      String
   lineIndex     Int
   transactionAt DateTime
@@ -212,13 +216,16 @@ model BankStatementLine {
   updatedAt     DateTime                     @updatedAt
   import        BankStatementImport          @relation(fields: [importId], references: [id], onDelete: Cascade)
   match         BankReconciliationMatch?
+  tenant        Tenant                       @relation(fields: [tenantId], references: [id])
 
   @@unique([importId, lineIndex])
   @@index([importId, matchStatus])
+  @@index([tenantId])
 }
 
 model BankReconciliationMatch {
   id                String                        @id @default(cuid())
+  tenantId          String
   statementLineId   String                        @unique
   cashTransactionId String?                       @unique
   status            BankReconciliationMatchStatus @default(SUGGESTED)
@@ -228,8 +235,10 @@ model BankReconciliationMatch {
   updatedAt         DateTime                      @updatedAt
   statementLine     BankStatementLine             @relation(fields: [statementLineId], references: [id], onDelete: Cascade)
   cashTransaction   CashTransaction?              @relation(fields: [cashTransactionId], references: [id])
+  tenant            Tenant                        @relation(fields: [tenantId], references: [id])
 
   @@index([status])
+  @@index([tenantId])
 }
 
 model NegotiableInstrument {
@@ -1723,6 +1732,9 @@ model Tenant {
   collectionRecords            CollectionRecord[]
   paymentRecords               PaymentRecord[]
   financeAllocationLinks       FinanceAllocationLink[]
+  bankStatementImports         BankStatementImport[]
+  bankStatementLines           BankStatementLine[]
+  bankReconciliationMatches    BankReconciliationMatch[]
 
   @@index([deleted, status])
 }
