@@ -4,38 +4,47 @@ import {
   documentWebhookJson,
   parseDocumentWebhookPayload,
 } from "@/lib/document-webhook-route.util";
+import { runWithTenantContext } from "@/lib/tenant-context";
+import { PLATFORM_TENANT_ID } from "@/lib/tenant-defaults";
 import { documentWebhookService } from "@/modules/documents/services/document-webhook.service";
 import { DocumentAdminError } from "@/modules/documents/services/document.service";
 import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function POST(request: Request, context: { params: Promise<{ providerCode: string }> }) {
   try {
-    const { providerCode } = await context.params;
-    const rawBody = await request.text();
-    const parsedBody = parseDocumentWebhookPayload(rawBody);
-    const signature = request.headers.get("x-arventa-signature");
+    return await runWithTenantContext(
+      // Bu webhook'ta oturum yok (HMAC imza dogrulamasi ile korunuyor). Belge
+      // saglayici config'leri tek gercek tenant olan platform tenant'ina sabittir.
+      { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: false },
+      async () => {
+        const { providerCode } = await context.params;
+        const rawBody = await request.text();
+        const parsedBody = parseDocumentWebhookPayload(rawBody);
+        const signature = request.headers.get("x-arventa-signature");
 
-    const item = await documentWebhookService.processProviderWebhook({
-      providerCode,
-      rawBody,
-      signature,
-      payload: parsedBody,
-    });
+        const item = await documentWebhookService.processProviderWebhook({
+          providerCode,
+          rawBody,
+          signature,
+          payload: parsedBody,
+        });
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "BUSINESS_DOCUMENT",
-      entityId: item.id,
-      action: "STATUS_UPDATE",
-      summary: `Belge webhook durumu işlendi: ${item.documentNumber}`,
-      metadata: {
-        documentId: item.id,
-        orderId: item.orderId,
-        providerCode,
-        externalSystemStatus: item.externalSystemStatus,
+        await auditLogService.recordFromRequest(request, {
+          entityType: "BUSINESS_DOCUMENT",
+          entityId: item.id,
+          action: "STATUS_UPDATE",
+          summary: `Belge webhook durumu işlendi: ${item.documentNumber}`,
+          metadata: {
+            documentId: item.id,
+            orderId: item.orderId,
+            providerCode,
+            externalSystemStatus: item.externalSystemStatus,
+          },
+        });
+
+        return documentWebhookJson({ item });
       },
-    });
-
-    return documentWebhookJson({ item });
+    );
   } catch (error) {
     if (error instanceof DocumentAdminError) {
       return documentWebhookJson({ message: error.message }, { status: error.status });

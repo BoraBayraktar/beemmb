@@ -46,6 +46,10 @@ const TENANT_SCOPED_MODELS = new Set<Prisma.ModelName>([
   "BankStatementLine",
   "BankReconciliationMatch",
   "NegotiableInstrument",
+  "BusinessDocument",
+  "BusinessDocumentLine",
+  "EDocumentNumberSequence",
+  "DocumentProviderConfig",
 ]);
 
 const WHERE_MANY_OPERATIONS = new Set([

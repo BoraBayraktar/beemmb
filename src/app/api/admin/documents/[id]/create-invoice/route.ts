@@ -7,26 +7,27 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requirePermission("documentsPendingInvoices.manage");
-    const { id } = await context.params;
-    const created = await documentService.createInvoiceFromDeliveryNote(id);
+    return await requirePermission("documentsPendingInvoices.manage", async (user) => {
+      const { id } = await context.params;
+      const created = await documentService.createInvoiceFromDeliveryNote(id);
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "BUSINESS_DOCUMENT",
-      entityId: created.id,
-      action: "CREATE",
-      actorUserId: user.id,
-      summary: `İrsaliyeden e-fatura oluşturuldu: ${created.documentNumber}`,
-      metadata: {
-        documentId: created.id,
-        orderId: created.orderId,
-        documentType: created.documentType,
-        sourceDocumentId: id,
-        inventoryTransactionId: created.inventoryTransactionId,
-      },
+      await auditLogService.recordFromRequest(request, {
+        entityType: "BUSINESS_DOCUMENT",
+        entityId: created.id,
+        action: "CREATE",
+        actorUserId: user.id,
+        summary: `İrsaliyeden e-fatura oluşturuldu: ${created.documentNumber}`,
+        metadata: {
+          documentId: created.id,
+          orderId: created.orderId,
+          documentType: created.documentType,
+          sourceDocumentId: id,
+          inventoryTransactionId: created.inventoryTransactionId,
+        },
+      });
+
+      return createInvoiceJson({ item: created }, { status: 201 });
     });
-
-    return createInvoiceJson({ item: created }, { status: 201 });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return createInvoiceJson({ message: error.message }, { status: error.status });
@@ -40,7 +41,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       return createInvoiceJson({ message: error.issues[0]?.message ?? "Doğrulama hatası oluştu." }, { status: 400 });
     }
 
-    if (error instanceof Error && error.message.includes("BusinessDocument_documentNumber_key")) {
+    if (error instanceof Error && error.message.includes("BusinessDocument_tenantId_documentNumber_key")) {
       return createInvoiceJson({ message: "Bu e-fatura numarası zaten kullanılıyor." }, { status: 409 });
     }
 

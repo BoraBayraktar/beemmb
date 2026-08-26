@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 
 import { buildGibDocumentNumberFromSequence, normalizeGibDocumentNumberPrefix } from "@/lib/gib-document-number";
 import { prisma } from "@/lib/prisma";
+import { requireTenantId } from "@/lib/tenant-context";
 import type { AdminBusinessDocumentListQuery, AdminCreateBusinessDocumentInput } from "@/modules/documents/contracts/document.contract";
 
 export class DocumentRepository {
@@ -129,6 +130,7 @@ export class DocumentRepository {
 
       return tx.documentProviderConfig.create({
         data: {
+          tenantId: requireTenantId(),
           providerCode: args.providerCode,
           channel: args.channel,
           displayName: args.displayName,
@@ -504,8 +506,11 @@ export class DocumentRepository {
       note?: string | null;
     }>;
   }) {
+    const tenantId = requireTenantId();
+
     return (prisma.businessDocument as any).create({
       data: {
+        tenantId,
         documentNumber: args.input.documentNumber,
         documentType: args.input.documentType,
         status: args.input.status ?? "LINKED",
@@ -526,6 +531,7 @@ export class DocumentRepository {
         inventoryTransactionId: args.resolvedInventoryTransactionId ?? null,
         lines: {
           create: args.resolvedLines.map((line) => ({
+            tenantId,
             productId: line.productId ?? null,
             productVariantId: line.productVariantId ?? null,
             productSku: line.productSku,
@@ -558,15 +564,14 @@ export class DocumentRepository {
   async reserveEDocumentNumber(args: { documentType: "E_INVOICE" | "E_DISPATCH"; prefix: string }) {
     const year = new Date().getFullYear();
     const prefix = normalizeGibDocumentNumberPrefix(args.prefix);
+    const tenantId = requireTenantId();
 
     return prisma.$transaction(async (tx) => {
-      const existing = await tx.eDocumentNumberSequence.findUnique({
+      const existing = await tx.eDocumentNumberSequence.findFirst({
         where: {
-          documentType_prefix_year: {
-            documentType: args.documentType,
-            prefix,
-            year,
-          },
+          documentType: args.documentType,
+          prefix,
+          year,
         },
       });
 
@@ -574,13 +579,15 @@ export class DocumentRepository {
 
       await tx.eDocumentNumberSequence.upsert({
         where: {
-          documentType_prefix_year: {
+          tenantId_documentType_prefix_year: {
+            tenantId,
             documentType: args.documentType,
             prefix,
             year,
           },
         },
         create: {
+          tenantId,
           documentType: args.documentType,
           prefix,
           year,
@@ -611,8 +618,11 @@ export class DocumentRepository {
       return null;
     }
 
+    const tenantId = requireTenantId();
+
     return (prisma.businessDocument as any).create({
       data: {
+        tenantId,
         documentNumber: args.documentNumber,
         documentType: args.documentType,
         status: args.status,
@@ -645,6 +655,7 @@ export class DocumentRepository {
             currency: string;
             note: string | null;
           }) => ({
+            tenantId,
             productId: line.productId,
             productVariantId: line.productVariantId,
             productSku: line.productSku,

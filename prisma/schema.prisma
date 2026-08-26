@@ -810,7 +810,8 @@ model FinanceAllocationLink {
 
 model BusinessDocument {
   id                     String                               @id @default(cuid())
-  documentNumber         String                               @unique
+  tenantId               String
+  documentNumber         String
   documentType           BusinessDocumentType
   status                 BusinessDocumentStatus               @default(DRAFT)
   issueDate              DateTime
@@ -844,7 +845,9 @@ model BusinessDocument {
   inventoryTransaction   InventoryTransaction?                @relation(fields: [inventoryTransactionId], references: [id])
   providerConfig         DocumentProviderConfig?              @relation(fields: [providerConfigId], references: [id])
   financeAllocationLinks FinanceAllocationLink[]
+  tenant                 Tenant                               @relation(fields: [tenantId], references: [id])
 
+  @@unique([tenantId, documentNumber])
   @@index([documentType, issueDate])
   @@index([status, issueDate])
   @@index([providerConfigId])
@@ -853,6 +856,7 @@ model BusinessDocument {
   @@index([inventoryTransactionId])
   @@index([deleted, issueDate])
   @@index([deleted, dueDate])
+  @@index([tenantId])
 }
 
 model BusinessDocumentXmlArtifact {
@@ -882,19 +886,23 @@ model BusinessDocumentXmlArtifact {
 
 model EDocumentNumberSequence {
   id           String               @id @default(cuid())
+  tenantId     String
   documentType BusinessDocumentType
   prefix       String
   year         Int
   lastNumber   Int                  @default(0)
   createdAt    DateTime             @default(now())
   updatedAt    DateTime             @updatedAt
+  tenant       Tenant               @relation(fields: [tenantId], references: [id])
 
-  @@unique([documentType, prefix, year])
+  @@unique([tenantId, documentType, prefix, year])
   @@index([documentType, year])
+  @@index([tenantId])
 }
 
 model BusinessDocumentLine {
   id                     String                  @id @default(cuid())
+  tenantId               String
   businessDocumentId     String
   productId              String?
   productVariantId       String?
@@ -913,10 +921,12 @@ model BusinessDocumentLine {
   product                Product?                @relation(fields: [productId], references: [id])
   productVariant         ProductVariant?         @relation(fields: [productVariantId], references: [id])
   financeAllocationLinks FinanceAllocationLink[]
+  tenant                 Tenant                  @relation(fields: [tenantId], references: [id])
 
   @@index([businessDocumentId])
   @@index([productId])
   @@index([productVariantId])
+  @@index([tenantId])
 }
 
 model BusinessDocumentDispatch {
@@ -997,7 +1007,8 @@ model BusinessDocumentIntegrationMessage {
 
 model DocumentProviderConfig {
   id                 String             @id @default(cuid())
-  providerCode       String             @unique
+  tenantId           String
+  providerCode       String
   channel            IntegrationChannel
   displayName        String
   endpointUrl        String?
@@ -1017,9 +1028,12 @@ model DocumentProviderConfig {
   deletedDate        DateTime?
   deletedUserId      String?
   documents          BusinessDocument[]
+  tenant             Tenant             @relation(fields: [tenantId], references: [id])
 
+  @@unique([tenantId, providerCode])
   @@index([channel, isActive, deleted])
   @@index([isDefault, deleted])
+  @@index([tenantId])
 }
 
 model IncomingInvoiceProviderConfig {
@@ -1739,6 +1753,10 @@ model Tenant {
   bankStatementLines           BankStatementLine[]
   bankReconciliationMatches    BankReconciliationMatch[]
   negotiableInstruments        NegotiableInstrument[]
+  businessDocuments            BusinessDocument[]
+  businessDocumentLines        BusinessDocumentLine[]
+  eDocumentNumberSequences     EDocumentNumberSequence[]
+  documentProviderConfigs      DocumentProviderConfig[]
 
   @@index([deleted, status])
 }

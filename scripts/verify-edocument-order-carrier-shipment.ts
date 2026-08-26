@@ -18,6 +18,7 @@ async function createDispatchDocument(args: {
 }) {
   return prisma.businessDocument.create({
     data: {
+      tenantId: "tenant-beemmb-platform",
       documentNumber: `EDOC-SHIP-TEST-${args.unique}`,
       documentType: "E_DISPATCH",
       status: "DRAFT",
@@ -29,6 +30,7 @@ async function createDispatchDocument(args: {
       orderId: args.orderId,
       lines: {
         create: {
+          tenantId: "tenant-beemmb-platform",
           productSku: `EDOC-SHIP-SKU-${args.unique}`,
           productName: "Test Urun",
           quantity: 1,

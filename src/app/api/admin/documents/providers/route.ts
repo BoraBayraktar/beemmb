@@ -8,9 +8,10 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET() {
   try {
-    await requirePermission("documents.read");
-    const items = await documentService.listProviderConfigs();
-    return documentProviderConfigJson({ items });
+    return await requirePermission("documents.read", async () => {
+      const items = await documentService.listProviderConfigs();
+      return documentProviderConfigJson({ items });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return documentProviderConfigJson({ message: error.message }, { status: error.status });
@@ -22,20 +23,21 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("documentsProviders.manage");
-    const payload = await request.json();
-    const item = await documentService.upsertProviderConfig(payload);
+    return await requirePermission("documentsProviders.manage", async (user) => {
+      const payload = await request.json();
+      const item = await documentService.upsertProviderConfig(payload);
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "INTEGRATION",
-      entityId: item.id,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: `Belge sağlayıcısı kaydedildi: ${item.displayName}`,
-      metadata: buildDocumentProviderConfigAuditMetadata(item),
+      await auditLogService.recordFromRequest(request, {
+        entityType: "INTEGRATION",
+        entityId: item.id,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: `Belge sağlayıcısı kaydedildi: ${item.displayName}`,
+        metadata: buildDocumentProviderConfigAuditMetadata(item),
+      });
+
+      return documentProviderConfigJson({ item }, { status: 201 });
     });
-
-    return documentProviderConfigJson({ item }, { status: 201 });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return documentProviderConfigJson({ message: error.message }, { status: error.status });
@@ -49,7 +51,7 @@ export async function POST(request: Request) {
       return documentProviderConfigJson({ message: error.issues[0]?.message ?? "Doğrulama hatası oluştu." }, { status: 400 });
     }
 
-    if (error instanceof Error && error.message.includes("DocumentProviderConfig_providerCode_key")) {
+    if (error instanceof Error && error.message.includes("DocumentProviderConfig_tenantId_providerCode_key")) {
       return documentProviderConfigJson({ message: "Bu sağlayıcı kodu zaten kullanılıyor." }, { status: 409 });
     }
 

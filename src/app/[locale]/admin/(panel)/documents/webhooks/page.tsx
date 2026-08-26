@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { documentService } from "@/modules/documents/services/document.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
@@ -28,7 +29,10 @@ export default async function AdminDocumentWebhooksPage({
   }
 
   const dictionary = getDictionary(locale as Locale);
-  const items = await documentService.listProviderConfigs();
+  const items = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => documentService.listProviderConfigs(),
+  );
 
   return (
     <DocumentWebhookManager

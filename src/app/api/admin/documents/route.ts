@@ -9,17 +9,18 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET(request: Request) {
   try {
-    await requirePermission("documents.read");
-    const { searchParams } = new URL(request.url);
-    const result = await documentService.listBusinessDocuments({
-      search: searchParams.get("search") ?? undefined,
-      documentType: (searchParams.get("documentType") as "all" | "PURCHASE_DOCUMENT" | "DELIVERY_NOTE" | "E_INVOICE" | "E_DISPATCH" | null) ?? undefined,
-      status: (searchParams.get("status") as "all" | "DRAFT" | "LINKED" | "ISSUED" | "CANCELLED" | null) ?? undefined,
-      page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
-      pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : 10,
-    });
+    return await requirePermission("documents.read", async () => {
+      const { searchParams } = new URL(request.url);
+      const result = await documentService.listBusinessDocuments({
+        search: searchParams.get("search") ?? undefined,
+        documentType: (searchParams.get("documentType") as "all" | "PURCHASE_DOCUMENT" | "DELIVERY_NOTE" | "E_INVOICE" | "E_DISPATCH" | null) ?? undefined,
+        status: (searchParams.get("status") as "all" | "DRAFT" | "LINKED" | "ISSUED" | "CANCELLED" | null) ?? undefined,
+        page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
+        pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : 10,
+      });
 
-    return adminDocumentsJson(result);
+      return adminDocumentsJson(result);
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return adminDocumentsJson({ message: error.message }, { status: error.status });
@@ -73,7 +74,7 @@ export async function POST(request: Request) {
       return adminDocumentsJson({ message: error.issues[0]?.message ?? "Doğrulama hatası oluştu." }, { status: 400 });
     }
 
-    if (error instanceof Error && error.message.includes("BusinessDocument_documentNumber_key")) {
+    if (error instanceof Error && error.message.includes("BusinessDocument_tenantId_documentNumber_key")) {
       return adminDocumentsJson({ message: "Bu belge numarası zaten kullanılıyor." }, { status: 409 });
     }
 
