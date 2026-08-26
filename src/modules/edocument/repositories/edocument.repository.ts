@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { requireTenantId } from "@/lib/tenant-context";
 
 export class EDocumentRepository {
   async findBusinessDocumentForXml(id: string) {
@@ -36,6 +37,7 @@ export class EDocumentRepository {
   }) {
     return prisma.businessDocumentXmlArtifact.create({
       data: {
+        tenantId: requireTenantId(),
         businessDocumentId: args.businessDocumentId,
         supersedesArtifactId: args.supersedesArtifactId ?? null,
         documentRootType: args.documentRootType,

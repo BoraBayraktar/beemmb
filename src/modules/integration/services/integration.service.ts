@@ -196,6 +196,15 @@ export class IntegrationService {
   }
 
   async processQueue(input: ProcessIntegrationQueueInput): Promise<ProcessIntegrationQueueResult> {
+    // NOT: IntegrationSyncJob henuz tenant-scoped degil (ayri, gelecekteki bir
+    // Entegrasyon/Pazaryeri dalgasinin kapsami). Bu yuzden BUSINESS_DOCUMENT
+    // job'lari icin asagidaki documentDispatchLifecycleService cagrilari,
+    // route seviyesinde kurulan TEK tenant context'ini kullanir (cagiran admin'in
+    // kendi tenantId'si) -- job'un gercekte hangi tenant'a ait oldugu ayrica
+    // cozulmuyor. Bugun tek gercek tenant oldugu icin (tenant-beemmb-platform)
+    // bu dogru sonuc verir; birden fazla tenant provizyon edildiginde
+    // (Faz 2) IntegrationSyncJob'a tenantId eklenip is-belgesi lifecycle
+    // cagrilari kendi runWithTenantContext'ine sarilmalidir.
     const parsed = processSchema.parse(input);
     const reserved = await this.repository.reserveJobs(parsed.limit);
 

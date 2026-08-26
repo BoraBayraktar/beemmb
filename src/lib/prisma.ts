@@ -50,6 +50,10 @@ const TENANT_SCOPED_MODELS = new Set<Prisma.ModelName>([
   "BusinessDocumentLine",
   "EDocumentNumberSequence",
   "DocumentProviderConfig",
+  "BusinessDocumentXmlArtifact",
+  "BusinessDocumentDispatch",
+  "BusinessDocumentLifecycleEvent",
+  "BusinessDocumentIntegrationMessage",
 ]);
 
 const WHERE_MANY_OPERATIONS = new Set([

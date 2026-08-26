@@ -730,6 +730,7 @@ export class DocumentRepository {
         externalSystemStatus: "QUEUED",
         dispatches: {
           create: {
+            tenantId: requireTenantId(),
             integrationJobId: args.integrationJobId,
             channel: args.channel,
             providerKey: args.providerKey,
@@ -813,6 +814,7 @@ export class DocumentRepository {
     if (updatedCount.count === 0) {
       await prisma.businessDocumentDispatch.create({
         data: {
+          tenantId: requireTenantId(),
           businessDocumentId: args.id,
           integrationJobId: args.integrationJobId,
           channel: "EDOCS_MOCK",

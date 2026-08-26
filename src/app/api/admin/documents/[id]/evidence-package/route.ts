@@ -11,22 +11,23 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requirePermission("documents.manage");
-    const { id } = await context.params;
-    const evidencePackage = await documentEvidencePackageService.buildPackage(id);
+    return await requirePermission("documents.manage", async (user) => {
+      const { id } = await context.params;
+      const evidencePackage = await documentEvidencePackageService.buildPackage(id);
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "BUSINESS_DOCUMENT",
-      entityId: id,
-      action: "AUDIT_EXPORT",
-      actorUserId: user.id,
-      summary: "E-belge kanıt paketi dışa aktarıldı",
-      metadata: buildDocumentEvidencePackageAuditMetadata(evidencePackage),
-    });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "BUSINESS_DOCUMENT",
+        entityId: id,
+        action: "AUDIT_EXPORT",
+        actorUserId: user.id,
+        summary: "E-belge kanıt paketi dışa aktarıldı",
+        metadata: buildDocumentEvidencePackageAuditMetadata(evidencePackage),
+      });
 
-    return new NextResponse(JSON.stringify(evidencePackage, null, 2), {
-      status: 200,
-      headers: buildDocumentEvidencePackageHeaders(evidencePackage),
+      return new NextResponse(JSON.stringify(evidencePackage, null, 2), {
+        status: 200,
+        headers: buildDocumentEvidencePackageHeaders(evidencePackage),
+      });
     });
   } catch (error) {
     if (error instanceof AuthContextError) {

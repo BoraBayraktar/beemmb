@@ -8,30 +8,31 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requirePermission("documents.manage");
-    const { id } = await context.params;
-    const payload = await request.json().catch(() => ({}));
-    const item = await documentDispatchService.queueStatusSync({
-      id,
-      providerConfigId: typeof payload.providerConfigId === "string" ? payload.providerConfigId : undefined,
-      forceFail: payload.forceFail === true,
-    });
+    return await requirePermission("documents.manage", async (user) => {
+      const { id } = await context.params;
+      const payload = await request.json().catch(() => ({}));
+      const item = await documentDispatchService.queueStatusSync({
+        id,
+        providerConfigId: typeof payload.providerConfigId === "string" ? payload.providerConfigId : undefined,
+        forceFail: payload.forceFail === true,
+      });
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "BUSINESS_DOCUMENT",
-      entityId: item.id,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: `Belge durum senkronu kuyruğa alındı: ${item.documentNumber}`,
-      metadata: {
-        documentId: item.id,
-        orderId: item.orderId,
-        documentNumber: item.documentNumber,
-        providerConfigId: item.providerConfigId,
-      },
-    });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "BUSINESS_DOCUMENT",
+        entityId: item.id,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: `Belge durum senkronu kuyruğa alındı: ${item.documentNumber}`,
+        metadata: {
+          documentId: item.id,
+          orderId: item.orderId,
+          documentNumber: item.documentNumber,
+          providerConfigId: item.providerConfigId,
+        },
+      });
 
-    return documentStatusSyncJson({ item }, { status: 201 });
+      return documentStatusSyncJson({ item }, { status: 201 });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return documentStatusSyncJson({ message: error.message }, { status: error.status });

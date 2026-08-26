@@ -1,14 +1,18 @@
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { requireTenantId } from "@/lib/tenant-context";
 import type { RecordBusinessDocumentLifecycleEventInput } from "@/modules/documents/contracts/document-lifecycle.contract";
 
 export class DocumentLifecycleRepository {
   async createEvent(input: RecordBusinessDocumentLifecycleEventInput & {
     payloadHash?: string | null;
   }) {
+    const tenantId = requireTenantId();
+
     return prisma.businessDocumentLifecycleEvent.create({
       data: {
+        tenantId,
         businessDocumentId: input.businessDocumentId,
         eventType: input.eventType,
         status: input.status ?? null,
@@ -28,6 +32,7 @@ export class DocumentLifecycleRepository {
           ? {
               integrationMessages: {
                 create: {
+                  tenantId,
                   businessDocumentId: input.businessDocumentId,
                   integrationJobId: input.integrationJobId ?? null,
                   direction: input.message.direction,

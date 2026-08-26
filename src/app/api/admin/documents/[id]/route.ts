@@ -7,10 +7,11 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    await requirePermission("documents.read");
-    const { id } = await context.params;
-    const item = await documentService.getBusinessDocumentById(id);
-    return adminDocumentDetailJson({ item });
+    return await requirePermission("documents.read", async () => {
+      const { id } = await context.params;
+      const item = await documentService.getBusinessDocumentById(id);
+      return adminDocumentDetailJson({ item });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return adminDocumentDetailJson({ message: error.message }, { status: error.status });

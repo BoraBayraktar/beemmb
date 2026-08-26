@@ -8,32 +8,33 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requirePermission("documents.manage");
-    const { id } = await context.params;
-    const payload = await request.json().catch(() => ({}));
-    const item = await documentDispatchService.queueOutboundDispatch({
-      id,
-      channel: "EDOCS_MOCK",
-      providerConfigId: typeof payload.providerConfigId === "string" ? payload.providerConfigId : undefined,
-      forceFail: payload.forceFail === true,
-    });
+    return await requirePermission("documents.manage", async (user) => {
+      const { id } = await context.params;
+      const payload = await request.json().catch(() => ({}));
+      const item = await documentDispatchService.queueOutboundDispatch({
+        id,
+        channel: "EDOCS_MOCK",
+        providerConfigId: typeof payload.providerConfigId === "string" ? payload.providerConfigId : undefined,
+        forceFail: payload.forceFail === true,
+      });
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "BUSINESS_DOCUMENT",
-      entityId: item.id,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: `Belge outbound kuyruğuna alındı: ${item.documentNumber}`,
-      metadata: {
-        documentId: item.id,
-        orderId: item.orderId,
-        documentNumber: item.documentNumber,
-        externalSystemStatus: item.externalSystemStatus,
-        dispatchCount: item.dispatches.length,
-      },
-    });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "BUSINESS_DOCUMENT",
+        entityId: item.id,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: `Belge outbound kuyruğuna alındı: ${item.documentNumber}`,
+        metadata: {
+          documentId: item.id,
+          orderId: item.orderId,
+          documentNumber: item.documentNumber,
+          externalSystemStatus: item.externalSystemStatus,
+          dispatchCount: item.dispatches.length,
+        },
+      });
 
-    return documentDispatchJson({ item }, { status: 201 });
+      return documentDispatchJson({ item }, { status: 201 });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return documentDispatchJson({ message: error.message }, { status: error.status });

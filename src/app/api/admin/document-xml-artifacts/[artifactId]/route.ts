@@ -12,21 +12,22 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET(request: Request, context: { params: Promise<{ artifactId: string }> }) {
   try {
-    const user = await requirePermission("documents.read");
-    const { artifactId } = await context.params;
-    const item = await eDocumentService.getXmlArtifact(artifactId);
+    return await requirePermission("documents.read", async (user) => {
+      const { artifactId } = await context.params;
+      const item = await eDocumentService.getXmlArtifact(artifactId);
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "BUSINESS_DOCUMENT",
-      entityId: item.businessDocumentId,
-      action: "AUDIT_EXPORT",
-      actorUserId: user.id,
-      summary: `UBL-TR XML indirildi: ${item.documentRootType}`,
-      metadata: buildXmlArtifactAuditMetadata(item),
-    });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "BUSINESS_DOCUMENT",
+        entityId: item.businessDocumentId,
+        action: "AUDIT_EXPORT",
+        actorUserId: user.id,
+        summary: `UBL-TR XML indirildi: ${item.documentRootType}`,
+        metadata: buildXmlArtifactAuditMetadata(item),
+      });
 
-    return new NextResponse(item.xmlContent ?? "", {
-      headers: buildXmlArtifactDownloadHeaders(item),
+      return new NextResponse(item.xmlContent ?? "", {
+        headers: buildXmlArtifactDownloadHeaders(item),
+      });
     });
   } catch (error) {
     if (error instanceof AuthContextError) {
