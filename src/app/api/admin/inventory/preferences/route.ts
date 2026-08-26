@@ -7,9 +7,10 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET() {
   try {
-    const user = await requirePermission("inventory.read");
-    const result = await inventoryService.getUserInventoryPreferences(user.id);
-    return NextResponse.json(result);
+    return await requirePermission("inventory.read", async (user) => {
+      const result = await inventoryService.getUserInventoryPreferences(user.id);
+      return NextResponse.json(result);
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });
@@ -21,17 +22,18 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
-    const user = await requirePermission("inventory.manage");
-    const payload = await request.json();
-    const result = await inventoryService.saveUserInventoryPreferences(user.id, payload);
-    await auditLogService.recordFromRequest(request, {
-      entityType: "INVENTORY",
-      entityId: user.id,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: "Stok görünüm tercihleri güncellendi",
+    return await requirePermission("inventory.manage", async (user) => {
+      const payload = await request.json();
+      const result = await inventoryService.saveUserInventoryPreferences(user.id, payload);
+      await auditLogService.recordFromRequest(request, {
+        entityType: "INVENTORY",
+        entityId: user.id,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: "Stok görünüm tercihleri güncellendi",
+      });
+      return NextResponse.json(result);
     });
-    return NextResponse.json(result);
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

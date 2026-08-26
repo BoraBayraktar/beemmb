@@ -7,9 +7,10 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET() {
   try {
-    await requirePermission("inventory.read");
-    const result = await inventoryService.listInventoryIntegrationMappings();
-    return NextResponse.json(result);
+    return await requirePermission("inventory.read", async () => {
+      const result = await inventoryService.listInventoryIntegrationMappings();
+      return NextResponse.json(result);
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

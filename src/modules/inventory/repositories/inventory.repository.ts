@@ -563,6 +563,7 @@ export class InventoryRepository {
 
     return exportHistoryDelegate.create({
       data: {
+        tenantId: requireTenantId(),
         actorUserId: input.actorUserId ?? null,
         total: input.total,
         search: input.filters.search ?? null,
@@ -997,7 +998,10 @@ export class InventoryRepository {
           },
         })
       : prisma.inventoryIntegrationMapping.create({
-          data,
+          data: {
+            ...data,
+            tenantId: requireTenantId(),
+          },
           include: {
             product: {
               select: {
@@ -2868,6 +2872,7 @@ export class InventoryRepository {
 
     return prisma.inventoryHistoryEvent.create({
       data: {
+        tenantId: requireTenantId(),
         eventType: input.eventType,
         entityType: input.entityType,
         entityId: input.entityId ?? null,
@@ -2954,6 +2959,7 @@ export class InventoryRepository {
         visibleColumns: input.visibleColumns as Prisma.InputJsonValue,
       },
       create: {
+        tenantId: requireTenantId(),
         userId,
         compactInventoryList: input.compactInventoryList,
         visibleColumns: input.visibleColumns as Prisma.InputJsonValue,
