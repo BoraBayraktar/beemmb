@@ -7,20 +7,21 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("integrations.manage");
-    const payload = await request.json();
-    const result = await marketplaceIntegrationService.testConnection(payload);
-    await auditLogService.recordFromRequest(request, {
-      entityType: "INTEGRATION",
-      entityId: payload.configId ?? null,
-      action: "SYNC",
-      actorUserId: user.id,
-      summary: "Pazaryeri bağlantısı test edildi",
-      metadata: {
-        ok: result.ok,
-      },
+    return await requirePermission("integrations.manage", async (user) => {
+      const payload = await request.json();
+      const result = await marketplaceIntegrationService.testConnection(payload);
+      await auditLogService.recordFromRequest(request, {
+        entityType: "INTEGRATION",
+        entityId: payload.configId ?? null,
+        action: "SYNC",
+        actorUserId: user.id,
+        summary: "Pazaryeri bağlantısı test edildi",
+        metadata: {
+          ok: result.ok,
+        },
+      });
+      return NextResponse.json(result);
     });
-    return NextResponse.json(result);
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

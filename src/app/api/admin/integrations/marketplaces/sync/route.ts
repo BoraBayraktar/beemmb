@@ -7,19 +7,20 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("integrations.manage");
-    const payload = await request.json();
-    const result = await marketplaceIntegrationService.queueOrderImport(payload);
-    await auditLogService.recordFromRequest(request, {
-      entityType: "INTEGRATION",
-      action: "SYNC",
-      actorUserId: user.id,
-      summary: "Pazaryeri sipariş import kuyruğu oluşturuldu",
-      metadata: {
-        channel: payload.channel ?? null,
-      },
+    return await requirePermission("integrations.manage", async (user) => {
+      const payload = await request.json();
+      const result = await marketplaceIntegrationService.queueOrderImport(payload);
+      await auditLogService.recordFromRequest(request, {
+        entityType: "INTEGRATION",
+        action: "SYNC",
+        actorUserId: user.id,
+        summary: "Pazaryeri sipariş import kuyruğu oluşturuldu",
+        metadata: {
+          channel: payload.channel ?? null,
+        },
+      });
+      return NextResponse.json(result, { status: 201 });
     });
-    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

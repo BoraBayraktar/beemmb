@@ -7,21 +7,22 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function POST(request: Request, context: { params: Promise<{ jobId: string }> }) {
   try {
-    const user = await requirePermission("integrations.manage");
-    const { jobId } = await context.params;
-    const result = await integrationService.retryDeadLetter({
-      jobId,
-      resolvedByUserId: user.id,
-    });
-    await auditLogService.recordFromRequest(request, {
-      entityType: "INTEGRATION",
-      entityId: jobId,
-      action: "SYNC",
-      actorUserId: user.id,
-      summary: "Dead letter entegrasyon işi tekrar kuyruğa alındı",
-    });
+    return await requirePermission("integrations.manage", async (user) => {
+      const { jobId } = await context.params;
+      const result = await integrationService.retryDeadLetter({
+        jobId,
+        resolvedByUserId: user.id,
+      });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "INTEGRATION",
+        entityId: jobId,
+        action: "SYNC",
+        actorUserId: user.id,
+        summary: "Dead letter entegrasyon işi tekrar kuyruğa alındı",
+      });
 
-    return NextResponse.json({ item: result });
+      return NextResponse.json({ item: result });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

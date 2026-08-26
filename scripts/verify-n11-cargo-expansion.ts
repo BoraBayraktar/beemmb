@@ -1,5 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 
+import { runWithTenantContext } from "@/lib/tenant-context";
+import { PLATFORM_TENANT_ID } from "@/lib/tenant-defaults";
 import { N11Client } from "@/modules/integration/connectors/n11.client";
 import { MarketplaceIntegrationRepository } from "@/modules/integration/repositories/marketplace-integration.repository";
 import { integrationSecretCryptoService } from "@/modules/integration/services/integration-secret-crypto.service";
@@ -112,6 +114,7 @@ async function main() {
   // --- Fixture'lar ---
   const n11Config = await prisma.marketplaceIntegrationConfig.create({
     data: {
+      tenantId: PLATFORM_TENANT_ID,
       channel: "N11",
       displayName: `N11 Verify ${unique}`,
       sellerId: `n11-seller-${unique}`,
@@ -123,6 +126,7 @@ async function main() {
 
   const pazaramaConfig = await prisma.marketplaceIntegrationConfig.create({
     data: {
+      tenantId: PLATFORM_TENANT_ID,
       channel: "PAZARAMA",
       displayName: `Pazarama Verify ${unique}`,
       sellerId: `pazarama-seller-${unique}`,
@@ -134,6 +138,7 @@ async function main() {
 
   const pickingPackage = await prisma.marketplaceOrderPackage.create({
     data: {
+      tenantId: PLATFORM_TENANT_ID,
       configId: n11Config.id,
       channel: "N11",
       externalPackageId: `pkg-${unique}-picking`,
@@ -141,8 +146,8 @@ async function main() {
       packageStatus: "Picking",
       lines: {
         create: [
-          { externalLineId: `line-${unique}-a`, productName: "Verify Product A", quantity: 3 },
-          { externalLineId: `line-${unique}-b`, productName: "Verify Product B", quantity: 2 },
+          { tenantId: PLATFORM_TENANT_ID, externalLineId: `line-${unique}-a`, productName: "Verify Product A", quantity: 3 },
+          { tenantId: PLATFORM_TENANT_ID, externalLineId: `line-${unique}-b`, productName: "Verify Product B", quantity: 2 },
         ],
       },
     },
@@ -151,19 +156,21 @@ async function main() {
 
   const createdPackage = await prisma.marketplaceOrderPackage.create({
     data: {
+      tenantId: PLATFORM_TENANT_ID,
       configId: n11Config.id,
       channel: "N11",
       externalPackageId: `pkg-${unique}-created`,
       externalOrderNumber: `order-${unique}-created`,
       packageStatus: "Created",
       lines: {
-        create: { externalLineId: `line-${unique}-c`, productName: "Verify Product C", quantity: 1 },
+        create: { tenantId: PLATFORM_TENANT_ID, externalLineId: `line-${unique}-c`, productName: "Verify Product C", quantity: 1 },
       },
     },
   });
 
   const pazaramaPackage = await prisma.marketplaceOrderPackage.create({
     data: {
+      tenantId: PLATFORM_TENANT_ID,
       configId: pazaramaConfig.id,
       channel: "PAZARAMA",
       externalPackageId: `pkg-${unique}-pazarama`,
@@ -285,7 +292,7 @@ async function main() {
   console.log("N11 kargo genisletmesi (toplama talebi + parcali iptal + alan zenginlestirme) dogrulamasi gecti");
 }
 
-main()
+runWithTenantContext({ tenantId: PLATFORM_TENANT_ID, isPlatformOperator: false }, main)
   .catch((error) => {
     console.error(error);
     process.exitCode = 1;

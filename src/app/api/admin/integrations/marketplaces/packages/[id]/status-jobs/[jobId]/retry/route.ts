@@ -10,24 +10,25 @@ export async function POST(
   { params }: { params: Promise<{ id: string; jobId: string }> },
 ) {
   try {
-    const user = await requirePermission("integrations.manage");
-    const { id, jobId } = await params;
-    const result = await marketplaceIntegrationService.retryPackageStatusJob({
-      packageId: id,
-      jobId,
-      resolvedByUserId: user.id,
-    });
-    await auditLogService.recordFromRequest(request, {
-      entityType: "MARKETPLACE_PACKAGE",
-      entityId: id,
-      action: "SYNC",
-      actorUserId: user.id,
-      summary: "Pazaryeri paket durum işi tekrar kuyruğa alındı",
-      metadata: {
+    return await requirePermission("integrations.manage", async (user) => {
+      const { id, jobId } = await params;
+      const result = await marketplaceIntegrationService.retryPackageStatusJob({
+        packageId: id,
         jobId,
-      },
+        resolvedByUserId: user.id,
+      });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "MARKETPLACE_PACKAGE",
+        entityId: id,
+        action: "SYNC",
+        actorUserId: user.id,
+        summary: "Pazaryeri paket durum işi tekrar kuyruğa alındı",
+        metadata: {
+          jobId,
+        },
+      });
+      return NextResponse.json(result);
     });
-    return NextResponse.json(result);
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

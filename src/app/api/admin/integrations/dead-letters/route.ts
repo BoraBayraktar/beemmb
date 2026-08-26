@@ -5,9 +5,10 @@ import { AuthContextError, requirePermission } from "@/modules/identity/services
 
 export async function GET() {
   try {
-    await requirePermission("integrations.read");
-    const result = await integrationService.listDeadLetters();
-    return NextResponse.json(result);
+    return await requirePermission("integrations.read", async () => {
+      const result = await integrationService.listDeadLetters();
+      return NextResponse.json(result);
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

@@ -5,11 +5,12 @@ import { marketplaceIntegrationService } from "@/modules/integration/services/ma
 
 export async function GET(request: Request) {
   try {
-    await requirePermission("integrations.read");
-    const { searchParams } = new URL(request.url);
-    const channel = (searchParams.get("channel") as "TRENDYOL" | "N11" | "PAZARAMA" | "HEPSIBURADA" | null) ?? undefined;
-    const result = await marketplaceIntegrationService.getDashboard({ channel });
-    return NextResponse.json(result);
+    return await requirePermission("integrations.read", async () => {
+      const { searchParams } = new URL(request.url);
+      const channel = (searchParams.get("channel") as "TRENDYOL" | "N11" | "PAZARAMA" | "HEPSIBURADA" | null) ?? undefined;
+      const result = await marketplaceIntegrationService.getDashboard({ channel });
+      return NextResponse.json(result);
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

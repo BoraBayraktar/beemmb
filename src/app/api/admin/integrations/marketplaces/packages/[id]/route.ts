@@ -9,10 +9,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requirePermission("integrations.read");
-    const { id } = await params;
-    const result = await marketplaceIntegrationService.getPackageDetail({ id });
-    return NextResponse.json(result);
+    return await requirePermission("integrations.read", async () => {
+      const { id } = await params;
+      const result = await marketplaceIntegrationService.getPackageDetail({ id });
+      return NextResponse.json(result);
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

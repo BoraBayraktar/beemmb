@@ -59,6 +59,11 @@ const TENANT_SCOPED_MODELS = new Set<Prisma.ModelName>([
   "IncomingInvoiceLine",
   "IncomingInvoiceXmlArtifact",
   "IncomingInvoiceLifecycleEvent",
+  "IntegrationSyncJob",
+  "IntegrationDeadLetter",
+  "MarketplaceIntegrationConfig",
+  "MarketplaceOrderPackage",
+  "MarketplaceOrderLine",
 ]);
 
 const WHERE_MANY_OPERATIONS = new Set([

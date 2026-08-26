@@ -1,5 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 
+import { runWithTenantContext } from "@/lib/tenant-context";
+import { PLATFORM_TENANT_ID } from "@/lib/tenant-defaults";
 import { TrendyolClient } from "@/modules/integration/connectors/trendyol.client";
 import { integrationSecretCryptoService } from "@/modules/integration/services/integration-secret-crypto.service";
 import { marketplaceIntegrationService } from "@/modules/integration/services/marketplace-integration.service";
@@ -131,6 +133,7 @@ async function main() {
   // --- Test fixture'ları: Trendyol ve N11 config + paket + satır ---
   const trendyolConfig = await prisma.marketplaceIntegrationConfig.create({
     data: {
+      tenantId: PLATFORM_TENANT_ID,
       channel: "TRENDYOL",
       displayName: `Trendyol Verify ${unique}`,
       sellerId: `trendyol-seller-${unique}`,
@@ -142,6 +145,7 @@ async function main() {
 
   const n11Config = await prisma.marketplaceIntegrationConfig.create({
     data: {
+      tenantId: PLATFORM_TENANT_ID,
       channel: "N11",
       displayName: `N11 Verify ${unique}`,
       sellerId: `n11-seller-${unique}`,
@@ -153,6 +157,7 @@ async function main() {
 
   const eligiblePackage = await prisma.marketplaceOrderPackage.create({
     data: {
+      tenantId: PLATFORM_TENANT_ID,
       configId: trendyolConfig.id,
       channel: "TRENDYOL",
       externalPackageId: `pkg-${unique}-eligible`,
@@ -160,6 +165,7 @@ async function main() {
       packageStatus: "Created",
       lines: {
         create: {
+          tenantId: PLATFORM_TENANT_ID,
           externalLineId: `line-${unique}`,
           productName: "Verify Product",
           quantity: 3,
@@ -171,6 +177,7 @@ async function main() {
 
   const invoicedPackage = await prisma.marketplaceOrderPackage.create({
     data: {
+      tenantId: PLATFORM_TENANT_ID,
       configId: trendyolConfig.id,
       channel: "TRENDYOL",
       externalPackageId: `pkg-${unique}-invoiced`,
@@ -178,6 +185,7 @@ async function main() {
       packageStatus: "Invoiced",
       lines: {
         create: {
+          tenantId: PLATFORM_TENANT_ID,
           externalLineId: `line-${unique}-invoiced`,
           productName: "Verify Product",
           quantity: 1,
@@ -188,6 +196,7 @@ async function main() {
 
   const n11Package = await prisma.marketplaceOrderPackage.create({
     data: {
+      tenantId: PLATFORM_TENANT_ID,
       configId: n11Config.id,
       channel: "N11",
       externalPackageId: `pkg-${unique}-n11`,
@@ -267,7 +276,7 @@ async function main() {
   console.log("Trendyol v2/orders migrasyonu + tedarik edememe bildirimi doğrulaması geçti");
 }
 
-main()
+runWithTenantContext({ tenantId: PLATFORM_TENANT_ID, isPlatformOperator: false }, main)
   .catch((error) => {
     console.error(error);
     process.exitCode = 1;

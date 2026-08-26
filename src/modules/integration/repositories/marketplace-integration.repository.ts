@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { requireTenantId } from "@/lib/tenant-context";
 
 function toJsonInput(value: Prisma.JsonValue | Record<string, unknown> | null | undefined) {
   if (value === null || value === undefined) {
@@ -348,6 +349,7 @@ export class MarketplaceIntegrationRepository {
     return prisma.marketplaceIntegrationConfig.create({
       data: {
         ...data,
+        tenantId: requireTenantId(),
         apiKeyEncrypted: args.apiKeyEncrypted,
         apiSecretEncrypted: args.apiSecretEncrypted,
       },
@@ -692,6 +694,7 @@ export class MarketplaceIntegrationRepository {
   }
 
   async upsertPackage(input: MarketplacePackageInput) {
+    const tenantId = requireTenantId();
     const lineMatches = await Promise.all(input.lines.map(async (line) => {
       const matches = await this.findProductMatches({
         merchantSku: line.merchantSku,
@@ -715,7 +718,8 @@ export class MarketplaceIntegrationRepository {
 
     const createdPackage = await prisma.marketplaceOrderPackage.upsert({
       where: {
-        channel_configId_externalPackageId: {
+        tenantId_channel_configId_externalPackageId: {
+          tenantId,
           channel: input.channel,
           configId: input.configId,
           externalPackageId: input.externalPackageId,
@@ -743,6 +747,7 @@ export class MarketplaceIntegrationRepository {
         deletedUserId: null,
       },
       create: {
+        tenantId,
         channel: input.channel,
         configId: input.configId,
         externalPackageId: input.externalPackageId,
@@ -771,7 +776,8 @@ export class MarketplaceIntegrationRepository {
 
     await Promise.all(lineMatches.map((item) => prisma.marketplaceOrderLine.upsert({
       where: {
-        packageId_externalLineId: {
+        tenantId_packageId_externalLineId: {
+          tenantId,
           packageId: createdPackage.id,
           externalLineId: item.line.externalLineId,
         },
@@ -792,6 +798,7 @@ export class MarketplaceIntegrationRepository {
         deletedUserId: null,
       },
       create: {
+        tenantId,
         packageId: createdPackage.id,
         externalLineId: item.line.externalLineId,
         merchantSku: item.line.merchantSku,

@@ -7,9 +7,10 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET() {
   try {
-    await requirePermission("integrations.read");
-    const result = await marketplaceIntegrationService.listConfigs();
-    return NextResponse.json(result);
+    return await requirePermission("integrations.read", async () => {
+      const result = await marketplaceIntegrationService.listConfigs();
+      return NextResponse.json(result);
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });
@@ -21,22 +22,23 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("integrations.manage");
-    const payload = await request.json();
-    const result = await marketplaceIntegrationService.upsertConfig(payload);
-    await auditLogService.recordFromRequest(request, {
-      entityType: "MARKETPLACE_ACCOUNT",
-      entityId: result.id,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: `Pazaryeri entegrasyon ayarı kaydedildi: ${result.displayName}`,
-      metadata: {
-        channel: result.channel,
-        sellerId: result.sellerId,
-        credentialsChanged: Boolean(payload.apiKey || payload.apiSecret || payload.serviceToken),
-      },
+    return await requirePermission("integrations.manage", async (user) => {
+      const payload = await request.json();
+      const result = await marketplaceIntegrationService.upsertConfig(payload);
+      await auditLogService.recordFromRequest(request, {
+        entityType: "MARKETPLACE_ACCOUNT",
+        entityId: result.id,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: `Pazaryeri entegrasyon ayarı kaydedildi: ${result.displayName}`,
+        metadata: {
+          channel: result.channel,
+          sellerId: result.sellerId,
+          credentialsChanged: Boolean(payload.apiKey || payload.apiSecret || payload.serviceToken),
+        },
+      });
+      return NextResponse.json(result, { status: 201 });
     });
-    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

@@ -10,21 +10,22 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("integrations.manage");
-    const { id } = await params;
-    const payload = await request.json();
-    const result = await marketplaceIntegrationService.createN11CollectionRequest({
-      packageId: id,
-      ...payload,
+    return await requirePermission("integrations.manage", async (user) => {
+      const { id } = await params;
+      const payload = await request.json();
+      const result = await marketplaceIntegrationService.createN11CollectionRequest({
+        packageId: id,
+        ...payload,
+      });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "MARKETPLACE_PACKAGE",
+        entityId: id,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: "N11 paketi icin toplama talebi olusturuldu",
+      });
+      return NextResponse.json(result, { status: 201 });
     });
-    await auditLogService.recordFromRequest(request, {
-      entityType: "MARKETPLACE_PACKAGE",
-      entityId: id,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: "N11 paketi icin toplama talebi olusturuldu",
-    });
-    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

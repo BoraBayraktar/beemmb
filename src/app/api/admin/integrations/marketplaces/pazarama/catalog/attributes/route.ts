@@ -6,13 +6,14 @@ import { marketplaceIntegrationService } from "@/modules/integration/services/ma
 
 export async function GET(request: Request) {
   try {
-    await requirePermission("integrationsPazarama.manage");
-    const { searchParams } = new URL(request.url);
-    const result = await marketplaceIntegrationService.listPazaramaCategoryAttributes({
-      categoryId: searchParams.get("categoryId") ?? "",
-    });
+    return await requirePermission("integrationsPazarama.manage", async () => {
+      const { searchParams } = new URL(request.url);
+      const result = await marketplaceIntegrationService.listPazaramaCategoryAttributes({
+        categoryId: searchParams.get("categoryId") ?? "",
+      });
 
-    return NextResponse.json(result);
+      return NextResponse.json(result);
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

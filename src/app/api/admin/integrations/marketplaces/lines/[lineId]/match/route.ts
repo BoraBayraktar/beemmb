@@ -10,25 +10,26 @@ export async function PATCH(
   { params }: { params: Promise<{ lineId: string }> },
 ) {
   try {
-    const user = await requirePermission("integrations.manage");
-    const { lineId } = await params;
-    const payload = await request.json();
-    const result = await marketplaceIntegrationService.matchPackageLine({
-      ...payload,
-      lineId,
+    return await requirePermission("integrations.manage", async (user) => {
+      const { lineId } = await params;
+      const payload = await request.json();
+      const result = await marketplaceIntegrationService.matchPackageLine({
+        ...payload,
+        lineId,
+      });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "MARKETPLACE_PACKAGE",
+        entityId: lineId,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: "Pazaryeri paket satırı ürünle eşleştirildi",
+        metadata: {
+          productId: payload.productId ?? null,
+          productVariantId: payload.productVariantId ?? null,
+        },
+      });
+      return NextResponse.json(result);
     });
-    await auditLogService.recordFromRequest(request, {
-      entityType: "MARKETPLACE_PACKAGE",
-      entityId: lineId,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: "Pazaryeri paket satırı ürünle eşleştirildi",
-      metadata: {
-        productId: payload.productId ?? null,
-        productVariantId: payload.productVariantId ?? null,
-      },
-    });
-    return NextResponse.json(result);
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

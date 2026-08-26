@@ -14,8 +14,12 @@ async function handle(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const result = await runWithTenantContext(
-      // Sistem cron'u (paylasilan secret, oturumsuz). Pazaryeri entegrasyon
-      // config'leri henuz tenant-scoped olmadigindan platform tenant'ina sabittir.
+      // Sistem cron'u (paylasilan secret, oturumsuz), platform tenant'ina
+      // kasitli olarak sabittir. Pazaryeri entegrasyon config'leri artik
+      // tenant-scoped (Faz 1 / Dalga 15), ama bu cron sadece platform
+      // tenant'inin config'lerini gorur/isler. Coklu tenant provizyonu
+      // (Faz 2) sonrasi bu cron'un her tenant icin ayrica calistirilmasi
+      // veya tenant listesi uzerinde donmesi gerekir.
       { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: true },
       () => marketplaceIntegrationService.scheduleActiveTrendyolImports({
         processQueue: searchParams.get("processQueue") !== "false",

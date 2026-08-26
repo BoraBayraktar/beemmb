@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { requireTenantId } from "@/lib/tenant-context";
 import type {
   AdminIntegrationListQuery,
   DispatchIntegrationJobsInput,
@@ -54,7 +55,8 @@ export class IntegrationRepository {
   }
 
   async dispatchJobs(input: DispatchIntegrationJobsInput) {
-    const jobs: Array<{ job: Awaited<ReturnType<typeof prisma.integrationSyncJob.findUnique>>; deduplicated: boolean }> = [];
+    const tenantId = requireTenantId();
+    const jobs: Array<{ job: Awaited<ReturnType<typeof prisma.integrationSyncJob.findFirst>>; deduplicated: boolean }> = [];
 
     for (const entityId of input.entityIds) {
       const idempotencyKey = buildIdempotencyKey({
@@ -65,7 +67,7 @@ export class IntegrationRepository {
         suffix: input.idempotencySuffix,
       });
 
-      const existing = await prisma.integrationSyncJob.findUnique({
+      const existing = await prisma.integrationSyncJob.findFirst({
         where: {
           idempotencyKey,
         },
@@ -78,7 +80,7 @@ export class IntegrationRepository {
 
       const job = await prisma.integrationSyncJob.upsert({
         where: {
-          idempotencyKey,
+          tenantId_idempotencyKey: { tenantId, idempotencyKey },
         },
         update: {
           deleted: false,
@@ -93,6 +95,7 @@ export class IntegrationRepository {
           processedAt: null,
         },
         create: {
+          tenantId,
           idempotencyKey,
           channel: input.channel,
           jobType: input.jobType,
@@ -216,6 +219,7 @@ export class IntegrationRepository {
           deletedUserId: null,
         },
         create: {
+          tenantId: job.tenantId,
           jobId: job.id,
           channel: job.channel,
           jobType: job.jobType,
@@ -284,6 +288,7 @@ export class IntegrationRepository {
           deletedUserId: null,
         },
         create: {
+          tenantId: job.tenantId,
           jobId: job.id,
           channel: job.channel,
           jobType: job.jobType,

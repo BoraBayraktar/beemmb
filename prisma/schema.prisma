@@ -1481,7 +1481,8 @@ model InventoryTransactionLine {
 
 model IntegrationSyncJob {
   id                String                 @id @default(cuid())
-  idempotencyKey    String                 @unique
+  tenantId          String
+  idempotencyKey    String
   channel           IntegrationChannel
   jobType           IntegrationJobType
   entityType        IntegrationEntityType
@@ -1502,15 +1503,19 @@ model IntegrationSyncJob {
   deletedDate       DateTime?
   deletedUserId     String?
   deadLetter        IntegrationDeadLetter?
+  tenant            Tenant                 @relation(fields: [tenantId], references: [id])
 
+  @@unique([tenantId, idempotencyKey])
   @@index([status, nextAttemptAt])
   @@index([deleted])
   @@index([channel, jobType])
   @@index([entityType, entityId])
+  @@index([tenantId])
 }
 
 model IntegrationDeadLetter {
   id               String                @id @default(cuid())
+  tenantId         String
   jobId            String                @unique
   channel          IntegrationChannel
   jobType          IntegrationJobType
@@ -1529,14 +1534,17 @@ model IntegrationDeadLetter {
   deletedDate      DateTime?
   deletedUserId    String?
   job              IntegrationSyncJob    @relation(fields: [jobId], references: [id])
+  tenant           Tenant                @relation(fields: [tenantId], references: [id])
 
   @@index([resolved, deleted])
   @@index([channel, jobType])
   @@index([entityType, entityId])
+  @@index([tenantId])
 }
 
 model MarketplaceIntegrationConfig {
   id                         String                    @id @default(cuid())
+  tenantId                   String
   channel                    IntegrationChannel
   displayName                String
   sellerId                   String
@@ -1562,13 +1570,16 @@ model MarketplaceIntegrationConfig {
   deletedDate                DateTime?
   deletedUserId              String?
   packages                   MarketplaceOrderPackage[]
+  tenant                     Tenant                    @relation(fields: [tenantId], references: [id])
 
-  @@unique([channel, sellerId, deleted])
+  @@unique([tenantId, channel, sellerId, deleted])
   @@index([channel, isActive, deleted])
+  @@index([tenantId])
 }
 
 model MarketplaceOrderPackage {
   id                     String                         @id @default(cuid())
+  tenantId               String
   configId               String
   channel                IntegrationChannel
   externalPackageId      String
@@ -1597,16 +1608,19 @@ model MarketplaceOrderPackage {
   config                 MarketplaceIntegrationConfig   @relation(fields: [configId], references: [id])
   matchedOrder           Order?                         @relation(fields: [matchedOrderId], references: [id])
   lines                  MarketplaceOrderLine[]
+  tenant                 Tenant                         @relation(fields: [tenantId], references: [id])
 
-  @@unique([channel, configId, externalPackageId])
+  @@unique([tenantId, channel, configId, externalPackageId])
   @@index([configId, deleted])
   @@index([channel, packageStatus, deleted])
   @@index([externalOrderNumber])
   @@index([matchedOrderId])
+  @@index([tenantId])
 }
 
 model MarketplaceOrderLine {
   id               String                          @id @default(cuid())
+  tenantId         String
   packageId        String
   externalLineId   String
   merchantSku      String?
@@ -1627,13 +1641,15 @@ model MarketplaceOrderLine {
   package          MarketplaceOrderPackage         @relation(fields: [packageId], references: [id])
   product          Product?                        @relation(fields: [productId], references: [id])
   productVariant   ProductVariant?                 @relation(fields: [productVariantId], references: [id])
+  tenant           Tenant                          @relation(fields: [tenantId], references: [id])
 
-  @@unique([packageId, externalLineId])
+  @@unique([tenantId, packageId, externalLineId])
   @@index([packageId, deleted])
   @@index([merchantSku])
   @@index([barcode])
   @@index([productId])
   @@index([productVariantId])
+  @@index([tenantId])
 }
 
 model InventoryIntegrationMapping {
@@ -1795,6 +1811,11 @@ model Tenant {
   incomingInvoiceProviderConfigs      IncomingInvoiceProviderConfig[]
   incomingInvoiceXmlArtifacts         IncomingInvoiceXmlArtifact[]
   incomingInvoiceLifecycleEvents      IncomingInvoiceLifecycleEvent[]
+  integrationSyncJobs                 IntegrationSyncJob[]
+  integrationDeadLetters              IntegrationDeadLetter[]
+  marketplaceIntegrationConfigs       MarketplaceIntegrationConfig[]
+  marketplaceOrderPackages            MarketplaceOrderPackage[]
+  marketplaceOrderLines               MarketplaceOrderLine[]
 
   @@index([deleted, status])
 }

@@ -6,13 +6,14 @@ import { marketplaceIntegrationService } from "@/modules/integration/services/ma
 
 export async function GET(request: Request) {
   try {
-    await requirePermission("integrationsTrendyol.manage");
-    const { searchParams } = new URL(request.url);
-    const result = await marketplaceIntegrationService.searchTrendyolBrands({
-      query: searchParams.get("query") ?? "",
-    });
+    return await requirePermission("integrationsTrendyol.manage", async () => {
+      const { searchParams } = new URL(request.url);
+      const result = await marketplaceIntegrationService.searchTrendyolBrands({
+        query: searchParams.get("query") ?? "",
+      });
 
-    return NextResponse.json(result);
+      return NextResponse.json(result);
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

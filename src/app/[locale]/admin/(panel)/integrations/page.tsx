@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { integrationService } from "@/modules/integration/services/integration.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
@@ -25,14 +26,17 @@ export default async function AdminIntegrationsPage({
     redirect(`/${locale}/admin/login`);
   }
 
-  const [jobs, deadLetters, trendyolDashboard, n11Dashboard, pazaramaDashboard, hepsiburadaDashboard] = await Promise.all([
-    integrationService.listJobs({ page: 1, pageSize: 20 }),
-    integrationService.listDeadLetters(),
-    marketplaceIntegrationService.getDashboard({ channel: "TRENDYOL" }),
-    marketplaceIntegrationService.getDashboard({ channel: "N11" }),
-    marketplaceIntegrationService.getDashboard({ channel: "PAZARAMA" }),
-    marketplaceIntegrationService.getDashboard({ channel: "HEPSIBURADA" }),
-  ]);
+  const [jobs, deadLetters, trendyolDashboard, n11Dashboard, pazaramaDashboard, hepsiburadaDashboard] = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => Promise.all([
+      integrationService.listJobs({ page: 1, pageSize: 20 }),
+      integrationService.listDeadLetters(),
+      marketplaceIntegrationService.getDashboard({ channel: "TRENDYOL" }),
+      marketplaceIntegrationService.getDashboard({ channel: "N11" }),
+      marketplaceIntegrationService.getDashboard({ channel: "PAZARAMA" }),
+      marketplaceIntegrationService.getDashboard({ channel: "HEPSIBURADA" }),
+    ]),
+  );
 
   return (
     <IntegrationManager
