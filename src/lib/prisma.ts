@@ -39,6 +39,9 @@ const TENANT_SCOPED_MODELS = new Set<Prisma.ModelName>([
   "CashTransaction",
   "FinanceLedgerAccount",
   "FinanceAccountEntry",
+  "CollectionRecord",
+  "PaymentRecord",
+  "FinanceAllocationLink",
 ]);
 
 const WHERE_MANY_OPERATIONS = new Set([

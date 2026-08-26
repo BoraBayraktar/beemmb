@@ -657,6 +657,7 @@ model OrderPaymentStatusHistory {
 
 model CollectionRecord {
   id                         String                  @id @default(cuid())
+  tenantId                   String
   orderId                    String
   financialAccountId         String?
   amount                     Decimal                 @db.Decimal(10, 2)
@@ -675,16 +676,19 @@ model CollectionRecord {
   order                      Order                   @relation(fields: [orderId], references: [id])
   financialAccount           FinancialAccount?       @relation(fields: [financialAccountId], references: [id])
   allocationLinks            FinanceAllocationLink[]
+  tenant                     Tenant                  @relation(fields: [tenantId], references: [id])
 
-  @@unique([onlineCollectionProvider, onlineCollectionExternalId])
+  @@unique([tenantId, onlineCollectionProvider, onlineCollectionExternalId])
   @@index([orderId, collectedAt])
   @@index([financialAccountId, collectedAt])
   @@index([status, collectedAt])
   @@index([deleted, collectedAt])
+  @@index([tenantId])
 }
 
 model PaymentRecord {
   id                 String                  @id @default(cuid())
+  tenantId           String
   cariId             String?
   financialAccountId String?
   amount             Decimal                 @db.Decimal(10, 2)
@@ -701,11 +705,13 @@ model PaymentRecord {
   cari               Cari?                   @relation(fields: [cariId], references: [id])
   financialAccount   FinancialAccount?       @relation(fields: [financialAccountId], references: [id])
   allocationLinks    FinanceAllocationLink[]
+  tenant             Tenant                  @relation(fields: [tenantId], references: [id])
 
   @@index([cariId, paidAt])
   @@index([financialAccountId, paidAt])
   @@index([status, paidAt])
   @@index([deleted, paidAt])
+  @@index([tenantId])
 }
 
 model FinanceLedgerAccount {
@@ -760,6 +766,7 @@ model FinanceAccountEntry {
 
 model FinanceAllocationLink {
   id                     String                      @id @default(cuid())
+  tenantId               String
   collectionRecordId     String?
   paymentRecordId        String?
   targetType             FinanceAllocationTargetType
@@ -778,6 +785,7 @@ model FinanceAllocationLink {
   order                  Order?                      @relation(fields: [orderId], references: [id])
   businessDocument       BusinessDocument?           @relation(fields: [businessDocumentId], references: [id])
   businessDocumentLine   BusinessDocumentLine?       @relation(fields: [businessDocumentLineId], references: [id])
+  tenant                 Tenant                      @relation(fields: [tenantId], references: [id])
 
   @@index([collectionRecordId])
   @@index([paymentRecordId])
@@ -785,6 +793,7 @@ model FinanceAllocationLink {
   @@index([businessDocumentId])
   @@index([businessDocumentLineId])
   @@index([deleted, createdAt])
+  @@index([tenantId])
 }
 
 model BusinessDocument {
@@ -1711,6 +1720,9 @@ model Tenant {
   cashTransactions             CashTransaction[]
   financeLedgerAccounts        FinanceLedgerAccount[]
   financeAccountEntries        FinanceAccountEntry[]
+  collectionRecords            CollectionRecord[]
+  paymentRecords               PaymentRecord[]
+  financeAllocationLinks       FinanceAllocationLink[]
 
   @@index([deleted, status])
 }

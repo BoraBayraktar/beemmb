@@ -7,61 +7,62 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("finance.manage");
-    const payload = await request.json() as {
-      type?: "collection" | "payment";
-      collectionRecordId?: string;
-      paymentRecordId?: string;
-      items?: Array<{ businessDocumentLineId: string; amount: number }>;
-    };
+    return await requirePermission("finance.manage", async (user) => {
+      const payload = await request.json() as {
+        type?: "collection" | "payment";
+        collectionRecordId?: string;
+        paymentRecordId?: string;
+        items?: Array<{ businessDocumentLineId: string; amount: number }>;
+      };
 
-    if (payload.type === "collection" && payload.collectionRecordId && payload.items) {
-      const summary = await financeAllocationService.replaceCollectionAllocations({
-        collectionRecordId: payload.collectionRecordId,
-        items: payload.items,
-      });
-
-      await auditLogService.recordFromRequest(request, {
-        entityType: "FINANCE_COLLECTION",
-        entityId: payload.collectionRecordId,
-        action: "UPDATE",
-        actorUserId: user.id,
-        summary: "Tahsilat kaydı manuel eşleştirmesi güncellendi",
-        metadata: {
+      if (payload.type === "collection" && payload.collectionRecordId && payload.items) {
+        const summary = await financeAllocationService.replaceCollectionAllocations({
           collectionRecordId: payload.collectionRecordId,
-          allocatedAmount: summary.allocatedAmount,
-          expectedAmount: summary.expectedAmount,
-          itemCount: summary.items.length,
-        },
-      });
+          items: payload.items,
+        });
 
-      return NextResponse.json({ summary });
-    }
+        await auditLogService.recordFromRequest(request, {
+          entityType: "FINANCE_COLLECTION",
+          entityId: payload.collectionRecordId,
+          action: "UPDATE",
+          actorUserId: user.id,
+          summary: "Tahsilat kaydı manuel eşleştirmesi güncellendi",
+          metadata: {
+            collectionRecordId: payload.collectionRecordId,
+            allocatedAmount: summary.allocatedAmount,
+            expectedAmount: summary.expectedAmount,
+            itemCount: summary.items.length,
+          },
+        });
 
-    if (payload.type === "payment" && payload.paymentRecordId && payload.items) {
-      const summary = await financeAllocationService.replacePaymentAllocations({
-        paymentRecordId: payload.paymentRecordId,
-        items: payload.items,
-      });
+        return NextResponse.json({ summary });
+      }
 
-      await auditLogService.recordFromRequest(request, {
-        entityType: "FINANCE_PAYMENT",
-        entityId: payload.paymentRecordId,
-        action: "UPDATE",
-        actorUserId: user.id,
-        summary: "Ödeme kaydı manuel eşleştirmesi güncellendi",
-        metadata: {
+      if (payload.type === "payment" && payload.paymentRecordId && payload.items) {
+        const summary = await financeAllocationService.replacePaymentAllocations({
           paymentRecordId: payload.paymentRecordId,
-          allocatedAmount: summary.allocatedAmount,
-          expectedAmount: summary.expectedAmount,
-          itemCount: summary.items.length,
-        },
-      });
+          items: payload.items,
+        });
 
-      return NextResponse.json({ summary });
-    }
+        await auditLogService.recordFromRequest(request, {
+          entityType: "FINANCE_PAYMENT",
+          entityId: payload.paymentRecordId,
+          action: "UPDATE",
+          actorUserId: user.id,
+          summary: "Ödeme kaydı manuel eşleştirmesi güncellendi",
+          metadata: {
+            paymentRecordId: payload.paymentRecordId,
+            allocatedAmount: summary.allocatedAmount,
+            expectedAmount: summary.expectedAmount,
+            itemCount: summary.items.length,
+          },
+        });
 
-    return NextResponse.json({ message: "Geçersiz eşleştirme isteği." }, { status: 400 });
+        return NextResponse.json({ summary });
+      }
+
+      return NextResponse.json({ message: "Geçersiz eşleştirme isteği." }, { status: 400 });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

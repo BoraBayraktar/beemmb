@@ -69,7 +69,7 @@ assert(
   "Manuel eşleştirme route ödeme servis metodunu kullanmalıdır.",
 );
 assert(
-  allocationRouteSource.includes('requirePermission("finance.manage")'),
+  allocationRouteSource.includes('requirePermission("finance.manage"'),
   "Manuel eşleştirme route finance.manage izni istemelidir.",
 );
 assert(

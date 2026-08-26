@@ -7,9 +7,10 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET() {
   try {
-    await requirePermission("financeCollections.manage");
-    const items = await collectionsService.listCollectionRecords();
-    return NextResponse.json({ items });
+    return await requirePermission("financeCollections.manage", async () => {
+      const items = await collectionsService.listCollectionRecords();
+      return NextResponse.json({ items });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

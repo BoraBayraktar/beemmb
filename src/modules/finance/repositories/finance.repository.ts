@@ -263,6 +263,7 @@ export class FinanceRepository {
   }) {
     return prisma.collectionRecord.create({
       data: {
+        tenantId: requireTenantId(),
         orderId: args.orderId,
         financialAccountId: args.financialAccountId ?? null,
         amount: args.amount,
@@ -328,6 +329,7 @@ export class FinanceRepository {
   }) {
     return prisma.paymentRecord.create({
       data: {
+        tenantId: requireTenantId(),
         cariId: args.supplierId,
         financialAccountId: args.financialAccountId ?? null,
         amount: args.amount,
@@ -695,8 +697,11 @@ export class FinanceRepository {
       return;
     }
 
+    const tenantId = requireTenantId();
+
     await prisma.financeAllocationLink.createMany({
       data: links.map((link) => ({
+        tenantId,
         collectionRecordId: link.collectionRecordId,
         paymentRecordId: link.paymentRecordId,
         targetType: link.targetType,
