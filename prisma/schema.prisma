@@ -243,6 +243,7 @@ model BankReconciliationMatch {
 
 model NegotiableInstrument {
   id                 String                          @id @default(cuid())
+  tenantId           String
   instrumentNumber   String
   instrumentType     NegotiableInstrumentType
   direction          NegotiableInstrumentDirection
@@ -267,11 +268,13 @@ model NegotiableInstrument {
   cari               Cari?                           @relation(fields: [cariId], references: [id])
   financialAccount   FinancialAccount?               @relation(fields: [financialAccountId], references: [id])
   cashTransaction    CashTransaction?                @relation(fields: [cashTransactionId], references: [id])
+  tenant             Tenant                          @relation(fields: [tenantId], references: [id])
 
   @@index([status, dueDate])
   @@index([direction, dueDate])
   @@index([deleted, dueDate])
   @@index([cariId])
+  @@index([tenantId])
 }
 
 model ProductAttributeDefinition {
@@ -1735,6 +1738,7 @@ model Tenant {
   bankStatementImports         BankStatementImport[]
   bankStatementLines           BankStatementLine[]
   bankReconciliationMatches    BankReconciliationMatch[]
+  negotiableInstruments        NegotiableInstrument[]
 
   @@index([deleted, status])
 }

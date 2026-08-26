@@ -72,6 +72,7 @@ export class NegotiableInstrumentRepository {
   }) {
     return (prisma as any).negotiableInstrument.create({
       data: {
+        tenantId: requireTenantId(),
         instrumentNumber: data.instrumentNumber,
         instrumentType: data.instrumentType,
         direction: data.direction,

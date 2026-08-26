@@ -5,6 +5,7 @@ import { negotiableInstrumentService } from "@/modules/finance/services/negotiab
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
 import { isLocale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { NegotiableInstrumentsManager } from "@/ui/admin/negotiable-instruments-manager";
 
 export default async function AdminNegotiableInstrumentsPage({
@@ -44,14 +45,17 @@ export default async function AdminNegotiableInstrumentsPage({
       ? resolvedSearchParams.status
       : "all";
 
-  const result = await negotiableInstrumentService.listInstruments(
-    {
-      search: resolvedSearchParams.search,
-      direction,
-      status,
-      overdueOnly: resolvedSearchParams.overdueOnly === "1",
-    },
-    locale,
+  const result = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => negotiableInstrumentService.listInstruments(
+      {
+        search: resolvedSearchParams.search,
+        direction,
+        status,
+        overdueOnly: resolvedSearchParams.overdueOnly === "1",
+      },
+      locale,
+    ),
   );
 
   return (

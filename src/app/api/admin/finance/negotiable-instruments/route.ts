@@ -7,27 +7,28 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("financeInstruments.manage");
-    const payload = await request.json();
-    const created = await negotiableInstrumentService.createInstrument({
-      ...payload,
-      createdByUserId: user.id,
-    });
+    return await requirePermission("financeInstruments.manage", async (user) => {
+      const payload = await request.json();
+      const created = await negotiableInstrumentService.createInstrument({
+        ...payload,
+        createdByUserId: user.id,
+      });
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "FINANCE_COLLECTION",
-      entityId: created.id,
-      action: "CREATE",
-      actorUserId: user.id,
-      summary: "Çek/senet kaydı oluşturuldu",
-      metadata: {
-        instrumentNumber: created.instrumentNumber,
-        direction: created.direction,
-        amount: created.amount,
-      },
-    });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "FINANCE_COLLECTION",
+        entityId: created.id,
+        action: "CREATE",
+        actorUserId: user.id,
+        summary: "Çek/senet kaydı oluşturuldu",
+        metadata: {
+          instrumentNumber: created.instrumentNumber,
+          direction: created.direction,
+          amount: created.amount,
+        },
+      });
 
-    return NextResponse.json(created, { status: 201 });
+      return NextResponse.json(created, { status: 201 });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });
