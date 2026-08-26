@@ -1050,7 +1050,8 @@ model DocumentProviderConfig {
 
 model IncomingInvoiceProviderConfig {
   id            String            @id @default(cuid())
-  providerCode  String            @unique
+  tenantId      String
+  providerCode  String
   displayName   String
   endpointUrl   String?
   username      String?
@@ -1067,13 +1068,17 @@ model IncomingInvoiceProviderConfig {
   deletedDate   DateTime?
   deletedUserId String?
   invoices      IncomingInvoice[]
+  tenant        Tenant            @relation(fields: [tenantId], references: [id])
 
+  @@unique([tenantId, providerCode])
   @@index([isActive, deleted])
   @@index([isDefault, deleted])
+  @@index([tenantId])
 }
 
 model IncomingInvoice {
   id                    String                          @id @default(cuid())
+  tenantId              String
   documentNumber        String
   source                IncomingInvoiceSource
   status                IncomingInvoiceStatus           @default(DRAFT)
@@ -1102,17 +1107,20 @@ model IncomingInvoice {
   lines                 IncomingInvoiceLine[]
   xmlArtifact           IncomingInvoiceXmlArtifact?
   lifecycleEvents       IncomingInvoiceLifecycleEvent[]
+  tenant                Tenant                          @relation(fields: [tenantId], references: [id])
 
-  @@unique([providerConfigId, externalReference])
+  @@unique([tenantId, providerConfigId, externalReference])
   @@index([status, issueDate])
   @@index([source, issueDate])
   @@index([cariId])
   @@index([counterpartyTaxNumber])
   @@index([deleted, issueDate])
+  @@index([tenantId])
 }
 
 model IncomingInvoiceLine {
   id                String          @id @default(cuid())
+  tenantId          String
   incomingInvoiceId String
   productName       String
   quantity          Decimal         @db.Decimal(12, 3)
@@ -1123,25 +1131,32 @@ model IncomingInvoiceLine {
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
   incomingInvoice   IncomingInvoice @relation(fields: [incomingInvoiceId], references: [id])
+  tenant            Tenant          @relation(fields: [tenantId], references: [id])
 
   @@index([incomingInvoiceId])
+  @@index([tenantId])
 }
 
 model IncomingInvoiceXmlArtifact {
   id                String                             @id @default(cuid())
+  tenantId          String
   incomingInvoiceId String                             @unique
   xmlContent        String
-  xmlHash           String                             @unique
+  xmlHash           String
   validationStatus  IncomingInvoiceXmlValidationStatus @default(NOT_VALIDATED)
   validationErrors  Json?
   createdAt         DateTime                           @default(now())
   incomingInvoice   IncomingInvoice                    @relation(fields: [incomingInvoiceId], references: [id])
+  tenant            Tenant                             @relation(fields: [tenantId], references: [id])
 
+  @@unique([tenantId, xmlHash])
   @@index([validationStatus])
+  @@index([tenantId])
 }
 
 model IncomingInvoiceLifecycleEvent {
   id                String          @id @default(cuid())
+  tenantId          String
   incomingInvoiceId String
   eventType         String
   actorUserId       String?
@@ -1151,9 +1166,11 @@ model IncomingInvoiceLifecycleEvent {
   occurredAt        DateTime        @default(now())
   createdAt         DateTime        @default(now())
   incomingInvoice   IncomingInvoice @relation(fields: [incomingInvoiceId], references: [id])
+  tenant            Tenant          @relation(fields: [tenantId], references: [id])
 
   @@index([incomingInvoiceId, occurredAt])
   @@index([eventType, occurredAt])
+  @@index([tenantId])
 }
 
 model Warehouse {
@@ -1773,6 +1790,11 @@ model Tenant {
   businessDocumentDispatches          BusinessDocumentDispatch[]
   businessDocumentLifecycleEvents     BusinessDocumentLifecycleEvent[]
   businessDocumentIntegrationMessages BusinessDocumentIntegrationMessage[]
+  incomingInvoices                    IncomingInvoice[]
+  incomingInvoiceLines                IncomingInvoiceLine[]
+  incomingInvoiceProviderConfigs      IncomingInvoiceProviderConfig[]
+  incomingInvoiceXmlArtifacts         IncomingInvoiceXmlArtifact[]
+  incomingInvoiceLifecycleEvents      IncomingInvoiceLifecycleEvent[]
 
   @@index([deleted, status])
 }

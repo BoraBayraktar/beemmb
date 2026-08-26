@@ -4,10 +4,11 @@ import { IncomingInvoiceAdminError, incomingInvoiceService } from "@/modules/inc
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    await requirePermission("incomingInvoices.read");
-    const { id } = await context.params;
-    const item = await incomingInvoiceService.getXmlArtifactContent(id);
-    return noStoreJson({ item });
+    return await requirePermission("incomingInvoices.read", async () => {
+      const { id } = await context.params;
+      const item = await incomingInvoiceService.getXmlArtifactContent(id);
+      return noStoreJson({ item });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return noStoreJson({ message: error.message }, { status: error.status });

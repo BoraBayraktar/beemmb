@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { requireTenantId } from "@/lib/tenant-context";
 import type { AdminIncomingInvoiceListQuery } from "@/modules/incoming-invoices/contracts/incoming-invoice.contract";
 
 const detailInclude = {
@@ -75,19 +76,17 @@ export class IncomingInvoiceRepository {
   }
 
   async findXmlArtifactByHash(xmlHash: string) {
-    return prisma.incomingInvoiceXmlArtifact.findUnique({
+    return prisma.incomingInvoiceXmlArtifact.findFirst({
       where: { xmlHash },
       select: { id: true, incomingInvoiceId: true },
     });
   }
 
   async findByProviderExternalReference(args: { providerConfigId: string; externalReference: string }) {
-    return prisma.incomingInvoice.findUnique({
+    return prisma.incomingInvoice.findFirst({
       where: {
-        providerConfigId_externalReference: {
-          providerConfigId: args.providerConfigId,
-          externalReference: args.externalReference,
-        },
+        providerConfigId: args.providerConfigId,
+        externalReference: args.externalReference,
       },
       select: { id: true },
     });
@@ -119,8 +118,11 @@ export class IncomingInvoiceRepository {
     lifecycleEventType: string;
     lifecycleSummary: string;
   }) {
+    const tenantId = requireTenantId();
+
     return prisma.incomingInvoice.create({
       data: {
+        tenantId,
         documentNumber: args.documentNumber,
         source: args.source,
         status: "DRAFT",
@@ -138,6 +140,7 @@ export class IncomingInvoiceRepository {
         createdByUserId: args.createdByUserId ?? null,
         lines: {
           create: args.lines.map((line) => ({
+            tenantId,
             productName: line.productName,
             quantity: new Prisma.Decimal(line.quantity),
             unitPrice: new Prisma.Decimal(line.unitPrice),
@@ -148,6 +151,7 @@ export class IncomingInvoiceRepository {
         },
         lifecycleEvents: {
           create: {
+            tenantId,
             eventType: args.lifecycleEventType,
             summary: args.lifecycleSummary,
             actorUserId: args.createdByUserId ?? null,
@@ -186,8 +190,11 @@ export class IncomingInvoiceRepository {
     lifecycleEventType: string;
     lifecycleSummary: string;
   }) {
+    const tenantId = requireTenantId();
+
     return prisma.incomingInvoice.create({
       data: {
+        tenantId,
         documentNumber: args.documentNumber,
         source: args.source,
         status: "DRAFT",
@@ -206,6 +213,7 @@ export class IncomingInvoiceRepository {
         createdByUserId: args.createdByUserId ?? null,
         lines: {
           create: args.lines.map((line) => ({
+            tenantId,
             productName: line.productName,
             quantity: new Prisma.Decimal(line.quantity),
             unitPrice: new Prisma.Decimal(line.unitPrice),
@@ -215,6 +223,7 @@ export class IncomingInvoiceRepository {
         },
         xmlArtifact: {
           create: {
+            tenantId,
             xmlContent: args.xmlContent,
             xmlHash: args.xmlHash,
             validationStatus: "NOT_VALIDATED",
@@ -222,6 +231,7 @@ export class IncomingInvoiceRepository {
         },
         lifecycleEvents: {
           create: {
+            tenantId,
             eventType: args.lifecycleEventType,
             summary: args.lifecycleSummary,
             actorUserId: args.createdByUserId ?? null,
@@ -247,6 +257,7 @@ export class IncomingInvoiceRepository {
         status: "CANCELLED",
         lifecycleEvents: {
           create: {
+            tenantId: requireTenantId(),
             eventType: "CANCELLED",
             summary: "Gelen fatura iptal edildi.",
             actorUserId: args.actorUserId ?? null,
@@ -264,6 +275,7 @@ export class IncomingInvoiceRepository {
         status: "REVIEWED",
         lifecycleEvents: {
           create: {
+            tenantId: requireTenantId(),
             eventType: "REVIEWED",
             summary: "Gelen fatura onaylandı.",
             actorUserId: args.actorUserId ?? null,
@@ -282,6 +294,7 @@ export class IncomingInvoiceRepository {
         postedFinanceEntryAt: new Date(),
         lifecycleEvents: {
           create: {
+            tenantId: requireTenantId(),
             eventType: "POSTED_TO_FINANCE",
             summary: "Gelen fatura muhasebe defterine işlendi.",
           },
@@ -347,6 +360,7 @@ export class IncomingInvoiceRepository {
 
       return tx.incomingInvoiceProviderConfig.create({
         data: {
+          tenantId: requireTenantId(),
           providerCode: args.providerCode,
           displayName: args.displayName,
           endpointUrl: args.endpointUrl ?? null,

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { isLocale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
 import { incomingInvoiceProviderConfigService } from "@/modules/incoming-invoices/services/incoming-invoice-provider-config.service";
@@ -26,7 +27,10 @@ export default async function AdminIncomingInvoiceProvidersPage({
     notFound();
   }
 
-  const items = await incomingInvoiceProviderConfigService.listProviderConfigs();
+  const items = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => incomingInvoiceProviderConfigService.listProviderConfigs(),
+  );
 
   return <IncomingInvoiceProviderManager items={items} />;
 }

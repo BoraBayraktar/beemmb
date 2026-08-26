@@ -3,6 +3,8 @@ import { incomingInvoiceProviderConfigService } from "@/modules/incoming-invoice
 import { incomingInvoiceService } from "@/modules/incoming-invoices/services/incoming-invoice.service";
 import { incomingEDocumentProviderRegistryService } from "@/modules/incoming-invoices/services/incoming-invoice-provider-registry.service";
 import { prisma } from "@/lib/prisma";
+import { runWithTenantContext } from "@/lib/tenant-context";
+import { PLATFORM_TENANT_ID } from "@/lib/tenant-defaults";
 
 function assert(condition: boolean, message: string) {
   if (!condition) {
@@ -117,7 +119,7 @@ async function main() {
   console.log("verify-incoming-invoices: ok");
 }
 
-main()
+runWithTenantContext({ tenantId: PLATFORM_TENANT_ID, isPlatformOperator: false }, main)
   .catch((error) => {
     console.error(error);
     process.exit(1);

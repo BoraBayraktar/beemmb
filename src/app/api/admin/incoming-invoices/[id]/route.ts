@@ -7,10 +7,11 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    await requirePermission("incomingInvoices.read");
-    const { id } = await context.params;
-    const item = await incomingInvoiceService.getIncomingInvoiceDetail(id);
-    return noStoreJson({ item });
+    return await requirePermission("incomingInvoices.read", async () => {
+      const { id } = await context.params;
+      const item = await incomingInvoiceService.getIncomingInvoiceDetail(id);
+      return noStoreJson({ item });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return noStoreJson({ message: error.message }, { status: error.status });
@@ -26,21 +27,22 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requirePermission("incomingInvoices.manage");
-    const { id } = await context.params;
-    const payload = await request.json();
-    const updated = await incomingInvoiceService.updateIncomingInvoice({ id, ...payload });
+    return await requirePermission("incomingInvoices.manage", async (user) => {
+      const { id } = await context.params;
+      const payload = await request.json();
+      const updated = await incomingInvoiceService.updateIncomingInvoice({ id, ...payload });
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "INCOMING_INVOICE",
-      entityId: updated.id,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: `Gelen fatura güncellendi: ${updated.documentNumber}`,
-      metadata: { incomingInvoiceId: updated.id },
+      await auditLogService.recordFromRequest(request, {
+        entityType: "INCOMING_INVOICE",
+        entityId: updated.id,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: `Gelen fatura güncellendi: ${updated.documentNumber}`,
+        metadata: { incomingInvoiceId: updated.id },
+      });
+
+      return noStoreJson({ item: updated });
     });
-
-    return noStoreJson({ item: updated });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return noStoreJson({ message: error.message }, { status: error.status });

@@ -7,17 +7,18 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET(request: Request) {
   try {
-    await requirePermission("incomingInvoices.read");
-    const { searchParams } = new URL(request.url);
-    const result = await incomingInvoiceService.listIncomingInvoices({
-      search: searchParams.get("search") ?? undefined,
-      source: (searchParams.get("source") as "all" | "MANUAL" | "XML_IMPORT" | "INTEGRATOR" | null) ?? undefined,
-      status: (searchParams.get("status") as "all" | "DRAFT" | "REVIEWED" | "POSTED" | "CANCELLED" | null) ?? undefined,
-      page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
-      pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : 10,
-    });
+    return await requirePermission("incomingInvoices.read", async () => {
+      const { searchParams } = new URL(request.url);
+      const result = await incomingInvoiceService.listIncomingInvoices({
+        search: searchParams.get("search") ?? undefined,
+        source: (searchParams.get("source") as "all" | "MANUAL" | "XML_IMPORT" | "INTEGRATOR" | null) ?? undefined,
+        status: (searchParams.get("status") as "all" | "DRAFT" | "REVIEWED" | "POSTED" | "CANCELLED" | null) ?? undefined,
+        page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
+        pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : 10,
+      });
 
-    return noStoreJson(result);
+      return noStoreJson(result);
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return noStoreJson({ message: error.message }, { status: error.status });
