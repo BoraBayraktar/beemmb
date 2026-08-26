@@ -30,26 +30,27 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requirePermission("documents.manage");
-    const { id } = await context.params;
-    const payload = await request.json();
-    const updated = await documentService.updateBusinessDocument({ id, ...payload });
+    return await requirePermission("documents.manage", async (user) => {
+      const { id } = await context.params;
+      const payload = await request.json();
+      const updated = await documentService.updateBusinessDocument({ id, ...payload });
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "BUSINESS_DOCUMENT",
-      entityId: updated.id,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: `Belge güncellendi: ${updated.documentNumber}`,
-      metadata: {
-        documentId: updated.id,
-        orderId: updated.orderId,
-        status: updated.status,
-        externalSystemStatus: updated.externalSystemStatus,
-      },
+      await auditLogService.recordFromRequest(request, {
+        entityType: "BUSINESS_DOCUMENT",
+        entityId: updated.id,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: `Belge güncellendi: ${updated.documentNumber}`,
+        metadata: {
+          documentId: updated.id,
+          orderId: updated.orderId,
+          status: updated.status,
+          externalSystemStatus: updated.externalSystemStatus,
+        },
+      });
+
+      return adminDocumentDetailJson({ item: updated });
     });
-
-    return adminDocumentDetailJson({ item: updated });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return adminDocumentDetailJson({ message: error.message }, { status: error.status });

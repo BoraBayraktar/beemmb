@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { documentFinancePreviewService } from "@/modules/finance/services/document-finance-preview.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
@@ -26,7 +27,10 @@ export default async function AdminFinanceDocumentMovementPreviewPage({
     notFound();
   }
 
-  const preview = await documentFinancePreviewService.getPreview(locale, documentId);
+  const preview = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => documentFinancePreviewService.getPreview(locale, documentId),
+  );
   if (!preview) {
     notFound();
   }

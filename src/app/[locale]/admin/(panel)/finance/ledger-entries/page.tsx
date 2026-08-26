@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { isLocale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { financeAccountEntryService } from "@/modules/finance/services/finance-account-entry.service";
 import { resolveFinanceLedgerEntriesCopy } from "@/modules/finance/services/finance-ledger-entries-copy.resolver";
 import { parseFinanceReportDateRangeQuery } from "@/modules/finance/services/finance-report-date-range.util";
@@ -41,7 +42,10 @@ export default async function AdminFinanceLedgerEntriesPage({
     search: resolvedSearchParams.search,
   };
   const range = parseFinanceReportDateRangeQuery(query);
-  const result = await financeAccountEntryService.listLedgerEntries(query);
+  const result = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => financeAccountEntryService.listLedgerEntries(query),
+  );
 
   return (
     <FinanceLedgerEntriesManager

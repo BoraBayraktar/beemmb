@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireTenantId } from "@/lib/tenant-context";
 
 import type { FinanceAccountEntrySourceType } from "@/modules/finance/contracts/finance-account-entry.contract";
 
@@ -25,7 +26,10 @@ export class FinanceAccountEntryRepository {
       return { created: 0 };
     }
 
+    const tenantId = requireTenantId();
+
     const data = lines.map((line) => ({
+      tenantId,
       lineKey: line.lineKey,
       entryAt: line.entryAt,
       ledgerAccountId: line.ledgerAccountId,

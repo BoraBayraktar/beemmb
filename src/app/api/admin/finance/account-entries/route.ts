@@ -5,17 +5,18 @@ import { AuthContextError, requireAnyPermission } from "@/modules/identity/servi
 
 export async function GET(request: Request) {
   try {
-    await requireAnyPermission(["finance.read", "finance.audit.read"]);
-    const { searchParams } = new URL(request.url);
+    return await requireAnyPermission(["finance.read", "finance.audit.read"], async () => {
+      const { searchParams } = new URL(request.url);
 
-    const result = await financeAccountEntryService.listLedgerEntries({
-      from: searchParams.get("from") ?? undefined,
-      to: searchParams.get("to") ?? undefined,
-      search: searchParams.get("search") ?? undefined,
-      sourceType: (searchParams.get("sourceType") as "all" | "CASH_TRANSACTION" | "COLLECTION" | "PAYMENT" | null) ?? "all",
+      const result = await financeAccountEntryService.listLedgerEntries({
+        from: searchParams.get("from") ?? undefined,
+        to: searchParams.get("to") ?? undefined,
+        search: searchParams.get("search") ?? undefined,
+        sourceType: (searchParams.get("sourceType") as "all" | "CASH_TRANSACTION" | "COLLECTION" | "PAYMENT" | null) ?? "all",
+      });
+
+      return NextResponse.json(result);
     });
-
-    return NextResponse.json(result);
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

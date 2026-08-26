@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { financialAccountsService } from "@/modules/finance/services/financial-accounts.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
@@ -35,10 +36,13 @@ export default async function AdminFinancialAccountsPage({
     resolvedSearchParams.type === "CASH" || resolvedSearchParams.type === "BANK"
       ? resolvedSearchParams.type
       : "all";
-  const result = await financialAccountsService.listAccounts({
-    search: resolvedSearchParams.search,
-    type,
-  });
+  const result = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => financialAccountsService.listAccounts({
+      search: resolvedSearchParams.search,
+      type,
+    }),
+  );
 
   return (
     <FinancialAccountsManager

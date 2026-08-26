@@ -7,29 +7,30 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("financeInstruments.manage");
-    const payload = await request.json();
-    const updated = await negotiableInstrumentService.applyLifecycle({
-      instrumentId: payload.instrumentId,
-      action: payload.action,
-      financialAccountId: payload.financialAccountId,
-      actorUserId: user.id,
-    });
-
-    await auditLogService.recordFromRequest(request, {
-      entityType: "FINANCE_COLLECTION",
-      entityId: updated.id,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: "Çek/senet durum geçişi uygulandı",
-      metadata: {
+    return await requirePermission("financeInstruments.manage", async (user) => {
+      const payload = await request.json();
+      const updated = await negotiableInstrumentService.applyLifecycle({
+        instrumentId: payload.instrumentId,
         action: payload.action,
-        status: updated.status,
-        cashTransactionId: updated.cashTransactionId,
-      },
-    });
+        financialAccountId: payload.financialAccountId,
+        actorUserId: user.id,
+      });
 
-    return NextResponse.json(updated);
+      await auditLogService.recordFromRequest(request, {
+        entityType: "FINANCE_COLLECTION",
+        entityId: updated.id,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: "Çek/senet durum geçişi uygulandı",
+        metadata: {
+          action: payload.action,
+          status: updated.status,
+          cashTransactionId: updated.cashTransactionId,
+        },
+      });
+
+      return NextResponse.json(updated);
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

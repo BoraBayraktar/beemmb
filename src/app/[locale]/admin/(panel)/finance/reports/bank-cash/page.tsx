@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { resolveFinanceReportsCopy } from "@/modules/finance/services/finance-reports-copy.resolver";
 import { parseFinanceReportDateRangeQuery } from "@/modules/finance/services/finance-report-date-range.util";
 import { reportsService } from "@/modules/finance/services/reports.service";
@@ -38,11 +39,14 @@ export default async function AdminFinanceBankCashReportPage({
   };
   const range = parseFinanceReportDateRangeQuery(rangeQuery);
   const copy = resolveFinanceReportsCopy(locale);
-  const report = await reportsService.getBankCashMovementReport(locale, {
-    from: range.fromIso,
-    to: range.toIso,
-    financialAccountId: rangeQuery.financialAccountId,
-  });
+  const report = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => reportsService.getBankCashMovementReport(locale, {
+      from: range.fromIso,
+      to: range.toIso,
+      financialAccountId: rangeQuery.financialAccountId,
+    }),
+  );
   const dictionary = getDictionary(locale as Locale);
 
   return (

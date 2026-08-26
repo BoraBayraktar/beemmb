@@ -5,6 +5,7 @@ import { resolveBankReconciliationCopy } from "@/modules/finance/services/bank-r
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
 import { isLocale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { BankReconciliationManager } from "@/ui/admin/bank-reconciliation-manager";
 
 export default async function AdminBankReconciliationPage({
@@ -27,7 +28,10 @@ export default async function AdminBankReconciliationPage({
     notFound();
   }
 
-  const workspace = await bankReconciliationService.getWorkspace(id);
+  const workspace = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => bankReconciliationService.getWorkspace(id),
+  );
   if (!workspace) {
     notFound();
   }

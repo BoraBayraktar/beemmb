@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { cashTransactionsService } from "@/modules/finance/services/cash-transactions.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
@@ -26,7 +27,10 @@ export default async function AdminCashTransactionDetailPage({
     notFound();
   }
 
-  const detail = await cashTransactionsService.getTransactionDetail(id);
+  const detail = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => cashTransactionsService.getTransactionDetail(id),
+  );
   if (!detail) {
     notFound();
   }

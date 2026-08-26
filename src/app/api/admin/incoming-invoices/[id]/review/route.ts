@@ -5,20 +5,21 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requirePermission("incomingInvoices.manage");
-    const { id } = await context.params;
-    const updated = await incomingInvoiceService.reviewIncomingInvoice(id, user.id);
+    return await requirePermission("incomingInvoices.manage", async (user) => {
+      const { id } = await context.params;
+      const updated = await incomingInvoiceService.reviewIncomingInvoice(id, user.id);
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "INCOMING_INVOICE",
-      entityId: updated.id,
-      action: "STATUS_UPDATE",
-      actorUserId: user.id,
-      summary: `Gelen fatura onaylandı ve muhasebeleştirildi: ${updated.documentNumber}`,
-      metadata: { incomingInvoiceId: updated.id, status: updated.status, totalAmount: updated.totalAmount },
+      await auditLogService.recordFromRequest(request, {
+        entityType: "INCOMING_INVOICE",
+        entityId: updated.id,
+        action: "STATUS_UPDATE",
+        actorUserId: user.id,
+        summary: `Gelen fatura onaylandı ve muhasebeleştirildi: ${updated.documentNumber}`,
+        metadata: { incomingInvoiceId: updated.id, status: updated.status, totalAmount: updated.totalAmount },
+      });
+
+      return noStoreJson({ item: updated });
     });
-
-    return noStoreJson({ item: updated });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return noStoreJson({ message: error.message }, { status: error.status });

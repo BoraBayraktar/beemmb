@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { financialAccountsService } from "@/modules/finance/services/financial-accounts.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
@@ -37,11 +38,14 @@ export default async function AdminFinancialAccountDetailPage({
       ? resolvedSearchParams.direction
       : "all";
 
-  const detail = await financialAccountsService.getAccountDetail(id, {
-    direction,
-    fromDate: resolvedSearchParams.fromDate,
-    toDate: resolvedSearchParams.toDate,
-  });
+  const detail = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => financialAccountsService.getAccountDetail(id, {
+      direction,
+      fromDate: resolvedSearchParams.fromDate,
+      toDate: resolvedSearchParams.toDate,
+    }),
+  );
 
   if (!detail) {
     notFound();

@@ -1,3 +1,4 @@
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { counterpartyLookupService } from "@/modules/finance/services/counterparty-lookup.service";
 
 function assert(condition: boolean, message: string) {
@@ -29,7 +30,7 @@ async function main() {
   console.log("verify-finance-counterparty-lookup: ok");
 }
 
-main().catch((error) => {
+runWithTenantContext({ tenantId: "tenant-beemmb-platform", isPlatformOperator: false }, main).catch((error) => {
   console.error(error);
   process.exit(1);
 });

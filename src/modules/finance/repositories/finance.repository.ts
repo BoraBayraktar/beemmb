@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireTenantId } from "@/lib/tenant-context";
 import type { AdminReceivableStatus } from "@/modules/finance/contracts/receivables.contract";
 
 type ListOperationalReceivablesArgs = {
@@ -492,6 +493,7 @@ export class FinanceRepository {
   }) {
     return ((prisma as any).financialAccount).create({
       data: {
+        tenantId: requireTenantId(),
         name: args.name,
         type: args.type,
         currency: args.currency,
@@ -626,6 +628,7 @@ export class FinanceRepository {
   }) {
     return ((prisma as any).cashTransaction).create({
       data: {
+        tenantId: requireTenantId(),
         accountId: args.accountId,
         direction: args.direction,
         sourceType: args.sourceType,

@@ -7,13 +7,14 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET(request: Request) {
   try {
-    await requirePermission("financeBankCash.manage");
-    const { searchParams } = new URL(request.url);
-    const items = await financialAccountsService.listAccounts({
-      search: searchParams.get("search") ?? undefined,
-      type: (searchParams.get("type") as "all" | "CASH" | "BANK" | null) ?? undefined,
+    return await requirePermission("financeBankCash.manage", async () => {
+      const { searchParams } = new URL(request.url);
+      const items = await financialAccountsService.listAccounts({
+        search: searchParams.get("search") ?? undefined,
+        type: (searchParams.get("type") as "all" | "CASH" | "BANK" | null) ?? undefined,
+      });
+      return NextResponse.json(items);
     });
-    return NextResponse.json(items);
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });
@@ -29,17 +30,18 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("financeBankCash.manage");
-    const payload = await request.json();
-    const item = await financialAccountsService.createAccount(payload);
-    await auditLogService.recordFromRequest(request, {
-      entityType: "FINANCE_PAYMENT",
-      entityId: item.id,
-      action: "CREATE",
-      actorUserId: user.id,
-      summary: `Finans hesabı oluşturuldu: ${item.name}`,
+    return await requirePermission("financeBankCash.manage", async (user) => {
+      const payload = await request.json();
+      const item = await financialAccountsService.createAccount(payload);
+      await auditLogService.recordFromRequest(request, {
+        entityType: "FINANCE_PAYMENT",
+        entityId: item.id,
+        action: "CREATE",
+        actorUserId: user.id,
+        summary: `Finans hesabı oluşturuldu: ${item.name}`,
+      });
+      return NextResponse.json({ item }, { status: 201 });
     });
-    return NextResponse.json({ item }, { status: 201 });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

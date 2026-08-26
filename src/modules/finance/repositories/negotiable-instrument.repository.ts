@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireTenantId } from "@/lib/tenant-context";
 
 export class NegotiableInstrumentRepository {
   async listInstruments(args: {
@@ -137,6 +138,7 @@ export class NegotiableInstrumentRepository {
     return prisma.$transaction(async (tx) => {
       const cash = await (tx as any).cashTransaction.create({
         data: {
+          tenantId: requireTenantId(),
           accountId: args.cashTransaction.accountId,
           direction: args.cashTransaction.direction,
           sourceType: args.cashTransaction.sourceType,

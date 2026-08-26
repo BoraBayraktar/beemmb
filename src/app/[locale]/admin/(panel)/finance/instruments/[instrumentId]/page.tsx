@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { isLocale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { financialAccountsService } from "@/modules/finance/services/financial-accounts.service";
 import { resolveNegotiableInstrumentCopy } from "@/modules/finance/services/negotiable-instrument-copy.resolver";
 import { negotiableInstrumentService } from "@/modules/finance/services/negotiable-instrument.service";
@@ -28,10 +29,13 @@ export default async function AdminNegotiableInstrumentDetailPage({
     notFound();
   }
 
-  const [detail, accountOptions] = await Promise.all([
-    negotiableInstrumentService.getInstrumentDetail(instrumentId, locale),
-    financialAccountsService.listAccountOptions(),
-  ]);
+  const [detail, accountOptions] = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => Promise.all([
+      negotiableInstrumentService.getInstrumentDetail(instrumentId, locale),
+      financialAccountsService.listAccountOptions(),
+    ]),
+  );
 
   if (!detail) {
     notFound();

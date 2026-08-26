@@ -35,6 +35,10 @@ const TENANT_SCOPED_MODELS = new Set<Prisma.ModelName>([
   "InventoryExportHistory",
   "UserInventoryPreference",
   "InventoryHistoryEvent",
+  "FinancialAccount",
+  "CashTransaction",
+  "FinanceLedgerAccount",
+  "FinanceAccountEntry",
 ]);
 
 const WHERE_MANY_OPERATIONS = new Set([

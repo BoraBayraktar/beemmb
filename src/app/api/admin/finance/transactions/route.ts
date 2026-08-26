@@ -7,14 +7,15 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET(request: Request) {
   try {
-    await requirePermission("financeTransactions.manage");
-    const { searchParams } = new URL(request.url);
-    const items = await cashTransactionsService.listTransactions({
-      search: searchParams.get("search") ?? undefined,
-      direction: (searchParams.get("direction") as "all" | "IN" | "OUT" | "TRANSFER" | null) ?? undefined,
-      accountId: searchParams.get("accountId") ?? undefined,
+    return await requirePermission("financeTransactions.manage", async () => {
+      const { searchParams } = new URL(request.url);
+      const items = await cashTransactionsService.listTransactions({
+        search: searchParams.get("search") ?? undefined,
+        direction: (searchParams.get("direction") as "all" | "IN" | "OUT" | "TRANSFER" | null) ?? undefined,
+        accountId: searchParams.get("accountId") ?? undefined,
+      });
+      return NextResponse.json(items);
     });
-    return NextResponse.json(items);
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

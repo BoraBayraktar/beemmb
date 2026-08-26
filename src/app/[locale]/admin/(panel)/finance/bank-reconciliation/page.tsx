@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { isLocale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { bankReconciliationService } from "@/modules/finance/services/bank-reconciliation.service";
 import { resolveBankReconciliationCopy } from "@/modules/finance/services/bank-reconciliation-copy.resolver";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
@@ -28,7 +29,10 @@ export default async function AdminBankReconciliationHubPage({
     notFound();
   }
 
-  const hub = await bankReconciliationService.getReconciliationHub(locale);
+  const hub = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => bankReconciliationService.getReconciliationHub(locale),
+  );
   const copy = resolveBankReconciliationCopy(locale);
 
   return <BankReconciliationHubManager locale={locale} hub={hub} copy={copy} />;

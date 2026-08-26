@@ -9,15 +9,16 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requirePermission("financeTransactions.manage");
-    const { id } = await context.params;
-    const item = await cashTransactionsService.getTransactionDetail(id);
+    return await requirePermission("financeTransactions.manage", async () => {
+      const { id } = await context.params;
+      const item = await cashTransactionsService.getTransactionDetail(id);
 
-    if (!item) {
-      return NextResponse.json({ message: "Finans hareketi bulunamadı." }, { status: 404 });
-    }
+      if (!item) {
+        return NextResponse.json({ message: "Finans hareketi bulunamadı." }, { status: 404 });
+      }
 
-    return NextResponse.json({ item });
+      return NextResponse.json({ item });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

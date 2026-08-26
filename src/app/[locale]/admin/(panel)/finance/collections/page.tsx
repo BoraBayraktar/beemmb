@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { collectionsService } from "@/modules/finance/services/collections.service";
 import { financialAccountsService } from "@/modules/finance/services/financial-accounts.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
@@ -29,10 +30,13 @@ export default async function AdminFinanceCollectionsPage({
   }
 
   const dictionary = getDictionary(locale as Locale);
-  const [result, accountOptions] = await Promise.all([
-    collectionsService.listCollectionReadiness(locale),
-    financialAccountsService.listAccountOptions(),
-  ]);
+  const [result, accountOptions] = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => Promise.all([
+      collectionsService.listCollectionReadiness(locale),
+      financialAccountsService.listAccountOptions(),
+    ]),
+  );
 
   return (
     <CollectionReadinessManager

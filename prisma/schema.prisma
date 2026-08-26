@@ -119,6 +119,7 @@ model CariCarrierProfile {
 
 model FinancialAccount {
   id                    String                 @id @default(cuid())
+  tenantId              String
   name                  String
   type                  FinancialAccountType
   currency              String                 @default("TRY")
@@ -136,13 +137,16 @@ model FinancialAccount {
   bankStatementImports  BankStatementImport[]
   negotiableInstruments NegotiableInstrument[]
   financeAccountEntries FinanceAccountEntry[]
+  tenant                Tenant                 @relation(fields: [tenantId], references: [id])
 
   @@index([deleted, isActive])
   @@index([type, isActive])
+  @@index([tenantId])
 }
 
 model CashTransaction {
   id                   String                          @id @default(cuid())
+  tenantId             String
   accountId            String
   direction            CashTransactionDirection
   sourceType           CashTransactionSourceType       @default(MANUAL)
@@ -167,12 +171,14 @@ model CashTransaction {
   cari                 Cari?                           @relation(fields: [cariId], references: [id])
   reconciliationMatch  BankReconciliationMatch?
   negotiableInstrument NegotiableInstrument?
+  tenant               Tenant                          @relation(fields: [tenantId], references: [id])
 
   @@index([accountId, transactionAt])
   @@index([status, transactionAt])
   @@index([deleted, transactionAt])
   @@index([sourceType, sourceReferenceId])
   @@index([cariId, transactionAt])
+  @@index([tenantId])
 }
 
 model BankStatementImport {
@@ -704,7 +710,8 @@ model PaymentRecord {
 
 model FinanceLedgerAccount {
   id            String                       @id @default(cuid())
-  code          String                       @unique
+  tenantId      String
+  code          String
   name          String
   category      FinanceLedgerAccountCategory
   isActive      Boolean                      @default(true)
@@ -714,13 +721,17 @@ model FinanceLedgerAccount {
   createdAt     DateTime                     @default(now())
   updatedAt     DateTime                     @updatedAt
   entries       FinanceAccountEntry[]
+  tenant        Tenant                       @relation(fields: [tenantId], references: [id])
 
+  @@unique([tenantId, code])
   @@index([isActive, code])
   @@index([deleted])
+  @@index([tenantId])
 }
 
 model FinanceAccountEntry {
   id                 String                        @id @default(cuid())
+  tenantId           String
   lineKey            String                        @unique
   entryAt            DateTime
   ledgerAccountId    String
@@ -738,11 +749,13 @@ model FinanceAccountEntry {
   ledgerAccount      FinanceLedgerAccount          @relation(fields: [ledgerAccountId], references: [id])
   cari               Cari?                         @relation(fields: [cariId], references: [id])
   financialAccount   FinancialAccount?             @relation(fields: [financialAccountId], references: [id])
+  tenant             Tenant                        @relation(fields: [tenantId], references: [id])
 
   @@index([entryAt])
   @@index([sourceType, sourceId])
   @@index([ledgerAccountId, entryAt])
   @@index([cariId])
+  @@index([tenantId])
 }
 
 model FinanceAllocationLink {
@@ -1694,6 +1707,10 @@ model Tenant {
   inventoryExportHistories     InventoryExportHistory[]
   userInventoryPreferences     UserInventoryPreference[]
   inventoryHistoryEvents       InventoryHistoryEvent[]
+  financialAccounts            FinancialAccount[]
+  cashTransactions             CashTransaction[]
+  financeLedgerAccounts        FinanceLedgerAccount[]
+  financeAccountEntries        FinanceAccountEntry[]
 
   @@index([deleted, status])
 }

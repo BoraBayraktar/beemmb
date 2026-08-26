@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { cashTransactionsService } from "@/modules/finance/services/cash-transactions.service";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { financialAccountsService } from "@/modules/finance/services/financial-accounts.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
@@ -36,14 +37,17 @@ export default async function AdminCashTransactionsPage({
     resolvedSearchParams.direction === "IN" || resolvedSearchParams.direction === "OUT" || resolvedSearchParams.direction === "TRANSFER"
       ? resolvedSearchParams.direction
       : "all";
-  const [result, accountOptions] = await Promise.all([
-    cashTransactionsService.listTransactions({
-      search: resolvedSearchParams.search,
-      direction,
-      accountId: resolvedSearchParams.accountId,
-    }),
-    financialAccountsService.listAccountOptions(),
-  ]);
+  const [result, accountOptions] = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => Promise.all([
+      cashTransactionsService.listTransactions({
+        search: resolvedSearchParams.search,
+        direction,
+        accountId: resolvedSearchParams.accountId,
+      }),
+      financialAccountsService.listAccountOptions(),
+    ]),
+  );
 
   return (
     <CashTransactionsManager

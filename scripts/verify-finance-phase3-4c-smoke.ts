@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { financeCounterpartyRouteService } from "@/modules/finance/services/finance-counterparty-route.service";
 
 function assert(condition: boolean, message: string) {
@@ -107,7 +108,7 @@ async function main() {
   console.log("verify-finance-phase3-4c-smoke: ok");
 }
 
-main().catch((error) => {
+runWithTenantContext({ tenantId: "tenant-beemmb-platform", isPlatformOperator: false }, main).catch((error) => {
   console.error(error);
   process.exit(1);
 });
