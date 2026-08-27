@@ -13,25 +13,26 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("productQuestions.manage");
-    const { id } = await context.params;
-    const payload = await request.json();
+    return await requirePermission("productQuestions.manage", async (user) => {
+      const { id } = await context.params;
+      const payload = await request.json();
 
-    const updated = await catalogAdminService.answerProductQuestion({
-      id,
-      answer: payload.answer,
-      answeredBy: user.name,
+      const updated = await catalogAdminService.answerProductQuestion({
+        id,
+        answer: payload.answer,
+        answeredBy: user.name,
+      });
+
+      await auditLogService.recordFromRequest(request, {
+        entityType: "PRODUCT",
+        entityId: id,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: `Ürün sorusu yanıtlandı: ${updated.productSlug}`,
+      });
+
+      return NextResponse.json({ item: updated });
     });
-
-    await auditLogService.recordFromRequest(request, {
-      entityType: "PRODUCT",
-      entityId: id,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: `Ürün sorusu yanıtlandı: ${updated.productSlug}`,
-    });
-
-    return NextResponse.json({ item: updated });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });
@@ -50,20 +51,21 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("productQuestions.manage");
-    const { id } = await context.params;
+    return await requirePermission("productQuestions.manage", async (user) => {
+      const { id } = await context.params;
 
-    await catalogAdminService.softDeleteProductQuestion(id, user.id);
+      await catalogAdminService.softDeleteProductQuestion(id, user.id);
 
-    await auditLogService.recordFromRequest(request, {
-      entityType: "PRODUCT",
-      entityId: id,
-      action: "DELETE",
-      actorUserId: user.id,
-      summary: "Ürün sorusu moderasyon ile kaldırıldı",
+      await auditLogService.recordFromRequest(request, {
+        entityType: "PRODUCT",
+        entityId: id,
+        action: "DELETE",
+        actorUserId: user.id,
+        summary: "Ürün sorusu moderasyon ile kaldırıldı",
+      });
+
+      return NextResponse.json({ ok: true });
     });
-
-    return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

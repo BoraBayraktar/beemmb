@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireTenantId } from "@/lib/tenant-context";
 import type { ProductSort } from "@/modules/catalog/contracts/catalog.contract";
 
 type FindManyArgs = {
@@ -257,6 +258,7 @@ export class CatalogRepository {
         lastViewedAt: new Date(),
       },
       create: {
+        tenantId: requireTenantId(),
         productId,
         viewCount: 1,
         lastViewedAt: new Date(),
@@ -314,6 +316,7 @@ export class CatalogRepository {
   }) {
     return prisma.productReview.create({
       data: {
+        tenantId: requireTenantId(),
         productId: input.productId,
         authorUserId: input.authorUserId ?? null,
         authorName: input.authorName,
@@ -382,6 +385,7 @@ export class CatalogRepository {
   }) {
     return prisma.productQuestion.create({
       data: {
+        tenantId: requireTenantId(),
         productId: input.productId,
         question: input.question,
         askedBy: input.askedBy,

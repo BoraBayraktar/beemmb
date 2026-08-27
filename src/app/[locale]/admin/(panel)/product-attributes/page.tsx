@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
@@ -27,10 +28,13 @@ export default async function AdminProductAttributesPage({
   }
 
   const dictionary = getDictionary(locale as Locale);
-  const [items, valueMappings] = await Promise.all([
-    catalogAdminService.listAttributeDefinitions(),
-    catalogAdminService.listAttributeValueMarketplaceMappings("TRENDYOL"),
-  ]);
+  const [items, valueMappings] = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => Promise.all([
+      catalogAdminService.listAttributeDefinitions(),
+      catalogAdminService.listAttributeValueMarketplaceMappings("TRENDYOL"),
+    ]),
+  );
 
   return (
     <AttributeDefinitionManager

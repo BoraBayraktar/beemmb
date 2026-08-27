@@ -64,6 +64,14 @@ const TENANT_SCOPED_MODELS = new Set<Prisma.ModelName>([
   "MarketplaceIntegrationConfig",
   "MarketplaceOrderPackage",
   "MarketplaceOrderLine",
+  "ProductAttributeDefinition",
+  "ProductAttributeLink",
+  "ProductAttributeValueMarketplaceMapping",
+  "ProductVariantAttributeValue",
+  "ProductInteraction",
+  "ProductQuestion",
+  "ProductReview",
+  "StorefrontItem",
 ]);
 
 const WHERE_MANY_OPERATIONS = new Set([

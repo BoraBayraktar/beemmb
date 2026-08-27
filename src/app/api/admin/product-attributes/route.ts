@@ -7,9 +7,10 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET() {
   try {
-    await requirePermission("productAttributes.manage");
-    const items = await catalogAdminService.listAttributeDefinitions();
-    return NextResponse.json({ items });
+    return await requirePermission("productAttributes.manage", async () => {
+      const items = await catalogAdminService.listAttributeDefinitions();
+      return NextResponse.json({ items });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });
@@ -21,20 +22,21 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("productAttributes.manage");
-    const payload = await request.json();
-    const created = await catalogAdminService.createAttributeDefinition(payload);
-    await auditLogService.recordFromRequest(request, {
-      entityType: "PRODUCT_ATTRIBUTE",
-      entityId: created.id,
-      action: "CREATE",
-      actorUserId: user.id,
-      summary: `Ürün özelliği tanımı oluşturuldu: ${created.name}`,
-      metadata: {
-        scope: "product_attribute_definition",
-      },
+    return await requirePermission("productAttributes.manage", async (user) => {
+      const payload = await request.json();
+      const created = await catalogAdminService.createAttributeDefinition(payload);
+      await auditLogService.recordFromRequest(request, {
+        entityType: "PRODUCT_ATTRIBUTE",
+        entityId: created.id,
+        action: "CREATE",
+        actorUserId: user.id,
+        summary: `Ürün özelliği tanımı oluşturuldu: ${created.name}`,
+        metadata: {
+          scope: "product_attribute_definition",
+        },
+      });
+      return NextResponse.json({ item: created }, { status: 201 });
     });
-    return NextResponse.json({ item: created }, { status: 201 });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

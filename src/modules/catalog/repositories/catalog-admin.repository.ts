@@ -482,6 +482,7 @@ export class CatalogAdminRepository {
         attributeLinks: input.attributeLinks?.length
           ? {
               create: input.attributeLinks.map((link, index) => ({
+                tenantId,
                 attributeDefinitionId: link.attributeDefinitionId,
                 isVariantAxis: link.isVariantAxis,
                 sortOrder: link.sortOrder ?? index,
@@ -508,6 +509,7 @@ export class CatalogAdminRepository {
                 sortOrder: variant.sortOrder ?? index,
                 attributeValues: {
                   create: variant.attributes.map((attribute) => ({
+                    tenantId,
                     attributeDefinitionId: attribute.attributeDefinitionId,
                     value: attribute.value,
                   })),
@@ -599,6 +601,7 @@ export class CatalogAdminRepository {
               attributeLinks: {
                 deleteMany: {},
                 create: input.attributeLinks.map((link, index) => ({
+                  tenantId: requireTenantId(),
                   attributeDefinitionId: link.attributeDefinitionId,
                   isVariantAxis: link.isVariantAxis,
                   sortOrder: link.sortOrder ?? index,
@@ -628,6 +631,7 @@ export class CatalogAdminRepository {
                   sortOrder: variant.sortOrder ?? index,
                   attributeValues: {
                     create: variant.attributes.map((attribute) => ({
+                      tenantId: requireTenantId(),
                       attributeDefinitionId: attribute.attributeDefinitionId,
                       value: attribute.value,
                     })),
@@ -696,6 +700,7 @@ export class CatalogAdminRepository {
         if (input.attributeLinks.length > 0) {
           await tx.productAttributeLink.createMany({
             data: input.attributeLinks.map((link, index) => ({
+              tenantId: requireTenantId(),
               productId: input.id,
               attributeDefinitionId: link.attributeDefinitionId,
               isVariantAxis: link.isVariantAxis,
@@ -767,6 +772,7 @@ export class CatalogAdminRepository {
             if (variant.attributes.length > 0) {
               await tx.productVariantAttributeValue.createMany({
                 data: variant.attributes.map((attribute) => ({
+                  tenantId: requireTenantId(),
                   productVariantId: variant.id!,
                   attributeDefinitionId: attribute.attributeDefinitionId,
                   value: attribute.value,
@@ -796,6 +802,7 @@ export class CatalogAdminRepository {
               sortOrder: variant.sortOrder ?? index,
               attributeValues: {
                 create: variant.attributes.map((attribute) => ({
+                  tenantId: requireTenantId(),
                   attributeDefinitionId: attribute.attributeDefinitionId,
                   value: attribute.value,
                 })),
@@ -1081,6 +1088,7 @@ export class CatalogAdminRepository {
   async createAttributeDefinition(input: AdminCreateProductAttributeDefinitionInput) {
     return prisma.productAttributeDefinition.create({
       data: {
+        tenantId: requireTenantId(),
         slug: input.slug,
         name: input.name,
         displayType: input.displayType ?? "TEXT",
@@ -1231,9 +1239,12 @@ export class CatalogAdminRepository {
   }
 
   async upsertAttributeValueMarketplaceMapping(input: AdminUpsertProductAttributeValueMarketplaceMappingInput) {
+    const tenantId = requireTenantId();
+
     return prisma.productAttributeValueMarketplaceMapping.upsert({
       where: {
-        attributeDefinitionId_channel_localValue: {
+        tenantId_attributeDefinitionId_channel_localValue: {
+          tenantId,
           attributeDefinitionId: input.attributeDefinitionId,
           channel: input.channel ?? "TRENDYOL",
           localValue: input.localValue,
@@ -1249,6 +1260,7 @@ export class CatalogAdminRepository {
         deletedUserId: null,
       },
       create: {
+        tenantId,
         attributeDefinitionId: input.attributeDefinitionId,
         channel: input.channel ?? "TRENDYOL",
         localValue: input.localValue,

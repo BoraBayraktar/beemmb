@@ -538,19 +538,26 @@ export class CatalogService {
       await redisCache.del(cacheKey);
     }
 
-    const product = await runWithTenantContext(
+    const { product, reviews, ratingRows, questions } = await runWithTenantContext(
       { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: false },
-      () => this.repository.findBySlug(slug),
+      async () => {
+        const product = await this.repository.findBySlug(slug);
+        if (!product) {
+          return { product: null, reviews: [], ratingRows: [], questions: [] };
+        }
+
+        const [reviews, ratingRows, questions] = await Promise.all([
+          this.repository.findReviewsByProductId(product.id, 12),
+          this.repository.getReviewRatingDistribution(product.id),
+          this.repository.findQuestionsByProductId(product.id, 10),
+        ]);
+
+        return { product, reviews, ratingRows, questions };
+      },
     );
     if (!product) {
       return null;
     }
-
-    const [reviews, ratingRows, questions] = await Promise.all([
-      this.repository.findReviewsByProductId(product.id, 12),
-      this.repository.getReviewRatingDistribution(product.id),
-      this.repository.findQuestionsByProductId(product.id, 10),
-    ]);
 
     const mappedCard = mapProduct(product);
     const variants = product.variants.map((variant) => mapVariant(variant, mappedCard));
@@ -590,7 +597,10 @@ export class CatalogService {
   }
 
   async trackProductView(productId: string): Promise<void> {
-    await this.repository.trackProductView(productId);
+    await runWithTenantContext(
+      { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: false },
+      () => this.repository.trackProductView(productId),
+    );
   }
 
   async createReview(input: {
@@ -602,30 +612,30 @@ export class CatalogService {
     comment: string;
   }) {
     const parsed = createReviewSchema.parse(input);
-    const { existingOwn, product } = await runWithTenantContext(
+    const review = await runWithTenantContext(
       { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: false },
-      async () => ({
-        existingOwn: await this.repository.findOwnReviewByProductSlug(parsed.slug, input.userId),
-        product: await this.repository.findActiveProductIdBySlug(parsed.slug),
-      }),
+      async () => {
+        const existingOwn = await this.repository.findOwnReviewByProductSlug(parsed.slug, input.userId);
+        if (existingOwn) {
+          throw new Error("Review already exists");
+        }
+
+        const product = await this.repository.findActiveProductIdBySlug(parsed.slug);
+        if (!product) {
+          throw new Error("Product not found");
+        }
+
+        return this.repository.createProductReview({
+          productId: product.id,
+          authorUserId: input.userId,
+          authorName: parsed.authorName,
+          rating: parsed.rating,
+          title: parsed.title,
+          comment: parsed.comment,
+          verifiedPurchase: false,
+        });
+      },
     );
-    if (existingOwn) {
-      throw new Error("Review already exists");
-    }
-
-    if (!product) {
-      throw new Error("Product not found");
-    }
-
-    const review = await this.repository.createProductReview({
-      productId: product.id,
-      authorUserId: input.userId,
-      authorName: parsed.authorName,
-      rating: parsed.rating,
-      title: parsed.title,
-      comment: parsed.comment,
-      verifiedPurchase: false,
-    });
 
     await invalidateProductDetailCache(parsed.slug);
     return mapReview(review);
@@ -635,7 +645,10 @@ export class CatalogService {
     slug: string;
     userId: string;
   }) {
-    const own = await this.repository.findOwnReviewByProductSlug(input.slug, input.userId);
+    const own = await runWithTenantContext(
+      { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: false },
+      () => this.repository.findOwnReviewByProductSlug(input.slug, input.userId),
+    );
     if (!own) {
       return null;
     }
@@ -651,17 +664,21 @@ export class CatalogService {
     comment: string;
   }) {
     const parsed = updateOwnReviewSchema.parse(input);
-    const own = await this.repository.findOwnReviewByProductSlug(parsed.slug, input.userId);
+    const updated = await runWithTenantContext(
+      { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: false },
+      async () => {
+        const own = await this.repository.findOwnReviewByProductSlug(parsed.slug, input.userId);
+        if (!own) {
+          throw new Error("Review not found");
+        }
 
-    if (!own) {
-      throw new Error("Review not found");
-    }
-
-    const updated = await this.repository.updateOwnReview(own.id, {
-      rating: parsed.rating,
-      title: parsed.title,
-      comment: parsed.comment,
-    });
+        return this.repository.updateOwnReview(own.id, {
+          rating: parsed.rating,
+          title: parsed.title,
+          comment: parsed.comment,
+        });
+      },
+    );
 
     await invalidateProductDetailCache(parsed.slug);
     return mapReview(updated);
@@ -671,13 +688,18 @@ export class CatalogService {
     slug: string;
     userId: string;
   }) {
-    const own = await this.repository.findOwnReviewByProductSlug(input.slug, input.userId);
+    await runWithTenantContext(
+      { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: false },
+      async () => {
+        const own = await this.repository.findOwnReviewByProductSlug(input.slug, input.userId);
+        if (!own) {
+          throw new Error("Review not found");
+        }
 
-    if (!own) {
-      throw new Error("Review not found");
-    }
+        await this.repository.softDeleteOwnReview(own.id, input.userId);
+      },
+    );
 
-    await this.repository.softDeleteOwnReview(own.id, input.userId);
     await invalidateProductDetailCache(input.slug);
   }
 
@@ -687,20 +709,23 @@ export class CatalogService {
     question: string;
   }) {
     const parsed = createQuestionSchema.parse(input);
-    const product = await runWithTenantContext(
+    const { product, question } = await runWithTenantContext(
       { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: false },
-      () => this.repository.findActiveProductIdBySlug(parsed.slug),
+      async () => {
+        const product = await this.repository.findActiveProductIdBySlug(parsed.slug);
+        if (!product) {
+          throw new Error("Product not found");
+        }
+
+        const question = await this.repository.createProductQuestion({
+          productId: product.id,
+          askedBy: parsed.askedBy,
+          question: parsed.question,
+        });
+
+        return { product, question };
+      },
     );
-
-    if (!product) {
-      throw new Error("Product not found");
-    }
-
-    const question = await this.repository.createProductQuestion({
-      productId: product.id,
-      askedBy: parsed.askedBy,
-      question: parsed.question,
-    });
 
     try {
       const recipients = await identityAdminService.listBackofficeUsers();

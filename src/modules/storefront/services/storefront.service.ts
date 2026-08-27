@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 import { redisCache } from "@/lib/redis";
+import { runWithTenantContext } from "@/lib/tenant-context";
+import { PLATFORM_TENANT_ID } from "@/lib/tenant-defaults";
 import type {
   AdminStorefrontItem,
   LocalizedStorefrontResolver,
@@ -154,7 +156,10 @@ export class StorefrontService {
       return cached;
     }
 
-    const items = await this.repository.listHomeActiveItems();
+    const items = await runWithTenantContext(
+      { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: false },
+      () => this.repository.listHomeActiveItems(),
+    );
     const localized = items.map((item) => mapLocalized(item, locale));
     const result: StorefrontSectionResult = {
       campaigns: localized.filter((item) => item.section === "HOME_CAMPAIGN"),

@@ -429,6 +429,7 @@ async function main() {
     if (community.reviews.length > 0) {
       await prisma.productReview.createMany({
         data: community.reviews.map((review) => ({
+          tenantId: "tenant-beemmb-platform",
           productId: item.id,
           authorName: review.authorName,
           rating: review.rating,
@@ -444,6 +445,7 @@ async function main() {
     if (community.questions.length > 0) {
       await prisma.productQuestion.createMany({
         data: community.questions.map((question) => ({
+          tenantId: "tenant-beemmb-platform",
           productId: item.id,
           question: question.question,
           askedBy: question.askedBy,

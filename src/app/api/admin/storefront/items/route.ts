@@ -10,9 +10,10 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET() {
   try {
-    await requirePermission("storefront.manage");
-    const items = await storefrontService.listAdminItems();
-    return NextResponse.json({ items });
+    return await requirePermission("storefront.manage", async () => {
+      const items = await storefrontService.listAdminItems();
+      return NextResponse.json({ items });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });
@@ -24,17 +25,18 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("storefront.manage");
-    const payload = await request.json();
-    const item = await storefrontService.upsertItem(payload);
-    await auditLogService.recordFromRequest(request, {
-      entityType: "STOREFRONT_ITEM",
-      entityId: item.id,
-      action: "CREATE",
-      actorUserId: user.id,
-      summary: `Mağaza içeriği oluşturuldu: ${item.section}`,
+    return await requirePermission("storefront.manage", async (user) => {
+      const payload = await request.json();
+      const item = await storefrontService.upsertItem(payload);
+      await auditLogService.recordFromRequest(request, {
+        entityType: "STOREFRONT_ITEM",
+        entityId: item.id,
+        action: "CREATE",
+        actorUserId: user.id,
+        summary: `Mağaza içeriği oluşturuldu: ${item.section}`,
+      });
+      return NextResponse.json({ item }, { status: 201 });
     });
-    return NextResponse.json({ item }, { status: 201 });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

@@ -9,19 +9,20 @@ import {
 
 export async function GET(request: Request) {
   try {
-    await requirePermission("productQuestions.read");
-    const { searchParams } = new URL(request.url);
+    return await requirePermission("productQuestions.read", async () => {
+      const { searchParams } = new URL(request.url);
 
-    const result = await catalogAdminService.listProductQuestions({
-      status: (searchParams.get("status") as "all" | "pending" | "answered" | null) ?? "all",
-      sort: (searchParams.get("sort") as "priority" | "latest" | "oldest" | null) ?? "priority",
-      search: searchParams.get("search") ?? undefined,
-      questionId: searchParams.get("questionId") ?? undefined,
-      page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
-      pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : 10,
+      const result = await catalogAdminService.listProductQuestions({
+        status: (searchParams.get("status") as "all" | "pending" | "answered" | null) ?? "all",
+        sort: (searchParams.get("sort") as "priority" | "latest" | "oldest" | null) ?? "priority",
+        search: searchParams.get("search") ?? undefined,
+        questionId: searchParams.get("questionId") ?? undefined,
+        page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
+        pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : 10,
+      });
+
+      return NextResponse.json(result);
     });
-
-    return NextResponse.json(result);
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

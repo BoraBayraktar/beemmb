@@ -13,18 +13,19 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("storefront.manage");
-    const { id } = await context.params;
-    const payload = await request.json();
-    const item = await storefrontService.upsertItem({ id, ...payload });
-    await auditLogService.recordFromRequest(request, {
-      entityType: "STOREFRONT_ITEM",
-      entityId: item.id,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: `Mağaza içeriği güncellendi: ${item.section}`,
+    return await requirePermission("storefront.manage", async (user) => {
+      const { id } = await context.params;
+      const payload = await request.json();
+      const item = await storefrontService.upsertItem({ id, ...payload });
+      await auditLogService.recordFromRequest(request, {
+        entityType: "STOREFRONT_ITEM",
+        entityId: item.id,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: `Mağaza içeriği güncellendi: ${item.section}`,
+      });
+      return NextResponse.json({ item });
     });
-    return NextResponse.json({ item });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });
@@ -43,17 +44,18 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("storefront.manage");
-    const { id } = await context.params;
-    await storefrontService.softDeleteItem(id, user.id);
-    await auditLogService.recordFromRequest(request, {
-      entityType: "STOREFRONT_ITEM",
-      entityId: id,
-      action: "DELETE",
-      actorUserId: user.id,
-      summary: "Mağaza içeriği silindi",
+    return await requirePermission("storefront.manage", async (user) => {
+      const { id } = await context.params;
+      await storefrontService.softDeleteItem(id, user.id);
+      await auditLogService.recordFromRequest(request, {
+        entityType: "STOREFRONT_ITEM",
+        entityId: id,
+        action: "DELETE",
+        actorUserId: user.id,
+        summary: "Mağaza içeriği silindi",
+      });
+      return NextResponse.json({ ok: true });
     });
-    return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

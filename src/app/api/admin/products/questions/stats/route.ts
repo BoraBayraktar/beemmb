@@ -17,10 +17,11 @@ function getQuestionSlaHours() {
 
 export async function GET() {
   try {
-    await requirePermission("productQuestions.read");
-    const result = await catalogAdminService.getProductQuestionStats(getQuestionSlaHours());
+    return await requirePermission("productQuestions.read", async () => {
+      const result = await catalogAdminService.getProductQuestionStats(getQuestionSlaHours());
 
-    return NextResponse.json(result);
+      return NextResponse.json(result);
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

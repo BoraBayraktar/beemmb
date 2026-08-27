@@ -7,11 +7,12 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET(request: Request) {
   try {
-    await requirePermission("productAttributes.manage");
-    const { searchParams } = new URL(request.url);
-    const channel = (searchParams.get("channel") as "TRENDYOL" | "N11" | "EDOCS_MOCK" | null) ?? "TRENDYOL";
-    const items = await catalogAdminService.listAttributeValueMarketplaceMappings(channel);
-    return NextResponse.json({ items });
+    return await requirePermission("productAttributes.manage", async () => {
+      const { searchParams } = new URL(request.url);
+      const channel = (searchParams.get("channel") as "TRENDYOL" | "N11" | "EDOCS_MOCK" | null) ?? "TRENDYOL";
+      const items = await catalogAdminService.listAttributeValueMarketplaceMappings(channel);
+      return NextResponse.json({ items });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });
@@ -23,20 +24,21 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("productAttributes.manage");
-    const payload = await request.json();
-    const item = await catalogAdminService.upsertAttributeValueMarketplaceMapping(payload);
-    await auditLogService.recordFromRequest(request, {
-      entityType: "PRODUCT_ATTRIBUTE",
-      entityId: item.id,
-      action: "UPDATE",
-      actorUserId: user.id,
-      summary: "Ürün özellik pazaryeri değer eşlemesi kaydedildi",
-      metadata: {
-        channel: item.channel,
-      },
+    return await requirePermission("productAttributes.manage", async (user) => {
+      const payload = await request.json();
+      const item = await catalogAdminService.upsertAttributeValueMarketplaceMapping(payload);
+      await auditLogService.recordFromRequest(request, {
+        entityType: "PRODUCT_ATTRIBUTE",
+        entityId: item.id,
+        action: "UPDATE",
+        actorUserId: user.id,
+        summary: "Ürün özellik pazaryeri değer eşlemesi kaydedildi",
+        metadata: {
+          channel: item.channel,
+        },
+      });
+      return NextResponse.json({ item }, { status: 201 });
     });
-    return NextResponse.json({ item }, { status: 201 });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

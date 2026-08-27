@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireTenantId } from "@/lib/tenant-context";
 import type { UpsertStorefrontItemInput } from "@/modules/storefront/contracts/storefront.contract";
 
 const storefrontItemInclude = {
@@ -94,6 +95,7 @@ export class StorefrontRepository {
 
     return prisma.storefrontItem.create({
       data: {
+        tenantId: requireTenantId(),
         section: input.section,
         variant: input.variant,
         targetType: input.targetType ?? null,
