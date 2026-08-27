@@ -10,7 +10,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     const user = await requirePermission("roles.manage");
     const { id } = await context.params;
     const payload = await request.json();
-    const role = await rbacService.updateRole(id, payload);
+    const role = await rbacService.updateRole(user.tenantId, id, payload);
     await auditLogService.recordFromRequest(request, {
       entityType: "AUTH",
       entityId: role.id,
@@ -43,7 +43,7 @@ export async function DELETE(request: Request, context: { params: Promise<{ id: 
   try {
     const user = await requirePermission("roles.manage");
     const { id } = await context.params;
-    await rbacService.deleteRole(id, user.id);
+    await rbacService.deleteRole(user.tenantId, id, user.id);
     await auditLogService.recordFromRequest(request, {
       entityType: "AUTH",
       entityId: id,

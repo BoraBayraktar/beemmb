@@ -87,6 +87,12 @@ const TENANT_SCOPED_MODELS = new Set<Prisma.ModelName>([
   // trail'ini gorebilmesi gerekir. Filtreleme, okuma tarafinda
   // auditLogService.list()'e gecilen scope parametresiyle uygulama
   // kodunda yapilir (bkz. src/app/api/admin/audit-logs/route.ts).
+  // NOT: Role, RolePermission, UserRoleAssignment de kasitli olarak
+  // buraya EKLENMEZ. rbacService.hasPermission()/getEffectivePermissions(),
+  // requirePermission() icinde runWithTenantContext KURULMADAN ONCE
+  // calisir (bkz. auth-context.service.ts) -- User/SocialAccount ile ayni
+  // bootstrap kisiti. tenantId, rbac.repository.ts'te ambient context'ten
+  // degil, cagiran user.tenantId'sinden acikca parametre olarak tasinir.
 ]);
 
 const WHERE_MANY_OPERATIONS = new Set([

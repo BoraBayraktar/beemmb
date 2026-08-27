@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     const payload = await request.json();
     const targetRole = payload?.role as "ADMIN" | "EDITOR" | "CUSTOMER" | undefined;
     const user = await requirePermission(targetRole === "CUSTOMER" ? "customers.manage" : "systemUsers.manage");
-    const created = await identityAdminService.createUser(payload, user.id);
+    const created = await identityAdminService.createUser(payload, user.id, user.tenantId);
     await auditLogService.recordFromRequest(request, {
       entityType: "USER",
       entityId: created.id,

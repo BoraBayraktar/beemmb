@@ -1871,6 +1871,9 @@ model Tenant {
   userNotifications                        UserNotification[]
   cariCarrierProfiles                      CariCarrierProfile[]
   auditLogs                                AuditLog[]
+  roles                                    Role[]
+  rolePermissions                          RolePermission[]
+  userRoleAssignments                      UserRoleAssignment[]
 
   @@index([deleted, status])
 }
@@ -1936,9 +1939,17 @@ model User {
   @@index([tenantId])
 }
 
+// NOT: Role/RolePermission/UserRoleAssignment KASITLI OLARAK
+// TENANT_SCOPED_MODELS'e (src/lib/prisma.ts) EKLENMEZ. RBAC izin kontrolu
+// (rbacService.hasPermission/getEffectivePermissions), requirePermission()
+// icinde runWithTenantContext KURULMADAN ONCE calisir (bkz.
+// auth-context.service.ts) -- User/SocialAccount ile ayni bootstrap kisiti.
+// tenantId bu yuzden ambient context'ten degil, cagiran user.tenantId'sinden
+// acikca parametre olarak tasinir (rbac.repository.ts/rbac.service.ts).
 model Role {
   id              String               @id @default(cuid())
-  key             String               @unique
+  tenantId        String
+  key             String
   name            String
   description     String?
   isSystem        Boolean              @default(false)
@@ -1950,8 +1961,11 @@ model Role {
   deletedUserId   String?
   permissions     RolePermission[]
   userAssignments UserRoleAssignment[]
+  tenant          Tenant               @relation(fields: [tenantId], references: [id])
 
+  @@unique([tenantId, key])
   @@index([deleted, isActive])
+  @@index([tenantId])
 }
 
 model Permission {
@@ -1976,28 +1990,34 @@ model Permission {
 
 model RolePermission {
   id           String     @id @default(cuid())
+  tenantId     String
   roleId       String
   permissionId String
   createdAt    DateTime   @default(now())
   role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  tenant       Tenant     @relation(fields: [tenantId], references: [id])
 
   @@unique([roleId, permissionId])
   @@index([permissionId])
+  @@index([tenantId])
 }
 
 model UserRoleAssignment {
   id               String   @id @default(cuid())
+  tenantId         String
   userId           String
   roleId           String
   assignedByUserId String?
   assignedAt       DateTime @default(now())
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   role             Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  tenant           Tenant   @relation(fields: [tenantId], references: [id])
 
   @@unique([userId, roleId])
   @@index([roleId])
   @@index([assignedByUserId])
+  @@index([tenantId])
 }
 
 model InventoryExportHistory {

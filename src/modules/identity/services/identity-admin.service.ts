@@ -102,7 +102,7 @@ export class IdentityAdminService {
     };
   }
 
-  async createUser(input: AdminCreateUserInput, actorUserId?: string): Promise<AdminUserListItem> {
+  async createUser(input: AdminCreateUserInput, actorUserId?: string, tenantId?: string): Promise<AdminUserListItem> {
     const parsed = createUserSchema.parse(input);
     const passwordHash = await hash(parsed.password, 10);
     const created = await this.repository.createUser({
@@ -112,8 +112,8 @@ export class IdentityAdminService {
       passwordHash,
     });
 
-    if (parsed.roleIds !== undefined && actorUserId) {
-      await rbacService.assignRolesToUser({
+    if (parsed.roleIds !== undefined && actorUserId && tenantId) {
+      await rbacService.assignRolesToUser(tenantId, {
         userId: created.id,
         roleIds: parsed.roleIds,
         actorUserId,
@@ -123,7 +123,7 @@ export class IdentityAdminService {
     return mapAdminUser(created);
   }
 
-  async updateUser(input: AdminUpdateUserInput, actorUserId?: string): Promise<AdminUserListItem> {
+  async updateUser(input: AdminUpdateUserInput, actorUserId?: string, tenantId?: string): Promise<AdminUserListItem> {
     const parsed = updateUserSchema.parse(input);
     const passwordHash = parsed.password ? await hash(parsed.password, 10) : undefined;
 
@@ -135,8 +135,8 @@ export class IdentityAdminService {
       passwordHash,
     });
 
-    if (parsed.roleIds !== undefined && actorUserId) {
-      await rbacService.assignRolesToUser({
+    if (parsed.roleIds !== undefined && actorUserId && tenantId) {
+      await rbacService.assignRolesToUser(tenantId, {
         userId: parsed.id,
         roleIds: parsed.roleIds,
         actorUserId,

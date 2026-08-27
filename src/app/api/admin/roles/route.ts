@@ -7,9 +7,9 @@ import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function GET() {
   try {
-    await requirePermission("roles.manage");
+    const user = await requirePermission("roles.manage");
     const [roles, permissions] = await Promise.all([
-      rbacService.listRoles(),
+      rbacService.listRoles(user.tenantId),
       rbacService.listPermissions(),
     ]);
 
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   try {
     const user = await requirePermission("roles.manage");
     const payload = await request.json();
-    const role = await rbacService.createRole(payload);
+    const role = await rbacService.createRole(user.tenantId, payload);
     await auditLogService.recordFromRequest(request, {
       entityType: "AUTH",
       entityId: role.id,

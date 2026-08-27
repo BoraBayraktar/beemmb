@@ -33,7 +33,7 @@ export default async function AdminUsersPage({
       page: 1,
       pageSize: 10,
     }),
-    rbacService.listRoles(),
+    rbacService.listRoles(user.tenantId),
   ]);
 
   return (

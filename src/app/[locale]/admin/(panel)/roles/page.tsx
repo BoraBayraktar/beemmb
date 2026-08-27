@@ -25,7 +25,7 @@ export default async function AdminRolesPage({ params }: { params: Promise<{ loc
 
   const dictionary = getDictionary(locale as Locale);
   const [roles, permissions] = await Promise.all([
-    rbacService.listRoles(),
+    rbacService.listRoles(user.tenantId),
     rbacService.listPermissions(),
   ]);
   const menuTree = buildAdminMenuTree(dictionary, locale as Locale);

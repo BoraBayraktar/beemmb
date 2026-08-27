@@ -8,9 +8,9 @@ export class RbacRepository {
     });
   }
 
-  async listRoles() {
+  async listRoles(tenantId: string) {
     return prisma.role.findMany({
-      where: { deleted: false },
+      where: { tenantId, deleted: false },
       include: {
         permissions: { include: { permission: true } },
         userAssignments: { select: { id: true } },
@@ -19,9 +19,9 @@ export class RbacRepository {
     });
   }
 
-  async findRoleById(id: string) {
+  async findRoleById(tenantId: string, id: string) {
     return prisma.role.findFirst({
-      where: { id, deleted: false },
+      where: { id, tenantId, deleted: false },
       include: {
         permissions: { include: { permission: true } },
         userAssignments: { select: { userId: true } },
@@ -29,27 +29,29 @@ export class RbacRepository {
     });
   }
 
-  async findRoleByKey(key: string) {
+  async findRoleByKey(tenantId: string, key: string) {
     return prisma.role.findFirst({
-      where: { key, deleted: false },
+      where: { tenantId, key, deleted: false },
       include: { permissions: { include: { permission: true } } },
     });
   }
 
-  async countUsersWithRoleKey(roleKey: string) {
+  async countUsersWithRoleKey(tenantId: string, roleKey: string) {
     return prisma.userRoleAssignment.count({
       where: {
-        role: { key: roleKey, deleted: false, isActive: true },
+        tenantId,
+        role: { tenantId, key: roleKey, deleted: false, isActive: true },
         user: { deleted: false },
       },
     });
   }
 
-  async userHasRoleKey(userId: string, roleKey: string) {
+  async userHasRoleKey(tenantId: string, userId: string, roleKey: string) {
     const assignment = await prisma.userRoleAssignment.findFirst({
       where: {
+        tenantId,
         userId,
-        role: { key: roleKey, deleted: false, isActive: true },
+        role: { tenantId, key: roleKey, deleted: false, isActive: true },
       },
       select: { id: true },
     });
@@ -57,11 +59,12 @@ export class RbacRepository {
     return Boolean(assignment);
   }
 
-  async getEffectiveRolesForUser(userId: string) {
+  async getEffectiveRolesForUser(tenantId: string, userId: string) {
     return prisma.userRoleAssignment.findMany({
       where: {
+        tenantId,
         userId,
-        role: { deleted: false, isActive: true },
+        role: { tenantId, deleted: false, isActive: true },
       },
       include: {
         role: {
@@ -73,16 +76,18 @@ export class RbacRepository {
     });
   }
 
-  async createRole(input: { key: string; name: string; description?: string | null; permissionKeys: string[] }) {
+  async createRole(tenantId: string, input: { key: string; name: string; description?: string | null; permissionKeys: string[] }) {
     return prisma.$transaction(async (tx) => {
       const role = await tx.role.create({
         data: {
+          tenantId,
           key: input.key,
           name: input.name,
           description: input.description ?? null,
           isSystem: false,
           permissions: {
             create: input.permissionKeys.map((permissionKey) => ({
+              tenant: { connect: { id: tenantId } },
               permission: { connect: { key: permissionKey } },
             })),
           },
@@ -99,17 +104,18 @@ export class RbacRepository {
     });
   }
 
-  async updateRole(input: { id: string; name: string; description?: string | null; isActive: boolean; permissionKeys: string[] }) {
+  async updateRole(tenantId: string, input: { id: string; name: string; description?: string | null; isActive: boolean; permissionKeys: string[] }) {
     return prisma.$transaction(async (tx) => {
-      await tx.rolePermission.deleteMany({ where: { roleId: input.id } });
+      await tx.rolePermission.deleteMany({ where: { roleId: input.id, tenantId } });
       await tx.role.update({
-        where: { id: input.id },
+        where: { id: input.id, tenantId },
         data: {
           name: input.name,
           description: input.description ?? null,
           isActive: input.isActive,
           permissions: {
             create: input.permissionKeys.map((permissionKey) => ({
+              tenant: { connect: { id: tenantId } },
               permission: { connect: { key: permissionKey } },
             })),
           },
@@ -126,12 +132,13 @@ export class RbacRepository {
     });
   }
 
-  async assignRolesToUser(input: { userId: string; roleIds: string[]; actorUserId: string }) {
+  async assignRolesToUser(tenantId: string, input: { userId: string; roleIds: string[]; actorUserId: string }) {
     return prisma.$transaction(async (tx) => {
-      await tx.userRoleAssignment.deleteMany({ where: { userId: input.userId } });
+      await tx.userRoleAssignment.deleteMany({ where: { userId: input.userId, tenantId } });
       if (input.roleIds.length > 0) {
         await tx.userRoleAssignment.createMany({
           data: input.roleIds.map((roleId) => ({
+            tenantId,
             userId: input.userId,
             roleId,
             assignedByUserId: input.actorUserId,
@@ -142,9 +149,9 @@ export class RbacRepository {
     });
   }
 
-  async softDeleteRole(input: { id: string; deletedUserId: string }) {
+  async softDeleteRole(tenantId: string, input: { id: string; deletedUserId: string }) {
     return prisma.role.update({
-      where: { id: input.id },
+      where: { id: input.id, tenantId },
       data: {
         deleted: true,
         deletedDate: new Date(),

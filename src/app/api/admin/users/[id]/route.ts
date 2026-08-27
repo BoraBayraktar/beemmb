@@ -35,7 +35,7 @@ export async function PATCH(
     const updated = await identityAdminService.updateUser({
       id,
       ...payload,
-    }, user.id);
+    }, user.id, user.tenantId);
 
     await auditLogService.recordFromRequest(request, {
       entityType: "USER",

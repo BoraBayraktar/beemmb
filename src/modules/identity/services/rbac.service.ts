@@ -94,19 +94,19 @@ export class RbacService {
     return this.repository.listPermissions();
   }
 
-  async listRoles() {
-    const roles = await this.repository.listRoles();
+  async listRoles(tenantId: string) {
+    const roles = await this.repository.listRoles(tenantId);
     return roles.map(mapRole);
   }
 
-  async getEffectivePermissions(user: { id: string; role: "ADMIN" | "EDITOR" | "CUSTOMER"; isSuperAdmin?: boolean }): Promise<EffectiveRbac> {
+  async getEffectivePermissions(user: { id: string; tenantId: string; role: "ADMIN" | "EDITOR" | "CUSTOMER"; isSuperAdmin?: boolean }): Promise<EffectiveRbac> {
     if (user.isSuperAdmin) {
       return getSuperAdminEffectivePermissions();
     }
 
     let assignments: Awaited<ReturnType<RbacRepository["getEffectiveRolesForUser"]>>;
     try {
-      assignments = await this.repository.getEffectiveRolesForUser(user.id);
+      assignments = await this.repository.getEffectiveRolesForUser(user.tenantId, user.id);
     } catch (error) {
       console.error("RBAC etkin yetki okuması başarısız oldu, legacy rol yetkileri kullanılacak.", error);
       return getLegacyEffectivePermissions(user);
@@ -137,19 +137,19 @@ export class RbacService {
     };
   }
 
-  async hasPermission(user: { id: string; role: "ADMIN" | "EDITOR" | "CUSTOMER"; isSuperAdmin?: boolean }, permissionKey: PermissionKey) {
+  async hasPermission(user: { id: string; tenantId: string; role: "ADMIN" | "EDITOR" | "CUSTOMER"; isSuperAdmin?: boolean }, permissionKey: PermissionKey) {
     const effective = await this.getEffectivePermissions(user);
     return effective.permissionKeys.includes(permissionKey);
   }
 
-  async createRole(input: unknown) {
+  async createRole(tenantId: string, input: unknown) {
     const parsed = roleInputSchema.parse(input);
-    const role = await this.repository.createRole(parsed);
+    const role = await this.repository.createRole(tenantId, parsed);
     return mapRole(role);
   }
 
-  async updateRole(id: string, input: unknown) {
-    const existing = await this.repository.findRoleById(id);
+  async updateRole(tenantId: string, id: string, input: unknown) {
+    const existing = await this.repository.findRoleById(tenantId, id);
     if (!existing) {
       throw new RbacPolicyError("Rol bulunamadı");
     }
@@ -162,19 +162,19 @@ export class RbacService {
       }
     }
 
-    const role = await this.repository.updateRole({ id, ...parsed });
+    const role = await this.repository.updateRole(tenantId, { id, ...parsed });
     return mapRole(role);
   }
 
-  async assignRolesToUser(input: unknown) {
+  async assignRolesToUser(tenantId: string, input: unknown) {
     const parsed = assignRolesSchema.parse(input);
     if (parsed.roleIds.length === 0) {
       throw new RbacPolicyError("En az bir rol seçilmelidir");
     }
 
-    const superAdminRole = await this.repository.findRoleByKey("super-admin");
+    const superAdminRole = await this.repository.findRoleByKey(tenantId, "super-admin");
     const removesSuperAdmin = superAdminRole
-      ? await this.repository.userHasRoleKey(parsed.userId, "super-admin")
+      ? await this.repository.userHasRoleKey(tenantId, parsed.userId, "super-admin")
         && !parsed.roleIds.includes(superAdminRole.id)
       : false;
 
@@ -183,17 +183,17 @@ export class RbacService {
         throw new RbacPolicyError("Kendi Süper Yönetici yetkinizi kaldıramazsınız");
       }
 
-      const superAdminCount = await this.repository.countUsersWithRoleKey("super-admin");
+      const superAdminCount = await this.repository.countUsersWithRoleKey(tenantId, "super-admin");
       if (superAdminCount <= 1) {
         throw new RbacPolicyError("Son Süper Yönetici yetkisi kaldırılamaz");
       }
     }
 
-    await this.repository.assignRolesToUser(parsed);
+    await this.repository.assignRolesToUser(tenantId, parsed);
   }
 
-  async deleteRole(id: string, deletedUserId: string) {
-    const role = await this.repository.findRoleById(id);
+  async deleteRole(tenantId: string, id: string, deletedUserId: string) {
+    const role = await this.repository.findRoleById(tenantId, id);
     if (!role) {
       throw new RbacPolicyError("Rol bulunamadı");
     }
@@ -206,7 +206,7 @@ export class RbacService {
       throw new RbacPolicyError("Kullanıcıya atanmış rol silinemez");
     }
 
-    await this.repository.softDeleteRole({ id, deletedUserId });
+    await this.repository.softDeleteRole(tenantId, { id, deletedUserId });
   }
 }
 
