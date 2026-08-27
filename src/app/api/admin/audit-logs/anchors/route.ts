@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
 
-import { AuthContextError, requirePermission } from "@/modules/identity/services/auth-context.service";
+import { AuthContextError, requirePlatformOperator } from "@/modules/identity/services/auth-context.service";
 import { auditAnchorService } from "@/modules/system/services/audit-anchor.service";
 import { auditLogService } from "@/modules/system/services/audit-log.service";
 
 export async function POST(request: Request) {
   try {
-    const user = await requirePermission("audit.export");
+    // AuditAnchor/hash-chain PLATFORM-GENELI (tenant-siz) bir yapidir --
+    // tek bir tenant'in denetciliginin coklu-tenant zinciri icin anchor
+    // olusturmasi dogru degil, bu yuzden platform operatorleriyle
+    // sinirlandirilir.
+    const user = await requirePlatformOperator();
     const payload = await request.json();
     const anchor = await auditAnchorService.createDailyAnchor({
       startDate: payload.startDate,

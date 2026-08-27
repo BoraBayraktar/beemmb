@@ -17,6 +17,7 @@ export async function POST(request: Request) {
     action: "LOGOUT",
     actorUserId: user?.id ?? null,
     actorType: user ? "USER" : "SYSTEM",
+    tenantId: user?.tenantId ?? null,
     summary: user ? `Kullanıcı çıkış yaptı: ${user.email}` : "Oturum çıkışı yapıldı",
   });
 

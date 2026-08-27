@@ -29,11 +29,13 @@ export async function GET(request: Request) {
         pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : 20,
       };
 
+      const scope = { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin };
+
       if (searchParams.get("export") === "manifest") {
         const manifest = await auditLogService.exportManifest({
           ...query,
           pageSize: Math.min(query.pageSize, 100),
-        });
+        }, scope);
         await auditLogService.recordFromRequest(request, {
           entityType: "AUTH",
           action: "AUDIT_EXPORT",
@@ -55,7 +57,7 @@ export async function GET(request: Request) {
         });
       }
 
-      const result = await auditLogService.list(query);
+      const result = await auditLogService.list(query, scope);
 
       return NextResponse.json(result);
     });

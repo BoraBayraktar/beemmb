@@ -87,6 +87,7 @@ export class AuditLogRepository {
     actorUserId?: string;
     startDate?: string;
     endDate?: string;
+    tenantId?: string;
     page: number;
     pageSize: number;
   }) {
@@ -111,6 +112,7 @@ export class AuditLogRepository {
         ...(args.action ? { action: args.action } : {}),
         ...(args.actorUserId ? { actorUserId: args.actorUserId } : {}),
         ...(createdAtFilter ? { createdAt: createdAtFilter } : {}),
+        ...(args.tenantId ? { tenantId: args.tenantId } : {}),
       },
       orderBy: {
         createdAt: "desc",
@@ -127,6 +129,7 @@ export class AuditLogRepository {
     actorUserId?: string;
     startDate?: string;
     endDate?: string;
+    tenantId?: string;
   }) {
     const createdAtFilter = args.startDate || args.endDate
       ? {
@@ -149,6 +152,7 @@ export class AuditLogRepository {
         ...(args.action ? { action: args.action } : {}),
         ...(args.actorUserId ? { actorUserId: args.actorUserId } : {}),
         ...(createdAtFilter ? { createdAt: createdAtFilter } : {}),
+        ...(args.tenantId ? { tenantId: args.tenantId } : {}),
       },
     });
   }

@@ -1870,6 +1870,7 @@ model Tenant {
   socialAccounts                           SocialAccount[]
   userNotifications                        UserNotification[]
   cariCarrierProfiles                      CariCarrierProfile[]
+  auditLogs                                AuditLog[]
 
   @@index([deleted, status])
 }
@@ -2075,6 +2076,15 @@ model UserNotification {
   @@index([tenantId])
 }
 
+// NOT: tenantId bilincli olarak NULLABLE kalir ve TENANT_SCOPED_MODELS'e
+// (src/lib/prisma.ts) EKLENMEZ. Bazi olaylar (basarisiz giris denemesi,
+// sifre sifirlama talebi gibi) gercekten hicbir tenant'a ait degildir --
+// zorla NOT NULL yapmak veri kaybina veya yanlis deger atamaya yol acar.
+// Ayrica platform operatorlerinin (Beemmb ekibi) coklu-tenant uyum/guvenlik
+// denetimi icin TUM tenant'larin audit trail'ini gorebilmesi gerekir --
+// bu yuzden okuma tarafinda filtreleme User/SocialAccount'ta oldugu gibi
+// uygulama kodunda (requireTenantId() + isPlatformOperator kontrolu ile)
+// yapilir, extension'in fail-closed enforcement'i ile degil.
 model AuditLog {
   id               String   @id @default(cuid())
   entityType       String
@@ -2100,12 +2110,14 @@ model AuditLog {
   serverReceivedAt DateTime @default(now())
   timezone         String   @default("Europe/Istanbul")
   createdAt        DateTime @default(now())
+  tenant           Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
   @@index([createdAt])
   @@index([entityType, createdAt])
   @@index([actorUserId, createdAt])
   @@index([requestId])
   @@index([chainHash])
+  @@index([tenantId])
 }
 
 model AuditAnchor {

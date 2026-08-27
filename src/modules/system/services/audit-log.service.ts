@@ -14,6 +14,7 @@ import {
   AUDIT_LOG_ENTITY_TYPES,
 } from "@/modules/system/contracts/audit-log.contract";
 import { createRequestId, getRequestIdFromHeaders } from "@/lib/observability";
+import { getTenantContext } from "@/lib/tenant-context";
 import { AuditLogRepository } from "@/modules/system/repositories/audit-log.repository";
 
 export const auditLogEntityLabels: Record<AuditLogEntityType, string> = {
@@ -210,7 +211,10 @@ export class AuditLogService {
   constructor(private readonly repository: AuditLogRepository) {}
 
   async record(input: CreateAuditLogInput) {
-    const parsed = createAuditLogSchema.parse(input);
+    const parsed = createAuditLogSchema.parse({
+      ...input,
+      tenantId: input.tenantId ?? getTenantContext()?.tenantId ?? null,
+    });
     await this.repository.create(parsed);
   }
 
@@ -256,11 +260,12 @@ export class AuditLogService {
     await this.record({ ...input, entityType: input.entityType ?? "INVENTORY" });
   }
 
-  async list(query: AuditLogListQuery): Promise<AuditLogListResult> {
+  async list(query: AuditLogListQuery, scope?: { tenantId: string; isPlatformOperator: boolean }): Promise<AuditLogListResult> {
     const parsed = listAuditLogSchema.parse(query);
+    const tenantFilter = scope && !scope.isPlatformOperator ? scope.tenantId : undefined;
 
     const [items, total] = await Promise.all([
-      this.repository.list(parsed),
+      this.repository.list({ ...parsed, tenantId: tenantFilter }),
       this.repository.count({
         search: parsed.search,
         entityType: parsed.entityType,
@@ -268,6 +273,7 @@ export class AuditLogService {
         actorUserId: parsed.actorUserId,
         startDate: parsed.startDate,
         endDate: parsed.endDate,
+        tenantId: tenantFilter,
       }),
     ]);
 
@@ -362,12 +368,12 @@ export class AuditLogService {
     };
   }
 
-  async exportManifest(query: AuditLogListQuery) {
+  async exportManifest(query: AuditLogListQuery, scope?: { tenantId: string; isPlatformOperator: boolean }) {
     const result = await this.list({
       ...query,
       page: query.page ?? 1,
       pageSize: query.pageSize ?? 100,
-    });
+    }, scope);
     const records = result.items.map((item) => ({
       id: item.id,
       entityType: item.entityType,

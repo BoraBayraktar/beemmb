@@ -195,7 +195,7 @@ export default async function AdminAuditLogsPage({ params, searchParams }: Audit
       endDate: query.endDate,
       page: query.page ? Number(query.page) : 1,
       pageSize: 20,
-    }),
+    }, { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin }),
   );
 
   const prevPage = result.page > 1 ? result.page - 1 : null;

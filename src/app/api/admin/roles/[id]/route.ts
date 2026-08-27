@@ -16,6 +16,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       entityId: role.id,
       action: "PERMISSION_CHANGE",
       actorUserId: user.id,
+      tenantId: user.tenantId,
       summary: `Rol güncellendi: ${role.name}`,
       metadata: { roleKey: role.key, permissionKeys: role.permissionKeys },
     });
@@ -48,6 +49,7 @@ export async function DELETE(request: Request, context: { params: Promise<{ id: 
       entityId: id,
       action: "PERMISSION_CHANGE",
       actorUserId: user.id,
+      tenantId: user.tenantId,
       summary: "Rol silindi",
     });
 

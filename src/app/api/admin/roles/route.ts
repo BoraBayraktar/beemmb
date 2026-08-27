@@ -33,6 +33,7 @@ export async function POST(request: Request) {
       entityId: role.id,
       action: "PERMISSION_CHANGE",
       actorUserId: user.id,
+      tenantId: user.tenantId,
       summary: `Rol oluşturuldu: ${role.name}`,
       metadata: { roleKey: role.key, permissionKeys: role.permissionKeys },
     });

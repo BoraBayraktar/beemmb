@@ -80,6 +80,13 @@ const TENANT_SCOPED_MODELS = new Set<Prisma.ModelName>([
   // ayni bootstrap kisiti). tenantId kolonu var ama enforcement yok.
   "UserNotification",
   "CariCarrierProfile",
+  // NOT: AuditLog de kasitli olarak buraya EKLENMEZ. tenantId nullable
+  // kalir (bazi olaylar -- basarisiz giris, sifre sifirlama talebi --
+  // gercekten hicbir tenant'a ait degildir) ve platform operatorlerinin
+  // coklu-tenant uyum/guvenlik denetimi icin TUM tenant'larin audit
+  // trail'ini gorebilmesi gerekir. Filtreleme, okuma tarafinda
+  // auditLogService.list()'e gecilen scope parametresiyle uygulama
+  // kodunda yapilir (bkz. src/app/api/admin/audit-logs/route.ts).
 ]);
 
 const WHERE_MANY_OPERATIONS = new Set([

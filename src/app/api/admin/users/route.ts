@@ -47,6 +47,7 @@ export async function POST(request: Request) {
       entityId: created.id,
       action: "CREATE",
       actorUserId: user.id,
+      tenantId: user.tenantId,
       summary: `Kullanıcı oluşturuldu: ${created.email}`,
     });
     await auditLogService.recordFromRequest(request, {
@@ -54,6 +55,7 @@ export async function POST(request: Request) {
       entityId: created.id,
       action: "PERMISSION_CHANGE",
       actorUserId: user.id,
+      tenantId: user.tenantId,
       summary: `Kullanıcı yetkisi tanımlandı: ${created.email}`,
       metadata: {
         targetRole: created.role,

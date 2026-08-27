@@ -26,6 +26,7 @@ export async function POST(request: Request) {
       entityId: result.user.id,
       action: "LOGIN",
       actorUserId: result.user.id,
+      tenantId: result.user.tenantId,
       summary: `Yeni kullanıcı kayıt oldu: ${result.user.email}`,
       metadata: {
         role: result.user.role,

@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 
-import { AuthContextError, requirePermission } from "@/modules/identity/services/auth-context.service";
+import { AuthContextError, requirePlatformOperator } from "@/modules/identity/services/auth-context.service";
 import { auditAnchorService } from "@/modules/system/services/audit-anchor.service";
 
 export async function GET(request: Request) {
   try {
-    await requirePermission("audit.read");
+    // AuditAnchor/hash-chain PLATFORM-GENELI (tenant-siz) bir yapidir --
+    // tek bir tenant'in denetciliginin coklu-tenant zincirini
+    // dogrulamasi/gormesi dogru degil, bu yuzden platform operatorleriyle
+    // sinirlandirilir.
+    await requirePlatformOperator();
     const { searchParams } = new URL(request.url);
     const result = await auditAnchorService.verifyRange({
       startDate: searchParams.get("startDate") ?? undefined,

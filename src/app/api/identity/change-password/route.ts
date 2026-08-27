@@ -29,6 +29,7 @@ export async function POST(request: Request) {
       action: "PASSWORD_RESET_COMPLETE",
       actorUserId: user.id,
       actorType: "USER",
+      tenantId: user.tenantId,
       summary: `Kullanıcı şifresini değiştirdi: ${user.email}`,
       metadata: {
         flow: "AUTHENTICATED_CHANGE_PASSWORD",

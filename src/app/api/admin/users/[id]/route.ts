@@ -42,6 +42,7 @@ export async function PATCH(
       entityId: updated.id,
       action: "UPDATE",
       actorUserId: user.id,
+      tenantId: user.tenantId,
       summary: `Kullanıcı güncellendi: ${updated.email}`,
     });
     if (payload.role !== undefined || payload.roleIds !== undefined || payload.password !== undefined) {
@@ -50,6 +51,7 @@ export async function PATCH(
         entityId: updated.id,
         action: "PERMISSION_CHANGE",
         actorUserId: user.id,
+        tenantId: user.tenantId,
         summary: `Kullanıcı güvenlik bilgisi güncellendi: ${updated.email}`,
         metadata: {
           roleChanged: payload.role !== undefined,
@@ -93,6 +95,7 @@ export async function DELETE(
       entityId: id,
       action: "DELETE",
       actorUserId: user.id,
+      tenantId: user.tenantId,
       summary: "Kullanıcı silindi",
     });
     return NextResponse.json({ ok: true });
