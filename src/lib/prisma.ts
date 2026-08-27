@@ -79,6 +79,7 @@ const TENANT_SCOPED_MODELS = new Set<Prisma.ModelName>([
   // bu tabloyu tenant/kullanici henuz bilinmeden sorgular (User'in kendisiyle
   // ayni bootstrap kisiti). tenantId kolonu var ama enforcement yok.
   "UserNotification",
+  "CariCarrierProfile",
 ]);
 
 const WHERE_MANY_OPERATIONS = new Set([

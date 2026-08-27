@@ -29,12 +29,19 @@ function carrierProfileData(input: CarrierProfileWriteInput) {
   };
 }
 
+function carrierProfileCreateData(input: CarrierProfileWriteInput) {
+  return {
+    tenantId: requireTenantId(),
+    ...carrierProfileData(input),
+  };
+}
+
 function buildCarrierProfileCreate(input: CarrierProfileWriteInput): Prisma.CariCreateInput["carrierProfile"] {
   if (!input.isCarrier) {
     return undefined;
   }
 
-  return { create: carrierProfileData(input) };
+  return { create: carrierProfileCreateData(input) };
 }
 
 function buildCarrierProfileUpsert(input: CarrierProfileWriteInput): Prisma.CariUpdateInput["carrierProfile"] {
@@ -44,7 +51,7 @@ function buildCarrierProfileUpsert(input: CarrierProfileWriteInput): Prisma.Cari
 
   return {
     upsert: {
-      create: carrierProfileData(input),
+      create: carrierProfileCreateData(input),
       update: carrierProfileData(input),
     },
   };

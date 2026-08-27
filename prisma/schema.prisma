@@ -107,6 +107,7 @@ model Cari {
 
 model CariCarrierProfile {
   id                      String   @id @default(cuid())
+  tenantId                String
   cariId                  String   @unique
   trackingUrlTemplate     String?
   externalCodeTrendyol    Int?
@@ -115,6 +116,9 @@ model CariCarrierProfile {
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
   cari                    Cari     @relation(fields: [cariId], references: [id])
+  tenant                  Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
 }
 
 model FinancialAccount {
@@ -1865,6 +1869,7 @@ model Tenant {
   purchaseReceiptLines                     PurchaseReceiptLine[]
   socialAccounts                           SocialAccount[]
   userNotifications                        UserNotification[]
+  cariCarrierProfiles                      CariCarrierProfile[]
 
   @@index([deleted, status])
 }
