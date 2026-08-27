@@ -1876,6 +1876,7 @@ export class InventoryRepository {
       ) {
         const createdReceipt = await tx.purchaseReceipt.create({
           data: {
+            tenantId,
             receiptNumber: args.sourceDocumentNumber,
             supplierName: args.sourceDocumentSupplier,
             receiptDate: args.sourceDocumentDate,
@@ -1902,6 +1903,7 @@ export class InventoryRepository {
 
         await tx.purchaseReceiptLine.create({
           data: {
+            tenantId,
             purchaseReceiptId: createdReceipt.id,
             productId: product.id,
             productVariantId: variant?.id ?? null,

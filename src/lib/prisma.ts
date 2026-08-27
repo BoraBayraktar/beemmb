@@ -72,6 +72,9 @@ const TENANT_SCOPED_MODELS = new Set<Prisma.ModelName>([
   "ProductQuestion",
   "ProductReview",
   "StorefrontItem",
+  "Promotion",
+  "PurchaseReceipt",
+  "PurchaseReceiptLine",
 ]);
 
 const WHERE_MANY_OPERATIONS = new Set([

@@ -532,7 +532,8 @@ model ProductInteraction {
 
 model Promotion {
   id            String        @id @default(cuid())
-  code          String        @unique
+  tenantId      String
+  code          String
   name          String
   type          PromotionType
   value         Decimal       @db.Decimal(10, 2)
@@ -549,9 +550,12 @@ model Promotion {
   deleted       Boolean       @default(false)
   deletedDate   DateTime?
   deletedUserId String?
+  tenant        Tenant        @relation(fields: [tenantId], references: [id])
 
+  @@unique([tenantId, code])
   @@index([active, deleted])
   @@index([startsAt, endsAt])
+  @@index([tenantId])
 }
 
 model Order {
@@ -1438,7 +1442,8 @@ model InventoryTransaction {
 
 model PurchaseReceipt {
   id                String                @id @default(cuid())
-  receiptNumber     String                @unique
+  tenantId          String
+  receiptNumber     String
   supplierName      String
   receiptDate       DateTime
   externalReference String?
@@ -1453,14 +1458,18 @@ model PurchaseReceipt {
   warehouse         Warehouse             @relation(fields: [warehouseId], references: [id])
   transaction       InventoryTransaction  @relation(fields: [transactionId], references: [id])
   lines             PurchaseReceiptLine[]
+  tenant            Tenant                @relation(fields: [tenantId], references: [id])
 
+  @@unique([tenantId, receiptNumber])
   @@index([warehouseId, receiptDate])
   @@index([supplierName, receiptDate])
   @@index([deleted])
+  @@index([tenantId])
 }
 
 model PurchaseReceiptLine {
   id                String          @id @default(cuid())
+  tenantId          String
   purchaseReceiptId String
   productId         String
   productVariantId  String?
@@ -1472,10 +1481,12 @@ model PurchaseReceiptLine {
   purchaseReceipt   PurchaseReceipt @relation(fields: [purchaseReceiptId], references: [id])
   product           Product         @relation(fields: [productId], references: [id])
   productVariant    ProductVariant? @relation(fields: [productVariantId], references: [id])
+  tenant            Tenant          @relation(fields: [tenantId], references: [id])
 
   @@index([purchaseReceiptId])
   @@index([productId])
   @@index([productVariantId])
+  @@index([tenantId])
 }
 
 model InventoryTransactionLine {
@@ -1849,6 +1860,9 @@ model Tenant {
   productQuestions                         ProductQuestion[]
   productReviews                           ProductReview[]
   storefrontItems                          StorefrontItem[]
+  promotions                               Promotion[]
+  purchaseReceipts                         PurchaseReceipt[]
+  purchaseReceiptLines                     PurchaseReceiptLine[]
 
   @@index([deleted, status])
 }

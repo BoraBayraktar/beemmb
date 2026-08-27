@@ -86,7 +86,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Tedarikçi bulunamadı." }, { status: 404 });
     }
 
-    if (error instanceof Error && error.message.includes("PurchaseReceipt_receiptNumber_key")) {
+    if (error instanceof Error && error.message.includes("PurchaseReceipt_tenantId_receiptNumber_key")) {
       return NextResponse.json({ message: "Bu satın alma belge numarası zaten kullanılıyor." }, { status: 409 });
     }
 
