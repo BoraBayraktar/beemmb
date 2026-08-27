@@ -11,10 +11,11 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requirePermission("admin.access");
-    const { id } = await context.params;
-    await notificationService.markAsRead(id, user.id);
-    return NextResponse.json({ ok: true });
+    return await requirePermission("admin.access", async (user) => {
+      const { id } = await context.params;
+      await notificationService.markAsRead(id, user.id);
+      return NextResponse.json({ ok: true });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

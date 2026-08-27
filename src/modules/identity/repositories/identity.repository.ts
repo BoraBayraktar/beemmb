@@ -286,6 +286,7 @@ export class IdentityRepository {
         passwordHash: input.passwordHash,
         socialAccounts: {
           create: {
+            tenantId: PLATFORM_TENANT_ID,
             provider: input.provider,
             providerAccountId: input.providerAccountId,
             providerEmail: input.providerEmail ?? null,
@@ -305,6 +306,7 @@ export class IdentityRepository {
 
   async attachSocialAccountToUser(input: {
     userId: string;
+    tenantId: string;
     provider: string;
     providerAccountId: string;
     providerEmail?: string | null;
@@ -320,6 +322,7 @@ export class IdentityRepository {
         providerEmail: input.providerEmail ?? null,
       },
       create: {
+        tenantId: input.tenantId,
         userId: input.userId,
         provider: input.provider,
         providerAccountId: input.providerAccountId,

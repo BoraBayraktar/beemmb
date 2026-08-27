@@ -8,9 +8,10 @@ import { notificationService } from "@/modules/system/services/notification.serv
 
 export async function PATCH() {
   try {
-    const user = await requirePermission("admin.access");
-    await notificationService.markAllAsRead(user.id);
-    return NextResponse.json({ ok: true });
+    return await requirePermission("admin.access", async (user) => {
+      await notificationService.markAllAsRead(user.id);
+      return NextResponse.json({ ok: true });
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

@@ -1,3 +1,5 @@
+import { runWithTenantContext } from "@/lib/tenant-context";
+import { PLATFORM_TENANT_ID } from "@/lib/tenant-defaults";
 import { identityAdminService } from "@/modules/identity/services/identity-admin.service";
 import { notificationService } from "@/modules/system/services/notification.service";
 
@@ -33,7 +35,7 @@ async function main() {
   }, null, 2));
 }
 
-main().catch((error) => {
+runWithTenantContext({ tenantId: PLATFORM_TENANT_ID, isPlatformOperator: false }, main).catch((error) => {
   console.error(error);
   process.exit(1);
 });

@@ -709,7 +709,7 @@ export class CatalogService {
     question: string;
   }) {
     const parsed = createQuestionSchema.parse(input);
-    const { product, question } = await runWithTenantContext(
+    const { question } = await runWithTenantContext(
       { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: false },
       async () => {
         const product = await this.repository.findActiveProductIdBySlug(parsed.slug);
@@ -723,28 +723,28 @@ export class CatalogService {
           question: parsed.question,
         });
 
+        try {
+          const recipients = await identityAdminService.listBackofficeUsers();
+          if (recipients.length > 0) {
+            await notificationService.createForRecipients({
+              recipients: recipients.map((item) => ({ id: item.id })),
+              channels: ["IN_APP", "EMAIL"],
+              type: "PRODUCT_QUESTION_CREATED",
+              title: `${adminDictionary.notificationProductQuestionCreatedTitle}: ${product.name}`,
+              message: formatNotificationMessage(adminDictionary.notificationProductQuestionCreatedMessage, {
+                askedBy: parsed.askedBy,
+                question: parsed.question,
+              }),
+              linkUrl: `/admin/product-questions?questionId=${question.id}`,
+            });
+          }
+        } catch {
+          // Do not block customer flow if notification fan-out fails.
+        }
+
         return { product, question };
       },
     );
-
-    try {
-      const recipients = await identityAdminService.listBackofficeUsers();
-      if (recipients.length > 0) {
-        await notificationService.createForRecipients({
-          recipients: recipients.map((item) => ({ id: item.id })),
-          channels: ["IN_APP", "EMAIL"],
-          type: "PRODUCT_QUESTION_CREATED",
-          title: `${adminDictionary.notificationProductQuestionCreatedTitle}: ${product.name}`,
-          message: formatNotificationMessage(adminDictionary.notificationProductQuestionCreatedMessage, {
-            askedBy: parsed.askedBy,
-            question: parsed.question,
-          }),
-          linkUrl: `/admin/product-questions?questionId=${question.id}`,
-        });
-      }
-    } catch {
-      // Do not block customer flow if notification fan-out fails.
-    }
 
     await invalidateProductDetailCache(parsed.slug);
     return mapQuestion(question);

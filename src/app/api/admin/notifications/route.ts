@@ -9,17 +9,18 @@ import { notificationService } from "@/modules/system/services/notification.serv
 
 export async function GET(request: Request) {
   try {
-    const user = await requirePermission("admin.access");
-    const { searchParams } = new URL(request.url);
+    return await requirePermission("admin.access", async (user) => {
+      const { searchParams } = new URL(request.url);
 
-    const result = await notificationService.listInAppForUser({
-      userId: user.id,
-      unreadOnly: searchParams.get("unreadOnly") === "1",
-      page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
-      pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : 8,
+      const result = await notificationService.listInAppForUser({
+        userId: user.id,
+        unreadOnly: searchParams.get("unreadOnly") === "1",
+        page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
+        pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : 8,
+      });
+
+      return NextResponse.json(result);
     });
-
-    return NextResponse.json(result);
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

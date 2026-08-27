@@ -1863,6 +1863,8 @@ model Tenant {
   promotions                               Promotion[]
   purchaseReceipts                         PurchaseReceipt[]
   purchaseReceiptLines                     PurchaseReceiptLine[]
+  socialAccounts                           SocialAccount[]
+  userNotifications                        UserNotification[]
 
   @@index([deleted, status])
 }
@@ -2025,8 +2027,14 @@ model UserInventoryPreference {
   @@index([tenantId])
 }
 
+// NOT: tenantId burada TENANT_SCOPED_MODELS'e (src/lib/prisma.ts) EKLENMEZ.
+// OAuth callback akisi bu tabloyu, hangi kullanici/tenant oldugu henuz
+// bilinmeden ("bu Google hesabi hangi User'a ait?") sorgulamak zorunda --
+// User modelinin kendisiyle ayni bootstrap kisiti. tenantId manuel olarak
+// uygulama kodunda (User ile ayni PLATFORM_TENANT_ID) atanir.
 model SocialAccount {
   id                String   @id @default(cuid())
+  tenantId          String
   userId            String
   provider          String
   providerAccountId String
@@ -2034,13 +2042,16 @@ model SocialAccount {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   user              User     @relation(fields: [userId], references: [id])
+  tenant            Tenant   @relation(fields: [tenantId], references: [id])
 
   @@unique([provider, providerAccountId])
   @@index([userId, provider])
+  @@index([tenantId])
 }
 
 model UserNotification {
   id        String                  @id @default(cuid())
+  tenantId  String
   userId    String
   type      UserNotificationType
   channel   UserNotificationChannel
@@ -2051,10 +2062,12 @@ model UserNotification {
   sentAt    DateTime?
   createdAt DateTime                @default(now())
   user      User                    @relation(fields: [userId], references: [id])
+  tenant    Tenant                  @relation(fields: [tenantId], references: [id])
 
   @@index([userId, channel, createdAt])
   @@index([userId, channel, readAt])
   @@index([channel, sentAt])
+  @@index([tenantId])
 }
 
 model AuditLog {

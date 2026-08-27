@@ -359,6 +359,7 @@ export class IdentityService {
     if (existing) {
       await this.repository.attachSocialAccountToUser({
         userId: existing.id,
+        tenantId: existing.tenantId,
         provider: profile.provider,
         providerAccountId: profile.providerAccountId,
         providerEmail: profile.email,

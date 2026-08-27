@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireTenantId } from "@/lib/tenant-context";
 import type {
   UserNotificationChannel,
   UserNotificationType,
@@ -17,8 +18,11 @@ export class NotificationRepository {
       return;
     }
 
+    const tenantId = requireTenantId();
+
     await prisma.userNotification.createMany({
       data: items.map((item) => ({
+        tenantId,
         userId: item.userId,
         type: item.type,
         channel: item.channel,

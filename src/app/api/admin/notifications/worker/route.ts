@@ -9,10 +9,11 @@ import { notificationService } from "@/modules/system/services/notification.serv
 
 export async function POST(request: Request) {
   try {
-    await requirePermission("users.manage");
-    const payload = await request.json().catch(() => ({}));
-    const result = await notificationService.processEmailQueue(payload);
-    return NextResponse.json(result);
+    return await requirePermission("users.manage", async () => {
+      const payload = await request.json().catch(() => ({}));
+      const result = await notificationService.processEmailQueue(payload);
+      return NextResponse.json(result);
+    });
   } catch (error) {
     if (error instanceof AuthContextError) {
       return NextResponse.json({ message: error.message }, { status: error.status });
