@@ -2,11 +2,17 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
 import { counterpartyLookupService } from "@/modules/finance/services/counterparty-lookup.service";
-import { AuthContextError, requirePermission } from "@/modules/identity/services/auth-context.service";
+import { AuthContextError, requireAnyPermission } from "@/modules/identity/services/auth-context.service";
 
 export async function GET(request: Request) {
   try {
-    return await requirePermission("finance.read", async () => {
+    // Bu endpoint'in tek cagirani kasa/banka hareketi olusturma formu
+    // (cash-transactions-manager.tsx), sadece "financeTransactions.manage"
+    // iznini gerektiriyor -- oysa endpoint tek basina "finance.read"
+    // istiyordu. Hareket olusturmaya yetkili ama finans-genel-okuma
+    // izni olmayan roller (or. "operation") icin cari arama sessizce
+    // 403 doner, arayuz de bunu "sonuc bulunamadi" gibi gosterirdi.
+    return await requireAnyPermission(["finance.read", "financeTransactions.manage"], async () => {
       const { searchParams } = new URL(request.url);
       const result = await counterpartyLookupService.searchCounterparties({
         search: searchParams.get("search") ?? undefined,
