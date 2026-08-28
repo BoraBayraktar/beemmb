@@ -177,6 +177,46 @@ async function main() {
   const homeHtmlAAfter = await homeResponseAAfter.text();
   assert(homeHtmlAAfter.includes("/tr/admin/finance"), "Tenant A should see finance after entitlement granted");
 
+  // 8) Kullanici listesi izolasyonu (2026-08-28'de canlida bulunan gercek
+  // regresyon: identityRepository.listUsers/countUsers hic tenantId filtresi
+  // tasimiyordu). Her tenant admin'i /api/admin/users'ta SADECE kendi
+  // kullanicisini gormeli.
+  const usersResponseA = await authFetch("/api/admin/users", cookieA);
+  assert(usersResponseA.status === 200, `Tenant A users list expected 200, got ${usersResponseA.status}`);
+  const usersPayloadA = (await usersResponseA.json()) as { items: Array<{ id: string; email: string }>; total: number };
+  assert(usersPayloadA.total === 1, `Tenant A should see exactly 1 (its own) user, got ${usersPayloadA.total}`);
+  assert(usersPayloadA.items[0]?.email === ADMIN_EMAIL_A, "Tenant A user list should only contain its own admin");
+
+  const usersResponseB = await authFetch("/api/admin/users", cookieB);
+  const usersPayloadB = (await usersResponseB.json()) as { items: Array<{ id: string; email: string }>; total: number };
+  assert(usersPayloadB.total === 1, `Tenant B should see exactly 1 (its own) user, got ${usersPayloadB.total}`);
+  assert(usersPayloadB.items[0]?.email === ADMIN_EMAIL_B, "Tenant B user list should only contain its own admin");
+
+  // 9) Yeni kullanici olusturma dogru tenant'a yaziyor mu (identityAdminService.
+  // createUser tenantId'yi repository.createUser'a hic gecirmiyordu -- yeni
+  // kullanicilar sessizce PLATFORM_TENANT_ID'ye dusuyordu).
+  const createUserResponse = await authFetch("/api/admin/users", cookieA, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "verify-tenant-iso-newstaff-a@example.com", name: "New Staff A", role: "EDITOR", password: ADMIN_PASSWORD }),
+  });
+  assert(createUserResponse.status === 201, `Create user expected 201, got ${createUserResponse.status}`);
+  const createdUserPayload = (await createUserResponse.json()) as { item: { id: string } };
+  const createdUserRow = await prisma.user.findUniqueOrThrow({ where: { id: createdUserPayload.item.id }, select: { tenantId: true } });
+  assert(createdUserRow.tenantId === tenantA.tenant.id, "New user created by Tenant A admin should belong to Tenant A, not fall back to the platform tenant");
+
+  // 10) Capraz-tenant yazma reddi: Tenant A admin'i Tenant B'nin admin id'sini
+  // biliyor olsaydi bile PATCH/DELETE edememeli (Extended Where Unique Fields:
+  // where {id, tenantId} -> yanlis tenant'ta P2025).
+  const crossTenantPatchResponse = await authFetch(`/api/admin/users/${tenantB.adminUser.id}`, cookieA, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: "HACKED" }),
+  });
+  assert(crossTenantPatchResponse.status >= 400, `Cross-tenant PATCH should fail, got ${crossTenantPatchResponse.status}`);
+  const tenantBAdminAfterAttack = await prisma.user.findUniqueOrThrow({ where: { id: tenantB.adminUser.id }, select: { name: true } });
+  assert(tenantBAdminAfterAttack.name === "Verify Admin B", "Tenant B admin's name should be untouched by Tenant A's cross-tenant PATCH attempt");
+
   console.log("Tenant isolation verification passed");
 }
 
