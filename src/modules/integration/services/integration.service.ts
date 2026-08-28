@@ -1,6 +1,8 @@
 import { z } from "zod";
 
+import { buildTenantCacheKey } from "@/lib/cache-key";
 import { redisCache } from "@/lib/redis";
+import { requireTenantId } from "@/lib/tenant-context";
 import { documentDispatchLifecycleService } from "@/modules/documents/services/document-dispatch-lifecycle.service";
 import type {
   AdminIntegrationJobItem,
@@ -85,7 +87,7 @@ const connectors: Record<"TRENDYOL" | "N11" | "PAZARAMA" | "HEPSIBURADA" | "EDOC
 };
 
 async function invalidateIntegrationCache() {
-  await redisCache.delByPrefix("inventory:integrations:");
+  await redisCache.delByPrefix(buildTenantCacheKey(requireTenantId(), "inventory", "integrations"));
 }
 
 function mapJob(item: {

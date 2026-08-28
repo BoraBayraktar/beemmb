@@ -2,7 +2,9 @@ import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 import tr from "@/i18n/tr.json";
+import { buildTenantCacheKey } from "@/lib/cache-key";
 import { redisCache } from "@/lib/redis";
+import { requireTenantId } from "@/lib/tenant-context";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { identityAdminService } from "@/modules/identity/services/identity-admin.service";
 import { integrationService } from "@/modules/integration/services/integration.service";
@@ -1148,11 +1150,12 @@ async function invalidateCatalogCache() {
 }
 
 async function invalidateInventoryCache() {
+  const tenantId = requireTenantId();
   await Promise.all([
-    redisCache.delByPrefix("inventory:overview:"),
-    redisCache.delByPrefix("inventory:reports:"),
-    redisCache.delByPrefix("inventory:integrations:"),
-    redisCache.delByPrefix("inventory:exports:"),
+    redisCache.delByPrefix(buildTenantCacheKey(tenantId, "inventory", "overview")),
+    redisCache.delByPrefix(buildTenantCacheKey(tenantId, "inventory", "reports")),
+    redisCache.delByPrefix(buildTenantCacheKey(tenantId, "inventory", "integrations")),
+    redisCache.delByPrefix(buildTenantCacheKey(tenantId, "inventory", "exports")),
   ]);
 }
 
@@ -1321,7 +1324,7 @@ export class InventoryService {
   }
 
   async listInventoryExportHistory(): Promise<AdminInventoryExportHistoryItem[]> {
-    const cacheKey = "inventory:exports:history:v1";
+    const cacheKey = buildTenantCacheKey(requireTenantId(), "inventory", "exports", "history", "v1");
     const cached = await redisCache.get<AdminInventoryExportHistoryItem[]>(cacheKey);
     if (cached) {
       return cached;
@@ -1368,7 +1371,7 @@ export class InventoryService {
     filters: AdminInventoryExportHistoryItem["filters"];
   }): Promise<AdminInventoryExportHistoryItem | null> {
     const created = await this.repository.createInventoryExportHistory(input);
-    await redisCache.delByPrefix("inventory:exports:");
+    await redisCache.delByPrefix(buildTenantCacheKey(requireTenantId(), "inventory", "exports"));
     if (!created) {
       return null;
     }
@@ -1432,16 +1435,19 @@ export class InventoryService {
 
   async listInventoryOverview(query: AdminInventoryListQuery): Promise<AdminInventoryListResult> {
     const parsed = adminInventoryListQuerySchema.parse(query);
-    const cacheKey = [
-      "inventory:overview:v4",
+    const cacheKey = buildTenantCacheKey(
+      requireTenantId(),
+      "inventory",
+      "overview",
+      "v4",
       parsed.search ?? "",
       parsed.stockStatusFilter ?? "all",
       parsed.reservationFilter ?? "all",
       parsed.warehouseFilter ?? "all",
       parsed.movementTypeFilter ?? "all",
-      String(parsed.page),
-      String(parsed.pageSize),
-    ].join(":");
+      parsed.page,
+      parsed.pageSize,
+    );
     const cached = await redisCache.get<AdminInventoryListResult>(cacheKey);
     if (cached) {
       return cached;
@@ -1634,8 +1640,12 @@ export class InventoryService {
 
   async getInventoryReports(query: AdminInventoryReportsQuery = {}): Promise<AdminInventoryReportsResult> {
     const parsed = adminInventoryReportsQuerySchema.parse(query);
-    const cacheKey = [
-      "inventory:reports:dashboard:v3",
+    const cacheKey = buildTenantCacheKey(
+      requireTenantId(),
+      "inventory",
+      "reports",
+      "dashboard",
+      "v3",
       parsed.periodDays,
       parsed.comparePreviousPeriod ? "cmp1" : "cmp0",
       parsed.costingMethod,
@@ -1645,7 +1655,7 @@ export class InventoryService {
       parsed.stockStatus ?? "all-stock-status",
       parsed.reservationStatus ?? "all-reservation-status",
       parsed.movementType ?? "all-movement-types",
-    ].join(":");
+    );
     const cached = await redisCache.get<AdminInventoryReportsResult>(cacheKey);
     if (cached) {
       return cached;
@@ -2163,7 +2173,7 @@ export class InventoryService {
   }
 
   async getInventoryIntegrationSummary(): Promise<AdminInventoryIntegrationSummary> {
-    const cacheKey = "inventory:integrations:dashboard:v1";
+    const cacheKey = buildTenantCacheKey(requireTenantId(), "inventory", "integrations", "dashboard", "v1");
     const cached = await redisCache.get<AdminInventoryIntegrationSummary>(cacheKey);
     if (cached) {
       return cached;
@@ -2211,7 +2221,7 @@ export class InventoryService {
   }
 
   async getExternalStockEventMonitoring(): Promise<AdminExternalStockEventMonitoring> {
-    const cacheKey = "inventory:integrations:external-events:v1";
+    const cacheKey = buildTenantCacheKey(requireTenantId(), "inventory", "integrations", "external-events", "v1");
     const cached = await redisCache.get<AdminExternalStockEventMonitoring>(cacheKey);
     if (cached) {
       return cached;
@@ -2263,7 +2273,7 @@ export class InventoryService {
         eventId: created.event.id,
         errorMessage: "Eşleşen entegrasyon eşlemesi bulunamadı.",
       });
-      await redisCache.delByPrefix("inventory:integrations:external-events:");
+      await redisCache.delByPrefix(buildTenantCacheKey(requireTenantId(), "inventory", "integrations", "external-events"));
       throw new Error("EXTERNAL_STOCK_MAPPING_NOT_FOUND");
     }
 
@@ -2275,7 +2285,7 @@ export class InventoryService {
         warehouseId: mapping.warehouse?.id ?? null,
         errorMessage: "Bu eşleme harici stok yazımına kapalıdır.",
       });
-      await redisCache.delByPrefix("inventory:integrations:external-events:");
+      await redisCache.delByPrefix(buildTenantCacheKey(requireTenantId(), "inventory", "integrations", "external-events"));
       throw new Error("EXTERNAL_STOCK_MAPPING_READ_ONLY");
     }
 
@@ -2292,7 +2302,7 @@ export class InventoryService {
         warehouseId: mapping.warehouse?.id ?? null,
         errorMessage: "Eşleme için aktif depo stoku bulunamadı.",
       });
-      await redisCache.delByPrefix("inventory:integrations:external-events:");
+      await redisCache.delByPrefix(buildTenantCacheKey(requireTenantId(), "inventory", "integrations", "external-events"));
       throw new Error("EXTERNAL_STOCK_TARGET_LEVEL_NOT_FOUND");
     }
 
@@ -2321,7 +2331,7 @@ export class InventoryService {
     });
 
     await invalidateInventoryCache();
-    await redisCache.delByPrefix("inventory:integrations:external-events:");
+    await redisCache.delByPrefix(buildTenantCacheKey(requireTenantId(), "inventory", "integrations", "external-events"));
 
     return {
       eventId: created.event.id,

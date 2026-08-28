@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 import {
-  CARI_LOOKUP_CACHE_PREFIX,
   type AdminCariItem,
   type AdminCreateCariInput,
   type AdminListCariFilter,
@@ -10,7 +9,9 @@ import {
 import { cariRepository } from "@/modules/cari/repositories/cari.repository";
 import { resolveTaxIdentifier } from "@/lib/tax-identifier";
 import { isValidIban, normalizeIban } from "@/lib/iban";
+import { buildTenantCacheKey } from "@/lib/cache-key";
 import { redisCache } from "@/lib/redis";
+import { requireTenantId } from "@/lib/tenant-context";
 
 const optionalTrimmed = (max: number) => z.string().trim().max(max).optional().nullable().or(z.literal("")).transform((value) => value || null);
 
@@ -144,7 +145,7 @@ export class CariService {
     }
 
     const created = await cariRepository.createCari(parsed);
-    await redisCache.delByPrefix(CARI_LOOKUP_CACHE_PREFIX);
+    await redisCache.delByPrefix(buildTenantCacheKey(requireTenantId(), "cari", "lookup"));
     return mapCari(created);
   }
 
@@ -157,7 +158,7 @@ export class CariService {
     }
 
     const updated = await cariRepository.updateCari(parsed);
-    await redisCache.delByPrefix(CARI_LOOKUP_CACHE_PREFIX);
+    await redisCache.delByPrefix(buildTenantCacheKey(requireTenantId(), "cari", "lookup"));
     return mapCari(updated);
   }
 
@@ -173,7 +174,7 @@ export class CariService {
 
   async deleteCari(id: string, deletedUserId: string): Promise<void> {
     await cariRepository.deleteCari(id, deletedUserId);
-    await redisCache.delByPrefix(CARI_LOOKUP_CACHE_PREFIX);
+    await redisCache.delByPrefix(buildTenantCacheKey(requireTenantId(), "cari", "lookup"));
   }
 
   async ensureCariFromContact(profile: {

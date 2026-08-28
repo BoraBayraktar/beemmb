@@ -1,4 +1,6 @@
+import { buildTenantCacheKey } from "@/lib/cache-key";
 import { redisCache } from "@/lib/redis";
+import { requireTenantId } from "@/lib/tenant-context";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import type { AdminFinanceReportDateRangeQuery } from "@/modules/finance/contracts/finance-report-date-range.contract";
 import type {
@@ -85,7 +87,8 @@ async function loadReportPeriodTransactions(query: AdminFinanceReportDateRangeQu
 }
 
 export class ReportsService {
-  private async withReportCache<T>(cacheKey: string, ttlSeconds: number, factory: () => Promise<T>): Promise<T> {
+  private async withReportCache<T>(cacheKeySuffix: string, ttlSeconds: number, factory: () => Promise<T>): Promise<T> {
+    const cacheKey = buildTenantCacheKey(requireTenantId(), cacheKeySuffix);
     const cached = await redisCache.get<T>(cacheKey);
     if (cached) {
       return cached;

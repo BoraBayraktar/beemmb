@@ -1,6 +1,8 @@
 import { z } from "zod";
 
+import { buildTenantCacheKey } from "@/lib/cache-key";
 import { redisCache } from "@/lib/redis";
+import { requireTenantId } from "@/lib/tenant-context";
 import type {
   AdminReceivableDetail,
   AdminReceivableListItem,
@@ -118,15 +120,18 @@ function paginateReceivables(items: AdminReceivableListItem[], page: number, pag
 export class ReceivablesService {
   async listOperationalReceivables(query: AdminReceivablesQuery = {}): Promise<AdminReceivablesResult> {
     const parsed = listQuerySchema.parse(query);
-    const cacheKey = [
-      "finance:receivables:list",
+    const cacheKey = buildTenantCacheKey(
+      requireTenantId(),
+      "finance",
+      "receivables",
+      "list",
       parsed.search ?? "",
       parsed.paymentStatus,
-      parsed.overdueOnly,
+      String(parsed.overdueOnly),
       parsed.page,
       parsed.pageSize,
       parsed.locale ?? "",
-    ].join(":");
+    );
     const cached = await redisCache.get<AdminReceivablesResult>(cacheKey);
     if (cached) {
       return cached;
@@ -219,7 +224,7 @@ export class ReceivablesService {
   }
 
   async getReceivablesSummary(): Promise<AdminReceivablesSummary> {
-    const cacheKey = "finance:receivables:summary";
+    const cacheKey = buildTenantCacheKey(requireTenantId(), "finance", "receivables", "summary");
     const cached = await redisCache.get<AdminReceivablesSummary>(cacheKey);
     if (cached) {
       return cached;

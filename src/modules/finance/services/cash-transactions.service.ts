@@ -1,6 +1,8 @@
 import { z } from "zod";
 
+import { buildTenantCacheKey } from "@/lib/cache-key";
 import { redisCache } from "@/lib/redis";
+import { requireTenantId } from "@/lib/tenant-context";
 import type {
   AdminCashTransactionCategory,
   AdminCashTransactionDetail,
@@ -48,11 +50,12 @@ const createCashTransactionSchema = z.object({
 });
 
 export async function invalidateFinanceCache() {
+  const tenantId = requireTenantId();
   await Promise.all([
-    redisCache.delByPrefix("finance:overview:"),
-    redisCache.delByPrefix("finance:reports:"),
-    redisCache.delByPrefix("finance:receivables:"),
-    redisCache.delByPrefix("finance:payables:"),
+    redisCache.delByPrefix(buildTenantCacheKey(tenantId, "finance", "overview")),
+    redisCache.delByPrefix(buildTenantCacheKey(tenantId, "finance", "reports")),
+    redisCache.delByPrefix(buildTenantCacheKey(tenantId, "finance", "receivables")),
+    redisCache.delByPrefix(buildTenantCacheKey(tenantId, "finance", "payables")),
   ]);
 }
 

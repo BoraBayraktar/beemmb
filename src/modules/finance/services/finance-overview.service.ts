@@ -1,4 +1,6 @@
+import { buildTenantCacheKey } from "@/lib/cache-key";
 import { redisCache } from "@/lib/redis";
+import { requireTenantId } from "@/lib/tenant-context";
 import type { AdminFinanceOverview } from "@/modules/finance/contracts/finance-overview.contract";
 import { resolveFinanceOverviewCopy } from "@/modules/finance/services/finance-overview-copy.resolver";
 import { financialAccountsService } from "@/modules/finance/services/financial-accounts.service";
@@ -7,7 +9,7 @@ import { receivablesService } from "@/modules/finance/services/receivables.servi
 
 export class FinanceOverviewService {
   async getOverview(locale: string): Promise<AdminFinanceOverview> {
-    const cacheKey = `finance:overview:${locale}`;
+    const cacheKey = buildTenantCacheKey(requireTenantId(), "finance", "overview", locale);
     const cached = await redisCache.get<AdminFinanceOverview>(cacheKey);
     if (cached) {
       return cached;

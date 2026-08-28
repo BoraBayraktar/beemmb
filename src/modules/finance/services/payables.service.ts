@@ -1,4 +1,6 @@
+import { buildTenantCacheKey } from "@/lib/cache-key";
 import { redisCache } from "@/lib/redis";
+import { requireTenantId } from "@/lib/tenant-context";
 import { documentService } from "@/modules/documents/services/document.service";
 import { financeRepository } from "@/modules/finance/repositories/finance.repository";
 import type {
@@ -99,7 +101,7 @@ function buildSupplierSummaryFromDocuments(
 
 export class PayablesService {
   async listSupplierPayables(query: AdminSupplierPayablesQuery = {}): Promise<AdminSupplierPayablesListResult> {
-    const cacheKey = `finance:payables:list:${query.search ?? ""}:${query.overdueOnly ?? false}`;
+    const cacheKey = buildTenantCacheKey(requireTenantId(), "finance", "payables", "list", query.search ?? "", String(query.overdueOnly ?? false));
     const cached = await redisCache.get<AdminSupplierPayablesListResult>(cacheKey);
     if (cached) {
       return cached;

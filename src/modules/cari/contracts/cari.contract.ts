@@ -1,5 +1,3 @@
-export const CARI_LOOKUP_CACHE_PREFIX = "cari:lookup:";
-
 export type CariRole = "CUSTOMER" | "SUPPLIER" | "CARRIER";
 
 export type AdminCariCarrierProfile = {

@@ -1,14 +1,16 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 
+import { buildTenantCacheKey } from "@/lib/cache-key";
 import { redisCache } from "@/lib/redis";
+import { requireTenantId } from "@/lib/tenant-context";
 import type {
   AdminFinanceCounterpartyKind,
   AdminFinanceCounterpartyLookupQuery,
   AdminFinanceCounterpartyLookupResult,
 } from "@/modules/finance/contracts/counterparty-lookup.contract";
 import { cariService } from "@/modules/cari/services/cari.service";
-import { CARI_LOOKUP_CACHE_PREFIX, type CariRole } from "@/modules/cari/contracts/cari.contract";
+import { type CariRole } from "@/modules/cari/contracts/cari.contract";
 
 const lookupQuerySchema = z.object({
   search: z.string().trim().optional(),
@@ -45,7 +47,7 @@ function buildCacheKey(parsed: z.infer<typeof lookupQuerySchema>) {
     .digest("hex")
     .slice(0, 16);
 
-  return `${CARI_LOOKUP_CACHE_PREFIX}${fingerprint}`;
+  return buildTenantCacheKey(requireTenantId(), "cari", "lookup", fingerprint);
 }
 
 export class CounterpartyLookupService {
@@ -83,7 +85,7 @@ export class CounterpartyLookupService {
   }
 
   async invalidateLookupCache() {
-    await redisCache.delByPrefix(CARI_LOOKUP_CACHE_PREFIX);
+    await redisCache.delByPrefix(buildTenantCacheKey(requireTenantId(), "cari", "lookup"));
   }
 }
 
