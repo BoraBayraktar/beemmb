@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { X } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,6 +44,9 @@ type Labels = {
   taxNumber: string;
   taxNumberVkn: string;
   taxNumberTckn: string;
+  taxIdentifierLabel: string;
+  taxNumberVknShort: string;
+  taxNumberTcknShort: string;
   taxOffice: string;
   bankSectionTitle: string;
   iban: string;
@@ -231,7 +235,7 @@ export function CariManager({ items, labels, canDelete }: Props) {
   const taxIdentifierResolution = useMemo(() => resolveTaxIdentifier(form.taxNumber), [form.taxNumber]);
   const taxNumberLabel = taxIdentifierResolution.status === "valid"
     ? (taxIdentifierResolution.type === "vkn" ? labels.taxNumberVkn : labels.taxNumberTckn)
-    : labels.taxNumber;
+    : labels.taxIdentifierLabel;
   const showTaxOfficeField = taxIdentifierResolution.status === "valid" && taxIdentifierResolution.type === "vkn";
 
   const roleFilters: Array<{ value: RoleFilter; label: string }> = [
@@ -287,6 +291,19 @@ export function CariManager({ items, labels, canDelete }: Props) {
     if (item.isSupplier) roles.push(labels.roleSupplier);
     if (item.isCarrier) roles.push(labels.roleCarrier);
     return roles.join(" / ");
+  }
+
+  function taxIdentifierBadgeLabel(item: AdminCariItem) {
+    if (!item.taxNumber) {
+      return null;
+    }
+
+    const resolution = resolveTaxIdentifier(item.taxNumber);
+    if (resolution.status !== "valid") {
+      return null;
+    }
+
+    return resolution.type === "vkn" ? labels.taxNumberVknShort : labels.taxNumberTcknShort;
   }
 
   function openCreateDrawer() {
@@ -554,7 +571,7 @@ export function CariManager({ items, labels, canDelete }: Props) {
             <span>{labels.slug}</span>
             <span>{labels.roleLabel}</span>
             <span>{labels.email}</span>
-            <span>{labels.taxNumber}</span>
+            <span>{labels.taxIdentifierLabel}</span>
             <span>{labels.status}</span>
             <span className="text-right">{labels.edit}</span>
           </div>
@@ -572,7 +589,18 @@ export function CariManager({ items, labels, canDelete }: Props) {
                   <p className="text-sm text-[color:var(--color-text-muted)]">{item.slug}</p>
                   <p className="text-sm text-[color:var(--color-text-muted)]">{roleBadges(item)}</p>
                   <p className="text-sm text-[color:var(--color-text-muted)]">{item.email ?? "-"}</p>
-                  <p className="text-sm text-[color:var(--color-text-muted)]">{item.taxNumber ?? "-"}</p>
+                  <p className="flex items-center gap-1.5 text-sm text-[color:var(--color-text-muted)]">
+                    {item.taxNumber ? (
+                      <>
+                        {taxIdentifierBadgeLabel(item) ? (
+                          <Badge variant="secondary" className="shrink-0">{taxIdentifierBadgeLabel(item)}</Badge>
+                        ) : null}
+                        {item.taxNumber}
+                      </>
+                    ) : (
+                      "-"
+                    )}
+                  </p>
                   <p className="text-sm font-medium text-[color:var(--color-text)]">{item.isActive ? labels.filterActive : labels.filterPassive}</p>
                   <div className="flex flex-wrap justify-start gap-2 lg:justify-end">
                     <Button type="button" size="sm" variant="secondary" disabled={pending} onClick={() => openEditDrawer(item)}>
