@@ -139,10 +139,11 @@ export class IdentityRepository {
     name: string;
     role: "ADMIN" | "EDITOR" | "CUSTOMER";
     passwordHash: string;
+    tenantId?: string;
   }) {
     return prisma.user.create({
       data: {
-        tenantId: PLATFORM_TENANT_ID,
+        tenantId: input.tenantId ?? PLATFORM_TENANT_ID,
         email: input.email,
         name: input.name,
         role: input.role,

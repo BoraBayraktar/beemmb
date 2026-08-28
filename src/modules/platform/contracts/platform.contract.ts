@@ -58,3 +58,27 @@ export type SetTenantModuleEntitlementInput = {
   grantedByUserId?: string;
   note?: string;
 };
+
+export type ProvisionTenantInput = {
+  slug: string;
+  name: string;
+  legalName?: string;
+  taxNumber?: string;
+  contactEmail: string;
+  contactPhone?: string;
+  moduleKeys: string[];
+  adminUser: {
+    email: string;
+    name: string;
+    password: string;
+  };
+};
+
+export type ProvisionTenantResult = {
+  tenant: Tenant;
+  adminUser: {
+    id: string;
+    email: string;
+    name: string;
+  };
+};

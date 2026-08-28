@@ -1,12 +1,70 @@
+import { hash } from "bcryptjs";
+import { z } from "zod";
+
 import { redisCache } from "@/lib/redis";
 import { buildTenantCacheKey } from "@/lib/cache-key";
-import type { CreateTenantInput, SetTenantModuleEntitlementInput, UpdateTenantInput } from "@/modules/platform/contracts/platform.contract";
+import { IdentityRepository } from "@/modules/identity/repositories/identity.repository";
 import { PlatformRepository } from "@/modules/platform/repositories/platform.repository";
 
 const ENTITLEMENT_CACHE_TTL_SECONDS = 300;
 
+const TENANT_SLUG_REGEX = /^[a-z0-9-]+$/;
+const TENANT_STATUSES = ["ACTIVE", "TRIAL", "SUSPENDED", "ARCHIVED"] as const;
+
+const createTenantSchema = z.object({
+  slug: z.string().trim().toLowerCase().min(2).max(63).regex(TENANT_SLUG_REGEX),
+  name: z.string().trim().min(2),
+  legalName: z.string().trim().min(2).optional(),
+  taxNumber: z.string().trim().min(2).optional(),
+  contactEmail: z.string().trim().email(),
+  contactPhone: z.string().trim().optional(),
+});
+
+const updateTenantSchema = z.object({
+  id: z.string().trim().min(1),
+  name: z.string().trim().min(2).optional(),
+  legalName: z.string().trim().min(2).optional(),
+  taxNumber: z.string().trim().min(2).optional(),
+  contactEmail: z.string().trim().email().optional(),
+  contactPhone: z.string().trim().optional(),
+  status: z.enum(TENANT_STATUSES).optional(),
+});
+
+const setEntitlementSchema = z.object({
+  tenantId: z.string().trim().min(1),
+  moduleKey: z.string().trim().min(1),
+  isEnabled: z.boolean(),
+  grantedByUserId: z.string().trim().min(1).optional(),
+  note: z.string().trim().optional(),
+});
+
+const provisionTenantSchema = z.object({
+  slug: z.string().trim().toLowerCase().min(2).max(63).regex(TENANT_SLUG_REGEX),
+  name: z.string().trim().min(2),
+  legalName: z.string().trim().min(2).optional(),
+  taxNumber: z.string().trim().min(2).optional(),
+  contactEmail: z.string().trim().email(),
+  contactPhone: z.string().trim().optional(),
+  moduleKeys: z.array(z.string().trim().min(1)).default([]),
+  adminUser: z.object({
+    email: z.string().trim().email(),
+    name: z.string().trim().min(2),
+    password: z.string().min(6),
+  }),
+});
+
+export class PlatformPolicyError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PlatformPolicyError";
+  }
+}
+
 export class PlatformService {
-  constructor(private readonly repository: PlatformRepository) {}
+  constructor(
+    private readonly repository: PlatformRepository,
+    private readonly identityRepository: IdentityRepository,
+  ) {}
 
   async listTenants() {
     return this.repository.listTenants();
@@ -16,17 +74,19 @@ export class PlatformService {
     return this.repository.findTenantById(id);
   }
 
-  async createTenant(input: CreateTenantInput) {
-    const existing = await this.repository.findTenantBySlug(input.slug);
+  async createTenant(input: unknown) {
+    const parsed = createTenantSchema.parse(input);
+    const existing = await this.repository.findTenantBySlug(parsed.slug);
     if (existing) {
-      throw new Error("TENANT_SLUG_ALREADY_EXISTS");
+      throw new PlatformPolicyError("TENANT_SLUG_ALREADY_EXISTS");
     }
 
-    return this.repository.createTenant(input);
+    return this.repository.createTenant(parsed);
   }
 
-  async updateTenant(input: UpdateTenantInput) {
-    return this.repository.updateTenant(input);
+  async updateTenant(input: unknown) {
+    const parsed = updateTenantSchema.parse(input);
+    return this.repository.updateTenant(parsed);
   }
 
   async listModuleCatalog() {
@@ -37,10 +97,46 @@ export class PlatformService {
     return this.repository.listEntitlementsForTenant(tenantId);
   }
 
-  async setEntitlement(input: SetTenantModuleEntitlementInput) {
-    const result = await this.repository.setEntitlement(input);
-    await redisCache.del(buildTenantCacheKey(input.tenantId, "platform", "entitlements"));
+  async setEntitlement(input: unknown) {
+    const parsed = setEntitlementSchema.parse(input);
+    const result = await this.repository.setEntitlement(parsed);
+    await redisCache.del(buildTenantCacheKey(parsed.tenantId, "platform", "entitlements"));
     return result;
+  }
+
+  /**
+   * Yeni bir tenant'i, secilen modullerin entitlement'lariyla, RBAC_SYSTEM_ROLES'ten
+   * klonlanan varsayilan rol setiyle ve tenant'in ilk (super-admin) kullanicisiyla
+   * birlikte tek seferde kurar. Slug ve admin e-posta benzersizligi transaction
+   * baslamadan once kontrol edilir (email global @unique -- ayni domain'den tek
+   * giris akisi geregi tenant'lar arasinda da benzersiz olmali).
+   */
+  async provisionTenant(input: unknown, actorUserId: string) {
+    const parsed = provisionTenantSchema.parse(input);
+
+    const existingSlug = await this.repository.findTenantBySlug(parsed.slug);
+    if (existingSlug) {
+      throw new PlatformPolicyError("TENANT_SLUG_ALREADY_EXISTS");
+    }
+
+    const existingEmail = await this.identityRepository.findByEmail(parsed.adminUser.email);
+    if (existingEmail) {
+      throw new PlatformPolicyError("ADMIN_EMAIL_ALREADY_EXISTS");
+    }
+
+    const passwordHash = await hash(parsed.adminUser.password, 10);
+
+    return this.repository.provisionTenant({
+      slug: parsed.slug,
+      name: parsed.name,
+      legalName: parsed.legalName,
+      taxNumber: parsed.taxNumber,
+      contactEmail: parsed.contactEmail,
+      contactPhone: parsed.contactPhone,
+      moduleKeys: parsed.moduleKeys,
+      adminUser: { email: parsed.adminUser.email, name: parsed.adminUser.name, passwordHash },
+      actorUserId,
+    });
   }
 
   /** Menu cift-kontrolunde (Faz 3) kullanilacak: tenant'in acik oldugu modul anahtarlari. */
@@ -59,4 +155,4 @@ export class PlatformService {
   }
 }
 
-export const platformService = new PlatformService(new PlatformRepository());
+export const platformService = new PlatformService(new PlatformRepository(), new IdentityRepository());
