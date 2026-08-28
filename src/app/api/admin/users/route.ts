@@ -13,14 +13,14 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const roleFilter = (searchParams.get("role") as "ADMIN" | "EDITOR" | "CUSTOMER" | null) ?? undefined;
-    await requirePermission(roleFilter === "CUSTOMER" ? "customers.manage" : "systemUsers.manage");
+    const user = await requirePermission(roleFilter === "CUSTOMER" ? "customers.manage" : "systemUsers.manage");
 
     const users = await identityAdminService.listUsers({
       search: searchParams.get("search") ?? undefined,
       role: roleFilter,
       page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
       pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : 10,
-    });
+    }, user.tenantId);
 
     return NextResponse.json(users);
   } catch (error) {

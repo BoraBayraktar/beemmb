@@ -32,7 +32,7 @@ export default async function AdminUsersPage({
     identityAdminService.listUsers({
       page: 1,
       pageSize: 10,
-    }),
+    }, user.tenantId),
     rbacService.listRoles(user.tenantId),
   ]);
 

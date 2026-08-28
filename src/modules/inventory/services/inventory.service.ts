@@ -1196,7 +1196,7 @@ async function notifyBackofficeUsersForInventoryAlerts(alerts: Array<{
     return;
   }
 
-  const recipients = await identityAdminService.listBackofficeUsers();
+  const recipients = await identityAdminService.listBackofficeUsers(requireTenantId());
   if (recipients.length === 0) {
     return;
   }
@@ -2847,7 +2847,7 @@ export class InventoryService {
     const alerts = await this.repository.refreshInventoryAlerts(applied.touchedTargets);
     await notifyBackofficeUsersForInventoryAlerts(alerts);
 
-    const recipients = await identityAdminService.listBackofficeUsers();
+    const recipients = await identityAdminService.listBackofficeUsers(requireTenantId());
     if (recipients.length > 0) {
       await notificationService.createForRecipients({
         recipients: recipients.map((recipient) => ({ id: recipient.id })),

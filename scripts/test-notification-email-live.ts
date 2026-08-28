@@ -4,7 +4,7 @@ import { identityAdminService } from "@/modules/identity/services/identity-admin
 import { notificationService } from "@/modules/system/services/notification.service";
 
 async function main() {
-  const backofficeUsers = await identityAdminService.listBackofficeUsers();
+  const backofficeUsers = await identityAdminService.listBackofficeUsers(PLATFORM_TENANT_ID);
   if (backofficeUsers.length === 0) {
     throw new Error("NO_BACKOFFICE_USER_FOUND");
   }

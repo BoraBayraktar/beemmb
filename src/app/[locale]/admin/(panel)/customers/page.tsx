@@ -32,7 +32,7 @@ export default async function AdminCustomersPage({
     page: 1,
     pageSize: 10,
     role: "CUSTOMER",
-  });
+  }, user.tenantId);
 
   return (
     <UserManager

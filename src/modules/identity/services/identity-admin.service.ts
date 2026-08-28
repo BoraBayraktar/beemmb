@@ -68,8 +68,8 @@ export class IdentityAdminDeleteError extends Error {
 export class IdentityAdminService {
   constructor(private readonly repository: IdentityRepository) {}
 
-  async listBackofficeUsers() {
-    return this.repository.listUsersByRoles(["ADMIN", "EDITOR"]);
+  async listBackofficeUsers(tenantId: string) {
+    return this.repository.listUsersByRoles(["ADMIN", "EDITOR"], tenantId);
   }
 
   async getUserRole(id: string): Promise<"ADMIN" | "EDITOR" | "CUSTOMER" | null> {
@@ -77,7 +77,7 @@ export class IdentityAdminService {
     return existing?.role ?? null;
   }
 
-  async listUsers(query: AdminUserListQuery): Promise<AdminUserListResult> {
+  async listUsers(query: AdminUserListQuery, tenantId: string): Promise<AdminUserListResult> {
     const parsed = listUsersQuerySchema.parse(query);
     // "Sistem Kullanıcıları" (system/staff users) is the default context: when no
     // explicit role filter is given, scope to ADMIN/EDITOR so CUSTOMER accounts never
@@ -86,10 +86,11 @@ export class IdentityAdminService {
     const roleFilter = parsed.role ?? (["ADMIN", "EDITOR"] as Array<"ADMIN" | "EDITOR" | "CUSTOMER">);
 
     const [users, total] = await Promise.all([
-      this.repository.listUsers({ ...parsed, role: roleFilter }),
+      this.repository.listUsers({ ...parsed, role: roleFilter, tenantId }),
       this.repository.countUsers({
         search: parsed.search,
         role: roleFilter,
+        tenantId,
       }),
     ]);
 
@@ -102,7 +103,7 @@ export class IdentityAdminService {
     };
   }
 
-  async createUser(input: AdminCreateUserInput, actorUserId?: string, tenantId?: string): Promise<AdminUserListItem> {
+  async createUser(input: AdminCreateUserInput, actorUserId: string, tenantId: string): Promise<AdminUserListItem> {
     const parsed = createUserSchema.parse(input);
     const passwordHash = await hash(parsed.password, 10);
     const created = await this.repository.createUser({
@@ -110,9 +111,10 @@ export class IdentityAdminService {
       name: parsed.name,
       role: parsed.role,
       passwordHash,
+      tenantId,
     });
 
-    if (parsed.roleIds !== undefined && actorUserId && tenantId) {
+    if (parsed.roleIds !== undefined) {
       await rbacService.assignRolesToUser(tenantId, {
         userId: created.id,
         roleIds: parsed.roleIds,
@@ -123,7 +125,7 @@ export class IdentityAdminService {
     return mapAdminUser(created);
   }
 
-  async updateUser(input: AdminUpdateUserInput, actorUserId?: string, tenantId?: string): Promise<AdminUserListItem> {
+  async updateUser(input: AdminUpdateUserInput, actorUserId: string, tenantId: string): Promise<AdminUserListItem> {
     const parsed = updateUserSchema.parse(input);
     const passwordHash = parsed.password ? await hash(parsed.password, 10) : undefined;
 
@@ -133,9 +135,10 @@ export class IdentityAdminService {
       name: parsed.name,
       role: parsed.role,
       passwordHash,
+      tenantId,
     });
 
-    if (parsed.roleIds !== undefined && actorUserId && tenantId) {
+    if (parsed.roleIds !== undefined) {
       await rbacService.assignRolesToUser(tenantId, {
         userId: parsed.id,
         roleIds: parsed.roleIds,
@@ -146,12 +149,12 @@ export class IdentityAdminService {
     return mapAdminUser(updated);
   }
 
-  async softDeleteUser(userId: string, deletedUserId: string) {
+  async softDeleteUser(userId: string, deletedUserId: string, tenantId: string) {
     if (userId === deletedUserId) {
       throw new IdentityAdminDeleteError("You cannot delete your own account");
     }
 
-    await this.repository.softDeleteUser(userId, deletedUserId);
+    await this.repository.softDeleteUser(userId, deletedUserId, tenantId);
   }
 }
 

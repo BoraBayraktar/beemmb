@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import tr from "@/i18n/tr.json";
 import { redisCache } from "@/lib/redis";
-import { runWithTenantContext } from "@/lib/tenant-context";
+import { requireTenantId, runWithTenantContext } from "@/lib/tenant-context";
 import { PLATFORM_TENANT_ID } from "@/lib/tenant-defaults";
 import type {
   CategoryOption,
@@ -724,7 +724,7 @@ export class CatalogService {
         });
 
         try {
-          const recipients = await identityAdminService.listBackofficeUsers();
+          const recipients = await identityAdminService.listBackofficeUsers(requireTenantId());
           if (recipients.length > 0) {
             await notificationService.createForRecipients({
               recipients: recipients.map((item) => ({ id: item.id })),

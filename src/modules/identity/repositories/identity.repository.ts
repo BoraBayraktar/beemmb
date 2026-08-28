@@ -53,9 +53,10 @@ export class IdentityRepository {
     });
   }
 
-  async listUsersByRoles(roles: Array<"ADMIN" | "EDITOR" | "CUSTOMER">) {
+  async listUsersByRoles(roles: Array<"ADMIN" | "EDITOR" | "CUSTOMER">, tenantId: string) {
     return prisma.user.findMany({
       where: {
+        tenantId,
         deleted: false,
         isSuperAdmin: false,
         role: {
@@ -79,9 +80,11 @@ export class IdentityRepository {
     role?: "ADMIN" | "EDITOR" | "CUSTOMER" | Array<"ADMIN" | "EDITOR" | "CUSTOMER">;
     page: number;
     pageSize: number;
+    tenantId: string;
   }) {
     return prisma.user.findMany({
       where: {
+        tenantId: args.tenantId,
         deleted: false,
         isSuperAdmin: false,
         ...(args.search
@@ -116,9 +119,10 @@ export class IdentityRepository {
     });
   }
 
-  async countUsers(args: { search?: string; role?: "ADMIN" | "EDITOR" | "CUSTOMER" | Array<"ADMIN" | "EDITOR" | "CUSTOMER"> }) {
+  async countUsers(args: { search?: string; role?: "ADMIN" | "EDITOR" | "CUSTOMER" | Array<"ADMIN" | "EDITOR" | "CUSTOMER">; tenantId: string }) {
     return prisma.user.count({
       where: {
+        tenantId: args.tenantId,
         deleted: false,
         isSuperAdmin: false,
         ...(args.search
@@ -172,10 +176,12 @@ export class IdentityRepository {
     name?: string;
     role?: "ADMIN" | "EDITOR" | "CUSTOMER";
     passwordHash?: string;
+    tenantId: string;
   }) {
     return prisma.user.update({
       where: {
         id: input.id,
+        tenantId: input.tenantId,
       },
       data: {
         ...(input.email !== undefined ? { email: input.email } : {}),
@@ -200,10 +206,11 @@ export class IdentityRepository {
     });
   }
 
-  async softDeleteUser(id: string, deletedUserId: string) {
+  async softDeleteUser(id: string, deletedUserId: string, tenantId: string) {
     return prisma.user.update({
       where: {
         id,
+        tenantId,
       },
       data: {
         deleted: true,

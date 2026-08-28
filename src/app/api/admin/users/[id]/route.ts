@@ -89,7 +89,7 @@ export async function DELETE(
     const { id } = await context.params;
     const existingRole = await identityAdminService.getUserRole(id);
     const user = await requirePermission(permissionForRole(existingRole));
-    await identityAdminService.softDeleteUser(id, user.id);
+    await identityAdminService.softDeleteUser(id, user.id, user.tenantId);
     await auditLogService.recordFromRequest(request, {
       entityType: "USER",
       entityId: id,
