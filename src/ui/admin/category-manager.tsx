@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ConfirmDeleteButton } from "@/ui/admin/confirm-delete-button";
 import { useTrendyolCatalogSearch } from "@/ui/admin/use-trendyol-catalog-search";
 
 type Category = {
@@ -69,6 +70,8 @@ type Labels = {
   opFailed: string;
   validationRequired: string;
   validationDeleteBlocked: string;
+  deleteConfirmTitle: string;
+  deleteConfirmDescription: string;
   loading: string;
   importCsv: string;
   exportCsv: string;
@@ -665,7 +668,19 @@ export function CategoryManager({ initialResult, parentCandidates, labels, canDe
                   <div className="flex flex-wrap gap-2 lg:justify-end">
                     <Button type="button" size="sm" variant="secondary" disabled={loading} onClick={() => openEditDrawer(category)}>{labels.edit}</Button>
                     {canDelete ? (
-                      <Button type="button" size="sm" variant="destructive" disabled={loading || category.productCount > 0} onClick={() => deleteCategory(category)}>{labels.delete}</Button>
+                      <ConfirmDeleteButton
+                        type="button"
+                        size="sm"
+                        variant="destructive"
+                        disabled={loading || category.productCount > 0}
+                        onConfirm={() => deleteCategory(category)}
+                        title={labels.deleteConfirmTitle}
+                        description={labels.deleteConfirmDescription}
+                        confirmLabel={labels.delete}
+                        cancelLabel={labels.cancel}
+                      >
+                        {labels.delete}
+                      </ConfirmDeleteButton>
                     ) : null}
                   </div>
                 </article>

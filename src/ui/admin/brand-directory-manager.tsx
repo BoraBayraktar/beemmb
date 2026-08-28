@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { AdminBrandItem } from "@/modules/catalog/contracts/catalog-admin.contract";
+import { ConfirmDeleteButton } from "@/ui/admin/confirm-delete-button";
 import { useTrendyolCatalogSearch } from "@/ui/admin/use-trendyol-catalog-search";
 
 type Labels = {
@@ -50,6 +51,8 @@ type Labels = {
   opFailed: string;
   validationRequired: string;
   validationDeleteBlocked: string;
+  deleteConfirmTitle: string;
+  deleteConfirmDescription: string;
   importCsv: string;
   exportCsv: string;
 };
@@ -518,7 +521,19 @@ export function BrandDirectoryManager({ items, labels, canDelete }: Props) {
                   <div className="flex flex-wrap gap-2 lg:justify-end">
                     <Button type="button" size="sm" variant="secondary" disabled={loading} onClick={() => openEditDrawer(item)}>{labels.edit}</Button>
                     {canDelete ? (
-                      <Button type="button" size="sm" variant="destructive" disabled={loading || item.productCount > 0} onClick={() => deleteBrand(item)}>{labels.delete}</Button>
+                      <ConfirmDeleteButton
+                        type="button"
+                        size="sm"
+                        variant="destructive"
+                        disabled={loading || item.productCount > 0}
+                        onConfirm={() => deleteBrand(item)}
+                        title={labels.deleteConfirmTitle}
+                        description={labels.deleteConfirmDescription}
+                        confirmLabel={labels.delete}
+                        cancelLabel={labels.cancel}
+                      >
+                        {labels.delete}
+                      </ConfirmDeleteButton>
                     ) : null}
                   </div>
                 </article>

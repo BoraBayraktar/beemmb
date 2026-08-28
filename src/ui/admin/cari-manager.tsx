@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ConfirmDeleteButton } from "@/ui/admin/confirm-delete-button";
 import type { AdminCariItem, CariRole } from "@/modules/cari/contracts/cari.contract";
 import { resolveTaxIdentifier } from "@/lib/tax-identifier";
 import { formatIbanInput, isValidIban } from "@/lib/iban";
@@ -75,6 +76,8 @@ type Labels = {
   invalidTaxIdentifier: string;
   invalidIban: string;
   roleRequired: string;
+  deleteConfirmTitle: string;
+  deleteConfirmDescription: string;
 };
 
 type Props = {
@@ -576,9 +579,19 @@ export function CariManager({ items, labels, canDelete }: Props) {
                       {labels.edit}
                     </Button>
                     {canDelete ? (
-                      <Button type="button" size="sm" variant="destructive" disabled={pending} onClick={() => deleteItem(item)}>
+                      <ConfirmDeleteButton
+                        type="button"
+                        size="sm"
+                        variant="destructive"
+                        disabled={pending}
+                        onConfirm={() => deleteItem(item)}
+                        title={labels.deleteConfirmTitle}
+                        description={labels.deleteConfirmDescription}
+                        confirmLabel={labels.delete}
+                        cancelLabel={labels.cancel}
+                      >
                         {labels.delete}
-                      </Button>
+                      </ConfirmDeleteButton>
                     ) : null}
                   </div>
                 </article>

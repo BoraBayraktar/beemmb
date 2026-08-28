@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ConfirmDeleteButton } from "@/ui/admin/confirm-delete-button";
 
 type UserItem = {
   id: string;
@@ -55,6 +56,8 @@ type Labels = {
   validationPassword: string;
   validationDeleteSelf: string;
   loading: string;
+  deleteConfirmTitle: string;
+  deleteConfirmDescription: string;
 };
 
 type Props = {
@@ -386,7 +389,19 @@ export function UserManager({ initialResult, labels, availableRoles = [], fixedR
                   <p className="text-sm font-semibold text-[color:var(--color-text)]">{user.roleNames.length > 0 ? user.roleNames.join(", ") : getRoleLabel(user.role)}</p>
                   <div className="flex flex-wrap gap-2 lg:justify-end">
                     <Button type="button" size="sm" variant="secondary" disabled={loading} onClick={() => openEditDrawer(user)}>{labels.edit}</Button>
-                    <Button type="button" size="sm" variant="destructive" disabled={loading} onClick={() => deleteUser(user.id)}>{labels.delete}</Button>
+                    <ConfirmDeleteButton
+                      type="button"
+                      size="sm"
+                      variant="destructive"
+                      disabled={loading}
+                      onConfirm={() => deleteUser(user.id)}
+                      title={labels.deleteConfirmTitle}
+                      description={labels.deleteConfirmDescription}
+                      confirmLabel={labels.delete}
+                      cancelLabel={labels.cancel}
+                    >
+                      {labels.delete}
+                    </ConfirmDeleteButton>
                   </div>
                 </article>
               ))}

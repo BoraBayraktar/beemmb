@@ -69,6 +69,8 @@ export default async function AdminUsersPage({
         validationRequired: dictionary.admin.validationRequired,
         validationPassword: dictionary.admin.validationPassword,
         validationDeleteSelf: dictionary.admin.validationDeleteSelf,
+        deleteConfirmTitle: dictionary.admin.deleteConfirmTitle,
+        deleteConfirmDescription: dictionary.admin.deleteConfirmDescription,
         loading: dictionary.common.loading,
       }}
     />

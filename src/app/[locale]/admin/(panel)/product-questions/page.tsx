@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
@@ -53,17 +54,20 @@ export default async function AdminProductQuestionsPage({
     notFound();
   }
 
-  const [questionResult, questionStats] = await Promise.all([
-    catalogAdminService.listProductQuestions({
-      status: initialStatus,
-      sort: initialSort,
-      search: initialSearch || undefined,
-      questionId: questionId ?? undefined,
-      page: initialQuestionPage,
-      pageSize: 12,
-    }),
-    catalogAdminService.getProductQuestionStats(questionSlaHours),
-  ]);
+  const [questionResult, questionStats] = await runWithTenantContext(
+    { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
+    () => Promise.all([
+      catalogAdminService.listProductQuestions({
+        status: initialStatus,
+        sort: initialSort,
+        search: initialSearch || undefined,
+        questionId: questionId ?? undefined,
+        page: initialQuestionPage,
+        pageSize: 12,
+      }),
+      catalogAdminService.getProductQuestionStats(questionSlaHours),
+    ]),
+  );
 
   return (
     <ProductQuestionsManager
@@ -124,6 +128,9 @@ export default async function AdminProductQuestionsPage({
         bulkAnswer: dictionary.admin.bulkAnswer,
         bulkDelete: dictionary.admin.bulkDelete,
         bulkAnswerPlaceholder: dictionary.admin.bulkAnswerPlaceholder,
+        cancel: dictionary.admin.cancel,
+        deleteConfirmTitle: dictionary.admin.deleteConfirmTitle,
+        deleteConfirmDescription: dictionary.admin.deleteConfirmDescription,
       }}
     />
   );

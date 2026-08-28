@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { AdminMenuItem } from "@/ui/admin/admin-menu";
+import { ConfirmDeleteButton } from "@/ui/admin/confirm-delete-button";
 
 type Permission = {
   id: string;
@@ -70,6 +71,8 @@ type Props = {
     users: string;
     operationFailed: string;
     permissionModules: Record<string, string>;
+    deleteConfirmTitle: string;
+    deleteConfirmDescription: string;
   };
 };
 
@@ -230,7 +233,21 @@ export function RoleManager({ initialRoles, permissions, menuTree, labels }: Pro
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button type="button" size="sm" variant="secondary" onClick={() => editRole(role)} disabled={loading}>{labels.edit}</Button>
-                {!role.isSystem ? <Button type="button" size="sm" variant="destructive" onClick={() => deleteRole(role.id)} disabled={loading}>{labels.delete}</Button> : null}
+                {!role.isSystem ? (
+                  <ConfirmDeleteButton
+                    type="button"
+                    size="sm"
+                    variant="destructive"
+                    disabled={loading}
+                    onConfirm={() => deleteRole(role.id)}
+                    title={labels.deleteConfirmTitle}
+                    description={labels.deleteConfirmDescription}
+                    confirmLabel={labels.delete}
+                    cancelLabel={labels.cancel}
+                  >
+                    {labels.delete}
+                  </ConfirmDeleteButton>
+                ) : null}
               </div>
             </article>
           ))}

@@ -107,6 +107,8 @@ export default async function AdminCategoriesPage({
         opFailed: dictionary.admin.operationFailed,
         validationRequired: dictionary.admin.validationRequired,
         validationDeleteBlocked: dictionary.admin.validationDeleteCategoryBlocked,
+        deleteConfirmTitle: dictionary.admin.deleteConfirmTitle,
+        deleteConfirmDescription: dictionary.admin.deleteConfirmDescription,
         loading: dictionary.common.loading,
         importCsv: dictionary.admin.importCsv,
         exportCsv: dictionary.admin.exportCsv,

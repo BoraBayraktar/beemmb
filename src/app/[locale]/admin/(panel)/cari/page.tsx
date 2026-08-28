@@ -96,6 +96,8 @@ export default async function AdminCariPage({
         invalidTaxIdentifier: dictionary.admin.cariInvalidTaxIdentifier,
         invalidIban: dictionary.admin.cariInvalidIban,
         roleRequired: dictionary.admin.cariRoleRequired,
+        deleteConfirmTitle: dictionary.admin.deleteConfirmTitle,
+        deleteConfirmDescription: dictionary.admin.deleteConfirmDescription,
       }}
     />
   );

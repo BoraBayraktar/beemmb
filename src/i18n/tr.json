@@ -736,6 +736,8 @@
     "passive": "Pasif",
     "delete": "Sil",
     "cancel": "İptal",
+    "deleteConfirmTitle": "Silme Onayı",
+    "deleteConfirmDescription": "Bu kaydı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
     "emptyProducts": "Gösterilecek ürün yok.",
     "emptyQuestions": "Gösterilecek soru yok.",
     "operationFailed": "İşlem başarısız oldu. Lütfen tekrar deneyin.",

@@ -88,6 +88,8 @@ export default async function AdminStorefrontPage({
         variantSoft: dictionary.admin.variantSoft,
         variantDark: dictionary.admin.variantDark,
         variantDefault: dictionary.admin.variantDefault,
+        deleteConfirmTitle: dictionary.admin.deleteConfirmTitle,
+        deleteConfirmDescription: dictionary.admin.deleteConfirmDescription,
       }}
     />
   );

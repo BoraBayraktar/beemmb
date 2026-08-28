@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { ConfirmDeleteButton } from "@/ui/admin/confirm-delete-button";
 
 type OrderStatus = "CONFIRMED" | "CANCELLED";
 type PaymentStatus = "PENDING" | "AUTHORIZED" | "PAID" | "FAILED" | "REFUNDED";
@@ -150,6 +151,9 @@ type Labels = {
   customerAccount: string;
   updateStatus: string;
   deleteOrder: string;
+  cancel: string;
+  deleteConfirmTitle: string;
+  deleteConfirmDescription: string;
   operationFailed: string;
   loading: string;
   statusHistoryTitle: string;
@@ -1061,7 +1065,18 @@ export function OrderDetailManager({ locale, order, labels, canManage, accountOp
             </select>
           ) : null}
           <Button type="button" variant="secondary" onClick={updateStatus} disabled={loading}>{loading ? labels.loading : labels.updateStatus}</Button>
-          <Button type="button" variant="destructive" onClick={deleteOrder} disabled={loading}>{labels.deleteOrder}</Button>
+          <ConfirmDeleteButton
+            type="button"
+            variant="destructive"
+            disabled={loading}
+            onConfirm={deleteOrder}
+            title={labels.deleteConfirmTitle}
+            description={labels.deleteConfirmDescription}
+            confirmLabel={labels.deleteOrder}
+            cancelLabel={labels.cancel}
+          >
+            {labels.deleteOrder}
+          </ConfirmDeleteButton>
         </div>
       ) : null}
     </section>

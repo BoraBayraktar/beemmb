@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ConfirmDeleteButton } from "@/ui/admin/confirm-delete-button";
 
 type StorefrontItem = {
   id: string;
@@ -79,6 +80,8 @@ type Labels = {
   variantSoft: string;
   variantDark: string;
   variantDefault: string;
+  deleteConfirmTitle: string;
+  deleteConfirmDescription: string;
 };
 
 type Props = {
@@ -369,9 +372,19 @@ export function StorefrontManager({ items, productOptions, categoryOptions, labe
                   {labels.edit}
                 </Button>
                 {canDelete ? (
-                  <Button type="button" size="sm" variant="destructive" disabled={loading} onClick={() => deleteItem(item.id)}>
+                  <ConfirmDeleteButton
+                    type="button"
+                    size="sm"
+                    variant="destructive"
+                    disabled={loading}
+                    onConfirm={() => deleteItem(item.id)}
+                    title={labels.deleteConfirmTitle}
+                    description={labels.deleteConfirmDescription}
+                    confirmLabel={labels.delete}
+                    cancelLabel={labels.cancel}
+                  >
                     {labels.delete}
-                  </Button>
+                  </ConfirmDeleteButton>
                 ) : null}
               </div>
             </article>

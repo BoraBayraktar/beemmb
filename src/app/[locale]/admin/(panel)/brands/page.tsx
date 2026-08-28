@@ -77,6 +77,8 @@ export default async function AdminBrandsPage({
         opFailed: dictionary.admin.operationFailed,
         validationRequired: dictionary.admin.validationRequired,
         validationDeleteBlocked: "Bu marka aktif ürünlerde kullanıldığı için silinemez.",
+        deleteConfirmTitle: dictionary.admin.deleteConfirmTitle,
+        deleteConfirmDescription: dictionary.admin.deleteConfirmDescription,
         importCsv: dictionary.admin.importCsv,
         exportCsv: dictionary.admin.exportCsv,
       }}

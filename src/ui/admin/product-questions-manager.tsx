@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ConfirmDeleteButton } from "@/ui/admin/confirm-delete-button";
 
 type Labels = {
   title: string;
@@ -50,6 +51,9 @@ type Labels = {
   bulkAnswer: string;
   bulkDelete: string;
   bulkAnswerPlaceholder: string;
+  cancel: string;
+  deleteConfirmTitle: string;
+  deleteConfirmDescription: string;
 };
 type ProductQuestion = {
   id: string;
@@ -645,15 +649,19 @@ export function ProductQuestionsManager({
               >
                 {labels.bulkAnswer}
               </Button>
-              <Button
+              <ConfirmDeleteButton
                 type="button"
                 size="sm"
                 variant="destructive"
                 disabled={questionLoading || selectedQuestionIds.length === 0}
-                onClick={() => void bulkModerateQuestions("delete")}
+                onConfirm={() => void bulkModerateQuestions("delete")}
+                title={labels.deleteConfirmTitle}
+                description={labels.deleteConfirmDescription}
+                confirmLabel={labels.bulkDelete}
+                cancelLabel={labels.cancel}
               >
                 {labels.bulkDelete}
-              </Button>
+              </ConfirmDeleteButton>
             </div>
           </div>
 
@@ -733,9 +741,19 @@ export function ProductQuestionsManager({
                     <Button type="button" size="sm" disabled={questionLoading} onClick={() => answerQuestion(item.id)}>
                       {item.isAnswered ? labels.save : labels.answerQuestion}
                     </Button>
-                    <Button type="button" size="sm" variant="destructive" disabled={questionLoading} onClick={() => removeQuestion(item.id)}>
+                    <ConfirmDeleteButton
+                      type="button"
+                      size="sm"
+                      variant="destructive"
+                      disabled={questionLoading}
+                      onConfirm={() => removeQuestion(item.id)}
+                      title={labels.deleteConfirmTitle}
+                      description={labels.deleteConfirmDescription}
+                      confirmLabel={labels.removeQuestion}
+                      cancelLabel={labels.cancel}
+                    >
                       {labels.removeQuestion}
-                    </Button>
+                    </ConfirmDeleteButton>
                   </div>
                 </article>
               ))
