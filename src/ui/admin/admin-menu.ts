@@ -4,6 +4,8 @@ export type AdminMenuItem = {
   href: string;
   label: string;
   permissionKey?: string;
+  /** Sadece ust-seviye (grup) node'larda set edilir; children ModuleCatalog.key'ini mirasla alir (bkz. filterMenuByPermissionsAndEntitlements). */
+  moduleKey?: string;
   children?: AdminMenuItem[];
 };
 
@@ -13,6 +15,7 @@ export function buildAdminMenuTree(dictionary: Dictionary, locale: Locale): Admi
       href: `/${locale}/admin/products`,
       label: dictionary.admin.productManager,
       permissionKey: "products.read",
+      moduleKey: "products",
       children: [
         { href: `/${locale}/admin/products`, label: "Ürünler", permissionKey: "products.read" },
         { href: `/${locale}/admin/product-questions`, label: dictionary.admin.questionManager, permissionKey: "productQuestions.read" },
@@ -28,6 +31,7 @@ export function buildAdminMenuTree(dictionary: Dictionary, locale: Locale): Admi
       href: `/${locale}/admin/inventory`,
       label: dictionary.admin.inventoryManager,
       permissionKey: "inventory.read",
+      moduleKey: "inventory",
       children: [
         { href: `/${locale}/admin/inventory`, label: "Genel Bakış", permissionKey: "inventory.read" },
         { href: `/${locale}/admin/inventory/quick-actions`, label: "Hızlı Barkod İşlemleri", permissionKey: "inventoryQuickActions.manage" },
@@ -42,6 +46,7 @@ export function buildAdminMenuTree(dictionary: Dictionary, locale: Locale): Admi
       href: `/${locale}/admin/documents`,
       label: dictionary.admin.documentManager,
       permissionKey: "documents.read",
+      moduleKey: "documents",
       children: [
         { href: `/${locale}/admin/documents`, label: dictionary.admin.documentsMenuOverview, permissionKey: "documents.read" },
         { href: `/${locale}/admin/documents/pending-invoices`, label: dictionary.admin.documentsMenuPendingInvoices, permissionKey: "documentsPendingInvoices.manage" },
@@ -53,6 +58,7 @@ export function buildAdminMenuTree(dictionary: Dictionary, locale: Locale): Admi
       href: `/${locale}/admin/incoming-invoices`,
       label: "Gelen Faturalar",
       permissionKey: "incomingInvoices.read",
+      moduleKey: "incomingInvoices",
       children: [
         { href: `/${locale}/admin/incoming-invoices`, label: "Genel Bakış", permissionKey: "incomingInvoices.read" },
         { href: `/${locale}/admin/incoming-invoices/providers`, label: "Gelen Fatura Entegratörleri", permissionKey: "incomingInvoices.manage" },
@@ -62,6 +68,7 @@ export function buildAdminMenuTree(dictionary: Dictionary, locale: Locale): Admi
       href: `/${locale}/admin/finance`,
       label: dictionary.admin.financeManager,
       permissionKey: "finance.read",
+      moduleKey: "finance",
       children: [
         { href: `/${locale}/admin/finance`, label: dictionary.admin.financeMenuOverview, permissionKey: "finance.read" },
         { href: `/${locale}/admin/finance/payables`, label: dictionary.admin.financeMenuSupplierPayables, permissionKey: "financePayables.read" },
@@ -84,6 +91,7 @@ export function buildAdminMenuTree(dictionary: Dictionary, locale: Locale): Admi
       href: `/${locale}/admin/integrations`,
       label: dictionary.admin.integrationManager,
       permissionKey: "integrations.read",
+      moduleKey: "integrations",
       children: [
         { href: `/${locale}/admin/integrations`, label: dictionary.admin.integrationManager, permissionKey: "integrations.read" },
         { href: `/${locale}/admin/integrations/trendyol`, label: dictionary.admin.integrationMarketplaceTrendyol, permissionKey: "integrationsTrendyol.manage" },
@@ -97,6 +105,7 @@ export function buildAdminMenuTree(dictionary: Dictionary, locale: Locale): Admi
       href: `/${locale}/admin/users`,
       label: dictionary.admin.userManagerGroup,
       permissionKey: "customers.manage",
+      moduleKey: "system",
       children: [
         { href: `/${locale}/admin/customers`, label: dictionary.admin.customerManager, permissionKey: "customers.manage" },
         { href: `/${locale}/admin/users`, label: dictionary.admin.userManager, permissionKey: "systemUsers.manage" },
