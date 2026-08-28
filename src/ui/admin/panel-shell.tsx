@@ -56,7 +56,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
-import { LogoutButton } from "@/ui/admin/logout-button";
+import { UserAccountMenu, type AccountMenuLabels } from "@/ui/admin/user-account-menu";
 
 const SIDEBAR_COLLAPSED_STORAGE_KEY = "beemmb-admin-sidebar-collapsed";
 const ADMIN_THEME_STORAGE_KEY = "beemmb-admin-theme";
@@ -125,8 +125,8 @@ type Props = {
   userName: string;
   userEmail: string;
   userRole: string;
-  logoutLabel: string;
   loadingLabel: string;
+  accountMenu: AccountMenuLabels;
   storeLabel: string;
   notificationsLabel: string;
   noNotificationsLabel: string;
@@ -859,8 +859,8 @@ export function AdminPanelShell({
   userName,
   userEmail,
   userRole,
-  logoutLabel,
   loadingLabel,
+  accountMenu,
   storeLabel,
   notificationsLabel,
   noNotificationsLabel,
@@ -1307,7 +1307,7 @@ export function AdminPanelShell({
                           <ChevronRight className="h-4 w-4" />
                         </Link>
                       </Button>
-                      <LogoutButton locale={locale} label={logoutLabel} loadingLabel={loadingLabel} />
+                      <UserAccountMenu locale={locale} labels={accountMenu} />
                     </div>
                   </div>
                 </CardContent>
@@ -1413,7 +1413,7 @@ export function AdminPanelShell({
                     </div>
                   </>
                 )}
-                <LogoutButton locale={locale} label={logoutLabel} loadingLabel={loadingLabel} />
+                <UserAccountMenu locale={locale} labels={accountMenu} />
               </div>
             </Card>
           </aside>

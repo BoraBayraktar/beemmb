@@ -101,8 +101,25 @@ export default async function AdminPanelLayout({
       userName={user.name}
       userEmail={user.email}
       userRole={localizedRole}
-      logoutLabel={dictionary.admin.logout}
       loadingLabel={dictionary.common.loading}
+      accountMenu={{
+        menuLabel: dictionary.admin.accountMenuLabel,
+        logout: dictionary.admin.logout,
+        loading: dictionary.common.loading,
+        changePassword: dictionary.admin.changePassword,
+        changePasswordDescription: dictionary.admin.changePasswordDescription,
+        currentPassword: dictionary.admin.currentPassword,
+        newPassword: dictionary.admin.newPassword,
+        confirmNewPassword: dictionary.admin.confirmNewPassword,
+        save: dictionary.admin.save,
+        cancel: dictionary.admin.cancel,
+        passwordMismatch: dictionary.admin.passwordMismatch,
+        changePasswordSuccess: dictionary.admin.changePasswordSuccess,
+        currentPasswordInvalid: dictionary.admin.currentPasswordInvalid,
+        passwordReuseNotAllowed: dictionary.admin.passwordReuseNotAllowed,
+        passwordTooShort: dictionary.admin.passwordTooShort,
+        operationFailed: dictionary.admin.operationFailed,
+      }}
       storeLabel={dictionary.admin.goStore}
       notificationsLabel={dictionary.admin.notifications}
       noNotificationsLabel={dictionary.admin.noNotifications}

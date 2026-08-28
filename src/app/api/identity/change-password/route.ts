@@ -39,17 +39,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof ZodError) {
-      return NextResponse.json({ message: error.issues[0]?.message ?? "Validation failed" }, { status: 400 });
+      return NextResponse.json({ message: "VALIDATION_FAILED" }, { status: 400 });
     }
 
     if (error instanceof Error && error.message === "CURRENT_PASSWORD_INVALID") {
-      return NextResponse.json({ message: "Current password invalid" }, { status: 400 });
+      return NextResponse.json({ message: "CURRENT_PASSWORD_INVALID" }, { status: 400 });
     }
 
     if (error instanceof Error && error.message === "PASSWORD_REUSE_NOT_ALLOWED") {
-      return NextResponse.json({ message: "Password reuse not allowed" }, { status: 400 });
+      return NextResponse.json({ message: "PASSWORD_REUSE_NOT_ALLOWED" }, { status: 400 });
     }
 
-    return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
+    return NextResponse.json({ message: "UNEXPECTED_ERROR" }, { status: 500 });
   }
 }
