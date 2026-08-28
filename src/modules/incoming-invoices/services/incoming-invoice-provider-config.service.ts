@@ -1,5 +1,8 @@
+import { createHmac } from "node:crypto";
+
 import { z } from "zod";
 
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { documentProviderCryptoService } from "@/modules/documents/services/document-provider-crypto.service";
 import type {
   AdminIncomingInvoiceProviderConfigItem,
@@ -7,6 +10,7 @@ import type {
 } from "@/modules/incoming-invoices/contracts/incoming-invoice.contract";
 import { IncomingInvoiceRepository, incomingInvoiceRepository } from "@/modules/incoming-invoices/repositories/incoming-invoice.repository";
 import { incomingEDocumentProviderRegistryService } from "@/modules/incoming-invoices/services/incoming-invoice-provider-registry.service";
+import { platformService } from "@/modules/platform/services/platform.service";
 
 const upsertSchema = z.object({
   id: z.string().trim().min(1).optional(),
@@ -26,6 +30,15 @@ export class IncomingInvoiceProviderConfigError extends Error {
     super(message);
     this.name = "IncomingInvoiceProviderConfigError";
   }
+}
+
+function verifyIncomingInvoiceWebhookSignature(rawBody: string, signature: string | null, webhookSecret: string | null) {
+  if (!webhookSecret || !signature) {
+    return false;
+  }
+
+  const digest = createHmac("sha256", webhookSecret).update(rawBody).digest("hex");
+  return documentProviderCryptoService.compareSecret(digest, signature);
 }
 
 function maskSecret(value: string | null | undefined) {
@@ -82,6 +95,32 @@ export class IncomingInvoiceProviderConfigService {
       id: config.id,
       webhookSecret: documentProviderCryptoService.decrypt(config.webhookSecret),
     };
+  }
+
+  /**
+   * IncomingInvoiceProviderConfig tenant-scoped (Faz 1 / Dalga 14); ayni
+   * providerCode'u birden fazla tenant kendi hesabiyla baglayabilir. Webhook'ta
+   * oturum olmadigindan (HMAC imza ile korunuyor) hangi tenant'a ait oldugu
+   * URL'den degil, imzanin HANGI tenant'in webhookSecret'iyla eslestiginden
+   * cikarilir -- her aktif tenant sirayla denenir, ilk eslesen kazanir.
+   */
+  async resolveTenantAndProviderForWebhook(providerCode: string, rawBody: string, signature: string | null) {
+    const tenants = await platformService.listTenants();
+
+    for (const tenant of tenants) {
+      if (tenant.status === "SUSPENDED" || tenant.status === "ARCHIVED") {
+        continue;
+      }
+
+      const config = await runWithTenantContext({ tenantId: tenant.id, isPlatformOperator: false }, () =>
+        this.resolveActiveProviderForWebhook(providerCode));
+
+      if (config && verifyIncomingInvoiceWebhookSignature(rawBody, signature, config.webhookSecret)) {
+        return { tenantId: tenant.id, config };
+      }
+    }
+
+    return null;
   }
 
   async upsertProviderConfig(input: AdminUpsertIncomingInvoiceProviderConfigInput): Promise<AdminIncomingInvoiceProviderConfigItem> {
