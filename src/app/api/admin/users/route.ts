@@ -76,6 +76,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: error.message }, { status: 409 });
     }
 
+    if (error instanceof Error && error.message.includes("Unique constraint failed") && error.message.includes("email")) {
+      return NextResponse.json({ message: "Bu e-posta adresi zaten kullanılıyor." }, { status: 409 });
+    }
+
     return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
   }
 }

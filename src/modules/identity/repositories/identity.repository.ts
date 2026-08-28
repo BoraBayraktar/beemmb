@@ -145,6 +145,43 @@ export class IdentityRepository {
     passwordHash: string;
     tenantId?: string;
   }) {
+    // E-posta global @unique -- soft-delete edilmis bir kullanicinin satiri
+    // fiziksel olarak var olmaya devam eder ve ayni e-postayla yeni kayit
+    // acmayi P2002 ile engeller. Admin acisindan "sil, sonra ayni kisiyi
+    // tekrar ekle" gayet normal bir akis oldugundan, sadece soft-delete
+    // edilmis bir catisma varsa o satir CANLANDIRILIR (yeni bilgilerle
+    // update edilir) -- silinmemis bir catisma varsa dogal P2002 firlar,
+    // servis katmani bunu net bir hataya cevirir.
+    const existing = await prisma.user.findFirst({ where: { email: input.email }, select: { id: true, deleted: true } });
+    if (existing?.deleted) {
+      return prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          tenantId: input.tenantId ?? PLATFORM_TENANT_ID,
+          name: input.name,
+          role: input.role,
+          passwordHash: input.passwordHash,
+          deleted: false,
+          deletedDate: null,
+          deletedUserId: null,
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          createdAt: true,
+          roleAssignments: {
+            where: { role: { deleted: false } },
+            select: {
+              roleId: true,
+              role: { select: { name: true } },
+            },
+          },
+        },
+      });
+    }
+
     return prisma.user.create({
       data: {
         tenantId: input.tenantId ?? PLATFORM_TENANT_ID,
