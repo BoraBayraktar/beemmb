@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { redisCache } from "@/lib/redis";
 import { buildTenantCacheKey } from "@/lib/cache-key";
+import { runWithTenantContext } from "@/lib/tenant-context";
 import { IdentityRepository } from "@/modules/identity/repositories/identity.repository";
 import { PlatformRepository } from "@/modules/platform/repositories/platform.repository";
 
@@ -152,6 +153,34 @@ export class PlatformService {
 
     await redisCache.set(cacheKey, enabledKeys, ENTITLEMENT_CACHE_TTL_SECONDS);
     return new Set(enabledKeys);
+  }
+
+  /**
+   * Sistem cron/job endpoint'leri (oturumsuz, paylasilan secret ile korunur)
+   * icin: her aktif (ACTIVE/TRIAL) tenant sirayla kendi runWithTenantContext'i
+   * icinde `fn` ile calistirilir. Bir tenant hata verirse digerlerini
+   * engellemez -- hata sonuc listesinde tenant'a karsi toplanir. Elle
+   * provizyon modelinde (DEVELOPMENT_RULES.md madde 7) kucuk/orta tenant
+   * sayisi icin bu O(n) tarama kabul edilebilir bir maliyettir.
+   */
+  async runForEachActiveTenant<T>(fn: () => Promise<T>): Promise<Array<{ tenantId: string; result: T } | { tenantId: string; error: string }>> {
+    const tenants = await this.repository.listTenants();
+    const outcomes: Array<{ tenantId: string; result: T } | { tenantId: string; error: string }> = [];
+
+    for (const tenant of tenants) {
+      if (tenant.status === "SUSPENDED" || tenant.status === "ARCHIVED") {
+        continue;
+      }
+
+      try {
+        const result = await runWithTenantContext({ tenantId: tenant.id, isPlatformOperator: true }, fn);
+        outcomes.push({ tenantId: tenant.id, result });
+      } catch (error) {
+        outcomes.push({ tenantId: tenant.id, error: error instanceof Error ? error.message : String(error) });
+      }
+    }
+
+    return outcomes;
   }
 }
 

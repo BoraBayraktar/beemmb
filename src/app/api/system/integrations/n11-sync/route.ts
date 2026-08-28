@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
-import { runWithTenantContext } from "@/lib/tenant-context";
-import { PLATFORM_TENANT_ID } from "@/lib/tenant-defaults";
 import { isMarketplaceSystemRequestAuthorized } from "@/modules/integration/services/marketplace-system-auth.service";
 import { marketplaceIntegrationService } from "@/modules/integration/services/marketplace-integration.service";
+import { platformService } from "@/modules/platform/services/platform.service";
 
 async function handle(request: Request) {
   if (!isMarketplaceSystemRequestAuthorized(request)) {
@@ -13,21 +12,20 @@ async function handle(request: Request) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const result = await runWithTenantContext(
-      { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: true },
-      () => marketplaceIntegrationService.scheduleActiveN11Imports({
-        processQueue: searchParams.get("processQueue") !== "false",
-        limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : 20,
-        followUpTasks: searchParams.get("followUpTasks") !== "false",
-        taskLimit: searchParams.get("taskLimit") ? Number(searchParams.get("taskLimit")) : undefined,
-        taskMinCheckIntervalMinutes: searchParams.get("taskMinCheckIntervalMinutes")
-          ? Number(searchParams.get("taskMinCheckIntervalMinutes"))
-          : undefined,
-        status: searchParams.get("status") ?? undefined,
-      }),
-    );
+    // Sistem cron'u (paylasilan secret, oturumsuz) -- her aktif tenant icin
+    // ayri ayri calistirilir (bkz. trendyol-sync route'undaki ayni desen).
+    const outcomes = await platformService.runForEachActiveTenant(() => marketplaceIntegrationService.scheduleActiveN11Imports({
+      processQueue: searchParams.get("processQueue") !== "false",
+      limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : 20,
+      followUpTasks: searchParams.get("followUpTasks") !== "false",
+      taskLimit: searchParams.get("taskLimit") ? Number(searchParams.get("taskLimit")) : undefined,
+      taskMinCheckIntervalMinutes: searchParams.get("taskMinCheckIntervalMinutes")
+        ? Number(searchParams.get("taskMinCheckIntervalMinutes"))
+        : undefined,
+      status: searchParams.get("status") ?? undefined,
+    }));
 
-    return NextResponse.json(result);
+    return NextResponse.json({ tenants: outcomes });
   } catch (error) {
     if (error instanceof ZodError) {
       return NextResponse.json({ message: error.issues[0]?.message ?? "Validation failed" }, { status: 400 });

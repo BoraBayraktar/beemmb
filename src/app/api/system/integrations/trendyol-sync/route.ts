@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
-import { runWithTenantContext } from "@/lib/tenant-context";
-import { PLATFORM_TENANT_ID } from "@/lib/tenant-defaults";
 import { isMarketplaceSystemRequestAuthorized } from "@/modules/integration/services/marketplace-system-auth.service";
 import { marketplaceIntegrationService } from "@/modules/integration/services/marketplace-integration.service";
+import { platformService } from "@/modules/platform/services/platform.service";
 
 async function handle(request: Request) {
   if (!isMarketplaceSystemRequestAuthorized(request)) {
@@ -13,26 +12,21 @@ async function handle(request: Request) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const result = await runWithTenantContext(
-      // Sistem cron'u (paylasilan secret, oturumsuz), platform tenant'ina
-      // kasitli olarak sabittir. Pazaryeri entegrasyon config'leri artik
-      // tenant-scoped (Faz 1 / Dalga 15), ama bu cron sadece platform
-      // tenant'inin config'lerini gorur/isler. Coklu tenant provizyonu
-      // (Faz 2) sonrasi bu cron'un her tenant icin ayrica calistirilmasi
-      // veya tenant listesi uzerinde donmesi gerekir.
-      { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: true },
-      () => marketplaceIntegrationService.scheduleActiveTrendyolImports({
-        processQueue: searchParams.get("processQueue") !== "false",
-        limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : 20,
-        followUpBatches: searchParams.get("followUpBatches") !== "false",
-        batchLimit: searchParams.get("batchLimit") ? Number(searchParams.get("batchLimit")) : undefined,
-        batchMinCheckIntervalMinutes: searchParams.get("batchMinCheckIntervalMinutes")
-          ? Number(searchParams.get("batchMinCheckIntervalMinutes"))
-          : undefined,
-      }),
-    );
+    // Sistem cron'u (paylasilan secret, oturumsuz). Pazaryeri entegrasyon
+    // config'leri tenant-scoped (Faz 1 / Dalga 15) -- her aktif tenant icin
+    // ayri ayri calistirilir, boylece Trendyol'u baglayan HER tenant senkron
+    // olur, sadece platform tenant'i degil.
+    const outcomes = await platformService.runForEachActiveTenant(() => marketplaceIntegrationService.scheduleActiveTrendyolImports({
+      processQueue: searchParams.get("processQueue") !== "false",
+      limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : 20,
+      followUpBatches: searchParams.get("followUpBatches") !== "false",
+      batchLimit: searchParams.get("batchLimit") ? Number(searchParams.get("batchLimit")) : undefined,
+      batchMinCheckIntervalMinutes: searchParams.get("batchMinCheckIntervalMinutes")
+        ? Number(searchParams.get("batchMinCheckIntervalMinutes"))
+        : undefined,
+    }));
 
-    return NextResponse.json(result);
+    return NextResponse.json({ tenants: outcomes });
   } catch (error) {
     if (error instanceof ZodError) {
       return NextResponse.json({ message: error.issues[0]?.message ?? "Validation failed" }, { status: 400 });
