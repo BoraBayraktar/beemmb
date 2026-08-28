@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
-import { runWithTenantContext } from "@/lib/tenant-context";
-import { PLATFORM_TENANT_ID } from "@/lib/tenant-defaults";
 import { isMarketplaceSystemRequestAuthorized } from "@/modules/integration/services/marketplace-system-auth.service";
 import { trendyolStockSyncService } from "@/modules/integration/services/trendyol-stock-sync.service";
+import { platformService } from "@/modules/platform/services/platform.service";
 
 async function handle(request: Request) {
   if (!isMarketplaceSystemRequestAuthorized(request)) {
@@ -13,17 +12,16 @@ async function handle(request: Request) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const result = await runWithTenantContext(
-      { tenantId: PLATFORM_TENANT_ID, isPlatformOperator: true },
-      () => trendyolStockSyncService.followUpPendingBatches({
-        limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : undefined,
-        minCheckIntervalMinutes: searchParams.get("minCheckIntervalMinutes")
-          ? Number(searchParams.get("minCheckIntervalMinutes"))
-          : undefined,
-      }),
-    );
+    // Sistem cron'u (paylasilan secret, oturumsuz) -- her aktif tenant icin
+    // ayri ayri calistirilir (bkz. trendyol-sync route'undaki ayni desen).
+    const outcomes = await platformService.runForEachActiveTenant(() => trendyolStockSyncService.followUpPendingBatches({
+      limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : undefined,
+      minCheckIntervalMinutes: searchParams.get("minCheckIntervalMinutes")
+        ? Number(searchParams.get("minCheckIntervalMinutes"))
+        : undefined,
+    }));
 
-    return NextResponse.json(result);
+    return NextResponse.json({ tenants: outcomes });
   } catch (error) {
     if (error instanceof ZodError) {
       return NextResponse.json({ message: error.issues[0]?.message ?? "Validation failed" }, { status: 400 });
