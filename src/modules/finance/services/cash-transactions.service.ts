@@ -34,18 +34,18 @@ const incomeExpenseReportQuerySchema = z.object({
 });
 
 const createCashTransactionSchema = z.object({
-  accountId: z.string().trim().min(1),
-  direction: z.enum(["IN", "OUT", "TRANSFER"]),
-  sourceType: z.enum(["MANUAL", "COLLECTION", "PAYMENT", "TRANSFER", "ORDER", "DOCUMENT", "REFUND"]).default("MANUAL"),
-  category: z.enum(["GENERAL_INCOME", "GENERAL_EXPENSE", "MARKETPLACE_COMMISSION", "SHIPPING_EXPENSE", "SERVICE_FEE", "REFUND", "TRANSFER"]).optional(),
+  accountId: z.string().trim().min(1, "Finans hesabı seçilmelidir."),
+  direction: z.enum(["IN", "OUT", "TRANSFER"], { error: "Hareket yönü seçilmelidir." }),
+  sourceType: z.enum(["MANUAL", "COLLECTION", "PAYMENT", "TRANSFER", "ORDER", "DOCUMENT", "REFUND"], { error: "Kaynak tipi seçilmelidir." }).default("MANUAL"),
+  category: z.enum(["GENERAL_INCOME", "GENERAL_EXPENSE", "MARKETPLACE_COMMISSION", "SHIPPING_EXPENSE", "SERVICE_FEE", "REFUND", "TRANSFER"], { error: "Kategori seçilmelidir." }).optional(),
   targetAccountId: z.string().trim().optional(),
   sourceReferenceId: z.string().trim().optional(),
-  amount: z.coerce.number().positive(),
+  amount: z.coerce.number({ error: "Tutar geçerli bir sayı olmalıdır." }).positive("Tutar sıfırdan büyük olmalıdır."),
   transactionAt: z.string().datetime().optional(),
-  title: z.string().trim().min(2).max(160),
-  note: z.string().trim().max(500).optional().nullable(),
+  title: z.string().trim().min(2, "Hareket başlığı en az 2 karakter olmalıdır.").max(160, "Hareket başlığı en fazla 160 karakter olabilir."),
+  note: z.string().trim().max(500, "Not en fazla 500 karakter olabilir.").optional().nullable(),
   cariId: z.string().trim().optional().nullable(),
-  counterpartyName: z.string().trim().max(160).optional().nullable(),
+  counterpartyName: z.string().trim().max(160, "Karşı taraf adı en fazla 160 karakter olabilir.").optional().nullable(),
   recordedByUserId: z.string().trim().min(1).optional().nullable(),
 });
 
