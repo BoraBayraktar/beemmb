@@ -407,6 +407,32 @@ export class FinanceRepository {
     });
   }
 
+  async listCashTransactionsWithCari() {
+    return ((prisma as any).cashTransaction).findMany({
+      where: {
+        deleted: false,
+        status: "RECORDED",
+        cariId: {
+          not: null,
+        },
+      },
+      include: {
+        cari: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+      },
+      orderBy: [
+        { transactionAt: "desc" },
+        { createdAt: "desc" },
+      ],
+      take: 200,
+    });
+  }
+
   async listBusinessDocumentsForCari(cariId: string) {
     return prisma.businessDocument.findMany({
       where: {

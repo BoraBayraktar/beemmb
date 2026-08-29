@@ -7,7 +7,9 @@ import { MoreHorizontal, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { AdminFinanceAccountsResult, AdminFinanceAccountEntryType } from "@/modules/finance/contracts/accounts.contract";
+import type { AdminFinanceAccountsResult, AdminFinanceAccountsQuery } from "@/modules/finance/contracts/accounts.contract";
+
+type FilterType = NonNullable<AdminFinanceAccountsQuery["type"]>;
 
 type Labels = {
   title: string;
@@ -16,10 +18,16 @@ type Labels = {
   allTypes: string;
   receivable: string;
   payable: string;
+  cash: string;
+  cashIn: string;
+  cashOut: string;
   receivableCount: string;
   payableCount: string;
+  cashMovementCount: string;
   totalReceivableAmount: string;
   totalPayableAmount: string;
+  totalCashInAmount: string;
+  totalCashOutAmount: string;
   counterparty: string;
   sourceNumber: string;
   sourceDate: string;
@@ -38,7 +46,7 @@ type Props = {
   locale: string;
   result: AdminFinanceAccountsResult;
   initialSearch: string;
-  initialType: "all" | AdminFinanceAccountEntryType;
+  initialType: FilterType;
   labels: Labels;
 };
 
@@ -57,7 +65,7 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-function buildTypeHref(locale: string, type: "all" | AdminFinanceAccountEntryType, search: string) {
+function buildTypeHref(locale: string, type: FilterType, search: string) {
   const params = new URLSearchParams();
   if (type !== "all") {
     params.set("type", type);
@@ -67,6 +75,31 @@ function buildTypeHref(locale: string, type: "all" | AdminFinanceAccountEntryTyp
   }
   const query = params.toString();
   return query ? `/${locale}/admin/finance/accounts?${query}` : `/${locale}/admin/finance/accounts`;
+}
+
+function typeBadgeClassName(type: AdminFinanceAccountsResult["items"][number]["type"]) {
+  switch (type) {
+    case "RECEIVABLE":
+    case "CASH_IN":
+      return "border-emerald-200 bg-emerald-100 text-emerald-700";
+    default:
+      return "border-amber-200 bg-amber-100 text-amber-700";
+  }
+}
+
+function typeLabel(type: AdminFinanceAccountsResult["items"][number]["type"], labels: Labels) {
+  switch (type) {
+    case "RECEIVABLE":
+      return labels.receivable;
+    case "PAYABLE":
+      return labels.payable;
+    case "CASH_IN":
+      return labels.cashIn;
+    case "CASH_OUT":
+      return labels.cashOut;
+    default:
+      return type;
+  }
 }
 
 function formatStatusLabel(value: string) {
@@ -80,6 +113,10 @@ function formatStatusLabel(value: string) {
 
   if (value === "FAILED") {
     return "Başarısız ödeme";
+  }
+
+  if (value === "RECORDED") {
+    return "Kaydedildi";
   }
 
   return value;
@@ -121,24 +158,25 @@ export function FinanceAccountsManager({ locale, result, initialSearch, initialT
           <Link href={buildTypeHref(locale, "all", initialSearch)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialType === "all" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)] hover:text-[color:var(--color-text)]"}`}>{labels.allTypes}</Link>
           <Link href={buildTypeHref(locale, "RECEIVABLE", initialSearch)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialType === "RECEIVABLE" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)] hover:text-[color:var(--color-text)]"}`}>{labels.receivable}</Link>
           <Link href={buildTypeHref(locale, "PAYABLE", initialSearch)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialType === "PAYABLE" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)] hover:text-[color:var(--color-text)]"}`}>{labels.payable}</Link>
+          <Link href={buildTypeHref(locale, "CASH", initialSearch)} className={`rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors ${initialType === "CASH" ? "bg-neutral-950 !text-white hover:!text-white" : "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text)] hover:text-[color:var(--color-text)]"}`}>{labels.cash}</Link>
         </div>
 
-        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           <article className="rounded-3xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">{labels.totalReceivableAmount}</p>
             <p className="mt-3 text-2xl font-semibold text-emerald-950">{formatMoney(result.summary.totalReceivableAmount, result.summary.currency)}</p>
+            <p className="mt-1 text-xs text-emerald-700">{labels.receivableCount}: {result.summary.receivableCount}</p>
           </article>
           <article className="rounded-3xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">{labels.totalPayableAmount}</p>
             <p className="mt-3 text-2xl font-semibold text-amber-950">{formatMoney(result.summary.totalPayableAmount, result.summary.currency)}</p>
+            <p className="mt-1 text-xs text-amber-700">{labels.payableCount}: {result.summary.payableCount}</p>
           </article>
           <article className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.receivableCount}</p>
-            <p className="mt-3 text-2xl font-semibold text-[color:var(--color-text)]">{result.summary.receivableCount}</p>
-          </article>
-          <article className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.payableCount}</p>
-            <p className="mt-3 text-2xl font-semibold text-[color:var(--color-text)]">{result.summary.payableCount}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{labels.cash}</p>
+            <p className="mt-3 text-lg font-semibold text-emerald-700">+{formatMoney(result.summary.totalCashInAmount, result.summary.currency)}</p>
+            <p className="text-lg font-semibold text-amber-700">-{formatMoney(result.summary.totalCashOutAmount, result.summary.currency)}</p>
+            <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{labels.cashMovementCount}: {result.summary.cashMovementCount}</p>
           </article>
         </div>
 
@@ -159,8 +197,8 @@ export function FinanceAccountsManager({ locale, result, initialSearch, initialT
               {result.items.map((item) => (
                 <article key={item.id} className="grid gap-4 p-4 lg:grid-cols-[130px_1.2fr_1fr_180px_180px_88px] lg:items-center">
                   <div>
-                    <Badge className={item.type === "RECEIVABLE" ? "border-emerald-200 bg-emerald-100 text-emerald-700" : "border-amber-200 bg-amber-100 text-amber-700"}>
-                      {item.type === "RECEIVABLE" ? labels.receivable : labels.payable}
+                    <Badge className={typeBadgeClassName(item.type)}>
+                      {typeLabel(item.type, labels)}
                     </Badge>
                   </div>
                   <div>
@@ -249,8 +287,8 @@ export function FinanceAccountsManager({ locale, result, initialSearch, initialT
 
             <div className="grid gap-4 p-5">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge className={selectedItem.type === "RECEIVABLE" ? "border-emerald-200 bg-emerald-100 text-emerald-700" : "border-amber-200 bg-amber-100 text-amber-700"}>
-                  {selectedItem.type === "RECEIVABLE" ? labels.receivable : labels.payable}
+                <Badge className={typeBadgeClassName(selectedItem.type)}>
+                  {typeLabel(selectedItem.type, labels)}
                 </Badge>
               </div>
               <div className="grid gap-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">

@@ -33,7 +33,9 @@ export default async function AdminFinanceAccountsPage({
 
   const dictionary = getDictionary(locale as Locale);
   const type =
-    resolvedSearchParams.type === "RECEIVABLE" || resolvedSearchParams.type === "PAYABLE"
+    resolvedSearchParams.type === "RECEIVABLE"
+    || resolvedSearchParams.type === "PAYABLE"
+    || resolvedSearchParams.type === "CASH"
       ? resolvedSearchParams.type
       : "all";
 
@@ -58,10 +60,16 @@ export default async function AdminFinanceAccountsPage({
         allTypes: dictionary.admin.financeAccountsAllTypes,
         receivable: dictionary.admin.financeAccountsReceivable,
         payable: dictionary.admin.financeAccountsPayable,
+        cash: dictionary.admin.financeAccountsCash,
+        cashIn: dictionary.admin.financeAccountsCashIn,
+        cashOut: dictionary.admin.financeAccountsCashOut,
         receivableCount: dictionary.admin.financeAccountsReceivableCount,
         payableCount: dictionary.admin.financeAccountsPayableCount,
+        cashMovementCount: dictionary.admin.financeAccountsCashMovementCount,
         totalReceivableAmount: dictionary.admin.financeAccountsTotalReceivableAmount,
         totalPayableAmount: dictionary.admin.financeAccountsTotalPayableAmount,
+        totalCashInAmount: dictionary.admin.financeAccountsTotalCashInAmount,
+        totalCashOutAmount: dictionary.admin.financeAccountsTotalCashOutAmount,
         counterparty: dictionary.admin.documentsCounterparty,
         sourceNumber: dictionary.admin.financeAccountsSourceNumber,
         sourceDate: dictionary.admin.financeAccountsSourceDate,
