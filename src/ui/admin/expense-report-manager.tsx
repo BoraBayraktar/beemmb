@@ -333,6 +333,19 @@ export function ExpenseReportManager({
     }
   }
 
+  function closeDrawer() {
+    const current = detail;
+    setDetail(null);
+
+    // Kullanici "Yeni Bildirim" ile bos bir taslak olusturup hic kalem eklemeden
+    // kapatirsa, bu bos taslak listede anlamsiz "0,00 TL" satirlar olarak
+    // birikmesin diye sessizce silinir -- zaten hicbir kaleme sahip degil,
+    // kaybedilecek bir veri yok.
+    if (current && current.status === "DRAFT" && current.items.length === 0) {
+      void fetch(`/api/admin/expense-reports/${current.id}`, { method: "DELETE" }).then(() => refreshList());
+    }
+  }
+
   async function discardDraft() {
     if (!detail) return;
     if (!window.confirm("Bu taslağı silmek istediğinize emin misiniz?")) {
@@ -423,11 +436,11 @@ export function ExpenseReportManager({
       </section>
 
       {detail || detailLoading ? (
-        <div className="fixed inset-0 z-30 flex justify-end bg-black/30" onClick={() => setDetail(null)}>
+        <div className="fixed inset-0 z-30 flex justify-end bg-black/30" onClick={closeDrawer}>
           <div className="h-full w-full max-w-xl overflow-y-auto bg-[color:var(--color-surface)] p-6 shadow-2xl" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-[color:var(--color-text)]">{detail ? detail.reportNumber : "Yükleniyor..."}</h2>
-              <Button type="button" variant="ghost" onClick={() => setDetail(null)}>Kapat</Button>
+              <Button type="button" variant="ghost" onClick={closeDrawer}>Kapat</Button>
             </div>
 
             {detail ? (
