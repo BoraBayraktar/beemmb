@@ -193,6 +193,7 @@ export function buildAdminMenuTree(dictionary: Dictionary, locale: Locale): Admi
         { href: `/${locale}/admin/expense-reports`, label: dictionary.admin.expenseReportsMenuMine, permissionKey: "expenseReports.submit" },
         { href: `/${locale}/admin/expense-reports/approvals`, label: dictionary.admin.expenseReportsMenuApprovals, permissionKey: "expenseReports.approve" },
         { href: `/${locale}/admin/expense-reports/all`, label: dictionary.admin.expenseReportsMenuAll, permissionKey: "expenseReports.manage" },
+        { href: `/${locale}/admin/expense-reports/report`, label: dictionary.admin.expenseReportsMenuReport, permissionKey: "expenseReports.manage" },
         { href: `/${locale}/admin/expense-reports/settings`, label: dictionary.admin.expenseReportsMenuSettings, permissionKey: "expenseSettings.manage" },
       ],
     },

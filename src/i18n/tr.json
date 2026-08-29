@@ -2031,6 +2031,7 @@
     "expenseReportsMenuMine": "Bildirimlerim",
     "expenseReportsMenuApprovals": "Onay Bekleyenler",
     "expenseReportsMenuAll": "Tüm Bildirimler",
+    "expenseReportsMenuReport": "Raporlar",
     "expenseReportsMenuSettings": "Masraf Ayarları",
     "expenseReportsEmpty": "Henüz bir masraf bildiriminiz yok.",
     "expenseReportsEmptyCta": "Yeni Bildirim",
@@ -2079,6 +2080,19 @@
     "expenseReportsApprovalsEmpty": "Onayınızı bekleyen masraf bildirimi yok.",
     "expenseReportsAllEmpty": "Kayıtlı masraf bildirimi bulunamadı.",
     "notificationExpenseReportSubmittedTitle": "Yeni masraf bildirimi onayınızı bekliyor",
-    "notificationExpenseReportDecidedTitle": "Masraf bildiriminiz karara bağlandı"
+    "notificationExpenseReportDecidedTitle": "Masraf bildiriminiz karara bağlandı",
+    "expenseReportsAnalyticsTitle": "Masraf Raporları",
+    "expenseReportsAnalyticsDescription": "Onaylanan harcamaların analizi ve tüm masraf kalemlerinin tam listesi.",
+    "expenseAnalyticsTotalApproved": "Toplam Onaylı Harcama",
+    "expenseAnalyticsApprovedReports": "Onaylı Bildirim Sayısı",
+    "expenseAnalyticsAveragePerReport": "Bildirim Başına Ortalama",
+    "expenseAnalyticsByCategoryTitle": "Kategoriye Göre Harcama",
+    "expenseAnalyticsByEmployeeTitle": "Personele Göre Harcama",
+    "expenseAnalyticsMonthlyTrendTitle": "Aylık Harcama Trendi (Son 12 Ay)",
+    "expenseAnalyticsEmpty": "Onaylanmış harcama verisi henüz yok.",
+    "expenseItemReportListTitle": "Tüm Masraf Kalemleri",
+    "expenseItemReportEmpty": "Kayıtlı masraf kalemi bulunamadı.",
+    "expenseItemReportViewReceipt": "Görseli Görüntüle",
+    "expenseItemReportNoReceipt": "Görsel yok"
   }
 }
