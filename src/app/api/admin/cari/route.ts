@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     }
 
     if (error instanceof ZodError) {
-      return NextResponse.json({ message: error.issues[0]?.message ?? "Validation failed" }, { status: 400 });
+      return NextResponse.json({ message: error.issues[0]?.message ?? "Doğrulama hatası oluştu." }, { status: 400 });
     }
 
     if (error instanceof DuplicateCariSlugError) {

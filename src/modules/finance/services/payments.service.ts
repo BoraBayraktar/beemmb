@@ -15,12 +15,14 @@ import { payablesService } from "@/modules/finance/services/payables.service";
 import { financeCounterpartyFinanceTermsService } from "@/modules/finance/services/finance-counterparty-finance-terms.service";
 import { resolveFinanceServiceMessages } from "@/modules/finance/services/finance-service-messages.resolver";
 
+const requiredString = (message: string) => z.string({ error: message }).trim().min(1, message);
+
 const createPaymentRecordSchema = z.object({
-  supplierId: z.string().trim().min(1),
-  financialAccountId: z.string().trim().min(1),
-  amount: z.coerce.number().positive(),
-  paidAt: z.string().datetime(),
-  note: z.string().trim().max(500).optional().nullable(),
+  supplierId: requiredString("Tedarikçi seçilmelidir."),
+  financialAccountId: requiredString("Finans hesabı seçilmelidir."),
+  amount: z.coerce.number({ error: "Tutar geçerli bir sayı olmalıdır." }).positive("Tutar sıfırdan büyük olmalıdır."),
+  paidAt: z.string().datetime("Geçerli bir tarih/saat giriniz."),
+  note: z.string().trim().max(500, "Not en fazla 500 karakter olabilir.").optional().nullable(),
   recordedByUserId: z.string().trim().min(1),
 });
 

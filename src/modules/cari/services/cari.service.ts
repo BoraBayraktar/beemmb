@@ -13,34 +13,36 @@ import { buildTenantCacheKey } from "@/lib/cache-key";
 import { redisCache } from "@/lib/redis";
 import { requireTenantId } from "@/lib/tenant-context";
 
-const optionalTrimmed = (max: number) => z.string().trim().max(max).optional().nullable().or(z.literal("")).transform((value) => value || null);
+const optionalTrimmed = (max: number, label: string) => z.string().trim().max(max, `${label} en fazla ${max} karakter olabilir.`).optional().nullable().or(z.literal("")).transform((value) => value || null);
+const emailField = (label: string) => z.string().trim().email(`Geçerli bir ${label} giriniz.`).max(160, `${label} en fazla 160 karakter olabilir.`).optional().nullable().or(z.literal("")).transform((value) => value || null);
+const requiredString = (message: string) => z.string({ error: message }).trim().min(1, message);
 
 const createCariSchema = z.object({
-  slug: z.string().trim().min(1).max(120),
-  name: z.string().trim().min(2).max(160),
-  email: z.string().trim().email().max(160).optional().nullable().or(z.literal("")).transform((value) => value || null),
-  phone: optionalTrimmed(64),
-  taxNumber: optionalTrimmed(64),
-  taxOffice: optionalTrimmed(120),
-  photoUrl: z.string().trim().url().max(2048).optional().nullable().or(z.literal("")).transform((value) => value || null),
-  iban: z.string().trim().max(42).optional().nullable().or(z.literal("")).transform((value) => (value ? normalizeIban(value) : null)),
-  bankName: optionalTrimmed(120),
-  bankAccountHolder: optionalTrimmed(160),
-  contactPersonName: optionalTrimmed(160),
-  contactPersonPhone: optionalTrimmed(64),
-  contactPersonEmail: z.string().trim().email().max(160).optional().nullable().or(z.literal("")).transform((value) => value || null),
-  address: optionalTrimmed(500),
-  note: optionalTrimmed(500),
-  defaultPaymentTermDays: z.coerce.number().int().min(0).max(365).optional().nullable(),
-  creditLimit: z.coerce.number().nonnegative().optional().nullable(),
+  slug: requiredString("Cari kodu girilmelidir.").max(120, "Cari kodu en fazla 120 karakter olabilir."),
+  name: z.string({ error: "Ad Soyad / Unvan girilmelidir." }).trim().min(2, "Ad Soyad / Unvan en az 2 karakter olmalıdır.").max(160, "Ad Soyad / Unvan en fazla 160 karakter olabilir."),
+  email: emailField("e-posta adresi"),
+  phone: optionalTrimmed(64, "Telefon"),
+  taxNumber: optionalTrimmed(64, "Vergi No / TC Kimlik No"),
+  taxOffice: optionalTrimmed(120, "Vergi dairesi"),
+  photoUrl: z.string().trim().url("Geçerli bir görsel adresi giriniz.").max(2048, "Görsel adresi çok uzun.").optional().nullable().or(z.literal("")).transform((value) => value || null),
+  iban: z.string().trim().max(42, "IBAN çok uzun.").optional().nullable().or(z.literal("")).transform((value) => (value ? normalizeIban(value) : null)),
+  bankName: optionalTrimmed(120, "Banka adı"),
+  bankAccountHolder: optionalTrimmed(160, "Hesap sahibi"),
+  contactPersonName: optionalTrimmed(160, "İlgili kişi adı"),
+  contactPersonPhone: optionalTrimmed(64, "İlgili kişi telefonu"),
+  contactPersonEmail: emailField("ilgili kişi e-posta adresi"),
+  address: optionalTrimmed(500, "Adres"),
+  note: optionalTrimmed(500, "Not"),
+  defaultPaymentTermDays: z.coerce.number({ error: "Ödeme vadesi geçerli bir sayı olmalıdır." }).int("Ödeme vadesi tam sayı olmalıdır.").min(0, "Ödeme vadesi negatif olamaz.").max(365, "Ödeme vadesi en fazla 365 gün olabilir.").optional().nullable(),
+  creditLimit: z.coerce.number({ error: "Kredi limiti geçerli bir sayı olmalıdır." }).nonnegative("Kredi limiti negatif olamaz.").optional().nullable(),
   isCustomer: z.boolean().default(false),
   isSupplier: z.boolean().default(false),
   isCarrier: z.boolean().default(false),
   isActive: z.boolean().default(true),
-  trackingUrlTemplate: optionalTrimmed(500),
-  externalCodeTrendyol: z.coerce.number().int().optional().nullable(),
-  externalCodePazarama: optionalTrimmed(64),
-  externalCodeHepsiburada: optionalTrimmed(64),
+  trackingUrlTemplate: optionalTrimmed(500, "Kargo takip URL şablonu"),
+  externalCodeTrendyol: z.coerce.number({ error: "Trendyol kodu geçerli bir sayı olmalıdır." }).int("Trendyol kodu tam sayı olmalıdır.").optional().nullable(),
+  externalCodePazarama: optionalTrimmed(64, "Pazarama kodu"),
+  externalCodeHepsiburada: optionalTrimmed(64, "Hepsiburada kodu"),
 }).superRefine((data, ctx) => {
   if (!data.isCustomer && !data.isSupplier && !data.isCarrier) {
     ctx.addIssue({

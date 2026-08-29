@@ -644,6 +644,7 @@ export function CariManager({ items, labels, canDelete }: Props) {
             </div>
 
             <form className="grid gap-4 p-5" onSubmit={submitItem}>
+              {error ? <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{error}</p> : null}
               <div className="grid gap-2">
                 <Label>{labels.roleLabel}</Label>
                 <div className="flex flex-wrap gap-4">

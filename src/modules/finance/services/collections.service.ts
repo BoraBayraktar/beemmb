@@ -17,12 +17,14 @@ import { cashTransactionsService, invalidateFinanceCache } from "@/modules/finan
 import { receivablesService } from "@/modules/finance/services/receivables.service";
 import { resolveFinanceServiceMessages } from "@/modules/finance/services/finance-service-messages.resolver";
 
+const requiredString = (message: string) => z.string({ error: message }).trim().min(1, message);
+
 const createCollectionRecordSchema = z.object({
-  orderId: z.string().trim().min(1),
-  financialAccountId: z.string().trim().min(1),
-  amount: z.coerce.number().positive(),
-  collectedAt: z.string().datetime(),
-  note: z.string().trim().max(500).optional().nullable(),
+  orderId: requiredString("Sipariş seçilmelidir."),
+  financialAccountId: requiredString("Finans hesabı seçilmelidir."),
+  amount: z.coerce.number({ error: "Tutar geçerli bir sayı olmalıdır." }).positive("Tutar sıfırdan büyük olmalıdır."),
+  collectedAt: z.string().datetime("Geçerli bir tarih/saat giriniz."),
+  note: z.string().trim().max(500, "Not en fazla 500 karakter olabilir.").optional().nullable(),
   recordedByUserId: z.string().trim().min(1),
   onlineCollectionProvider: z.string().trim().min(1).optional().nullable(),
   onlineCollectionExternalId: z.string().trim().min(1).optional().nullable(),

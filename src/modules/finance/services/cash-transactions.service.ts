@@ -19,6 +19,8 @@ import { parseFinanceMovementReference } from "@/modules/finance/services/financ
 import { parseFinanceReportDateRangeQuery } from "@/modules/finance/services/finance-report-date-range.util";
 import { financeAccountEntryService } from "@/modules/finance/services/finance-account-entry.service";
 
+const requiredString = (message: string) => z.string({ error: message }).trim().min(1, message);
+
 const listQuerySchema = z.object({
   search: z.string().trim().optional(),
   direction: z.enum(["all", "IN", "OUT", "TRANSFER"]).default("all"),
@@ -34,7 +36,7 @@ const incomeExpenseReportQuerySchema = z.object({
 });
 
 const createCashTransactionSchema = z.object({
-  accountId: z.string().trim().min(1, "Finans hesabı seçilmelidir."),
+  accountId: requiredString("Finans hesabı seçilmelidir."),
   direction: z.enum(["IN", "OUT", "TRANSFER"], { error: "Hareket yönü seçilmelidir." }),
   sourceType: z.enum(["MANUAL", "COLLECTION", "PAYMENT", "TRANSFER", "ORDER", "DOCUMENT", "REFUND"], { error: "Kaynak tipi seçilmelidir." }).default("MANUAL"),
   category: z.enum(["GENERAL_INCOME", "GENERAL_EXPENSE", "MARKETPLACE_COMMISSION", "SHIPPING_EXPENSE", "SERVICE_FEE", "REFUND", "TRANSFER"], { error: "Kategori seçilmelidir." }).optional(),
@@ -42,7 +44,7 @@ const createCashTransactionSchema = z.object({
   sourceReferenceId: z.string().trim().optional(),
   amount: z.coerce.number({ error: "Tutar geçerli bir sayı olmalıdır." }).positive("Tutar sıfırdan büyük olmalıdır."),
   transactionAt: z.string().datetime().optional(),
-  title: z.string().trim().min(2, "Hareket başlığı en az 2 karakter olmalıdır.").max(160, "Hareket başlığı en fazla 160 karakter olabilir."),
+  title: z.string({ error: "Hareket başlığı girilmelidir." }).trim().min(2, "Hareket başlığı en az 2 karakter olmalıdır.").max(160, "Hareket başlığı en fazla 160 karakter olabilir."),
   note: z.string().trim().max(500, "Not en fazla 500 karakter olabilir.").optional().nullable(),
   cariId: z.string().trim().optional().nullable(),
   counterpartyName: z.string().trim().max(160, "Karşı taraf adı en fazla 160 karakter olabilir.").optional().nullable(),
