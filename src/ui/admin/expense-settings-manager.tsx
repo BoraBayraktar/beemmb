@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ErrorToast } from "@/components/ui/toast";
 import type {
   AdminBackofficeUserOption,
   AdminExpenseApproverSettingItem,
@@ -102,7 +103,7 @@ export function ExpenseSettingsManager({
 
   return (
     <div className="space-y-6">
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error ? <ErrorToast message={error} onDismiss={() => setError(null)} /> : null}
 
       <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
         <h2 className="text-lg font-semibold text-[color:var(--color-text)]">Onaycı</h2>

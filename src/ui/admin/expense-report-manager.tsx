@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { MoneyInput } from "@/components/ui/money-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ErrorToast } from "@/components/ui/toast";
 import type {
   AdminExpenseReportDetail,
   AdminExpenseReportListItem,
@@ -320,7 +321,7 @@ export function ExpenseReportManager({
         </div>
       </section>
 
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error ? <ErrorToast message={error} onDismiss={() => setError(null)} /> : null}
 
       <section className="overflow-hidden rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-sm">
         {items.length === 0 ? (

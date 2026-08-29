@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ErrorToast } from "@/components/ui/toast";
 import type { AdminExpenseReportDetail, AdminExpenseReportListResult } from "@/modules/expense-reports/contracts/expense-report.contract";
 
 async function readErrorMessage(response: Response, fallback: string) {
@@ -123,7 +124,7 @@ export function ExpenseApprovalsManager({
 
   return (
     <div className="space-y-6">
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error ? <ErrorToast message={error} onDismiss={() => setError(null)} /> : null}
 
       <section className="overflow-hidden rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-sm">
         {items.length === 0 ? (

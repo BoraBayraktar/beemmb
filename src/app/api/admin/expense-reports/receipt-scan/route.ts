@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { ZodError } from "zod";
 
+import { logError } from "@/lib/observability";
 import { AuthContextError, requirePermission } from "@/modules/identity/services/auth-context.service";
 import { auditLogService } from "@/modules/system/services/audit-log.service";
 import { MediaUploadError, mediaStorageService } from "@/modules/system/services/media-storage.service";
@@ -26,6 +28,16 @@ export async function POST(request: Request) {
 
     const ocr = await expenseOcrService.extract({ bytes, contentType: file.type });
 
+    if (ocr.status === "FAILED") {
+      logError("Fiş/fatura OCR okuması başarısız oldu", {
+        scope: "expenseReports.receiptScan",
+        userId: user.id,
+        contentType: file.type,
+        size: bytes.length,
+        raw: ocr.raw,
+      });
+    }
+
     await auditLogService.recordFromRequest(request, {
       entityType: "EXPENSE_REPORT",
       action: "UPDATE",
@@ -45,6 +57,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: error.message }, { status: error.status });
     }
 
-    return NextResponse.json({ message: "Beklenmeyen bir hata oluştu." }, { status: 500 });
+    if (error instanceof ZodError) {
+      return NextResponse.json({ message: error.issues[0]?.message ?? "Doğrulama hatası oluştu." }, { status: 400 });
+    }
+
+    logError("Fiş/fatura yükleme isteği başarısız oldu", {
+      scope: "expenseReports.receiptScan",
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return NextResponse.json({ message: "Görsel yüklenirken beklenmeyen bir hata oluştu." }, { status: 500 });
   }
 }

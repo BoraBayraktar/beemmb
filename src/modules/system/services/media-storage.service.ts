@@ -12,7 +12,7 @@ import { MediaStorageRepository } from "@/modules/system/repositories/media-stor
 
 const uploadProductImageSchema = z.object({
   bytes: z.instanceof(Buffer).refine((value) => value.length > 0, {
-    message: "Image file is empty",
+    message: "Görsel dosyası boş.",
   }),
   fileName: z.string().trim().min(1),
   contentType: z.string().trim().min(1),
@@ -21,7 +21,7 @@ const uploadProductImageSchema = z.object({
 
 const uploadCariPhotoSchema = z.object({
   bytes: z.instanceof(Buffer).refine((value) => value.length > 0, {
-    message: "Image file is empty",
+    message: "Görsel dosyası boş.",
   }),
   fileName: z.string().trim().min(1),
   contentType: z.string().trim().min(1),
@@ -30,7 +30,7 @@ const uploadCariPhotoSchema = z.object({
 
 const uploadExpenseReceiptSchema = z.object({
   bytes: z.instanceof(Buffer).refine((value) => value.length > 0, {
-    message: "Image file is empty",
+    message: "Görsel dosyası boş.",
   }),
   fileName: z.string().trim().min(1),
   contentType: z.string().trim().min(1),
@@ -88,17 +88,17 @@ export class MediaStorageService {
 
   async uploadProductImage(input: UploadProductImageInput): Promise<UploadProductImageResult> {
     if (!this.repository.isConfigured()) {
-      throw new MediaUploadError(503, "Media storage is not configured");
+      throw new MediaUploadError(503, "Görsel depolama şu anda yapılandırılmamış. Lütfen sistem yöneticinize başvurun.");
     }
 
     const parsed = uploadProductImageSchema.parse(input);
 
     if (!ALLOWED_IMAGE_TYPES.has(parsed.contentType)) {
-      throw new MediaUploadError(400, "Unsupported image type");
+      throw new MediaUploadError(400, "Desteklenmeyen görsel formatı. Lütfen JPEG, PNG, WEBP veya GIF formatında bir görsel yükleyin (iPhone'da HEIC formatı yerine \"En Uyumlu\" kamera ayarını kullanın).");
     }
 
     if (parsed.bytes.length > MAX_IMAGE_BYTES) {
-      throw new MediaUploadError(400, "Image is too large. Max size is 8MB");
+      throw new MediaUploadError(400, "Görsel çok büyük. En fazla 8MB boyutunda bir görsel yükleyebilirsiniz.");
     }
 
     const now = new Date();
@@ -126,17 +126,17 @@ export class MediaStorageService {
 
   async uploadCariPhoto(input: UploadCariPhotoInput): Promise<UploadCariPhotoResult> {
     if (!this.repository.isConfigured()) {
-      throw new MediaUploadError(503, "Media storage is not configured");
+      throw new MediaUploadError(503, "Görsel depolama şu anda yapılandırılmamış. Lütfen sistem yöneticinize başvurun.");
     }
 
     const parsed = uploadCariPhotoSchema.parse(input);
 
     if (!ALLOWED_IMAGE_TYPES.has(parsed.contentType)) {
-      throw new MediaUploadError(400, "Unsupported image type");
+      throw new MediaUploadError(400, "Desteklenmeyen görsel formatı. Lütfen JPEG, PNG, WEBP veya GIF formatında bir görsel yükleyin (iPhone'da HEIC formatı yerine \"En Uyumlu\" kamera ayarını kullanın).");
     }
 
     if (parsed.bytes.length > MAX_IMAGE_BYTES) {
-      throw new MediaUploadError(400, "Image is too large. Max size is 8MB");
+      throw new MediaUploadError(400, "Görsel çok büyük. En fazla 8MB boyutunda bir görsel yükleyebilirsiniz.");
     }
 
     const now = new Date();
@@ -164,17 +164,17 @@ export class MediaStorageService {
 
   async uploadExpenseReceipt(input: UploadExpenseReceiptInput): Promise<UploadExpenseReceiptResult> {
     if (!this.repository.isConfigured()) {
-      throw new MediaUploadError(503, "Media storage is not configured");
+      throw new MediaUploadError(503, "Görsel depolama şu anda yapılandırılmamış. Lütfen sistem yöneticinize başvurun.");
     }
 
     const parsed = uploadExpenseReceiptSchema.parse(input);
 
     if (!ALLOWED_IMAGE_TYPES.has(parsed.contentType)) {
-      throw new MediaUploadError(400, "Unsupported image type");
+      throw new MediaUploadError(400, "Desteklenmeyen görsel formatı. Lütfen JPEG, PNG, WEBP veya GIF formatında bir görsel yükleyin (iPhone'da HEIC formatı yerine \"En Uyumlu\" kamera ayarını kullanın).");
     }
 
     if (parsed.bytes.length > MAX_IMAGE_BYTES) {
-      throw new MediaUploadError(400, "Image is too large. Max size is 8MB");
+      throw new MediaUploadError(400, "Görsel çok büyük. En fazla 8MB boyutunda bir görsel yükleyebilirsiniz.");
     }
 
     const now = new Date();
