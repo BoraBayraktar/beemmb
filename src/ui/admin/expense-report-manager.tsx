@@ -80,6 +80,50 @@ async function readErrorMessage(response: Response, fallback: string) {
   return payload?.message ?? fallback;
 }
 
+const MAX_UPLOAD_DIMENSION = 1600;
+const COMPRESSED_JPEG_QUALITY = 0.82;
+
+/**
+ * Telefon kamerası fotoğrafları genelde 5-12MB olur; Vercel Function'ların
+ * sabit 4.5MB istek gövdesi limiti var (uygulama kodumuza hiç ulaşmadan
+ * platform seviyesinde 413 ile reddedilir, JSON gövde de dönmez). Yüklemeden
+ * önce görseli tarayıcıda küçültüp JPEG'e sıkıştırmak bunu önler; ayrıca OCR
+ * isteğini ve mobil veri kullanımını da hızlandırır. createImageBitmap
+ * başarısız olursa (ör. desteklenmeyen format) orijinal dosya olduğu gibi
+ * gönderilir -- sunucu tarafı kendi boyut/format kontrolünü zaten yapıyor.
+ */
+async function compressImageForUpload(file: File): Promise<File> {
+  if (!file.type.startsWith("image/") || file.type === "image/gif") {
+    return file;
+  }
+
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_UPLOAD_DIMENSION / Math.max(bitmap.width, bitmap.height));
+    const width = Math.round(bitmap.width * scale);
+    const height = Math.round(bitmap.height * scale);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      return file;
+    }
+    ctx.drawImage(bitmap, 0, 0, width, height);
+
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", COMPRESSED_JPEG_QUALITY));
+    if (!blob) {
+      return file;
+    }
+
+    const compressedName = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+    return new File([blob], compressedName, { type: "image/jpeg" });
+  } catch {
+    return file;
+  }
+}
+
 const emptyItemForm = {
   categoryId: "",
   expenseDate: new Date().toISOString().slice(0, 10),
@@ -177,8 +221,9 @@ export function ExpenseReportManager({
     setPhotoUploading(true);
     setError(null);
     try {
+      const compressedFile = await compressImageForUpload(file);
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", compressedFile);
       const response = await fetch("/api/admin/expense-reports/receipt-scan", { method: "POST", body: formData });
       if (!response.ok) {
         setError(await readErrorMessage(response, "Görsel yüklenemedi."));

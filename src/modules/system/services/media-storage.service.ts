@@ -45,7 +45,11 @@ const ALLOWED_IMAGE_TYPES = new Set([
   "image/gif",
 ]);
 
-const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+// Vercel Function'ların sabit 4.5MB istek govdesi limiti var (platform seviyesinde,
+// kodumuza hic ulasmadan 413 ile reddedilir, JSON govde de donmez) -- bu yuzden
+// kendi limitimizi guvenli bir pay ile altinda tutuyoruz, boylece kullanici bizim
+// anlasilir Turkce hata mesajimizi gorur, Vercel'in genel platform hatasini degil.
+const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 
 export class MediaUploadError extends Error {
   constructor(
@@ -98,7 +102,7 @@ export class MediaStorageService {
     }
 
     if (parsed.bytes.length > MAX_IMAGE_BYTES) {
-      throw new MediaUploadError(400, "Görsel çok büyük. En fazla 8MB boyutunda bir görsel yükleyebilirsiniz.");
+      throw new MediaUploadError(400, "Görsel çok büyük. En fazla 4MB boyutunda bir görsel yükleyebilirsiniz.");
     }
 
     const now = new Date();
@@ -136,7 +140,7 @@ export class MediaStorageService {
     }
 
     if (parsed.bytes.length > MAX_IMAGE_BYTES) {
-      throw new MediaUploadError(400, "Görsel çok büyük. En fazla 8MB boyutunda bir görsel yükleyebilirsiniz.");
+      throw new MediaUploadError(400, "Görsel çok büyük. En fazla 4MB boyutunda bir görsel yükleyebilirsiniz.");
     }
 
     const now = new Date();
@@ -174,7 +178,7 @@ export class MediaStorageService {
     }
 
     if (parsed.bytes.length > MAX_IMAGE_BYTES) {
-      throw new MediaUploadError(400, "Görsel çok büyük. En fazla 8MB boyutunda bir görsel yükleyebilirsiniz.");
+      throw new MediaUploadError(400, "Görsel çok büyük. En fazla 4MB boyutunda bir görsel yükleyebilirsiniz.");
     }
 
     const now = new Date();
