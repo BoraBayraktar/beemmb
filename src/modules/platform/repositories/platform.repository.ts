@@ -95,6 +95,16 @@ export class PlatformRepository {
     adminUser: { email: string; name: string; passwordHash: string };
     actorUserId: string;
   }) {
+    // RBAC_PERMISSIONS zaman icinde buyudukce, her rol icin her izni ayri ayri
+    // `permission: { connect: { key } } }` ile bagliyor olmak (asagida eskiden
+    // oldugu gibi) her baglanti icin ayri bir round-trip gerektirir; tum
+    // permission satirlarini tek seferde onceden cekip RolePermission'lari
+    // createMany ile toplu yazmak bunu ~170 sorgudan ~10'a indirir. Bu, Prisma
+    // Postgres (db.prisma.io) gibi daha yuksek gecikmeli baglantilarda
+    // interactive transaction timeout'unu (varsayilan 5000ms) asmayi onler.
+    const allPermissions = await prisma.permission.findMany({ select: { id: true, key: true } });
+    const permissionIdByKey = new Map(allPermissions.map((permission) => [permission.key, permission.id]));
+
     return prisma.$transaction(async (tx) => {
       const tenant = await tx.tenant.create({
         data: {
@@ -118,28 +128,45 @@ export class PlatformRepository {
         });
       }
 
+      const roleIdByKey = new Map<string, string>();
       for (const roleDef of RBAC_SYSTEM_ROLES) {
-        await tx.role.create({
+        const role = await tx.role.create({
           data: {
             tenantId: tenant.id,
             key: roleDef.key,
             name: roleDef.name,
             description: roleDef.description,
             isSystem: true,
-            permissions: {
-              create: roleDef.permissions.map((permissionKey) => ({
-                tenant: { connect: { id: tenant.id } },
-                permission: { connect: { key: permissionKey } },
-              })),
-            },
           },
+          select: { id: true },
         });
+        roleIdByKey.set(roleDef.key, role.id);
       }
 
-      const superAdminRole = await tx.role.findFirstOrThrow({
-        where: { tenantId: tenant.id, key: "super-admin" },
-        select: { id: true },
+      const rolePermissionRows = RBAC_SYSTEM_ROLES.flatMap((roleDef) => {
+        const roleId = roleIdByKey.get(roleDef.key);
+        if (!roleId) {
+          throw new Error(`Rol olusturulamadi: ${roleDef.key}`);
+        }
+
+        return roleDef.permissions.map((permissionKey) => {
+          const permissionId = permissionIdByKey.get(permissionKey);
+          if (!permissionId) {
+            throw new Error(`Bilinmeyen izin anahtari: ${permissionKey}`);
+          }
+
+          return { tenantId: tenant.id, roleId, permissionId };
+        });
       });
+
+      if (rolePermissionRows.length > 0) {
+        await tx.rolePermission.createMany({ data: rolePermissionRows });
+      }
+
+      const superAdminRoleId = roleIdByKey.get("super-admin");
+      if (!superAdminRoleId) {
+        throw new Error("super-admin rolu olusturulamadi");
+      }
 
       const adminUser = await tx.user.create({
         data: {
@@ -156,12 +183,12 @@ export class PlatformRepository {
         data: {
           tenantId: tenant.id,
           userId: adminUser.id,
-          roleId: superAdminRole.id,
+          roleId: superAdminRoleId,
           assignedByUserId: input.actorUserId,
         },
       });
 
       return { tenant, adminUser };
-    });
+    }, { timeout: 15000 });
   }
 }
