@@ -52,6 +52,8 @@ export type AdminExpenseItemReportQuery = {
   categoryId?: string;
   employeeUserId?: string;
   status?: AdminExpenseReportStatus | "all";
+  dateFrom?: string;
+  dateTo?: string;
   page?: number;
   pageSize?: number;
 };
@@ -62,4 +64,7 @@ export type AdminExpenseItemReportResult = {
   pageSize: number;
   total: number;
   totalPages: number;
+  totalAmount: number;
 };
+
+export type AdminExpenseItemReportExportQuery = Omit<AdminExpenseItemReportQuery, "page" | "pageSize">;

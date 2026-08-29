@@ -6,9 +6,22 @@ const itemReportInclude = {
   expenseReport: { select: { status: true, reportNumber: true, employee: { select: { name: true } } } },
 };
 
-function buildItemWhere(filter: Pick<AdminExpenseItemReportQuery, "search" | "categoryId" | "employeeUserId" | "status">) {
+type ItemFilter = Pick<AdminExpenseItemReportQuery, "search" | "categoryId" | "employeeUserId" | "status" | "dateFrom" | "dateTo">;
+
+function buildItemWhere(filter: ItemFilter) {
+  const dateFrom = filter.dateFrom ? new Date(filter.dateFrom) : undefined;
+  const dateTo = filter.dateTo ? new Date(filter.dateTo) : undefined;
+
   return {
     ...(filter.categoryId ? { categoryId: filter.categoryId } : {}),
+    ...(dateFrom || dateTo
+      ? {
+          expenseDate: {
+            ...(dateFrom ? { gte: dateFrom } : {}),
+            ...(dateTo ? { lte: dateTo } : {}),
+          },
+        }
+      : {}),
     expenseReport: {
       deleted: false,
       ...(filter.status && filter.status !== "all" ? { status: filter.status } : {}),
@@ -27,7 +40,7 @@ function buildItemWhere(filter: Pick<AdminExpenseItemReportQuery, "search" | "ca
 }
 
 export class ExpenseReportAnalyticsRepository {
-  async listItems(filter: Required<Pick<AdminExpenseItemReportQuery, "page" | "pageSize">> & Pick<AdminExpenseItemReportQuery, "search" | "categoryId" | "employeeUserId" | "status">) {
+  async listItems(filter: Required<Pick<AdminExpenseItemReportQuery, "page" | "pageSize">> & ItemFilter) {
     return prisma.expenseReportItem.findMany({
       where: buildItemWhere(filter),
       orderBy: { expenseDate: "desc" },
@@ -37,8 +50,26 @@ export class ExpenseReportAnalyticsRepository {
     });
   }
 
-  async countItems(filter: Pick<AdminExpenseItemReportQuery, "search" | "categoryId" | "employeeUserId" | "status">) {
+  async countItems(filter: ItemFilter) {
     return prisma.expenseReportItem.count({ where: buildItemWhere(filter) });
+  }
+
+  async sumItems(filter: ItemFilter) {
+    const result = await prisma.expenseReportItem.aggregate({
+      where: buildItemWhere(filter),
+      _sum: { amount: true },
+    });
+    return result._sum.amount?.toNumber() ?? 0;
+  }
+
+  /** Export icin sayfalamasiz tam liste -- guvenlik siniri olarak makul bir tavan (take) uygulanir. */
+  async listItemsForExport(filter: ItemFilter, limit: number) {
+    return prisma.expenseReportItem.findMany({
+      where: buildItemWhere(filter),
+      orderBy: { expenseDate: "desc" },
+      take: limit,
+      include: itemReportInclude,
+    });
   }
 
   async getApprovedSummary() {

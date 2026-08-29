@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ErrorToast } from "@/components/ui/toast";
 import type {
@@ -12,8 +13,10 @@ import type {
   AdminExpenseItemReportResult,
   AdminExpenseItemReportRow,
 } from "@/modules/expense-reports/contracts/expense-report-analytics.contract";
-import type { AdminExpenseCategoryItem } from "@/modules/expense-reports/contracts/expense-settings.contract";
+import type { AdminBackofficeUserOption, AdminExpenseCategoryItem } from "@/modules/expense-reports/contracts/expense-settings.contract";
 import type { AdminExpenseReportStatus } from "@/modules/expense-reports/contracts/expense-report.contract";
+
+const FILTER_DEBOUNCE_MS = 350;
 
 const BAR_FILL = "bg-[#2a78d6] dark:bg-[#3987e5]";
 const LINE_STROKE = "stroke-[#2a78d6] dark:stroke-[#3987e5]";
@@ -145,28 +148,45 @@ export function ExpenseReportAnalyticsManager({
   analytics,
   itemResult,
   categories,
+  employees,
 }: {
   analytics: AdminExpenseAnalytics;
   itemResult: AdminExpenseItemReportResult;
   categories: AdminExpenseCategoryItem[];
+  employees: AdminBackofficeUserOption[];
 }) {
   const [items, setItems] = useState(itemResult.items);
   const [page, setPage] = useState(itemResult.page);
   const [totalPages, setTotalPages] = useState(itemResult.totalPages);
+  const [totalCount, setTotalCount] = useState(itemResult.total);
+  const [totalAmount, setTotalAmount] = useState(itemResult.totalAmount);
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState("all");
+  const [employeeUserId, setEmployeeUserId] = useState("all");
   const [statusFilter, setStatusFilter] = useState<"all" | AdminExpenseReportStatus>("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState<"excel" | "pdf" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const isFirstRender = useRef(true);
+
+  function buildFilterParams() {
+    const params = new URLSearchParams();
+    if (search.trim()) params.set("search", search.trim());
+    if (categoryId !== "all") params.set("categoryId", categoryId);
+    if (employeeUserId !== "all") params.set("employeeUserId", employeeUserId);
+    if (statusFilter !== "all") params.set("status", statusFilter);
+    if (dateFrom) params.set("dateFrom", new Date(dateFrom).toISOString());
+    if (dateTo) params.set("dateTo", new Date(`${dateTo}T23:59:59.999`).toISOString());
+    return params;
+  }
 
   async function loadItems(nextPage: number) {
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams();
-      if (search.trim()) params.set("search", search.trim());
-      if (categoryId !== "all") params.set("categoryId", categoryId);
-      if (statusFilter !== "all") params.set("status", statusFilter);
+      const params = buildFilterParams();
       params.set("page", String(nextPage));
       params.set("pageSize", "25");
 
@@ -179,8 +199,54 @@ export function ExpenseReportAnalyticsManager({
       setItems(payload.items);
       setPage(payload.page);
       setTotalPages(payload.totalPages);
+      setTotalCount(payload.total);
+      setTotalAmount(payload.totalAmount);
     } finally {
       setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      void loadItems(1);
+    }, FILTER_DEBOUNCE_MS);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, categoryId, employeeUserId, statusFilter, dateFrom, dateTo]);
+
+  async function handleExport(format: "excel" | "pdf") {
+    setExporting(format);
+    setError(null);
+    try {
+      const params = buildFilterParams();
+      params.set("format", format);
+
+      const response = await fetch(`/api/admin/expense-reports/report/export?${params.toString()}`);
+      if (!response.ok) {
+        setError(await readErrorMessage(response, "Rapor dışa aktarılamadı."));
+        return;
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = URL.createObjectURL(blob);
+      const extension = format === "pdf" ? "pdf" : "xlsx";
+      const anchor = document.createElement("a");
+      anchor.href = downloadUrl;
+      anchor.download = `masraf-raporu-${new Date().toISOString().slice(0, 10)}.${extension}`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(downloadUrl);
+    } catch {
+      setError("Rapor dışa aktarılamadı.");
+    } finally {
+      setExporting(null);
     }
   }
 
@@ -228,16 +294,35 @@ export function ExpenseReportAnalyticsManager({
       </section>
 
       <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
-        <h2 className="text-sm font-semibold text-[color:var(--color-text)]">Tüm Masraf Kalemleri</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold text-[color:var(--color-text)]">Tüm Masraf Kalemleri</h2>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" size="sm" disabled={exporting !== null || items.length === 0} onClick={() => void handleExport("excel")}>
+              {exporting === "excel" ? "Hazırlanıyor..." : "Excel"}
+            </Button>
+            <Button type="button" variant="outline" size="sm" disabled={exporting !== null || items.length === 0} onClick={() => void handleExport("pdf")}>
+              {exporting === "pdf" ? "Hazırlanıyor..." : "PDF"}
+            </Button>
+          </div>
+        </div>
 
-        <div className="mt-4 grid gap-3 md:grid-cols-4">
-          <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Şirket, fiş no veya personel ara" />
+        <div className="mt-4 grid gap-3 md:grid-cols-3 lg:grid-cols-5">
+          <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Şirket, fiş no veya personel ara" className="lg:col-span-2" />
           <Select value={categoryId} onValueChange={setCategoryId}>
             <SelectTrigger><SelectValue placeholder="Kategori" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tüm kategoriler</SelectItem>
               {categories.map((category) => (
                 <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={employeeUserId} onValueChange={setEmployeeUserId}>
+            <SelectTrigger><SelectValue placeholder="Personel" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tüm personel</SelectItem>
+              {employees.map((employee) => (
+                <SelectItem key={employee.id} value={employee.id}>{employee.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -251,10 +336,22 @@ export function ExpenseReportAnalyticsManager({
               <SelectItem value="REJECTED">Reddedildi</SelectItem>
             </SelectContent>
           </Select>
-          <Button type="button" variant="outline" disabled={loading} onClick={() => void loadItems(1)}>Filtrele</Button>
+          <div className="grid gap-1">
+            <Label className="text-xs text-[color:var(--color-text-muted)]">Başlangıç Tarihi</Label>
+            <Input type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} />
+          </div>
+          <div className="grid gap-1">
+            <Label className="text-xs text-[color:var(--color-text-muted)]">Bitiş Tarihi</Label>
+            <Input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} />
+          </div>
         </div>
 
-        <div className="mt-4 overflow-x-auto">
+        <div className="mt-4 flex items-center justify-between text-sm text-[color:var(--color-text-muted)]">
+          <span>{loading ? "Yükleniyor..." : `${totalCount} kalem bulundu`}</span>
+          <span className="font-semibold text-[color:var(--color-text)]">Alt Toplam: {formatCurrency(totalAmount)}</span>
+        </div>
+
+        <div className="mt-2 overflow-x-auto">
           {items.length === 0 ? (
             <p className="py-10 text-center text-sm text-[color:var(--color-text-muted)]">Kayıtlı masraf kalemi bulunamadı.</p>
           ) : (
@@ -293,6 +390,13 @@ export function ExpenseReportAnalyticsManager({
                   </tr>
                 ))}
               </tbody>
+              <tfoot>
+                <tr className="border-t-2 border-[color:var(--color-border)] font-semibold text-[color:var(--color-text)]">
+                  <td className="px-4 py-3" colSpan={7}>Alt Toplam ({totalCount} kalem)</td>
+                  <td className="px-4 py-3">{formatCurrency(totalAmount)}</td>
+                  <td className="px-4 py-3" />
+                </tr>
+              </tfoot>
             </table>
           )}
         </div>

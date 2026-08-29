@@ -24,14 +24,15 @@ export default async function AdminExpenseReportsAnalyticsPage({ params }: { par
     notFound();
   }
 
-  const [analytics, itemResult, categories] = await runWithTenantContext(
+  const [analytics, itemResult, categories, employees] = await runWithTenantContext(
     { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
     () => Promise.all([
       expenseReportAnalyticsService.getAnalytics(),
       expenseReportAnalyticsService.listItemReport({ page: 1, pageSize: 25 }),
       expenseSettingsService.listActiveCategories(),
+      expenseSettingsService.listApproverCandidates(),
     ]),
   );
 
-  return <ExpenseReportAnalyticsManager analytics={analytics} itemResult={itemResult} categories={categories} />;
+  return <ExpenseReportAnalyticsManager analytics={analytics} itemResult={itemResult} categories={categories} employees={employees} />;
 }

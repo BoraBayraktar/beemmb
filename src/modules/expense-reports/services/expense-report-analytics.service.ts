@@ -8,15 +8,22 @@ import type {
 } from "@/modules/expense-reports/contracts/expense-report-analytics.contract";
 import { expenseReportAnalyticsRepository } from "@/modules/expense-reports/repositories/expense-report-analytics.repository";
 
+const dateFilterSchema = z.string().trim().min(1).optional();
+
 const listQuerySchema = z.object({
   search: z.string().trim().optional(),
   categoryId: z.string().trim().min(1).optional(),
   employeeUserId: z.string().trim().min(1).optional(),
   status: z.enum(["all", "DRAFT", "SUBMITTED", "APPROVED", "REJECTED"]).default("all"),
+  dateFrom: dateFilterSchema,
+  dateTo: dateFilterSchema,
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(25),
 });
 
+const exportQuerySchema = listQuerySchema.omit({ page: true, pageSize: true });
+
+const EXPORT_ROW_LIMIT = 10000;
 const TREND_MONTHS = 12;
 const MONTH_LABELS = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
 
@@ -24,35 +31,65 @@ function monthKey(date: Date) {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
+type ItemReportRepoRow = {
+  id: string;
+  expenseDate: Date;
+  receiptNo: string | null;
+  vendorName: string;
+  description: string | null;
+  amount: { toNumber: () => number };
+  currency: string;
+  receiptUrl: string | null;
+  category: { name: string };
+  expenseReport: { status: AdminExpenseItemReportRow["status"]; reportNumber: string; employee: { name: string } };
+};
+
+function mapItemRow(row: ItemReportRepoRow): AdminExpenseItemReportRow {
+  return {
+    id: row.id,
+    expenseDate: row.expenseDate.toISOString(),
+    receiptNo: row.receiptNo,
+    vendorName: row.vendorName,
+    categoryName: row.category.name,
+    description: row.description,
+    employeeName: row.expenseReport.employee.name,
+    status: row.expenseReport.status,
+    reportNumber: row.expenseReport.reportNumber,
+    amount: row.amount.toNumber(),
+    currency: row.currency,
+    receiptUrl: row.receiptUrl,
+  };
+}
+
 export class ExpenseReportAnalyticsService {
   async listItemReport(query: AdminExpenseItemReportQuery): Promise<AdminExpenseItemReportResult> {
     const parsed = listQuerySchema.parse(query);
-    const [rows, total] = await Promise.all([
+    const [rows, total, totalAmount] = await Promise.all([
       expenseReportAnalyticsRepository.listItems(parsed),
       expenseReportAnalyticsRepository.countItems(parsed),
+      expenseReportAnalyticsRepository.sumItems(parsed),
     ]);
 
-    const items: AdminExpenseItemReportRow[] = rows.map((row) => ({
-      id: row.id,
-      expenseDate: row.expenseDate.toISOString(),
-      receiptNo: row.receiptNo,
-      vendorName: row.vendorName,
-      categoryName: row.category.name,
-      description: row.description,
-      employeeName: row.expenseReport.employee.name,
-      status: row.expenseReport.status,
-      reportNumber: row.expenseReport.reportNumber,
-      amount: row.amount.toNumber(),
-      currency: row.currency,
-      receiptUrl: row.receiptUrl,
-    }));
-
     return {
-      items,
+      items: rows.map(mapItemRow),
       page: parsed.page,
       pageSize: parsed.pageSize,
       total,
       totalPages: Math.max(1, Math.ceil(total / parsed.pageSize)),
+      totalAmount: Math.round(totalAmount * 100) / 100,
+    };
+  }
+
+  async getExportRows(query: AdminExpenseItemReportQuery): Promise<{ items: AdminExpenseItemReportRow[]; totalAmount: number }> {
+    const parsed = exportQuerySchema.parse(query);
+    const [rows, totalAmount] = await Promise.all([
+      expenseReportAnalyticsRepository.listItemsForExport(parsed, EXPORT_ROW_LIMIT),
+      expenseReportAnalyticsRepository.sumItems(parsed),
+    ]);
+
+    return {
+      items: rows.map(mapItemRow),
+      totalAmount: Math.round(totalAmount * 100) / 100,
     };
   }
 
