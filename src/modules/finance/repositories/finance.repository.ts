@@ -408,7 +408,7 @@ export class FinanceRepository {
   }
 
   async listCashTransactionsWithCari() {
-    return ((prisma as any).cashTransaction).findMany({
+    return prisma.cashTransaction.findMany({
       where: {
         deleted: false,
         status: "RECORDED",
