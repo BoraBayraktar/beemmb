@@ -8,6 +8,7 @@ type StorageConfig = {
   secretKey: string;
   bucket: string;
   publicBaseUrl?: string;
+  region?: string;
 };
 
 function parseBool(value: string | undefined, fallback: boolean) {
@@ -39,6 +40,9 @@ function getStorageConfig(): StorageConfig | null {
     secretKey,
     bucket,
     publicBaseUrl: process.env.MEDIA_PUBLIC_BASE_URL,
+    // Cloudflare R2 gibi AWS-disi S3-uyumlu saglayicilar icin gerekli (R2 "auto"
+    // bekler); yerel MinIO icin bos birakilabilir, minio-js kendi varsayilanini kullanir.
+    region: process.env.MINIO_REGION || undefined,
   };
 }
 
@@ -55,6 +59,7 @@ export class MediaStorageRepository {
         useSSL: this.config.useSSL,
         accessKey: this.config.accessKey,
         secretKey: this.config.secretKey,
+        ...(this.config.region ? { region: this.config.region } : {}),
       })
     : null;
   private ensureBucketPromise: Promise<void> | null = null;
