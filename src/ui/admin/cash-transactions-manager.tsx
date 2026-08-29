@@ -369,6 +369,7 @@ export function CashTransactionsManager({
             </div>
 
             <form className="grid gap-4 p-5" onSubmit={submitTransaction}>
+              {message ? <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{message}</p> : null}
               <div className="grid gap-2">
                 <Label>{labels.account}</Label>
                 <Select value={form.accountId} onValueChange={(value) => setForm((current) => ({ ...current, accountId: value }))}>
