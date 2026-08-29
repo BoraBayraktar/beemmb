@@ -39,6 +39,12 @@ const setEntitlementSchema = z.object({
   note: z.string().trim().optional(),
 });
 
+const resetAdminPasswordSchema = z.object({
+  tenantId: z.string().trim().min(1),
+  userId: z.string().trim().min(1),
+  password: z.string().min(6),
+});
+
 const provisionTenantSchema = z.object({
   slug: z.string().trim().toLowerCase().min(2).max(63).regex(TENANT_SLUG_REGEX),
   name: z.string().trim().min(2),
@@ -138,6 +144,29 @@ export class PlatformService {
       adminUser: { email: parsed.adminUser.email, name: parsed.adminUser.name, passwordHash },
       actorUserId,
     });
+  }
+
+  /** Tenant detayinda gosterilecek yonetici kullanicilar (ADMIN rolu) -- platform operatoru
+   * tenant context'i icinde olmadigi icin explicit tenantId parametresi alan
+   * IdentityRepository metotlari kullanilir (User tenant-scoped model degildir). */
+  async getTenantAdminUsers(tenantId: string) {
+    const users = await this.identityRepository.listUsersByRoles(["ADMIN"], tenantId);
+    return users.map((user) => ({ id: user.id, email: user.email, name: user.name }));
+  }
+
+  /** Platform operatorunun, herhangi bir tenant'in yonetici kullanicisinin sifresini
+   * sifirlayabilmesi icin -- hedef kullanicinin gercekten belirtilen tenant'a ait
+   * oldugu explicit kontrol edilir (updatePasswordById tenant kontrolu yapmaz). */
+  async resetAdminUserPassword(input: unknown) {
+    const parsed = resetAdminPasswordSchema.parse(input);
+
+    const user = await this.identityRepository.findById(parsed.userId);
+    if (!user || user.tenantId !== parsed.tenantId) {
+      throw new PlatformPolicyError("Belirtilen kullanıcı bu tenant'a ait değil.");
+    }
+
+    const passwordHash = await hash(parsed.password, 10);
+    await this.identityRepository.updatePasswordById(parsed.userId, passwordHash);
   }
 
   /** Menu cift-kontrolunde (Faz 3) kullanilacak: tenant'in acik oldugu modul anahtarlari. */

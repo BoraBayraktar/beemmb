@@ -63,6 +63,8 @@ const emptyForm = {
 
 type DrawerMode = "create" | "edit";
 
+type AdminUser = { id: string; email: string; name: string };
+
 export function PlatformTenantsManager({ initialTenants, modules, initialEntitlements }: Props) {
   const [tenants, setTenants] = useState(initialTenants);
   const [entitlementsByTenant, setEntitlementsByTenant] = useState<Record<string, Entitlement[]>>(
@@ -75,6 +77,12 @@ export function PlatformTenantsManager({ initialTenants, modules, initialEntitle
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingEntitlement, setPendingEntitlement] = useState<string | null>(null);
+
+  const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
+  const [adminUserLoading, setAdminUserLoading] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordPending, setPasswordPending] = useState(false);
+  const [passwordSaved, setPasswordSaved] = useState(false);
 
   function toggleModuleKey(moduleKey: string) {
     setForm((prev) => ({
@@ -108,6 +116,43 @@ export function PlatformTenantsManager({ initialTenants, modules, initialEntitle
     });
     setError(null);
     setDrawerOpen(true);
+
+    setAdminUser(null);
+    setNewPassword("");
+    setPasswordSaved(false);
+    setAdminUserLoading(true);
+    fetch(`/api/admin/platform/tenants/${tenant.id}/admin-user`)
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload: { items?: AdminUser[] } | null) => setAdminUser(payload?.items?.[0] ?? null))
+      .catch(() => setAdminUser(null))
+      .finally(() => setAdminUserLoading(false));
+  }
+
+  async function resetAdminPassword() {
+    if (!editingTenantId || !adminUser) return;
+
+    setPasswordPending(true);
+    setPasswordSaved(false);
+    setError(null);
+    try {
+      const response = await fetch(`/api/admin/platform/tenants/${editingTenantId}/admin-user`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: adminUser.id, password: newPassword }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+        throw new Error(payload?.message ?? "Şifre güncellenemedi.");
+      }
+
+      setPasswordSaved(true);
+      setNewPassword("");
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "Şifre güncellenemedi.");
+    } finally {
+      setPasswordPending(false);
+    }
   }
 
   function closeDrawer() {
@@ -344,6 +389,44 @@ export function PlatformTenantsManager({ initialTenants, modules, initialEntitle
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                ) : null}
+
+                {drawerMode === "edit" ? (
+                  <div className="grid gap-2 rounded-xl border border-[color:var(--color-border)] p-3">
+                    <p className="text-sm font-semibold text-[color:var(--color-text)]">Yönetici Kullanıcı</p>
+                    {adminUserLoading ? (
+                      <p className="text-sm text-[color:var(--color-text-muted)]">Yükleniyor...</p>
+                    ) : adminUser ? (
+                      <>
+                        <p className="text-sm text-[color:var(--color-text)]">{adminUser.name}</p>
+                        <p className="text-sm text-[color:var(--color-text-muted)]">{adminUser.email}</p>
+                        <div className="mt-2 grid gap-2">
+                          <Label>Yeni Şifre</Label>
+                          <Input
+                            type="password"
+                            value={newPassword}
+                            onChange={(event) => setNewPassword(event.target.value)}
+                            minLength={6}
+                            placeholder="En az 6 karakter"
+                          />
+                        </div>
+                        <div className="mt-1 flex items-center gap-3">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={passwordPending || newPassword.length < 6}
+                            onClick={() => void resetAdminPassword()}
+                          >
+                            Şifreyi Güncelle
+                          </Button>
+                          {passwordSaved ? <span className="text-sm text-emerald-600">Şifre güncellendi.</span> : null}
+                        </div>
+                      </>
+                    ) : (
+                      <p className="text-sm text-[color:var(--color-text-muted)]">Bu tenant için yönetici kullanıcı bulunamadı.</p>
+                    )}
                   </div>
                 ) : null}
 

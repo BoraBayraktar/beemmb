@@ -82,3 +82,15 @@ export type ProvisionTenantResult = {
     name: string;
   };
 };
+
+export type TenantAdminUser = {
+  id: string;
+  email: string;
+  name: string;
+};
+
+export type ResetTenantAdminPasswordInput = {
+  tenantId: string;
+  userId: string;
+  password: string;
+};
