@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
+import { logError } from "@/lib/observability";
 import { AuthContextError, requirePlatformOperator } from "@/modules/identity/services/auth-context.service";
 import { platformService } from "@/modules/platform/services/platform.service";
 import { auditLogService } from "@/modules/system/services/audit-log.service";
@@ -24,7 +25,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       return NextResponse.json({ message: error.message }, { status: error.status });
     }
 
-    return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
+    logError("Tenant detayı yüklenemedi", { scope: "platform.tenants", error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json({ message: "Tenant detayı yüklenirken beklenmeyen bir hata oluştu." }, { status: 500 });
   }
 }
 
@@ -51,9 +53,10 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     }
 
     if (error instanceof ZodError) {
-      return NextResponse.json({ message: error.issues[0]?.message ?? "Validation failed" }, { status: 400 });
+      return NextResponse.json({ message: error.issues[0]?.message ?? "Doğrulama hatası oluştu." }, { status: 400 });
     }
 
-    return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
+    logError("Tenant güncellenemedi", { scope: "platform.tenants", error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json({ message: "Tenant güncellenirken beklenmeyen bir hata oluştu." }, { status: 500 });
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
+import { logError } from "@/lib/observability";
 import { AuthContextError, requirePlatformOperator } from "@/modules/identity/services/auth-context.service";
 import { PlatformPolicyError, platformService } from "@/modules/platform/services/platform.service";
 import { auditLogService } from "@/modules/system/services/audit-log.service";
@@ -15,7 +16,8 @@ export async function GET() {
       return NextResponse.json({ message: error.message }, { status: error.status });
     }
 
-    return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
+    logError("Tenant listesi yüklenemedi", { scope: "platform.tenants", error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json({ message: "Tenant listesi yüklenirken beklenmeyen bir hata oluştu." }, { status: 500 });
   }
 }
 
@@ -48,6 +50,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: error.message }, { status: 409 });
     }
 
-    return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
+    logError("Tenant oluşturulamadı", {
+      scope: "platform.tenants",
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    return NextResponse.json({ message: "Tenant oluşturulurken beklenmeyen bir hata oluştu. Lütfen tekrar deneyin veya sistem yöneticinize başvurun." }, { status: 500 });
   }
 }

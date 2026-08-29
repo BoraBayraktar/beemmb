@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ErrorToast } from "@/components/ui/toast";
 
 type TenantStatus = "ACTIVE" | "TRIAL" | "SUSPENDED" | "ARCHIVED";
 
@@ -175,6 +176,8 @@ export function PlatformTenantsManager({ initialTenants, modules, initialEntitle
 
   return (
     <section className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
+      {error ? <ErrorToast message={error} onDismiss={() => setError(null)} /> : null}
+
       <div className="flex flex-col gap-4 border-b border-[color:var(--color-border)] p-5 md:flex-row md:items-start md:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Platform Yönetimi</p>
@@ -241,8 +244,6 @@ export function PlatformTenantsManager({ initialTenants, modules, initialEntitle
 
             <form className="flex min-h-0 flex-1 flex-col" onSubmit={submitTenant}>
               <div className="grid flex-1 content-start gap-4 overflow-y-auto p-5">
-                {error ? <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{error}</p> : null}
-
                 <div className="grid gap-2">
                   <Label>Slug</Label>
                   <Input value={form.slug} onChange={(event) => setForm((prev) => ({ ...prev, slug: event.target.value }))} placeholder="ornek-sirket" required />

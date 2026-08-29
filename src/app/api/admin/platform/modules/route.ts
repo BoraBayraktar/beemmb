@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { logError } from "@/lib/observability";
 import { AuthContextError, requirePlatformOperator } from "@/modules/identity/services/auth-context.service";
 import { platformService } from "@/modules/platform/services/platform.service";
 
@@ -13,6 +14,7 @@ export async function GET() {
       return NextResponse.json({ message: error.message }, { status: error.status });
     }
 
-    return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
+    logError("Modül kataloğu yüklenemedi", { scope: "platform.modules", error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json({ message: "Modül kataloğu yüklenirken beklenmeyen bir hata oluştu." }, { status: 500 });
   }
 }

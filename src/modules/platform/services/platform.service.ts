@@ -79,7 +79,7 @@ export class PlatformService {
     const parsed = createTenantSchema.parse(input);
     const existing = await this.repository.findTenantBySlug(parsed.slug);
     if (existing) {
-      throw new PlatformPolicyError("TENANT_SLUG_ALREADY_EXISTS");
+      throw new PlatformPolicyError(`"${parsed.slug}" tenant kodu zaten kullanılıyor. Lütfen farklı bir kod seçin.`);
     }
 
     return this.repository.createTenant(parsed);
@@ -117,12 +117,12 @@ export class PlatformService {
 
     const existingSlug = await this.repository.findTenantBySlug(parsed.slug);
     if (existingSlug) {
-      throw new PlatformPolicyError("TENANT_SLUG_ALREADY_EXISTS");
+      throw new PlatformPolicyError(`"${parsed.slug}" tenant kodu zaten kullanılıyor. Lütfen farklı bir kod seçin.`);
     }
 
     const existingEmail = await this.identityRepository.findByEmail(parsed.adminUser.email);
     if (existingEmail) {
-      throw new PlatformPolicyError("ADMIN_EMAIL_ALREADY_EXISTS");
+      throw new PlatformPolicyError(`"${parsed.adminUser.email}" e-posta adresi zaten bir kullanıcıya ait. Lütfen farklı bir e-posta girin.`);
     }
 
     const passwordHash = await hash(parsed.adminUser.password, 10);
