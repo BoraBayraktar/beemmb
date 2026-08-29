@@ -35,6 +35,11 @@ type Labels = {
   outgoing: string;
   transfer: string;
   refund: string;
+  manual: string;
+  collection: string;
+  payment: string;
+  order: string;
+  document: string;
   totalIncoming: string;
   totalOutgoing: string;
   netAmount: string;
@@ -102,6 +107,25 @@ function formatDate(value: string) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
+}
+
+function getSourceTypeLabel(sourceType: AdminCashTransactionSourceType, labels: Labels) {
+  switch (sourceType) {
+    case "REFUND":
+      return labels.refund;
+    case "TRANSFER":
+      return labels.transfer;
+    case "COLLECTION":
+      return labels.collection;
+    case "PAYMENT":
+      return labels.payment;
+    case "ORDER":
+      return labels.order;
+    case "DOCUMENT":
+      return labels.document;
+    default:
+      return labels.manual;
+  }
 }
 
 function getDirectionClassName(direction: AdminCashTransactionDirection) {
@@ -330,7 +354,7 @@ export function CashTransactionsManager({
                     {item.title}
                   </Link>
                 </h3>
-                <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{item.sourceType === "REFUND" ? labels.refund : item.sourceType === "TRANSFER" ? labels.transfer : item.sourceType}</p>
+                <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{getSourceTypeLabel(item.sourceType, labels)}</p>
               </div>
               <p className="text-sm text-[color:var(--color-text-muted)]">{item.accountName}</p>
               <p className="text-sm font-medium text-[color:var(--color-text)]">{formatMoney(item.amount, item.currency)}</p>
@@ -425,7 +449,7 @@ export function CashTransactionsManager({
                     <SelectValue placeholder={labels.sourceType} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="MANUAL">{labels.sourceType}</SelectItem>
+                    <SelectItem value="MANUAL">{labels.manual}</SelectItem>
                     <SelectItem value="REFUND">{labels.refund}</SelectItem>
                     <SelectItem value="TRANSFER">{labels.transfer}</SelectItem>
                   </SelectContent>
