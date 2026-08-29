@@ -1203,6 +1203,128 @@ model IncomingInvoiceLifecycleEvent {
   @@index([tenantId])
 }
 
+enum ExpenseReportStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum ExpenseItemOcrStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  SKIPPED
+}
+
+model ExpenseCategory {
+  id            String              @id @default(cuid())
+  tenantId      String
+  slug          String
+  name          String
+  isActive      Boolean             @default(true)
+  sortOrder     Int                 @default(0)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  deleted       Boolean             @default(false)
+  deletedDate   DateTime?
+  deletedUserId String?
+  tenant        Tenant              @relation(fields: [tenantId], references: [id])
+  items         ExpenseReportItem[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, deleted, isActive])
+}
+
+model ExpenseApproverSetting {
+  id             String   @id @default(cuid())
+  tenantId       String
+  approverUserId String
+  notifyEmail    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  tenant         Tenant   @relation(fields: [tenantId], references: [id])
+  approver       User     @relation("ExpenseApproverSettingApprover", fields: [approverUserId], references: [id])
+
+  @@unique([tenantId])
+}
+
+model ExpenseReport {
+  id              String                        @id @default(cuid())
+  tenantId        String
+  reportNumber    String
+  status          ExpenseReportStatus           @default(DRAFT)
+  employeeUserId  String
+  approverUserId  String?
+  currency        String                        @default("TRY")
+  totalAmount     Decimal                       @db.Decimal(10, 2)
+  note            String?
+  submittedAt     DateTime?
+  decidedAt       DateTime?
+  decisionNote    String?
+  createdAt       DateTime                      @default(now())
+  updatedAt       DateTime                      @updatedAt
+  deleted         Boolean                       @default(false)
+  deletedDate     DateTime?
+  deletedUserId   String?
+  employee        User                          @relation("ExpenseReportEmployee", fields: [employeeUserId], references: [id])
+  approver        User?                         @relation("ExpenseReportApprover", fields: [approverUserId], references: [id])
+  tenant          Tenant                        @relation(fields: [tenantId], references: [id])
+  items           ExpenseReportItem[]
+  lifecycleEvents ExpenseReportLifecycleEvent[]
+
+  @@unique([tenantId, reportNumber])
+  @@index([tenantId, status])
+  @@index([employeeUserId, status])
+  @@index([approverUserId, status])
+}
+
+model ExpenseReportItem {
+  id                 String               @id @default(cuid())
+  tenantId           String
+  expenseReportId    String
+  categoryId         String
+  expenseDate        DateTime
+  receiptNo          String?
+  amount             Decimal              @db.Decimal(10, 2)
+  currency           String               @default("TRY")
+  vendorName         String
+  description        String?
+  receiptObjectKey   String?
+  receiptUrl         String?
+  receiptContentType String?
+  receiptSize        Int?
+  ocrStatus          ExpenseItemOcrStatus @default(SKIPPED)
+  ocrRawResult       Json?
+  ocrConfidence      Decimal?             @db.Decimal(5, 4)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  category           ExpenseCategory      @relation(fields: [categoryId], references: [id])
+  expenseReport      ExpenseReport        @relation(fields: [expenseReportId], references: [id])
+  tenant             Tenant               @relation(fields: [tenantId], references: [id])
+
+  @@index([expenseReportId])
+  @@index([tenantId])
+}
+
+model ExpenseReportLifecycleEvent {
+  id              String        @id @default(cuid())
+  tenantId        String
+  expenseReportId String
+  eventType       String
+  actorUserId     String?
+  actorType       String        @default("USER")
+  summary         String
+  metadata        Json?
+  occurredAt      DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+  expenseReport   ExpenseReport @relation(fields: [expenseReportId], references: [id])
+  tenant          Tenant        @relation(fields: [tenantId], references: [id])
+
+  @@index([expenseReportId, occurredAt])
+  @@index([tenantId])
+}
+
 model Warehouse {
   id                            String                        @id @default(cuid())
   tenantId                      String
@@ -1851,6 +1973,11 @@ model Tenant {
   incomingInvoiceProviderConfigs           IncomingInvoiceProviderConfig[]
   incomingInvoiceXmlArtifacts              IncomingInvoiceXmlArtifact[]
   incomingInvoiceLifecycleEvents           IncomingInvoiceLifecycleEvent[]
+  expenseCategories                        ExpenseCategory[]
+  expenseApproverSettings                  ExpenseApproverSetting[]
+  expenseReports                           ExpenseReport[]
+  expenseReportItems                       ExpenseReportItem[]
+  expenseReportLifecycleEvents             ExpenseReportLifecycleEvent[]
   integrationSyncJobs                      IntegrationSyncJob[]
   integrationDeadLetters                   IntegrationDeadLetter[]
   marketplaceIntegrationConfigs            MarketplaceIntegrationConfig[]
@@ -1934,6 +2061,9 @@ model User {
   inventoryPreference      UserInventoryPreference?
   inventoryExportHistories InventoryExportHistory[]
   roleAssignments          UserRoleAssignment[]
+  expenseApproverSettings  ExpenseApproverSetting[] @relation("ExpenseApproverSettingApprover")
+  expenseReportsAsEmployee ExpenseReport[]          @relation("ExpenseReportEmployee")
+  expenseReportsAsApprover ExpenseReport[]          @relation("ExpenseReportApprover")
 
   @@index([deleted])
   @@index([tenantId])
@@ -2568,6 +2698,8 @@ enum UserNotificationType {
   PRODUCT_QUESTION_CREATED
   INVENTORY_ALERT_CREATED
   STOCK_COUNT_APPLIED
+  EXPENSE_REPORT_SUBMITTED
+  EXPENSE_REPORT_DECIDED
 }
 
 enum UserNotificationChannel {

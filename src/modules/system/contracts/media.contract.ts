@@ -27,3 +27,18 @@ export type UploadCariPhotoResult = {
   size: number;
   url: string;
 };
+
+export type UploadExpenseReceiptInput = {
+  bytes: Buffer;
+  fileName: string;
+  contentType: string;
+  tenantId: string;
+};
+
+export type UploadExpenseReceiptResult = {
+  bucket: string;
+  objectKey: string;
+  contentType: string;
+  size: number;
+  url: string;
+};
