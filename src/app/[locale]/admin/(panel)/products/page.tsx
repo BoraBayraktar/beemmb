@@ -36,6 +36,10 @@ export default async function AdminProductsPage({
     notFound();
   }
 
+  if (!(await rbacService.hasPermission(user, "products.read"))) {
+    notFound();
+  }
+
   const query = await searchParams;
   const [productResult, categories, warehouses, brands, suppliers, attributeDefinitions] = await runWithTenantContext(
     { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },

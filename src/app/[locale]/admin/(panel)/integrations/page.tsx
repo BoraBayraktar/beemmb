@@ -26,6 +26,10 @@ export default async function AdminIntegrationsPage({
     redirect(`/${locale}/admin/login`);
   }
 
+  if (!(await rbacService.hasPermission(user, "integrations.read"))) {
+    redirect(`/${locale}/admin`);
+  }
+
   const [jobs, deadLetters, trendyolDashboard, n11Dashboard, pazaramaDashboard, hepsiburadaDashboard] = await runWithTenantContext(
     { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
     () => Promise.all([

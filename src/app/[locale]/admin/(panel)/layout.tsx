@@ -4,52 +4,8 @@ import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
 import { platformService } from "@/modules/platform/services/platform.service";
-import { buildAdminMenuTree, type AdminMenuItem } from "@/ui/admin/admin-menu";
-import { AdminPanelShell, type MenuItem } from "@/ui/admin/panel-shell";
-
-/**
- * Menude bir ogenin gorunmesi icin CIFT KONTROL gerekir: (1) kullanicinin
- * rolunde ilgili permissionKey olmali VE (2) tenant'in aboneliginde ilgili
- * moduleKey acik olmali. moduleKey sadece ust-seviye (grup) node'larda
- * tanimlidir, children parent'tan miras alir. Bu SADECE menu gorunurlugu
- * icin bir kolayliktir -- route-level yetkilendirme hala tek basina
- * requirePermission()'a dayanir, entitlement kontrolu API katmaninda
- * ZORUNLU degildir (bkz. plan Faz 3 notu).
- */
-function filterMenuByPermissionsAndEntitlements(
-  items: AdminMenuItem[],
-  permissionKeys: string[],
-  enabledModuleKeys: Set<string>,
-  inheritedModuleKey?: string,
-): MenuItem[] {
-  const filteredItems: MenuItem[] = [];
-
-  for (const item of items) {
-    const moduleKey = item.moduleKey ?? inheritedModuleKey;
-    const hasEntitlement = !moduleKey || enabledModuleKeys.has(moduleKey);
-
-    if (!hasEntitlement) {
-      continue;
-    }
-
-    const children = item.children
-      ? filterMenuByPermissionsAndEntitlements(item.children, permissionKeys, enabledModuleKeys, moduleKey)
-      : undefined;
-    const canSeeItem = !item.permissionKey || permissionKeys.includes(item.permissionKey);
-
-    if (!canSeeItem && (!children || children.length === 0)) {
-      continue;
-    }
-
-    filteredItems.push({
-      href: item.href,
-      label: item.label,
-      children,
-    });
-  }
-
-  return filteredItems;
-}
+import { buildAdminMenuTree, filterMenuByPermissionsAndEntitlements, type AdminMenuItem } from "@/ui/admin/admin-menu";
+import { AdminPanelShell } from "@/ui/admin/panel-shell";
 
 export default async function AdminPanelLayout({
   children,

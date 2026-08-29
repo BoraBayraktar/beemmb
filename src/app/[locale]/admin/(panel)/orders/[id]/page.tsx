@@ -27,6 +27,10 @@ export default async function AdminOrderDetailPage({
     notFound();
   }
 
+  if (!(await rbacService.hasPermission(user, "orders.read"))) {
+    notFound();
+  }
+
   let order;
   const [accountOptions, carrierCompanies] = await runWithTenantContext(
     { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },

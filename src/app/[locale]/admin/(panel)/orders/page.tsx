@@ -6,6 +6,7 @@ import { runWithTenantContext } from "@/lib/tenant-context";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { commerceService } from "@/modules/commerce/services/commerce.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 
 type OrderStatusFilter = "CONFIRMED" | "CANCELLED";
 type PaymentStatusFilter = "PENDING" | "AUTHORIZED" | "PAID" | "FAILED" | "REFUNDED";
@@ -128,6 +129,10 @@ export default async function AdminOrdersPage({ params, searchParams }: OrdersPa
 
   const user = await getCurrentUserFromContext();
   if (!user) {
+    notFound();
+  }
+
+  if (!(await rbacService.hasPermission(user, "orders.read"))) {
     notFound();
   }
 

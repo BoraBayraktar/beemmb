@@ -26,6 +26,10 @@ export default async function AdminN11IntegrationPage({
     redirect(`/${locale}/admin/login`);
   }
 
+  if (!(await rbacService.hasPermission(user, "integrationsN11.manage"))) {
+    redirect(`/${locale}/admin`);
+  }
+
   const [dashboard, productResult, carrierCompanies] = await runWithTenantContext(
     { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
     () => Promise.all([

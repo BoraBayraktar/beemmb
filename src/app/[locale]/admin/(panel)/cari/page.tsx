@@ -23,6 +23,10 @@ export default async function AdminCariPage({
     notFound();
   }
 
+  if (!(await rbacService.hasPermission(user, "cari.manage"))) {
+    notFound();
+  }
+
   const dictionary = getDictionary(locale as Locale);
   const items = await runWithTenantContext(
     { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },

@@ -26,6 +26,10 @@ export default async function AdminHepsiburadaIntegrationPage({
     redirect(`/${locale}/admin/login`);
   }
 
+  if (!(await rbacService.hasPermission(user, "integrationsHepsiburada.manage"))) {
+    redirect(`/${locale}/admin`);
+  }
+
   const [dashboard, productResult, carrierCompanies] = await runWithTenantContext(
     { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
     () => Promise.all([

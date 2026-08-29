@@ -26,6 +26,10 @@ export default async function AdminTrendyolIntegrationPage({
     redirect(`/${locale}/admin/login`);
   }
 
+  if (!(await rbacService.hasPermission(user, "integrationsTrendyol.manage"))) {
+    redirect(`/${locale}/admin`);
+  }
+
   const [dashboard, productResult] = await runWithTenantContext(
     { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
     () => Promise.all([

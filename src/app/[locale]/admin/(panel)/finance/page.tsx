@@ -25,6 +25,11 @@ export default async function AdminFinancePage({
 
   const dictionary = getDictionary(locale as Locale);
   const effectiveRbac = await rbacService.getEffectivePermissions(user);
+
+  if (!effectiveRbac.permissionKeys.includes("finance.read")) {
+    notFound();
+  }
+
   const overview = await runWithTenantContext(
     { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
     () => financeOverviewService.getOverview(locale),

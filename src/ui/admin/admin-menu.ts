@@ -1,4 +1,5 @@
 import type { Dictionary, Locale } from "@/lib/i18n";
+import type { MenuItem } from "@/ui/admin/panel-shell";
 
 export type AdminMenuItem = {
   href: string;
@@ -8,6 +9,88 @@ export type AdminMenuItem = {
   moduleKey?: string;
   children?: AdminMenuItem[];
 };
+
+/**
+ * Menude bir ogenin gorunmesi icin CIFT KONTROL gerekir: (1) kullanicinin
+ * rolunde ilgili permissionKey olmali VE (2) tenant'in aboneliginde ilgili
+ * moduleKey acik olmali. moduleKey sadece ust-seviye (grup) node'larda
+ * tanimlidir, children parent'tan miras alir. Bu SADECE menu gorunurlugu
+ * icin bir kolayliktir -- route-level yetkilendirme hala tek basina
+ * requirePermission()'a dayanir, entitlement kontrolu API katmaninda
+ * ZORUNLU degildir (bkz. plan Faz 3 notu).
+ */
+export function filterMenuByPermissionsAndEntitlements(
+  items: AdminMenuItem[],
+  permissionKeys: string[],
+  enabledModuleKeys: Set<string>,
+  inheritedModuleKey?: string,
+): MenuItem[] {
+  const filteredItems: MenuItem[] = [];
+
+  for (const item of items) {
+    const moduleKey = item.moduleKey ?? inheritedModuleKey;
+    const hasEntitlement = !moduleKey || enabledModuleKeys.has(moduleKey);
+
+    if (!hasEntitlement) {
+      continue;
+    }
+
+    const children = item.children
+      ? filterMenuByPermissionsAndEntitlements(item.children, permissionKeys, enabledModuleKeys, moduleKey)
+      : undefined;
+    const canSeeItem = !item.permissionKey || permissionKeys.includes(item.permissionKey);
+
+    if (!canSeeItem && (!children || children.length === 0)) {
+      continue;
+    }
+
+    filteredItems.push({
+      href: item.href,
+      label: item.label,
+      children,
+    });
+  }
+
+  return filteredItems;
+}
+
+/**
+ * `/admin` kok sayfasinin, kullanicinin GERCEKTEN erisimi olan ilk sayfaya
+ * yonlendirebilmesi icin -- filterMenuByPermissionsAndEntitlements'in tersi:
+ * tum agaci filtrelemek yerine, izin+entitlement kontrolunden gecen ILK
+ * node'un href'ini bulup doner (bir grup basligi kendi permissionKey'ini
+ * karsilamiyor ama bir alt ogesi karsiliyorsa, o alt ogenin href'i donulur --
+ * boylece kullanici erisimi olmayan bir grup sayfasina yonlendirilmez).
+ */
+export function findFirstAccessibleHref(
+  items: AdminMenuItem[],
+  permissionKeys: string[],
+  enabledModuleKeys: Set<string>,
+  inheritedModuleKey?: string,
+): string | null {
+  for (const item of items) {
+    const moduleKey = item.moduleKey ?? inheritedModuleKey;
+    const hasEntitlement = !moduleKey || enabledModuleKeys.has(moduleKey);
+
+    if (!hasEntitlement) {
+      continue;
+    }
+
+    const canSeeItem = !item.permissionKey || permissionKeys.includes(item.permissionKey);
+    if (canSeeItem) {
+      return item.href;
+    }
+
+    if (item.children) {
+      const childHref = findFirstAccessibleHref(item.children, permissionKeys, enabledModuleKeys, moduleKey);
+      if (childHref) {
+        return childHref;
+      }
+    }
+  }
+
+  return null;
+}
 
 export function buildAdminMenuTree(dictionary: Dictionary, locale: Locale): AdminMenuItem[] {
   return [

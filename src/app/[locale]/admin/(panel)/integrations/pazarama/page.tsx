@@ -26,6 +26,10 @@ export default async function AdminPazaramaIntegrationPage({
     redirect(`/${locale}/admin/login`);
   }
 
+  if (!(await rbacService.hasPermission(user, "integrationsPazarama.manage"))) {
+    redirect(`/${locale}/admin`);
+  }
+
   const [dashboard, productResult, carrierCompanies] = await runWithTenantContext(
     { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
     () => Promise.all([
