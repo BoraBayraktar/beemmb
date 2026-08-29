@@ -188,6 +188,13 @@ type Labels = {
   financialMovementAccount: string;
   financialMovementDirection: string;
   financialMovementSource: string;
+  financialMovementSourceManual: string;
+  financialMovementSourceCollection: string;
+  financialMovementSourcePayment: string;
+  financialMovementSourceOrder: string;
+  financialMovementSourceDocument: string;
+  financialMovementSourceRefund: string;
+  financialMovementSourceTransfer: string;
   financialMovementCategory: string;
   inventoryMovementTitle: string;
   inventoryMovementType: string;
@@ -264,6 +271,25 @@ function formatRestockStatus(value: OrderDetail["inventorySummary"]["restockStat
   }
 
   return labels.inventoryMovementRestockNone;
+}
+
+function formatFinancialMovementSource(value: OrderDetail["financialMovements"][number]["sourceType"], labels: Labels) {
+  switch (value) {
+    case "COLLECTION":
+      return labels.financialMovementSourceCollection;
+    case "PAYMENT":
+      return labels.financialMovementSourcePayment;
+    case "ORDER":
+      return labels.financialMovementSourceOrder;
+    case "DOCUMENT":
+      return labels.financialMovementSourceDocument;
+    case "REFUND":
+      return labels.financialMovementSourceRefund;
+    case "TRANSFER":
+      return labels.financialMovementSourceTransfer;
+    default:
+      return labels.financialMovementSourceManual;
+  }
 }
 
 function formatMovementType(value: OrderDetail["inventoryMovements"][number]["type"], labels: Labels) {
@@ -917,7 +943,7 @@ export function OrderDetailManager({ locale, order, labels, canManage, accountOp
               <div className="grid gap-2 text-sm text-[color:var(--color-text)] md:grid-cols-2">
                 <p><span className="font-medium text-[color:var(--color-text)]">{labels.financialMovementAccount}:</span> {movement.accountName}</p>
                 <p><span className="font-medium text-[color:var(--color-text)]">{labels.financialMovementDirection}:</span> {formatFinancialDirection(movement.direction)}</p>
-                <p><span className="font-medium text-[color:var(--color-text)]">{labels.financialMovementSource}:</span> {movement.sourceType}</p>
+                <p><span className="font-medium text-[color:var(--color-text)]">{labels.financialMovementSource}:</span> {formatFinancialMovementSource(movement.sourceType, labels)}</p>
                 <p><span className="font-medium text-[color:var(--color-text)]">{labels.financialMovementCategory}:</span> {movement.category ?? labels.notSpecified}</p>
                 <p><span className="font-medium text-[color:var(--color-text)]">{labels.orderTotal}:</span> {formatMoney(movement.amount, movement.currency, locale)}</p>
                 <p><span className="font-medium text-[color:var(--color-text)]">{labels.historyAt}:</span> {formatDate(movement.transactionAt, locale)}</p>

@@ -61,6 +61,12 @@ export default async function AdminCashTransactionDetailPage({
         incoming: dictionary.admin.financeCashTransactionsIncoming,
         outgoing: dictionary.admin.financeCashTransactionsOutgoing,
         transfer: dictionary.admin.financeCashTransactionsTransfer,
+        manual: dictionary.admin.financeCashTransactionsManual,
+        collection: dictionary.admin.financeCashTransactionsCollection,
+        payment: dictionary.admin.financeCashTransactionsPayment,
+        order: dictionary.admin.financeCashTransactionsOrder,
+        document: dictionary.admin.financeCashTransactionsDocument,
+        refund: dictionary.admin.financeCashTransactionsRefund,
       }}
     />
   );

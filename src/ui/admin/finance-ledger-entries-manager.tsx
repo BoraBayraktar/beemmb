@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { AdminFinanceLedgerEntriesResult } from "@/modules/finance/contracts/finance-account-entry.contract";
+import type { AdminFinanceLedgerEntriesResult, FinanceAccountEntrySourceType } from "@/modules/finance/contracts/finance-account-entry.contract";
 import type { FinanceLedgerEntriesCopy } from "@/modules/finance/services/finance-ledger-entries-copy.resolver";
 
 type Props = {
@@ -24,6 +24,21 @@ function formatMoney(value: number, currency: string) {
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+}
+
+function formatSourceType(value: FinanceAccountEntrySourceType, copy: FinanceLedgerEntriesCopy) {
+  switch (value) {
+    case "COLLECTION":
+      return copy.sourceCollection;
+    case "PAYMENT":
+      return copy.sourcePayment;
+    case "BUSINESS_DOCUMENT":
+      return copy.sourceBusinessDocument;
+    case "INCOMING_INVOICE":
+      return copy.sourceIncomingInvoice;
+    default:
+      return copy.sourceCashTransaction;
+  }
 }
 
 export function FinanceLedgerEntriesManager({
@@ -140,7 +155,7 @@ export function FinanceLedgerEntriesManager({
                   <td className="px-3 py-2">{item.side === "DEBIT" ? copy.sideDebit : copy.sideCredit}</td>
                   <td className="px-3 py-2">{formatMoney(item.amount, item.currency)}</td>
                   <td className="px-3 py-2">
-                    {item.sourceType} / {item.sourceId.slice(0, 8)}
+                    {formatSourceType(item.sourceType, copy)} / {item.sourceId.slice(0, 8)}
                   </td>
                   <td className="px-3 py-2">{item.title}</td>
                 </tr>

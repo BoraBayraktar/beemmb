@@ -25,6 +25,12 @@ type Labels = {
   incoming: string;
   outgoing: string;
   transfer: string;
+  manual: string;
+  collection: string;
+  payment: string;
+  order: string;
+  document: string;
+  refund: string;
 };
 
 type Props = {
@@ -32,6 +38,25 @@ type Props = {
   detail: AdminCashTransactionDetail;
   labels: Labels;
 };
+
+function formatSourceType(value: AdminCashTransactionDetail["sourceType"], labels: Labels) {
+  switch (value) {
+    case "COLLECTION":
+      return labels.collection;
+    case "PAYMENT":
+      return labels.payment;
+    case "ORDER":
+      return labels.order;
+    case "DOCUMENT":
+      return labels.document;
+    case "REFUND":
+      return labels.refund;
+    case "TRANSFER":
+      return labels.transfer;
+    default:
+      return labels.manual;
+  }
+}
 
 function formatMoney(value: number, currency: string) {
   return new Intl.NumberFormat("tr-TR", {
@@ -71,7 +96,7 @@ export function CashTransactionDetailManager({ locale, detail, labels }: Props) 
           <p className="text-sm text-[color:var(--color-text)]">{labels.amount}: <span className="font-medium text-[color:var(--color-text)]">{formatMoney(detail.amount, detail.currency)}</span></p>
           <p className="text-sm text-[color:var(--color-text)]">{labels.date}: <span className="font-medium text-[color:var(--color-text)]">{formatDate(detail.transactionAt)}</span></p>
           <p className="text-sm text-[color:var(--color-text)]">{labels.direction}: <span className="font-medium text-[color:var(--color-text)]">{detail.direction === "IN" ? labels.incoming : detail.direction === "OUT" ? labels.outgoing : labels.transfer}</span></p>
-          <p className="text-sm text-[color:var(--color-text)]">{labels.sourceType}: <span className="font-medium text-[color:var(--color-text)]">{detail.sourceType}</span></p>
+          <p className="text-sm text-[color:var(--color-text)]">{labels.sourceType}: <span className="font-medium text-[color:var(--color-text)]">{formatSourceType(detail.sourceType, labels)}</span></p>
           <p className="text-sm text-[color:var(--color-text)]">
             {labels.counterparty}:{" "}
             {ledgerHref ? (

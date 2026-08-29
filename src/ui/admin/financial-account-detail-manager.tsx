@@ -37,6 +37,13 @@ type Labels = {
   filterTransfer: string;
   movementDirection: string;
   movementSourceType: string;
+  sourceTypeManual: string;
+  sourceTypeCollection: string;
+  sourceTypePayment: string;
+  sourceTypeOrder: string;
+  sourceTypeDocument: string;
+  sourceTypeRefund: string;
+  sourceTypeTransfer: string;
   movementCategory: string;
   movementAmount: string;
   movementDate: string;
@@ -77,6 +84,25 @@ function formatShortDate(value: string) {
   return new Intl.DateTimeFormat("tr-TR", {
     dateStyle: "medium",
   }).format(new Date(value));
+}
+
+function formatSourceType(value: AdminFinancialAccountDetail["transactions"][number]["sourceType"], labels: Labels) {
+  switch (value) {
+    case "COLLECTION":
+      return labels.sourceTypeCollection;
+    case "PAYMENT":
+      return labels.sourceTypePayment;
+    case "ORDER":
+      return labels.sourceTypeOrder;
+    case "DOCUMENT":
+      return labels.sourceTypeDocument;
+    case "REFUND":
+      return labels.sourceTypeRefund;
+    case "TRANSFER":
+      return labels.sourceTypeTransfer;
+    default:
+      return labels.sourceTypeManual;
+  }
 }
 
 function formatDirection(value: AdminFinancialAccountDetail["transactions"][number]["direction"], labels: Labels) {
@@ -271,7 +297,7 @@ export function FinancialAccountDetailManager({ locale, detail, accountId, initi
             <article key={item.id} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
               <div className="grid gap-2 text-sm text-[color:var(--color-text)] md:grid-cols-2 xl:grid-cols-4">
                 <p>{labels.movementDirection}: {formatDirection(item.direction, labels)}</p>
-                <p>{labels.movementSourceType}: {item.sourceType}</p>
+                <p>{labels.movementSourceType}: {formatSourceType(item.sourceType, labels)}</p>
                 <p>{labels.movementCategory}: {item.category ?? labels.notSpecified}</p>
                 <p>{labels.movementAmount}: {formatMoney(item.amount, item.currency)}</p>
                 <p>{labels.movementDate}: {formatDate(item.transactionAt)}</p>

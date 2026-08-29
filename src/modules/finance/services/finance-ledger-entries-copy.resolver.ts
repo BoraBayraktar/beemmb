@@ -27,6 +27,11 @@ export function resolveFinanceLedgerEntriesCopy(locale: string) {
     sideDebit: admin.financeLedgerEntriesSideDebit,
     sideCredit: admin.financeLedgerEntriesSideCredit,
     emptyList: admin.financeLedgerEntriesEmptyList,
+    sourceCashTransaction: admin.financeLedgerEntriesSourceCashTransaction,
+    sourceCollection: admin.financeLedgerEntriesSourceCollection,
+    sourcePayment: admin.financeLedgerEntriesSourcePayment,
+    sourceBusinessDocument: admin.financeLedgerEntriesSourceBusinessDocument,
+    sourceIncomingInvoice: admin.financeLedgerEntriesSourceIncomingInvoice,
   };
 }
 
