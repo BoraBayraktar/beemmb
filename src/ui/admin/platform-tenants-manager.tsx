@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ErrorToast } from "@/components/ui/toast";
 
 type TenantStatus = "ACTIVE" | "TRIAL" | "SUSPENDED" | "ARCHIVED";
@@ -53,11 +54,14 @@ const emptyForm = {
   taxNumber: "",
   contactEmail: "",
   contactPhone: "",
+  status: "ACTIVE" as TenantStatus,
   moduleKeys: [] as string[],
   adminEmail: "",
   adminName: "",
   adminPassword: "",
 };
+
+type DrawerMode = "create" | "edit";
 
 export function PlatformTenantsManager({ initialTenants, modules, initialEntitlements }: Props) {
   const [tenants, setTenants] = useState(initialTenants);
@@ -65,6 +69,8 @@ export function PlatformTenantsManager({ initialTenants, modules, initialEntitle
     Object.fromEntries(initialEntitlements.map((item) => [item.tenantId, item.entitlements])),
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState<DrawerMode>("create");
+  const [editingTenantId, setEditingTenantId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +86,26 @@ export function PlatformTenantsManager({ initialTenants, modules, initialEntitle
   }
 
   function openCreateDrawer() {
+    setDrawerMode("create");
+    setEditingTenantId(null);
     setForm(emptyForm);
+    setError(null);
+    setDrawerOpen(true);
+  }
+
+  function openEditDrawer(tenant: Tenant) {
+    setDrawerMode("edit");
+    setEditingTenantId(tenant.id);
+    setForm({
+      ...emptyForm,
+      slug: tenant.slug,
+      name: tenant.name,
+      legalName: tenant.legalName ?? "",
+      taxNumber: tenant.taxNumber ?? "",
+      contactEmail: tenant.contactEmail,
+      contactPhone: tenant.contactPhone ?? "",
+      status: tenant.status,
+    });
     setError(null);
     setDrawerOpen(true);
   }
@@ -109,6 +134,36 @@ export function PlatformTenantsManager({ initialTenants, modules, initialEntitle
     setError(null);
 
     try {
+      if (drawerMode === "edit") {
+        if (!editingTenantId) {
+          throw new Error("Düzenlenecek tenant bulunamadı.");
+        }
+
+        const response = await fetch(`/api/admin/platform/tenants/${editingTenantId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: form.name,
+            legalName: form.legalName || undefined,
+            taxNumber: form.taxNumber || undefined,
+            contactEmail: form.contactEmail,
+            contactPhone: form.contactPhone || undefined,
+            status: form.status,
+          }),
+        });
+
+        if (!response.ok) {
+          const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+          throw new Error(payload?.message ?? "Tenant güncellenemedi.");
+        }
+
+        const payload = (await response.json()) as { item: Tenant };
+        setTenants((prev) => prev.map((tenant) => (tenant.id === payload.item.id ? payload.item : tenant)));
+        setDrawerOpen(false);
+        setForm(emptyForm);
+        return;
+      }
+
       const response = await fetch("/api/admin/platform/tenants", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -198,9 +253,10 @@ export function PlatformTenantsManager({ initialTenants, modules, initialEntitle
                   <h3 className="font-semibold text-[color:var(--color-text)]">{tenant.name}</h3>
                   <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{tenant.slug} · {tenant.contactEmail}</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="rounded-full bg-[color:var(--color-bg-soft)] px-3 py-1 text-xs font-semibold text-[color:var(--color-text-muted)]">{STATUS_LABELS[tenant.status]}</span>
                   {tenant.isPlatformTenant ? <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">Platform</span> : null}
+                  <Button type="button" variant="outline" size="sm" onClick={() => openEditDrawer(tenant)}>Düzenle</Button>
                 </div>
               </div>
 
@@ -235,7 +291,7 @@ export function PlatformTenantsManager({ initialTenants, modules, initialEntitle
             <div className="flex items-start justify-between border-b border-[color:var(--color-border)] p-5">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">Platform Yönetimi</p>
-                <h3 className="mt-1 text-xl font-semibold tracking-tight text-[color:var(--color-text)]">Yeni Tenant</h3>
+                <h3 className="mt-1 text-xl font-semibold tracking-tight text-[color:var(--color-text)]">{drawerMode === "edit" ? "Tenant Düzenle" : "Yeni Tenant"}</h3>
               </div>
               <Button type="button" size="icon" variant="ghost" onClick={closeDrawer} disabled={loading}>
                 <X className="h-5 w-5" />
@@ -244,10 +300,18 @@ export function PlatformTenantsManager({ initialTenants, modules, initialEntitle
 
             <form className="flex min-h-0 flex-1 flex-col" onSubmit={submitTenant}>
               <div className="grid flex-1 content-start gap-4 overflow-y-auto p-5">
-                <div className="grid gap-2">
-                  <Label>Slug</Label>
-                  <Input value={form.slug} onChange={(event) => setForm((prev) => ({ ...prev, slug: event.target.value }))} placeholder="ornek-sirket" required />
-                </div>
+                {drawerMode === "create" ? (
+                  <div className="grid gap-2">
+                    <Label>Slug</Label>
+                    <Input value={form.slug} onChange={(event) => setForm((prev) => ({ ...prev, slug: event.target.value }))} placeholder="ornek-sirket" required />
+                  </div>
+                ) : (
+                  <div className="grid gap-2">
+                    <Label>Slug</Label>
+                    <Input value={form.slug} disabled />
+                    <p className="text-xs text-[color:var(--color-text-muted)]">Slug oluşturulduktan sonra değiştirilemez.</p>
+                  </div>
+                )}
                 <div className="grid gap-2">
                   <Label>Şirket Adı</Label>
                   <Input value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} required />
@@ -269,39 +333,57 @@ export function PlatformTenantsManager({ initialTenants, modules, initialEntitle
                   <Input value={form.contactPhone} onChange={(event) => setForm((prev) => ({ ...prev, contactPhone: event.target.value }))} />
                 </div>
 
-                <div className="grid gap-2">
-                  <p className="text-sm font-semibold text-[color:var(--color-text)]">Açık Modüller</p>
-                  <div className="rounded-xl border border-[color:var(--color-border)] p-3">
-                    <div className="grid gap-2">
-                      {modules.map((module) => (
-                        <label key={module.key} className="flex items-center gap-2 text-sm text-[color:var(--color-text)]">
-                          <input type="checkbox" checked={form.moduleKeys.includes(module.key)} onChange={() => toggleModuleKey(module.key)} />
-                          {module.name}
-                        </label>
-                      ))}
-                    </div>
+                {drawerMode === "edit" ? (
+                  <div className="grid gap-2">
+                    <Label>Durum</Label>
+                    <Select value={form.status} onValueChange={(value) => setForm((prev) => ({ ...prev, status: value as TenantStatus }))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(STATUS_LABELS) as TenantStatus[]).map((status) => (
+                          <SelectItem key={status} value={status}>{STATUS_LABELS[status]}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                </div>
+                ) : null}
 
-                <div className="grid gap-2 rounded-xl border border-[color:var(--color-border)] p-3">
-                  <p className="text-sm font-semibold text-[color:var(--color-text)]">İlk Yönetici Kullanıcı</p>
-                  <div className="grid gap-2">
-                    <Label>E-posta</Label>
-                    <Input type="email" value={form.adminEmail} onChange={(event) => setForm((prev) => ({ ...prev, adminEmail: event.target.value }))} required />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Ad Soyad</Label>
-                    <Input value={form.adminName} onChange={(event) => setForm((prev) => ({ ...prev, adminName: event.target.value }))} required />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Şifre</Label>
-                    <Input type="password" value={form.adminPassword} onChange={(event) => setForm((prev) => ({ ...prev, adminPassword: event.target.value }))} minLength={6} required />
-                  </div>
-                </div>
+                {drawerMode === "create" ? (
+                  <>
+                    <div className="grid gap-2">
+                      <p className="text-sm font-semibold text-[color:var(--color-text)]">Açık Modüller</p>
+                      <div className="rounded-xl border border-[color:var(--color-border)] p-3">
+                        <div className="grid gap-2">
+                          {modules.map((module) => (
+                            <label key={module.key} className="flex items-center gap-2 text-sm text-[color:var(--color-text)]">
+                              <input type="checkbox" checked={form.moduleKeys.includes(module.key)} onChange={() => toggleModuleKey(module.key)} />
+                              {module.name}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-2 rounded-xl border border-[color:var(--color-border)] p-3">
+                      <p className="text-sm font-semibold text-[color:var(--color-text)]">İlk Yönetici Kullanıcı</p>
+                      <div className="grid gap-2">
+                        <Label>E-posta</Label>
+                        <Input type="email" value={form.adminEmail} onChange={(event) => setForm((prev) => ({ ...prev, adminEmail: event.target.value }))} required />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label>Ad Soyad</Label>
+                        <Input value={form.adminName} onChange={(event) => setForm((prev) => ({ ...prev, adminName: event.target.value }))} required />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label>Şifre</Label>
+                        <Input type="password" value={form.adminPassword} onChange={(event) => setForm((prev) => ({ ...prev, adminPassword: event.target.value }))} minLength={6} required />
+                      </div>
+                    </div>
+                  </>
+                ) : null}
               </div>
               <div className="flex shrink-0 justify-end gap-2 border-t border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-5">
                 <Button type="button" variant="secondary" onClick={closeDrawer} disabled={loading}>Vazgeç</Button>
-                <Button type="submit" disabled={loading}>Oluştur</Button>
+                <Button type="submit" disabled={loading}>{drawerMode === "edit" ? "Kaydet" : "Oluştur"}</Button>
               </div>
             </form>
           </aside>
