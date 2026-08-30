@@ -55,6 +55,68 @@ export function filterMenuByPermissionsAndEntitlements(
 }
 
 /**
+ * Rol duzenleyicisinde (roles/page.tsx) kullanilir: menude gorunen tum
+ * izinleri, kullanicinin KENDI izinlerine bakmaksizin -- sadece tenant'in
+ * abonelik entitlement'ina gore filtreler. Rol duzenleyen kisi baska bir
+ * kullaniciya kendisinde olmayan bir izni verebilmelidir; onemli olan tek
+ * kisitlama, tenant'in hic sahip olmadigi bir modulun izinlerinin
+ * gosterilmemesidir (anlam karisikligini onlemek icin).
+ */
+export function filterMenuTreeByEntitlements(
+  items: AdminMenuItem[],
+  enabledModuleKeys: Set<string>,
+  inheritedModuleKey?: string,
+): AdminMenuItem[] {
+  const filtered: AdminMenuItem[] = [];
+
+  for (const item of items) {
+    const moduleKey = item.moduleKey ?? inheritedModuleKey;
+    const hasEntitlement = !moduleKey || enabledModuleKeys.has(moduleKey);
+
+    if (!hasEntitlement) {
+      continue;
+    }
+
+    const children = item.children
+      ? filterMenuTreeByEntitlements(item.children, enabledModuleKeys, moduleKey)
+      : undefined;
+
+    filtered.push({ ...item, children });
+  }
+
+  return filtered;
+}
+
+/**
+ * Permission.module bazen ModuleCatalog'da ayri bir kayit degildir --
+ * admin-menu.ts'teki ust grubun (ör. "orders"/"productQuestions" ->
+ * "products", "users"/"audit" -> "system") altinda gosterilir; bu esleme
+ * rol duzenleyicisindeki "Diger izinler" listesini entitlement'a gore
+ * filtrelerken kullanilir. "admin" hicbir module bagli degildir (panele
+ * erisimin temel izni), her zaman gosterilir -- null doner.
+ */
+const PERMISSION_MODULE_TO_CATALOG_MODULE: Record<string, string | null> = {
+  admin: null,
+  users: "system",
+  audit: "system",
+  orders: "products",
+  productQuestions: "products",
+  categories: "products",
+  storefront: "products",
+  productAttributes: "products",
+  brands: "products",
+  warehouses: "inventory",
+  cari: "finance",
+  expenseSettings: "expenseReports",
+};
+
+export function resolvePermissionCatalogModule(permissionModule: string): string | null {
+  return permissionModule in PERMISSION_MODULE_TO_CATALOG_MODULE
+    ? PERMISSION_MODULE_TO_CATALOG_MODULE[permissionModule]
+    : permissionModule;
+}
+
+/**
  * `/admin` kok sayfasinin, kullanicinin GERCEKTEN erisimi olan ilk sayfaya
  * yonlendirebilmesi icin -- filterMenuByPermissionsAndEntitlements'in tersi:
  * tum agaci filtrelemek yerine, izin+entitlement kontrolunden gecen ILK

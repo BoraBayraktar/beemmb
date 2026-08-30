@@ -3,7 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
-import { buildAdminMenuTree } from "@/ui/admin/admin-menu";
+import { platformService } from "@/modules/platform/services/platform.service";
+import { buildAdminMenuTree, filterMenuTreeByEntitlements, resolvePermissionCatalogModule } from "@/ui/admin/admin-menu";
 import { RoleManager } from "@/ui/admin/role-manager";
 
 export default async function AdminRolesPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -24,11 +25,17 @@ export default async function AdminRolesPage({ params }: { params: Promise<{ loc
   }
 
   const dictionary = getDictionary(locale as Locale);
-  const [roles, permissions] = await Promise.all([
+  const [roles, allPermissions, enabledModuleKeys] = await Promise.all([
     rbacService.listRoles(user.tenantId),
     rbacService.listPermissions(),
+    platformService.getEnabledModuleKeys(user.tenantId),
   ]);
-  const menuTree = buildAdminMenuTree(dictionary, locale as Locale);
+  const rawMenuTree = buildAdminMenuTree(dictionary, locale as Locale);
+  const menuTree = filterMenuTreeByEntitlements(rawMenuTree, enabledModuleKeys);
+  const permissions = allPermissions.filter((permission) => {
+    const catalogModule = resolvePermissionCatalogModule(permission.module);
+    return catalogModule === null || enabledModuleKeys.has(catalogModule);
+  });
 
   return (
     <RoleManager
