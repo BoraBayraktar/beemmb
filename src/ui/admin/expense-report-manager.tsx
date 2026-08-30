@@ -479,10 +479,7 @@ export function ExpenseReportManager({
 
                 {detail.status === "DRAFT" ? (
                   <div className="space-y-3 rounded-2xl border border-dashed border-[color:var(--color-border)] p-4">
-                    <h3 className="font-medium text-[color:var(--color-text)]">{copy.addItem}</h3>
-
                     <div>
-                      <Label>{copy.photoCapture}</Label>
                       <input
                         ref={fileInputRef}
                         type="file"
@@ -499,7 +496,7 @@ export function ExpenseReportManager({
                         onClick={() => fileInputRef.current?.click()}
                       >
                         <Camera className="h-4 w-4" />
-                        Ekle
+                        Fiş/Fatura Fotoğrafı Ekle
                       </Button>
                       {photoUploading ? <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{copy.photoUploading}</p> : null}
                       {ocrResult?.status === "COMPLETED" ? <p className="mt-1 text-xs text-emerald-600">{copy.ocrPrefilled}</p> : null}
