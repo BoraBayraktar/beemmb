@@ -30,6 +30,11 @@ type ListFilter = {
 function buildWhere(filter: Pick<ListFilter, "search" | "status">, extra: Prisma.ExpenseReportWhereInput) {
   return {
     deleted: false,
+    // Kullanici formu acip hicbir kalem eklemeden kapatirsa (sekmeyi kapatma,
+    // sayfadan ayrilma gibi istemci tarafinin yakalayamadigi yollarla) bos
+    // taslak DB'de kalabiliyor. Bu tur 0 kalemli taslaklarin hicbir zaman
+    // anlamli bir kayit olmadigi icin listelerden her zaman gizlenir.
+    NOT: { status: "DRAFT" as const, items: { none: {} } },
     ...extra,
     ...(filter.status && filter.status !== "all" ? { status: filter.status } : {}),
     ...(filter.search
