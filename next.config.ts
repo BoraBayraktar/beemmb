@@ -8,7 +8,7 @@ const contentSecurityPolicy = `default-src 'self'; ${imgSrc}; style-src 'self' '
 const nextConfig: NextConfig = {
   serverExternalPackages: ["pdfkit", "fontkit"],
   outputFileTracingIncludes: {
-    "/api/admin/expense-reports/report/export": ["./node_modules/pdfkit/js/data/**/*"],
+    "/api/admin/expense-reports/report/export": ["./node_modules/pdfkit/js/**/*"],
   },
   async headers() {
     return [
