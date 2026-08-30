@@ -13,6 +13,8 @@ export async function GET(request: Request) {
         categoryId: searchParams.get("categoryId") ?? undefined,
         employeeUserId: searchParams.get("employeeUserId") ?? undefined,
         status: (searchParams.get("status") as "all" | "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED" | null) ?? undefined,
+        dateFrom: searchParams.get("dateFrom") ?? undefined,
+        dateTo: searchParams.get("dateTo") ?? undefined,
         page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
         pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : 25,
       });

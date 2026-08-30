@@ -11,6 +11,9 @@ type ItemFilter = Pick<AdminExpenseItemReportQuery, "search" | "categoryId" | "e
 function buildItemWhere(filter: ItemFilter) {
   const dateFrom = filter.dateFrom ? new Date(filter.dateFrom) : undefined;
   const dateTo = filter.dateTo ? new Date(filter.dateTo) : undefined;
+  if (dateTo) {
+    dateTo.setUTCHours(23, 59, 59, 999);
+  }
 
   return {
     ...(filter.categoryId ? { categoryId: filter.categoryId } : {}),
