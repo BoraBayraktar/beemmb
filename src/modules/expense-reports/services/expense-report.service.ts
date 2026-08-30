@@ -26,7 +26,7 @@ const addItemSchema = z.object({
   receiptNo: z.string().trim().max(80).optional().nullable(),
   amount: z.coerce.number().positive("Tutar sıfırdan büyük olmalıdır."),
   currency: z.string().trim().min(3).max(8).optional(),
-  vendorName: z.string().trim().min(1, "Şirket adı girilmelidir.").max(160),
+  vendorName: z.string().trim().min(1, "Satıcı adı girilmelidir.").max(160),
   description: z.string().trim().max(500).optional().nullable(),
   receiptObjectKey: z.string().trim().max(500).optional().nullable(),
   receiptUrl: z.string().trim().max(2048).optional().nullable(),
@@ -245,8 +245,12 @@ export class ExpenseReportService {
     const parsed = addItemSchema.parse(input);
 
     const category = await expenseSettingsService.listAllCategories();
-    if (!category.some((item) => item.id === parsed.categoryId)) {
+    const matchedCategory = category.find((item) => item.id === parsed.categoryId);
+    if (!matchedCategory) {
       throw new ExpenseReportAdminError("Geçersiz harcama cinsi.", 400);
+    }
+    if (matchedCategory.slug === "diger" && !parsed.description?.trim()) {
+      throw new ExpenseReportAdminError("\"Diğer\" seçildiğinde açıklama girilmelidir.", 400);
     }
 
     const updated = await this.repository.addItem({

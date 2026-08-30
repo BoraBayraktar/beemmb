@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Camera } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -158,6 +159,8 @@ export function ExpenseReportManager({
   const [ocrResult, setOcrResult] = useState<ExpenseOcrExtractionResult | null>(null);
   const [photoUploading, setPhotoUploading] = useState(false);
 
+  const isOtherCategorySelected = categories.find((category) => category.id === itemForm.categoryId)?.slug === "diger";
+
   function resetItemForm() {
     setItemForm(emptyItemForm);
     setReceipt(null);
@@ -276,7 +279,7 @@ export function ExpenseReportManager({
       });
 
       if (!response.ok) {
-        setError(await readErrorMessage(response, "Harcama kalemi eklenemedi."));
+        setError(await readErrorMessage(response, "Masraf eklenemedi."));
         return;
       }
 
@@ -285,7 +288,7 @@ export function ExpenseReportManager({
       resetItemForm();
       await refreshList();
     } catch {
-      setError("Harcama kalemi eklenemedi.");
+      setError("Masraf eklenemedi.");
     } finally {
       setPending(false);
     }
@@ -299,7 +302,7 @@ export function ExpenseReportManager({
     try {
       const response = await fetch(`/api/admin/expense-reports/${detail.id}/items/${itemId}`, { method: "DELETE" });
       if (!response.ok) {
-        setError(await readErrorMessage(response, "Harcama kalemi silinemedi."));
+        setError(await readErrorMessage(response, "Masraf silinemedi."));
         return;
       }
       const payload = await response.json();
@@ -348,7 +351,7 @@ export function ExpenseReportManager({
 
   async function discardDraft() {
     if (!detail) return;
-    if (!window.confirm("Bu taslağı silmek istediğinize emin misiniz?")) {
+    if (!window.confirm("Bu masraf bildirimini silmek istediğinize emin misiniz?")) {
       return;
     }
 
@@ -357,7 +360,7 @@ export function ExpenseReportManager({
     try {
       const response = await fetch(`/api/admin/expense-reports/${detail.id}`, { method: "DELETE" });
       if (!response.ok) {
-        setError(await readErrorMessage(response, "Taslak silinemedi."));
+        setError(await readErrorMessage(response, "Masraf bildirimi silinemedi."));
         return;
       }
       setDetail(null);
@@ -451,10 +454,10 @@ export function ExpenseReportManager({
                 </div>
 
                 <div>
-                  <h3 className="font-medium text-[color:var(--color-text)]">Kalemler</h3>
+                  <h3 className="font-medium text-[color:var(--color-text)]">Masraflar</h3>
                   <div className="mt-2 space-y-1">
                     {detail.items.length === 0 ? (
-                      <p className="text-xs text-[color:var(--color-text-muted)]">Henüz kalem eklenmedi.</p>
+                      <p className="text-xs text-[color:var(--color-text-muted)]">Henüz masraf eklenmedi.</p>
                     ) : (
                       detail.items.map((line) => (
                         <div key={line.id} className="flex items-center justify-between rounded-xl border border-[color:var(--color-border)] px-3 py-2">
@@ -486,8 +489,18 @@ export function ExpenseReportManager({
                         accept="image/jpeg,image/png,image/webp,image/gif"
                         capture="environment"
                         onChange={(event) => void handlePhotoChange(event)}
-                        className="mt-1 block w-full text-sm"
+                        className="hidden"
                       />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="mt-1 w-full gap-2"
+                        disabled={photoUploading}
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Camera className="h-4 w-4" />
+                        Ekle
+                      </Button>
                       {photoUploading ? <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{copy.photoUploading}</p> : null}
                       {ocrResult?.status === "COMPLETED" ? <p className="mt-1 text-xs text-emerald-600">{copy.ocrPrefilled}</p> : null}
                       {ocrResult?.status === "FAILED" ? <p className="mt-1 text-xs text-amber-600">{copy.ocrFailedManualEntry}</p> : null}
@@ -529,14 +542,15 @@ export function ExpenseReportManager({
                     </div>
 
                     <div>
-                      <Label>{copy.descriptionLabel}</Label>
+                      <Label>{copy.descriptionLabel}{isOtherCategorySelected ? " *" : ""}</Label>
                       <Textarea value={itemForm.description} onChange={(event) => setItemForm((c) => ({ ...c, description: event.target.value }))} rows={2} />
+                      {isOtherCategorySelected ? <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">&quot;Diğer&quot; seçildiğinde açıklama zorunludur.</p> : null}
                     </div>
 
                     <Button
                       type="button"
                       className="w-full"
-                      disabled={pending || !itemForm.categoryId || !itemForm.vendorName || !itemForm.amount}
+                      disabled={pending || !itemForm.categoryId || !itemForm.vendorName || !itemForm.amount || (isOtherCategorySelected && !itemForm.description.trim())}
                       onClick={() => void addItem()}
                     >
                       Ekle

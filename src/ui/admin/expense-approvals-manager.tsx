@@ -137,7 +137,7 @@ export function ExpenseApprovalsManager({
                   <tr>
                     <th className="px-4 py-3">No</th>
                     <th className="px-4 py-3">Personel</th>
-                    <th className="px-4 py-3">Kalem</th>
+                    <th className="px-4 py-3">Masraf</th>
                     <th className="px-4 py-3">Tutar</th>
                     <th className="px-4 py-3">Gönderilme</th>
                     <th className="px-4 py-3" />
@@ -195,7 +195,7 @@ export function ExpenseApprovalsManager({
                 {detail.note ? <p className="text-[color:var(--color-text-muted)]">{detail.note}</p> : null}
 
                 <div>
-                  <h3 className="font-medium text-[color:var(--color-text)]">Kalemler</h3>
+                  <h3 className="font-medium text-[color:var(--color-text)]">Masraflar</h3>
                   <div className="mt-2 space-y-1">
                     {detail.items.map((line) => (
                       <div key={line.id} className="rounded-xl border border-[color:var(--color-border)] px-3 py-2">

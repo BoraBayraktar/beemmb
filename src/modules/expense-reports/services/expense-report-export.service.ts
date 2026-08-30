@@ -12,7 +12,7 @@ const BOLD_FONT_PATH = path.join(process.cwd(), "src/assets/fonts/NotoSans-Bold.
 const PDF_COLUMNS = [
   { key: "expenseDate", label: "Tarih", width: 58 },
   { key: "receiptNo", label: "Fiş/Fatura No", width: 72 },
-  { key: "vendorName", label: "Şirket Adı", width: 95 },
+  { key: "vendorName", label: "Satıcı Adı", width: 95 },
   { key: "categoryName", label: "Harcama Cinsi", width: 78 },
   { key: "description", label: "Açıklama", width: 140 },
   { key: "employeeName", label: "Personel", width: 85 },
@@ -21,7 +21,7 @@ const PDF_COLUMNS = [
 ] as const;
 
 function statusLabel(status: AdminExpenseItemReportRow["status"]) {
-  if (status === "DRAFT") return "Taslak";
+  if (status === "DRAFT") return "Gönderilmedi";
   if (status === "SUBMITTED") return "Onay Bekliyor";
   if (status === "APPROVED") return "Onaylandı";
   return "Reddedildi";
@@ -45,7 +45,7 @@ export class ExpenseReportExportService {
     sheet.columns = [
       { header: "Tarih", key: "expenseDate", width: 14 },
       { header: "Fiş/Fatura No", key: "receiptNo", width: 18 },
-      { header: "Şirket Adı", key: "vendorName", width: 28 },
+      { header: "Satıcı Adı", key: "vendorName", width: 28 },
       { header: "Harcama Cinsi", key: "categoryName", width: 20 },
       { header: "Açıklama", key: "description", width: 32 },
       { header: "Personel", key: "employeeName", width: 22 },

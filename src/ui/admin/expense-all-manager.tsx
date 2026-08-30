@@ -15,7 +15,7 @@ async function readErrorMessage(response: Response, fallback: string) {
 }
 
 function statusLabel(status: AdminExpenseReportStatus) {
-  if (status === "DRAFT") return "Taslak";
+  if (status === "DRAFT") return "Gönderilmedi";
   if (status === "SUBMITTED") return "Onay Bekliyor";
   if (status === "APPROVED") return "Onaylandı";
   return "Reddedildi";
@@ -83,7 +83,7 @@ export function ExpenseAllManager({ result, emptyLabel }: { locale: string; resu
             <SelectTrigger><SelectValue placeholder="Durum" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tüm durumlar</SelectItem>
-              <SelectItem value="DRAFT">Taslak</SelectItem>
+              <SelectItem value="DRAFT">Gönderilmedi</SelectItem>
               <SelectItem value="SUBMITTED">Onay Bekliyor</SelectItem>
               <SelectItem value="APPROVED">Onaylandı</SelectItem>
               <SelectItem value="REJECTED">Reddedildi</SelectItem>
@@ -151,7 +151,7 @@ export function ExpenseAllManager({ result, emptyLabel }: { locale: string; resu
                 {detail.decisionNote ? <p><span className="text-[color:var(--color-text-muted)]">Red gerekçesi:</span> {detail.decisionNote}</p> : null}
 
                 <div>
-                  <h3 className="font-medium text-[color:var(--color-text)]">Kalemler</h3>
+                  <h3 className="font-medium text-[color:var(--color-text)]">Masraflar</h3>
                   <div className="mt-2 space-y-1">
                     {detail.items.map((line) => (
                       <div key={line.id} className="flex items-center justify-between rounded-xl border border-[color:var(--color-border)] px-3 py-2">

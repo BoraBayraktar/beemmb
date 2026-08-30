@@ -32,7 +32,7 @@ function formatDate(value: string) {
 }
 
 function statusLabel(status: AdminExpenseReportStatus) {
-  if (status === "DRAFT") return "Taslak";
+  if (status === "DRAFT") return "Gönderilmedi";
   if (status === "SUBMITTED") return "Onay Bekliyor";
   if (status === "APPROVED") return "Onaylandı";
   return "Reddedildi";
@@ -307,7 +307,7 @@ export function ExpenseReportAnalyticsManager({
         </div>
 
         <div className="mt-4 grid gap-3 md:grid-cols-3 lg:grid-cols-5">
-          <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Şirket, fiş no veya personel ara" className="lg:col-span-2" />
+          <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Satıcı, fiş no veya personel ara" className="lg:col-span-2" />
           <Select value={categoryId} onValueChange={setCategoryId}>
             <SelectTrigger><SelectValue placeholder="Kategori" /></SelectTrigger>
             <SelectContent>
@@ -330,7 +330,7 @@ export function ExpenseReportAnalyticsManager({
             <SelectTrigger><SelectValue placeholder="Durum" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tüm durumlar</SelectItem>
-              <SelectItem value="DRAFT">Taslak</SelectItem>
+              <SelectItem value="DRAFT">Gönderilmedi</SelectItem>
               <SelectItem value="SUBMITTED">Onay Bekliyor</SelectItem>
               <SelectItem value="APPROVED">Onaylandı</SelectItem>
               <SelectItem value="REJECTED">Reddedildi</SelectItem>
@@ -360,7 +360,7 @@ export function ExpenseReportAnalyticsManager({
                 <tr>
                   <th className="px-4 py-3">Tarih</th>
                   <th className="px-4 py-3">Fiş/Fatura No</th>
-                  <th className="px-4 py-3">Şirket Adı</th>
+                  <th className="px-4 py-3">Satıcı Adı</th>
                   <th className="px-4 py-3">Harcama Cinsi</th>
                   <th className="px-4 py-3">Açıklama</th>
                   <th className="px-4 py-3">Personel</th>
