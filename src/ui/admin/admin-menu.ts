@@ -265,7 +265,18 @@ export function buildAdminMenuTree(dictionary: Dictionary, locale: Locale): Admi
       permissionKey: "customers.manage",
       moduleKey: "system",
       children: [
-        { href: `/${locale}/admin/customers`, label: dictionary.admin.customerManager, permissionKey: "customers.manage" },
+        // "Musteri Kullanicilari" aslinda e-ticaret magaza musterilerini
+        // (User role=CUSTOMER) yonetir, "system" degil "products" kapsamina
+        // girer -- bu yuzden grubun miras aldigi moduleKey'i kendi
+        // moduleKey'i ile eziyor (bkz. filterMenuByPermissionsAndEntitlements).
+        // VARSAYIM: bugun storefront/siparis islevi hep "products"
+        // entitlement'inin altinda satiliyor, ayri bir modul degil. Eger
+        // ileride storefront "products"tan bagimsiz, kendi basina
+        // satilabilir bir ModuleCatalog kaydina donusturulursek, bu
+        // moduleKey'in de o yeni anahtara tasinmasi gerekir -- yoksa sadece
+        // storefront alan ama urun yonetimi almayan bir tenant musteri
+        // hesaplarini hic goremez.
+        { href: `/${locale}/admin/customers`, label: dictionary.admin.customerManager, permissionKey: "customers.manage", moduleKey: "products" },
         { href: `/${locale}/admin/users`, label: dictionary.admin.userManager, permissionKey: "systemUsers.manage" },
         { href: `/${locale}/admin/roles`, label: dictionary.admin.roleManager, permissionKey: "roles.manage" },
         { href: `/${locale}/admin/audit-logs`, label: dictionary.admin.auditLogMenu, permissionKey: "audit.read" },
