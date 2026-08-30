@@ -51,7 +51,6 @@ export class ExpenseReportExportService {
       { header: "Personel", key: "employeeName", width: 22 },
       { header: "Durum", key: "status", width: 16 },
       { header: "Tutar", key: "amount", width: 16 },
-      { header: "Görsel", key: "receiptUrl", width: 42 },
     ];
 
     const headerRow = sheet.getRow(1);
@@ -68,7 +67,6 @@ export class ExpenseReportExportService {
         employeeName: item.employeeName,
         status: statusLabel(item.status),
         amount: item.amount,
-        receiptUrl: item.receiptUrl ?? "-",
       });
     }
 

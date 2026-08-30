@@ -6,6 +6,10 @@ const imgSrc = isDevelopment ? "img-src 'self' https: http: data:" : "img-src 's
 const contentSecurityPolicy = `default-src 'self'; ${imgSrc}; style-src 'self' 'unsafe-inline'; ${scriptSrc}; connect-src 'self'; frame-ancestors 'none';`;
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["pdfkit", "fontkit"],
+  outputFileTracingIncludes: {
+    "/api/admin/expense-reports/report/export": ["./node_modules/pdfkit/js/data/**/*"],
+  },
   async headers() {
     return [
       {
