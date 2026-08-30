@@ -10,6 +10,7 @@ import type {
   AdminCashTransactionsQuery,
   AdminCashTransactionsResult,
   AdminCreateCashTransactionInput,
+  AdminUpdateCashTransactionInput,
 } from "@/modules/finance/contracts/cash-transactions.contract";
 import type { AdminFinanceReportDateRangeQuery } from "@/modules/finance/contracts/finance-report-date-range.contract";
 import { financeRepository } from "@/modules/finance/repositories/finance.repository";
@@ -49,6 +50,13 @@ const createCashTransactionSchema = z.object({
   cariId: z.string().trim().optional().nullable(),
   counterpartyName: z.string().trim().max(160, "Karşı taraf adı en fazla 160 karakter olabilir.").optional().nullable(),
   recordedByUserId: z.string().trim().min(1).optional().nullable(),
+});
+
+const updateCashTransactionSchema = z.object({
+  amount: z.coerce.number({ error: "Tutar geçerli bir sayı olmalıdır." }).positive("Tutar sıfırdan büyük olmalıdır."),
+  title: z.string({ error: "Hareket başlığı girilmelidir." }).trim().min(2, "Hareket başlığı en az 2 karakter olmalıdır.").max(160, "Hareket başlığı en fazla 160 karakter olabilir."),
+  note: z.string().trim().max(500, "Not en fazla 500 karakter olabilir.").optional().nullable(),
+  transactionAt: z.string().datetime().optional(),
 });
 
 export async function invalidateFinanceCache() {
@@ -305,6 +313,61 @@ export class CashTransactionsService {
 
     await invalidateFinanceCache();
     return mapTransaction(created);
+  }
+
+  async updateTransaction(
+    id: string,
+    input: AdminUpdateCashTransactionInput & { actorUserId?: string | null },
+  ) {
+    const parsed = updateCashTransactionSchema.parse(input);
+    const existing = await financeRepository.findCashTransactionById(id);
+
+    if (!existing) {
+      throw new Error("Finans hareketi bulunamadı.");
+    }
+
+    if (existing.status === "CANCELLED" || existing.deleted) {
+      throw new Error("İptal edilmiş bir hareket düzenlenemez.");
+    }
+
+    if (existing.direction === "TRANSFER" || existing.sourceType === "TRANSFER") {
+      throw new Error("Transfer hareketleri bu ekrandan düzenlenemez.");
+    }
+
+    if (existing.sourceType !== "MANUAL") {
+      throw new Error("Bu hareket otomatik oluşturulduğu için burada düzenlenemez; kaynağından düzeltilmelidir.");
+    }
+
+    const transactionAt = parsed.transactionAt ? new Date(parsed.transactionAt) : existing.transactionAt;
+
+    await financeAccountEntryService.reverseFromCashTransaction(id);
+    await financeRepository.cancelCashTransaction(id, input.actorUserId ?? null);
+
+    const created = await financeRepository.createCashTransaction({
+      accountId: existing.accountId,
+      direction: existing.direction,
+      sourceType: "MANUAL",
+      category: existing.category,
+      amount: parsed.amount,
+      currency: existing.currency,
+      transactionAt,
+      title: parsed.title,
+      note: parsed.note ?? null,
+      counterpartyKind: existing.counterpartyKind,
+      cariId: existing.cariId,
+      counterpartyName: existing.counterpartyName,
+      sourceReferenceId: null,
+      createdByUserId: input.actorUserId ?? null,
+    });
+
+    try {
+      await financeAccountEntryService.syncFromCashTransaction(created.id);
+    } catch (error) {
+      console.error("PF8 defter projeksiyonu (düzeltme) başarısız oldu.", error);
+    }
+
+    await invalidateFinanceCache();
+    return { previousId: existing.id, item: mapTransaction(created) };
   }
 }
 

@@ -96,6 +96,12 @@ export class FinanceAccountEntryRepository {
     });
   }
 
+  async listEntriesBySource(sourceType: FinanceAccountEntrySourceType, sourceId: string) {
+    return (prisma as any).financeAccountEntry.findMany({
+      where: { sourceType, sourceId },
+    });
+  }
+
   async listEntriesForPeriod(args: { fromDate?: Date; toDate?: Date; take?: number }) {
     return (prisma as any).financeAccountEntry.findMany({
       where: {

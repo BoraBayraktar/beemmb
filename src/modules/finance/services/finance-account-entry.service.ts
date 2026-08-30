@@ -242,6 +242,31 @@ export class FinanceAccountEntryService {
     return { created: result.created, skipped: false };
   }
 
+  async reverseFromCashTransaction(cashTransactionId: string) {
+    const entries = await financeAccountEntryRepository.listEntriesBySource("CASH_TRANSACTION", cashTransactionId);
+    if (entries.length === 0) {
+      return { created: 0 };
+    }
+
+    const reversalLines = entries.map((entry: Awaited<ReturnType<typeof financeAccountEntryRepository.listEntriesBySource>>[number]) => ({
+      lineKey: `${entry.lineKey}:reversal`,
+      entryAt: new Date(),
+      ledgerAccountId: entry.ledgerAccountId as string,
+      side: (entry.side === "DEBIT" ? "CREDIT" : "DEBIT") as "DEBIT" | "CREDIT",
+      amount: toNumber(entry.amount),
+      currency: entry.currency as string,
+      sourceType: entry.sourceType as FinanceAccountEntrySourceType,
+      sourceId: entry.sourceId as string,
+      sourceReference: entry.sourceReference as string | null,
+      title: `${entry.title} (düzeltme)`,
+      note: "Tutar düzeltmesi nedeniyle ters kayıt",
+      customerAccountId: entry.cariId as string | null,
+      financialAccountId: entry.financialAccountId as string | null,
+    }));
+
+    return financeAccountEntryRepository.createEntryLines(reversalLines);
+  }
+
   async syncFromBusinessDocument(businessDocumentId: string) {
     const document = await financeRepository.findBusinessDocumentForLedgerSync(businessDocumentId);
     if (!document || document.status === "DRAFT" || document.status === "CANCELLED") {

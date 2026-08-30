@@ -74,3 +74,10 @@ export type AdminCreateCashTransactionInput = {
   cariId?: string | null;
   counterpartyName?: string | null;
 };
+
+export type AdminUpdateCashTransactionInput = {
+  amount: number;
+  title: string;
+  note?: string | null;
+  transactionAt?: string;
+};

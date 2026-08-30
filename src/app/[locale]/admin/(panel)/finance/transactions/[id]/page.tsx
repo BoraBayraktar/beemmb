@@ -67,6 +67,16 @@ export default async function AdminCashTransactionDetailPage({
         order: dictionary.admin.financeCashTransactionsOrder,
         document: dictionary.admin.financeCashTransactionsDocument,
         refund: dictionary.admin.financeCashTransactionsRefund,
+        editAction: dictionary.admin.financeCashTransactionEditAction,
+        editTitle: dictionary.admin.financeCashTransactionEditTitle,
+        editTitleField: dictionary.admin.financeCashTransactionsTitleField,
+        editNote: dictionary.admin.financeCashTransactionsNote,
+        editDate: dictionary.admin.financeCashTransactionsDate,
+        editSave: dictionary.admin.financeCashTransactionEditSave,
+        editSaving: dictionary.admin.financeCashTransactionEditSaving,
+        editCancel: dictionary.admin.cancel,
+        editFailed: dictionary.admin.financeCashTransactionEditFailed,
+        editUnavailable: dictionary.admin.financeCashTransactionEditUnavailable,
       }}
     />
   );

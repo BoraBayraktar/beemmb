@@ -688,6 +688,18 @@ export class FinanceRepository {
     });
   }
 
+  async cancelCashTransaction(id: string, actorUserId?: string | null) {
+    return ((prisma as any).cashTransaction).update({
+      where: { id },
+      data: {
+        status: "CANCELLED",
+        deleted: true,
+        deletedDate: new Date(),
+        deletedUserId: actorUserId ?? null,
+      },
+    });
+  }
+
   async listBusinessDocumentsForOrder(orderId: string) {
     return prisma.businessDocument.findMany({
       where: {
