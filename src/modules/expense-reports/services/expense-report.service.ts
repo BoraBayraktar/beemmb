@@ -6,12 +6,15 @@ import type {
   AdminExpenseReportListItem,
   AdminExpenseReportListQuery,
   AdminExpenseReportListResult,
+  AdminReimburseExpenseReportInput,
   AdminRejectExpenseReportInput,
   AdminUpdateExpenseReportInput,
 } from "@/modules/expense-reports/contracts/expense-report.contract";
 import { ExpenseReportRepository, expenseReportRepository } from "@/modules/expense-reports/repositories/expense-report.repository";
 import { expenseSettingsService } from "@/modules/expense-reports/services/expense-settings.service";
 import { notificationService } from "@/modules/system/services/notification.service";
+import { cashTransactionsService } from "@/modules/finance/services/cash-transactions.service";
+import { financeAccountEntryService } from "@/modules/finance/services/finance-account-entry.service";
 
 const listQuerySchema = z.object({
   search: z.string().trim().optional(),
@@ -47,6 +50,13 @@ const rejectSchema = z.object({
   decisionNote: z.string().trim().min(1, "Red gerekçesi girilmelidir.").max(500),
 });
 
+const reimburseSchema = z.object({
+  id: z.string().trim().min(1),
+  financialAccountId: z.string().trim().min(1, "Finans hesabı seçilmelidir."),
+  transactionAt: z.string().datetime().optional(),
+  note: z.string().trim().max(500, "Not en fazla 500 karakter olabilir.").optional().nullable(),
+});
+
 export class ExpenseReportAdminError extends Error {
   constructor(message: string, public readonly status = 400) {
     super(message);
@@ -75,6 +85,7 @@ function mapListItem(item: ExpenseReportListRow): AdminExpenseReportListItem {
     itemCount: item._count.items,
     submittedAt: item.submittedAt ? item.submittedAt.toISOString() : null,
     decidedAt: item.decidedAt ? item.decidedAt.toISOString() : null,
+    reimbursedAt: item.reimbursedAt ? item.reimbursedAt.toISOString() : null,
     createdAt: item.createdAt.toISOString(),
     updatedAt: item.updatedAt.toISOString(),
   };
@@ -94,6 +105,7 @@ function mapDetail(item: ExpenseReportDetailRow): AdminExpenseReportDetail {
     itemCount: item.items.length,
     submittedAt: item.submittedAt ? item.submittedAt.toISOString() : null,
     decidedAt: item.decidedAt ? item.decidedAt.toISOString() : null,
+    reimbursedAt: item.reimbursedAt ? item.reimbursedAt.toISOString() : null,
     createdAt: item.createdAt.toISOString(),
     updatedAt: item.updatedAt.toISOString(),
     note: item.note,
@@ -320,11 +332,72 @@ export class ExpenseReportService {
 
     const updated = await this.repository.markApproved({ id, actorUserId: user.id });
 
+    try {
+      await financeAccountEntryService.postExpenseReportAccrual({
+        expenseReportId: updated.id,
+        amount: updated.totalAmount.toNumber(),
+        currency: updated.currency,
+        entryAt: updated.decidedAt ?? new Date(),
+        reportNumber: updated.reportNumber,
+      });
+    } catch (error) {
+      console.error("Masraf bildirimi tahakkuk kaydı oluşturulamadı.", error);
+    }
+
     await notificationService.createForRecipients({
       recipients: [{ id: updated.employeeUserId }],
       type: "EXPENSE_REPORT_DECIDED",
       title: "Masraf bildiriminiz onaylandı",
       message: `${updated.reportNumber} numaralı masraf bildiriminiz onaylandı.`,
+      linkUrl: "/admin/expense-reports",
+      channels: ["IN_APP", "EMAIL"],
+    });
+
+    return mapDetail(updated);
+  }
+
+  async reimburse(input: AdminReimburseExpenseReportInput, user: RequestingUser): Promise<AdminExpenseReportDetail> {
+    const parsed = reimburseSchema.parse(input);
+    const report = await this.findOrThrow(parsed.id);
+
+    if (!user.hasManage) {
+      throw new ExpenseReportAdminError("Bu masrafı ödeme yetkiniz yok.", 403);
+    }
+    if (report.status !== "APPROVED") {
+      throw new ExpenseReportAdminError("Yalnızca onaylanmış bildirimler ödenebilir.", 400);
+    }
+    if (report.reimbursedAt) {
+      throw new ExpenseReportAdminError("Bu masraf bildirimi zaten ödendi.", 400);
+    }
+
+    const transactionAt = parsed.transactionAt ?? new Date().toISOString();
+
+    const cashTransaction = await cashTransactionsService.createTransaction({
+      accountId: parsed.financialAccountId,
+      direction: "OUT",
+      sourceType: "EXPENSE_REPORT",
+      sourceReferenceId: `expense-report:${report.id}`,
+      amount: report.totalAmount.toNumber(),
+      transactionAt,
+      title: `Masraf ödemesi • ${report.reportNumber}`,
+      note: parsed.note ?? null,
+      counterpartyName: report.employee.name,
+      recordedByUserId: user.id,
+    });
+
+    try {
+      await financeAccountEntryService.syncFromExpenseReportSettlement(cashTransaction.id, report.id);
+    } catch (error) {
+      console.error("Masraf ödemesi defter kaydı oluşturulamadı.", error);
+    }
+
+    const updated = await this.repository.markReimbursed({ id: report.id, actorUserId: user.id });
+
+    await notificationService.createForRecipients({
+      recipients: [{ id: updated.employeeUserId }],
+      type: "EXPENSE_REPORT_DECIDED",
+      title: "Masraf bildiriminiz ödendi",
+      message: `${updated.reportNumber} numaralı masraf bildiriminiz ödendi.`,
       linkUrl: "/admin/expense-reports",
       channels: ["IN_APP", "EMAIL"],
     });

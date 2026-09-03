@@ -1,7 +1,7 @@
 import type { AdminFinanceAllocationSummary } from "@/modules/finance/contracts/allocation.contract";
 
 export type AdminCashTransactionDirection = "IN" | "OUT" | "TRANSFER";
-export type AdminCashTransactionSourceType = "MANUAL" | "COLLECTION" | "PAYMENT" | "TRANSFER" | "ORDER" | "DOCUMENT" | "REFUND";
+export type AdminCashTransactionSourceType = "MANUAL" | "COLLECTION" | "PAYMENT" | "TRANSFER" | "ORDER" | "DOCUMENT" | "REFUND" | "EXPENSE_REPORT";
 export type AdminCashTransactionCategory =
   | "GENERAL_INCOME"
   | "GENERAL_EXPENSE"

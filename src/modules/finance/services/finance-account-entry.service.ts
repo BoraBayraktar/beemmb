@@ -18,6 +18,8 @@ import {
   buildPaymentEntryLines,
   buildBusinessDocumentEntryLines,
   buildTransferCashEntryLines,
+  buildExpenseReportAccrualEntryLines,
+  buildExpenseReportSettlementEntryLines,
   type PlannedFinanceAccountEntryLine,
 } from "@/modules/finance/services/finance-account-entry-mapping.util";
 import { incomingInvoiceRepository } from "@/modules/incoming-invoices/repositories/incoming-invoice.repository";
@@ -27,7 +29,7 @@ const listQuerySchema = z.object({
   from: z.string().trim().optional(),
   to: z.string().trim().optional(),
   search: z.string().trim().optional(),
-  sourceType: z.enum(["all", "CASH_TRANSACTION", "COLLECTION", "PAYMENT", "BUSINESS_DOCUMENT", "INCOMING_INVOICE"]).default("all"),
+  sourceType: z.enum(["all", "CASH_TRANSACTION", "COLLECTION", "PAYMENT", "BUSINESS_DOCUMENT", "INCOMING_INVOICE", "EXPENSE_REPORT"]).default("all"),
 });
 
 function toNumber(value: { toNumber(): number } | number) {
@@ -201,7 +203,7 @@ export class FinanceAccountEntryService {
       return { created: 0, skipped: true };
     }
 
-    if (record.sourceType === "COLLECTION" || record.sourceType === "PAYMENT") {
+    if (record.sourceType === "COLLECTION" || record.sourceType === "PAYMENT" || record.sourceType === "EXPENSE_REPORT") {
       return { created: 0, skipped: true };
     }
 
@@ -265,6 +267,71 @@ export class FinanceAccountEntryService {
     }));
 
     return financeAccountEntryRepository.createEntryLines(reversalLines);
+  }
+
+  async postExpenseReportAccrual(args: {
+    expenseReportId: string;
+    amount: number;
+    currency: string;
+    entryAt: Date;
+    reportNumber: string;
+  }) {
+    const existing = await financeAccountEntryRepository.countBySource("EXPENSE_REPORT", args.expenseReportId);
+    if (existing > 0) {
+      return { created: 0, skipped: true };
+    }
+
+    const lines = buildExpenseReportAccrualEntryLines({
+      expenseReportId: args.expenseReportId,
+      amount: args.amount,
+      title: `Masraf tahakkuku • ${args.reportNumber}`,
+    });
+
+    const result = await this.persistPlannedLines({
+      lines,
+      entryAt: args.entryAt,
+      currency: args.currency,
+      sourceType: "EXPENSE_REPORT",
+      sourceId: args.expenseReportId,
+      sourceReference: `expense-report:${args.expenseReportId}`,
+    });
+
+    return { created: result.created, skipped: false };
+  }
+
+  async syncFromExpenseReportSettlement(cashTransactionId: string, expenseReportId: string) {
+    const existing = await financeAccountEntryRepository.countBySource("EXPENSE_REPORT", `${expenseReportId}:settlement`);
+    if (existing > 0) {
+      return { created: 0, skipped: true };
+    }
+
+    const record = await financeRepository.findCashTransactionById(cashTransactionId);
+    if (!record) {
+      return { created: 0, skipped: true };
+    }
+
+    const account = record.account;
+    const amount = toNumber(record.amount);
+    const lines = buildExpenseReportSettlementEntryLines({
+      expenseReportId,
+      cashTransactionId,
+      amount,
+      financialAccountType: account.type,
+      title: record.title,
+    });
+
+    const result = await this.persistPlannedLines({
+      lines,
+      entryAt: record.transactionAt,
+      currency: record.currency,
+      sourceType: "EXPENSE_REPORT",
+      sourceId: `${expenseReportId}:settlement`,
+      sourceReference: record.sourceReferenceId,
+      note: record.note,
+      financialAccountId: record.accountId,
+    });
+
+    return { created: result.created, skipped: false };
   }
 
   async syncFromBusinessDocument(businessDocumentId: string) {

@@ -39,7 +39,7 @@ const incomeExpenseReportQuerySchema = z.object({
 const createCashTransactionSchema = z.object({
   accountId: requiredString("Finans hesabı seçilmelidir."),
   direction: z.enum(["IN", "OUT", "TRANSFER"], { error: "Hareket yönü seçilmelidir." }),
-  sourceType: z.enum(["MANUAL", "COLLECTION", "PAYMENT", "TRANSFER", "ORDER", "DOCUMENT", "REFUND"], { error: "Kaynak tipi seçilmelidir." }).default("MANUAL"),
+  sourceType: z.enum(["MANUAL", "COLLECTION", "PAYMENT", "TRANSFER", "ORDER", "DOCUMENT", "REFUND", "EXPENSE_REPORT"], { error: "Kaynak tipi seçilmelidir." }).default("MANUAL"),
   category: z.enum(["GENERAL_INCOME", "GENERAL_EXPENSE", "MARKETPLACE_COMMISSION", "SHIPPING_EXPENSE", "SERVICE_FEE", "REFUND", "TRANSFER"], { error: "Kategori seçilmelidir." }).optional(),
   targetAccountId: z.string().trim().optional(),
   sourceReferenceId: z.string().trim().optional(),
@@ -99,7 +99,7 @@ function mapTransaction(
 export class CashTransactionsService {
   private resolveDefaultCategory(input: {
     direction: "IN" | "OUT" | "TRANSFER";
-    sourceType: "MANUAL" | "COLLECTION" | "PAYMENT" | "TRANSFER" | "ORDER" | "DOCUMENT" | "REFUND";
+    sourceType: "MANUAL" | "COLLECTION" | "PAYMENT" | "TRANSFER" | "ORDER" | "DOCUMENT" | "REFUND" | "EXPENSE_REPORT";
     category?: AdminCashTransactionCategory;
   }) {
     if (input.category) {

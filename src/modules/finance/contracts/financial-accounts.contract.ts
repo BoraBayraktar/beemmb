@@ -16,7 +16,7 @@ export type AdminFinancialAccountItem = {
 export type AdminFinancialAccountDetailTransactionItem = {
   id: string;
   direction: "IN" | "OUT" | "TRANSFER";
-  sourceType: "MANUAL" | "COLLECTION" | "PAYMENT" | "TRANSFER" | "ORDER" | "DOCUMENT" | "REFUND";
+  sourceType: "MANUAL" | "COLLECTION" | "PAYMENT" | "TRANSFER" | "ORDER" | "DOCUMENT" | "REFUND" | "EXPENSE_REPORT";
   category:
     | "GENERAL_INCOME"
     | "GENERAL_EXPENSE"

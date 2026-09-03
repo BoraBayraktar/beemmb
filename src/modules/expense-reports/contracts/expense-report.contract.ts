@@ -32,6 +32,7 @@ export type AdminExpenseReportListItem = {
   itemCount: number;
   submittedAt: string | null;
   decidedAt: string | null;
+  reimbursedAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -94,4 +95,11 @@ export type AdminUpdateExpenseReportInput = {
 export type AdminRejectExpenseReportInput = {
   id: string;
   decisionNote: string;
+};
+
+export type AdminReimburseExpenseReportInput = {
+  id: string;
+  financialAccountId: string;
+  transactionAt?: string;
+  note?: string | null;
 };

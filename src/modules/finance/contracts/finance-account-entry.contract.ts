@@ -1,5 +1,5 @@
 export type FinanceAccountEntrySide = "DEBIT" | "CREDIT";
-export type FinanceAccountEntrySourceType = "CASH_TRANSACTION" | "COLLECTION" | "PAYMENT" | "BUSINESS_DOCUMENT" | "INCOMING_INVOICE";
+export type FinanceAccountEntrySourceType = "CASH_TRANSACTION" | "COLLECTION" | "PAYMENT" | "BUSINESS_DOCUMENT" | "INCOMING_INVOICE" | "EXPENSE_REPORT";
 
 export type AdminFinanceLedgerEntryListItem = {
   id: string;

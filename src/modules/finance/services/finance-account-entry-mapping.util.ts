@@ -248,6 +248,56 @@ export function buildIncomingInvoiceEntryLines(args: {
   return planned;
 }
 
+export function buildExpenseReportAccrualEntryLines(args: {
+  expenseReportId: string;
+  amount: number;
+  title: string;
+}) {
+  return [
+    {
+      lineKey: `expense-report:${args.expenseReportId}:debit:770`,
+      ledgerAccountCode: "770",
+      side: "DEBIT" as const,
+      amount: args.amount,
+      title: args.title,
+    },
+    {
+      lineKey: `expense-report:${args.expenseReportId}:credit:335`,
+      ledgerAccountCode: "335",
+      side: "CREDIT" as const,
+      amount: args.amount,
+      title: "Masraf tahakkuku — personele borçlar",
+    },
+  ];
+}
+
+export function buildExpenseReportSettlementEntryLines(args: {
+  expenseReportId: string;
+  cashTransactionId: string;
+  amount: number;
+  financialAccountType: "CASH" | "BANK";
+  title: string;
+}) {
+  const cashCode = resolveCashLedgerAccountCode(args.financialAccountType);
+
+  return [
+    {
+      lineKey: `expense-report:${args.expenseReportId}:settlement:debit:335`,
+      ledgerAccountCode: "335",
+      side: "DEBIT" as const,
+      amount: args.amount,
+      title: "Masraf ödemesi — personele borçlar kapanışı",
+    },
+    {
+      lineKey: `expense-report:${args.expenseReportId}:settlement:credit:${cashCode}`,
+      ledgerAccountCode: cashCode,
+      side: "CREDIT" as const,
+      amount: args.amount,
+      title: args.title,
+    },
+  ];
+}
+
 export function assertBalancedEntryLines(lines: PlannedFinanceAccountEntryLine[]) {
   const debit = lines.filter((line) => line.side === "DEBIT").reduce((sum, line) => sum + line.amount, 0);
   const credit = lines.filter((line) => line.side === "CREDIT").reduce((sum, line) => sum + line.amount, 0);

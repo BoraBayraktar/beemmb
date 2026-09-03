@@ -9,6 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ErrorToast } from "@/components/ui/toast";
 import type { AdminExpenseReportDetail, AdminExpenseReportListResult, AdminExpenseReportStatus } from "@/modules/expense-reports/contracts/expense-report.contract";
 
+type FinancialAccountOption = {
+  id: string;
+  name: string;
+  type: "CASH" | "BANK";
+  currency: string;
+  isActive: boolean;
+};
+
 async function readErrorMessage(response: Response, fallback: string) {
   const payload = (await response.json().catch(() => null)) as { message?: string } | null;
   return payload?.message ?? fallback;
@@ -38,12 +46,17 @@ function formatDate(value: string | null) {
 }
 
 export function ExpenseAllManager({ result, emptyLabel }: { locale: string; result: AdminExpenseReportListResult; emptyLabel: string }) {
-  const [items] = useState(result.items);
+  const [items, setItems] = useState(result.items);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | AdminExpenseReportStatus>("all");
   const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<AdminExpenseReportDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [reimburseTarget, setReimburseTarget] = useState<AdminExpenseReportListResult["items"][number] | null>(null);
+  const [accounts, setAccounts] = useState<FinancialAccountOption[] | null>(null);
+  const [accountsLoading, setAccountsLoading] = useState(false);
+  const [selectedAccountId, setSelectedAccountId] = useState("");
+  const [reimburseSubmitting, setReimburseSubmitting] = useState(false);
 
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
@@ -71,6 +84,51 @@ export function ExpenseAllManager({ result, emptyLabel }: { locale: string; resu
       setDetail(payload.item);
     } finally {
       setDetailLoading(false);
+    }
+  }
+
+  async function openReimburseDialog(item: AdminExpenseReportListResult["items"][number]) {
+    setError(null);
+    setReimburseTarget(item);
+    setSelectedAccountId("");
+    setAccounts(null);
+    setAccountsLoading(true);
+    try {
+      const response = await fetch("/api/admin/finance/financial-accounts?type=all");
+      if (!response.ok) {
+        setError(await readErrorMessage(response, "Finans hesapları yüklenemedi."));
+        setReimburseTarget(null);
+        return;
+      }
+      const payload = await response.json();
+      const activeAccounts = (payload.items as FinancialAccountOption[]).filter((account) => account.isActive);
+      setAccounts(activeAccounts);
+    } finally {
+      setAccountsLoading(false);
+    }
+  }
+
+  async function submitReimbursement() {
+    if (!reimburseTarget || !selectedAccountId) {
+      return;
+    }
+    setReimburseSubmitting(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/admin/expense-reports/${reimburseTarget.id}/reimburse`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ financialAccountId: selectedAccountId }),
+      });
+      if (!response.ok) {
+        setError(await readErrorMessage(response, "Masraf ödemesi kaydedilemedi."));
+        return;
+      }
+      const payload = await response.json();
+      setItems((current) => current.map((row) => (row.id === payload.item.id ? { ...row, reimbursedAt: payload.item.reimbursedAt } : row)));
+      setReimburseTarget(null);
+    } finally {
+      setReimburseSubmitting(false);
     }
   }
 
@@ -115,11 +173,23 @@ export function ExpenseAllManager({ result, emptyLabel }: { locale: string; resu
                   <tr key={item.id} className="border-t border-[color:var(--color-border)]">
                     <td className="px-4 py-3 font-medium text-[color:var(--color-text)]">{item.reportNumber}</td>
                     <td className="px-4 py-3">{item.employeeName}</td>
-                    <td className="px-4 py-3"><Badge className={statusBadgeClass(item.status)}>{statusLabel(item.status)}</Badge></td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Badge className={statusBadgeClass(item.status)}>{statusLabel(item.status)}</Badge>
+                        {item.status === "APPROVED" && item.reimbursedAt ? (
+                          <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700">Ödendi</Badge>
+                        ) : null}
+                      </div>
+                    </td>
                     <td className="px-4 py-3">{item.approverName ?? "-"}</td>
                     <td className="px-4 py-3">{formatCurrency(item.totalAmount, item.currency)}</td>
                     <td className="px-4 py-3 text-right">
-                      <Button type="button" variant="outline" onClick={() => void openDetail(item.id)}>Detay</Button>
+                      <div className="flex justify-end gap-2">
+                        {item.status === "APPROVED" && !item.reimbursedAt ? (
+                          <Button type="button" onClick={() => void openReimburseDialog(item)}>Masrafı Öde</Button>
+                        ) : null}
+                        <Button type="button" variant="outline" onClick={() => void openDetail(item.id)}>Detay</Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -148,6 +218,7 @@ export function ExpenseAllManager({ result, emptyLabel }: { locale: string; resu
                 <p><span className="text-[color:var(--color-text-muted)]">Onaycı:</span> {detail.approverName ?? "-"}</p>
                 <p><span className="text-[color:var(--color-text-muted)]">Gönderilme:</span> {formatDate(detail.submittedAt)}</p>
                 <p><span className="text-[color:var(--color-text-muted)]">Karar:</span> {formatDate(detail.decidedAt)}</p>
+                <p><span className="text-[color:var(--color-text-muted)]">Ödeme:</span> {formatDate(detail.reimbursedAt)}</p>
                 {detail.decisionNote ? <p><span className="text-[color:var(--color-text-muted)]">Red gerekçesi:</span> {detail.decisionNote}</p> : null}
 
                 <div>
@@ -165,6 +236,40 @@ export function ExpenseAllManager({ result, emptyLabel }: { locale: string; resu
             ) : (
               <p className="mt-4 text-sm text-[color:var(--color-text-muted)]">Yükleniyor...</p>
             )}
+          </div>
+        </div>
+      ) : null}
+
+      {reimburseTarget ? (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4" onClick={() => setReimburseTarget(null)}>
+          <div className="w-full max-w-md rounded-3xl bg-[color:var(--color-surface)] p-6 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+            <h2 className="text-lg font-semibold text-[color:var(--color-text)]">Masrafı Öde</h2>
+            <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">
+              {reimburseTarget.reportNumber} • {reimburseTarget.employeeName} • {formatCurrency(reimburseTarget.totalAmount, reimburseTarget.currency)}
+            </p>
+
+            <div className="mt-4 space-y-2">
+              <label className="text-sm font-medium text-[color:var(--color-text)]">Ödemenin yapılacağı hesap</label>
+              {accountsLoading ? (
+                <p className="text-sm text-[color:var(--color-text-muted)]">Hesaplar yükleniyor...</p>
+              ) : (
+                <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+                  <SelectTrigger><SelectValue placeholder="Kasa/banka hesabı seçin" /></SelectTrigger>
+                  <SelectContent>
+                    {(accounts ?? []).map((account) => (
+                      <SelectItem key={account.id} value={account.id}>{account.name} ({account.currency})</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end gap-2">
+              <Button type="button" variant="ghost" onClick={() => setReimburseTarget(null)}>Vazgeç</Button>
+              <Button type="button" disabled={!selectedAccountId || reimburseSubmitting} onClick={() => void submitReimbursement()}>
+                {reimburseSubmitting ? "Kaydediliyor..." : "Ödemeyi Kaydet"}
+              </Button>
+            </div>
           </div>
         </div>
       ) : null}

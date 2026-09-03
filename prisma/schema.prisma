@@ -1262,6 +1262,7 @@ model ExpenseReport {
   submittedAt     DateTime?
   decidedAt       DateTime?
   decisionNote    String?
+  reimbursedAt    DateTime?
   createdAt       DateTime                      @default(now())
   updatedAt       DateTime                      @updatedAt
   deleted         Boolean                       @default(false)
@@ -2557,6 +2558,7 @@ enum CashTransactionSourceType {
   ORDER
   DOCUMENT
   REFUND
+  EXPENSE_REPORT
 }
 
 enum CashTransactionCategory {
@@ -2617,6 +2619,7 @@ enum FinanceAccountEntrySourceType {
   PAYMENT
   BUSINESS_DOCUMENT
   INCOMING_INVOICE
+  EXPENSE_REPORT
 }
 
 enum NegotiableInstrumentType {

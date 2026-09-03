@@ -286,6 +286,26 @@ export class ExpenseReportRepository {
     });
   }
 
+  async markReimbursed(args: { id: string; actorUserId: string }) {
+    const tenantId = requireTenantId();
+
+    return prisma.expenseReport.update({
+      where: { id: args.id },
+      data: {
+        reimbursedAt: new Date(),
+        lifecycleEvents: {
+          create: {
+            tenantId,
+            eventType: "REIMBURSED",
+            summary: "Masraf bildirimi ödendi.",
+            actorUserId: args.actorUserId,
+          },
+        },
+      },
+      include: detailInclude,
+    });
+  }
+
   async markRejected(args: { id: string; actorUserId: string; decisionNote: string }) {
     const tenantId = requireTenantId();
 
