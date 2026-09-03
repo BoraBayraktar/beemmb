@@ -98,6 +98,7 @@ export default async function AdminFinancialAccountDetailPage({
         sourceTypePayment: dictionary.admin.financeCashTransactionsPayment,
         sourceTypeOrder: dictionary.admin.financeCashTransactionsOrder,
         sourceTypeDocument: dictionary.admin.financeCashTransactionsDocument,
+        sourceTypeExpenseReport: dictionary.admin.financeCashTransactionsExpenseReport,
         sourceTypeRefund: dictionary.admin.financeCashTransactionsRefund,
         sourceTypeTransfer: dictionary.admin.financeCashTransactionsTransfer,
         movementCategory: dictionary.admin.financeCashTransactionsCategory,

@@ -11,10 +11,7 @@ import type { AdminExpenseReportDetail, AdminExpenseReportListResult, AdminExpen
 
 type FinancialAccountOption = {
   id: string;
-  name: string;
-  type: "CASH" | "BANK";
-  currency: string;
-  isActive: boolean;
+  label: string;
 };
 
 async function readErrorMessage(response: Response, fallback: string) {
@@ -45,7 +42,16 @@ function formatDate(value: string | null) {
   return new Date(value).toLocaleDateString("tr-TR");
 }
 
-export function ExpenseAllManager({ result, emptyLabel }: { locale: string; result: AdminExpenseReportListResult; emptyLabel: string }) {
+export function ExpenseAllManager({
+  result,
+  emptyLabel,
+  financialAccountOptions,
+}: {
+  locale: string;
+  result: AdminExpenseReportListResult;
+  emptyLabel: string;
+  financialAccountOptions: FinancialAccountOption[];
+}) {
   const [items, setItems] = useState(result.items);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | AdminExpenseReportStatus>("all");
@@ -53,8 +59,6 @@ export function ExpenseAllManager({ result, emptyLabel }: { locale: string; resu
   const [detail, setDetail] = useState<AdminExpenseReportDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [reimburseTarget, setReimburseTarget] = useState<AdminExpenseReportListResult["items"][number] | null>(null);
-  const [accounts, setAccounts] = useState<FinancialAccountOption[] | null>(null);
-  const [accountsLoading, setAccountsLoading] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState("");
   const [reimburseSubmitting, setReimburseSubmitting] = useState(false);
 
@@ -87,25 +91,10 @@ export function ExpenseAllManager({ result, emptyLabel }: { locale: string; resu
     }
   }
 
-  async function openReimburseDialog(item: AdminExpenseReportListResult["items"][number]) {
+  function openReimburseDialog(item: AdminExpenseReportListResult["items"][number]) {
     setError(null);
-    setReimburseTarget(item);
     setSelectedAccountId("");
-    setAccounts(null);
-    setAccountsLoading(true);
-    try {
-      const response = await fetch("/api/admin/finance/financial-accounts?type=all");
-      if (!response.ok) {
-        setError(await readErrorMessage(response, "Finans hesapları yüklenemedi."));
-        setReimburseTarget(null);
-        return;
-      }
-      const payload = await response.json();
-      const activeAccounts = (payload.items as FinancialAccountOption[]).filter((account) => account.isActive);
-      setAccounts(activeAccounts);
-    } finally {
-      setAccountsLoading(false);
-    }
+    setReimburseTarget(item);
   }
 
   async function submitReimbursement() {
@@ -186,7 +175,7 @@ export function ExpenseAllManager({ result, emptyLabel }: { locale: string; resu
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-2">
                         {item.status === "APPROVED" && !item.reimbursedAt ? (
-                          <Button type="button" onClick={() => void openReimburseDialog(item)}>Masrafı Öde</Button>
+                          <Button type="button" onClick={() => openReimburseDialog(item)}>Masrafı Öde</Button>
                         ) : null}
                         <Button type="button" variant="outline" onClick={() => void openDetail(item.id)}>Detay</Button>
                       </div>
@@ -250,18 +239,14 @@ export function ExpenseAllManager({ result, emptyLabel }: { locale: string; resu
 
             <div className="mt-4 space-y-2">
               <label className="text-sm font-medium text-[color:var(--color-text)]">Ödemenin yapılacağı hesap</label>
-              {accountsLoading ? (
-                <p className="text-sm text-[color:var(--color-text-muted)]">Hesaplar yükleniyor...</p>
-              ) : (
-                <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-                  <SelectTrigger><SelectValue placeholder="Kasa/banka hesabı seçin" /></SelectTrigger>
-                  <SelectContent>
-                    {(accounts ?? []).map((account) => (
-                      <SelectItem key={account.id} value={account.id}>{account.name} ({account.currency})</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+              <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+                <SelectTrigger><SelectValue placeholder="Kasa/banka hesabı seçin" /></SelectTrigger>
+                <SelectContent>
+                  {financialAccountOptions.map((account) => (
+                    <SelectItem key={account.id} value={account.id}>{account.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="mt-6 flex justify-end gap-2">

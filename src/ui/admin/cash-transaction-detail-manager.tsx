@@ -37,6 +37,7 @@ type Labels = {
   payment: string;
   order: string;
   document: string;
+  expenseReport: string;
   refund: string;
   editAction: string;
   editTitle: string;
@@ -66,6 +67,8 @@ function formatSourceType(value: AdminCashTransactionDetail["sourceType"], label
       return labels.order;
     case "DOCUMENT":
       return labels.document;
+    case "EXPENSE_REPORT":
+      return labels.expenseReport;
     case "REFUND":
       return labels.refund;
     case "TRANSFER":

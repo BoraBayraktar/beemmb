@@ -32,6 +32,7 @@ export function resolveFinanceLedgerEntriesCopy(locale: string) {
     sourcePayment: admin.financeLedgerEntriesSourcePayment,
     sourceBusinessDocument: admin.financeLedgerEntriesSourceBusinessDocument,
     sourceIncomingInvoice: admin.financeLedgerEntriesSourceIncomingInvoice,
+    sourceExpenseReport: admin.financeLedgerEntriesSourceExpenseReport,
   };
 }
 

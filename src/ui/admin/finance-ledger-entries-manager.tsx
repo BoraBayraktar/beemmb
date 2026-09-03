@@ -36,6 +36,8 @@ function formatSourceType(value: FinanceAccountEntrySourceType, copy: FinanceLed
       return copy.sourceBusinessDocument;
     case "INCOMING_INVOICE":
       return copy.sourceIncomingInvoice;
+    case "EXPENSE_REPORT":
+      return copy.sourceExpenseReport;
     default:
       return copy.sourceCashTransaction;
   }

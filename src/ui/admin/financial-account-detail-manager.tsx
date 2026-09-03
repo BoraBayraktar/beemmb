@@ -42,6 +42,7 @@ type Labels = {
   sourceTypePayment: string;
   sourceTypeOrder: string;
   sourceTypeDocument: string;
+  sourceTypeExpenseReport: string;
   sourceTypeRefund: string;
   sourceTypeTransfer: string;
   movementCategory: string;
@@ -96,6 +97,8 @@ function formatSourceType(value: AdminFinancialAccountDetail["transactions"][num
       return labels.sourceTypeOrder;
     case "DOCUMENT":
       return labels.sourceTypeDocument;
+    case "EXPENSE_REPORT":
+      return labels.sourceTypeExpenseReport;
     case "REFUND":
       return labels.sourceTypeRefund;
     case "TRANSFER":

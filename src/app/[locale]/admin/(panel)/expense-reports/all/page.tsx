@@ -5,6 +5,7 @@ import { runWithTenantContext } from "@/lib/tenant-context";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
 import { expenseReportService } from "@/modules/expense-reports/services/expense-report.service";
+import { financialAccountsService } from "@/modules/finance/services/financial-accounts.service";
 import { ExpenseAllManager } from "@/ui/admin/expense-all-manager";
 
 export default async function AdminExpenseReportsAllPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -26,10 +27,20 @@ export default async function AdminExpenseReportsAllPage({ params }: { params: P
   const dictionary = getDictionary(locale as Locale);
   const admin = dictionary.admin;
 
-  const result = await runWithTenantContext(
+  const [result, financialAccountOptions] = await runWithTenantContext(
     { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
-    () => expenseReportService.listAll({ scope: "all", page: 1, pageSize: 50 }),
+    () => Promise.all([
+      expenseReportService.listAll({ scope: "all", page: 1, pageSize: 50 }),
+      financialAccountsService.listAccountOptions(),
+    ]),
   );
 
-  return <ExpenseAllManager locale={locale} result={result} emptyLabel={admin.expenseReportsAllEmpty} />;
+  return (
+    <ExpenseAllManager
+      locale={locale}
+      result={result}
+      emptyLabel={admin.expenseReportsAllEmpty}
+      financialAccountOptions={financialAccountOptions}
+    />
+  );
 }

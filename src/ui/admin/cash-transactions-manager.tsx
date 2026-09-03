@@ -40,6 +40,7 @@ type Labels = {
   payment: string;
   order: string;
   document: string;
+  expenseReport: string;
   totalIncoming: string;
   totalOutgoing: string;
   netAmount: string;
@@ -123,6 +124,8 @@ function getSourceTypeLabel(sourceType: AdminCashTransactionSourceType, labels: 
       return labels.order;
     case "DOCUMENT":
       return labels.document;
+    case "EXPENSE_REPORT":
+      return labels.expenseReport;
     default:
       return labels.manual;
   }

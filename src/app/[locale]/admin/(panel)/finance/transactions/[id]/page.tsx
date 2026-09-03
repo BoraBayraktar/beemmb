@@ -66,6 +66,7 @@ export default async function AdminCashTransactionDetailPage({
         payment: dictionary.admin.financeCashTransactionsPayment,
         order: dictionary.admin.financeCashTransactionsOrder,
         document: dictionary.admin.financeCashTransactionsDocument,
+        expenseReport: dictionary.admin.financeCashTransactionsExpenseReport,
         refund: dictionary.admin.financeCashTransactionsRefund,
         editAction: dictionary.admin.financeCashTransactionEditAction,
         editTitle: dictionary.admin.financeCashTransactionEditTitle,
