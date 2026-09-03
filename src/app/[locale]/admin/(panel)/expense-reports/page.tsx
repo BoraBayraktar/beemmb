@@ -59,6 +59,8 @@ export default async function AdminExpenseReportsPage({ params }: { params: Prom
         dateLabel: admin.expenseItemDateLabel,
         receiptNoLabel: admin.expenseItemReceiptNoLabel,
         amountLabel: admin.expenseItemAmountLabel,
+        vatRateLabel: admin.expenseItemVatRateLabel,
+        vatAmountLabel: admin.expenseItemVatAmountLabel,
         currencyLabel: admin.expenseItemCurrencyLabel,
         vendorLabel: admin.expenseItemVendorLabel,
         categoryLabel: admin.expenseItemCategoryLabel,

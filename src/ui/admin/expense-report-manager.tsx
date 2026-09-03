@@ -40,6 +40,8 @@ export type ExpenseReportsCopy = {
   dateLabel: string;
   receiptNoLabel: string;
   amountLabel: string;
+  vatRateLabel: string;
+  vatAmountLabel: string;
   currencyLabel: string;
   vendorLabel: string;
   categoryLabel: string;
@@ -130,9 +132,22 @@ const emptyItemForm = {
   expenseDate: new Date().toISOString().slice(0, 10),
   receiptNo: "",
   amount: "",
+  vatRate: "",
+  vatAmount: "",
   vendorName: "",
   description: "",
 };
+
+const VAT_RATE_OPTIONS = ["0", "1", "10", "20"];
+
+function computeVatAmount(amount: string, rate: string) {
+  const amountValue = Number(amount);
+  const rateValue = Number(rate);
+  if (!amountValue || !rateValue) {
+    return "";
+  }
+  return (amountValue - amountValue / (1 + rateValue / 100)).toFixed(2);
+}
 
 export function ExpenseReportManager({
   result,
@@ -243,6 +258,8 @@ export function ExpenseReportManager({
           receiptNo: payload.ocr.data.receiptNo ?? current.receiptNo,
           amount: payload.ocr.data.amount !== null ? String(payload.ocr.data.amount) : current.amount,
           vendorName: payload.ocr.data.vendorName ?? current.vendorName,
+          vatRate: payload.ocr.data.vatRate !== null ? String(payload.ocr.data.vatRate) : current.vatRate,
+          vatAmount: payload.ocr.data.vatAmount !== null ? String(payload.ocr.data.vatAmount) : current.vatAmount,
         }));
       }
     } catch {
@@ -266,6 +283,8 @@ export function ExpenseReportManager({
           expenseDate: new Date(itemForm.expenseDate).toISOString(),
           receiptNo: itemForm.receiptNo || null,
           amount: Number(itemForm.amount) || 0,
+          vatRate: itemForm.vatRate !== "" ? Number(itemForm.vatRate) : null,
+          vatAmount: itemForm.vatAmount !== "" ? Number(itemForm.vatAmount) : null,
           vendorName: itemForm.vendorName,
           description: itemForm.description || null,
           receiptObjectKey: receipt?.objectKey ?? null,
@@ -463,7 +482,10 @@ export function ExpenseReportManager({
                         <div key={line.id} className="flex items-center justify-between rounded-xl border border-[color:var(--color-border)] px-3 py-2">
                           <div>
                             <p className="font-medium text-[color:var(--color-text)]">{line.vendorName}</p>
-                            <p className="text-xs text-[color:var(--color-text-muted)]">{line.categoryName} • {formatDate(line.expenseDate)}</p>
+                            <p className="text-xs text-[color:var(--color-text-muted)]">
+                              {line.categoryName} • {formatDate(line.expenseDate)}
+                              {line.vatAmount !== null ? ` • KDV ${formatCurrency(line.vatAmount, line.currency)}` : ""}
+                            </p>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{formatCurrency(line.amount, line.currency)}</span>
@@ -518,7 +540,13 @@ export function ExpenseReportManager({
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <Label>{copy.amountLabel}</Label>
-                        <MoneyInput value={itemForm.amount} onValueChange={(value) => setItemForm((c) => ({ ...c, amount: value }))} currencySymbol={detail.currency === "TRY" ? "₺" : ""} />
+                        <MoneyInput
+                          value={itemForm.amount}
+                          onValueChange={(value) =>
+                            setItemForm((c) => ({ ...c, amount: value, vatAmount: computeVatAmount(value, c.vatRate) || c.vatAmount }))
+                          }
+                          currencySymbol={detail.currency === "TRY" ? "₺" : ""}
+                        />
                       </div>
                       <div>
                         <Label>{copy.categoryLabel}</Label>
@@ -530,6 +558,27 @@ export function ExpenseReportManager({
                             ))}
                           </SelectContent>
                         </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label>{copy.vatRateLabel}</Label>
+                        <Select
+                          value={itemForm.vatRate}
+                          onValueChange={(value) => setItemForm((c) => ({ ...c, vatRate: value, vatAmount: computeVatAmount(c.amount, value) }))}
+                        >
+                          <SelectTrigger><SelectValue placeholder="Seçin" /></SelectTrigger>
+                          <SelectContent>
+                            {VAT_RATE_OPTIONS.map((rate) => (
+                              <SelectItem key={rate} value={rate}>%{rate}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>{copy.vatAmountLabel}</Label>
+                        <MoneyInput value={itemForm.vatAmount} onValueChange={(value) => setItemForm((c) => ({ ...c, vatAmount: value }))} currencySymbol={detail.currency === "TRY" ? "₺" : ""} />
                       </div>
                     </div>
 

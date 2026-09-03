@@ -1289,6 +1289,8 @@ model ExpenseReportItem {
   receiptNo          String?
   amount             Decimal              @db.Decimal(10, 2)
   currency           String               @default("TRY")
+  vatRate            Decimal?             @db.Decimal(5, 2)
+  vatAmount          Decimal?             @db.Decimal(10, 2)
   vendorName         String
   description        String?
   receiptObjectKey   String?

@@ -215,7 +215,14 @@ export function ExpenseAllManager({
                   <div className="mt-2 space-y-1">
                     {detail.items.map((line) => (
                       <div key={line.id} className="flex items-center justify-between rounded-xl border border-[color:var(--color-border)] px-3 py-2">
-                        <span>{line.vendorName} ({line.categoryName})</span>
+                        <div>
+                          <span>{line.vendorName} ({line.categoryName})</span>
+                          {line.vatAmount !== null ? (
+                            <p className="text-xs text-[color:var(--color-text-muted)]">
+                              KDV {formatCurrency(line.vatAmount, line.currency)}{line.vatRate !== null ? ` (%${line.vatRate})` : ""}
+                            </p>
+                          ) : null}
+                        </div>
                         <span className="font-medium">{formatCurrency(line.amount, line.currency)}</span>
                       </div>
                     ))}

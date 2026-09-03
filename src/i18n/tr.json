@@ -2063,6 +2063,8 @@
     "expenseItemDateLabel": "Tarih",
     "expenseItemReceiptNoLabel": "Fiş/Fatura No",
     "expenseItemAmountLabel": "Tutar",
+    "expenseItemVatRateLabel": "KDV Oranı",
+    "expenseItemVatAmountLabel": "KDV Tutarı",
     "expenseItemCurrencyLabel": "Para Birimi",
     "expenseItemVendorLabel": "Satıcı Adı",
     "expenseItemCategoryLabel": "Harcama Cinsi",

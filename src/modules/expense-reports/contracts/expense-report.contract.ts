@@ -10,6 +10,8 @@ export type AdminExpenseReportItem = {
   receiptNo: string | null;
   amount: number;
   currency: string;
+  vatRate: number | null;
+  vatAmount: number | null;
   vendorName: string;
   description: string | null;
   receiptUrl: string | null;
@@ -76,6 +78,8 @@ export type AdminAddExpenseReportItemInput = {
   receiptNo?: string | null;
   amount: number;
   currency?: string;
+  vatRate?: number | null;
+  vatAmount?: number | null;
   vendorName: string;
   description?: string | null;
   receiptObjectKey?: string | null;

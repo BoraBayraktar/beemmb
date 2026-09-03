@@ -6,6 +6,8 @@ export type ExpenseOcrExtractedData = {
   amount: number | null;
   currency: string | null;
   vendorName: string | null;
+  vatRate: number | null;
+  vatAmount: number | null;
 };
 
 export type ExpenseOcrExtractionResult = {

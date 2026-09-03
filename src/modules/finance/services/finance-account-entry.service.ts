@@ -272,6 +272,7 @@ export class FinanceAccountEntryService {
   async postExpenseReportAccrual(args: {
     expenseReportId: string;
     amount: number;
+    vatAmount?: number;
     currency: string;
     entryAt: Date;
     reportNumber: string;
@@ -284,6 +285,7 @@ export class FinanceAccountEntryService {
     const lines = buildExpenseReportAccrualEntryLines({
       expenseReportId: args.expenseReportId,
       amount: args.amount,
+      vatAmount: args.vatAmount ?? 0,
       title: `Masraf tahakkuku • ${args.reportNumber}`,
     });
 

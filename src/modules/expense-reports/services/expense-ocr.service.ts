@@ -10,6 +10,8 @@ const extractionSchema = z.object({
   amount: z.number().nullable(),
   currency: z.string().nullable(),
   vendorName: z.string().nullable(),
+  vatRate: z.number().nullable(),
+  vatAmount: z.number().nullable(),
   confidence: z.number(),
 });
 
@@ -19,7 +21,7 @@ type SupportedMediaType = "image/jpeg" | "image/png" | "image/gif" | "image/webp
 const OCR_TIMEOUT_MS = 15000;
 
 const EXTRACTION_PROMPT =
-  "Bu bir fiş veya fatura görselidir. Görseldeki tarihi (ISO 8601, YYYY-MM-DD), fiş/fatura numarasını, toplam tutarı, para birimini (TRY/USD/EUR gibi kod) ve satıcı/şirket adını çıkar. Emin olmadığın alanları null bırak. confidence alanına genel okuma güvenini 0 ile 1 arasında bir sayı olarak yaz.";
+  "Bu bir fiş veya fatura görselidir. Görseldeki tarihi (ISO 8601, YYYY-MM-DD), fiş/fatura numarasını, toplam tutarı (KDV dahil), para birimini (TRY/USD/EUR gibi kod), satıcı/şirket adını, KDV oranını (% olarak, ör. 20, 10, 1, 0) ve toplam KDV tutarını çıkar. Fişte birden fazla KDV oranı/satırı varsa en yüksek tutarlı satırı esas al. Emin olmadığın veya görselde bulunmayan alanları null bırak. confidence alanına genel okuma güvenini 0 ile 1 arasında bir sayı olarak yaz.";
 
 export class ExpenseOcrService {
   private client: Anthropic | null = null;
@@ -84,6 +86,8 @@ export class ExpenseOcrService {
           amount: parsed.amount,
           currency: parsed.currency,
           vendorName: parsed.vendorName,
+          vatRate: parsed.vatRate,
+          vatAmount: parsed.vatAmount,
         },
         confidence: parsed.confidence,
         raw: parsed,

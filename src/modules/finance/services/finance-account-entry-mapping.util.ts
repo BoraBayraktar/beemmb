@@ -251,24 +251,41 @@ export function buildIncomingInvoiceEntryLines(args: {
 export function buildExpenseReportAccrualEntryLines(args: {
   expenseReportId: string;
   amount: number;
+  vatAmount: number;
   title: string;
 }) {
-  return [
+  const hasVat = args.vatAmount > 0 && args.vatAmount < args.amount;
+  const netAmount = hasVat ? Number((args.amount - args.vatAmount).toFixed(2)) : args.amount;
+
+  const lines: PlannedFinanceAccountEntryLine[] = [
     {
       lineKey: `expense-report:${args.expenseReportId}:debit:770`,
       ledgerAccountCode: "770",
-      side: "DEBIT" as const,
-      amount: args.amount,
+      side: "DEBIT",
+      amount: netAmount,
       title: args.title,
     },
-    {
-      lineKey: `expense-report:${args.expenseReportId}:credit:335`,
-      ledgerAccountCode: "335",
-      side: "CREDIT" as const,
-      amount: args.amount,
-      title: "Masraf tahakkuku — personele borçlar",
-    },
   ];
+
+  if (hasVat) {
+    lines.push({
+      lineKey: `expense-report:${args.expenseReportId}:debit:191`,
+      ledgerAccountCode: "191",
+      side: "DEBIT" as const,
+      amount: args.vatAmount,
+      title: "Masraf tahakkuku — indirilecek KDV",
+    });
+  }
+
+  lines.push({
+    lineKey: `expense-report:${args.expenseReportId}:credit:335`,
+    ledgerAccountCode: "335",
+    side: "CREDIT" as const,
+    amount: args.amount,
+    title: "Masraf tahakkuku — personele borçlar",
+  });
+
+  return lines;
 }
 
 export function buildExpenseReportSettlementEntryLines(args: {

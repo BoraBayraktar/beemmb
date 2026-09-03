@@ -165,6 +165,8 @@ export class ExpenseReportRepository {
     receiptNo: string | null;
     amount: number;
     currency: string;
+    vatRate: number | null;
+    vatAmount: number | null;
     vendorName: string;
     description: string | null;
     receiptObjectKey: string | null;
@@ -188,6 +190,8 @@ export class ExpenseReportRepository {
           receiptNo: args.receiptNo,
           amount: new Prisma.Decimal(args.amount),
           currency: args.currency,
+          vatRate: args.vatRate !== null ? new Prisma.Decimal(args.vatRate) : null,
+          vatAmount: args.vatAmount !== null ? new Prisma.Decimal(args.vatAmount) : null,
           vendorName: args.vendorName,
           description: args.description,
           receiptObjectKey: args.receiptObjectKey,

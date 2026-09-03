@@ -23,22 +23,29 @@ const listQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(50).default(10),
 });
 
-const addItemSchema = z.object({
-  categoryId: z.string().trim().min(1, "Harcama cinsi seçilmelidir."),
-  expenseDate: z.string().datetime(),
-  receiptNo: z.string().trim().max(80).optional().nullable(),
-  amount: z.coerce.number().positive("Tutar sıfırdan büyük olmalıdır."),
-  currency: z.string().trim().min(3).max(8).optional(),
-  vendorName: z.string().trim().min(1, "Satıcı adı girilmelidir.").max(160),
-  description: z.string().trim().max(500).optional().nullable(),
-  receiptObjectKey: z.string().trim().max(500).optional().nullable(),
-  receiptUrl: z.string().trim().max(2048).optional().nullable(),
-  receiptContentType: z.string().trim().max(100).optional().nullable(),
-  receiptSize: z.coerce.number().int().nonnegative().optional().nullable(),
-  ocrStatus: z.enum(["PENDING", "COMPLETED", "FAILED", "SKIPPED"]).default("SKIPPED"),
-  ocrRawResult: z.unknown().optional().nullable(),
-  ocrConfidence: z.coerce.number().min(0).max(1).optional().nullable(),
-});
+const addItemSchema = z
+  .object({
+    categoryId: z.string().trim().min(1, "Harcama cinsi seçilmelidir."),
+    expenseDate: z.string().datetime(),
+    receiptNo: z.string().trim().max(80).optional().nullable(),
+    amount: z.coerce.number().positive("Tutar sıfırdan büyük olmalıdır."),
+    currency: z.string().trim().min(3).max(8).optional(),
+    vatRate: z.coerce.number().min(0, "KDV oranı negatif olamaz.").max(100, "KDV oranı 100'ü geçemez.").optional().nullable(),
+    vatAmount: z.coerce.number().min(0, "KDV tutarı negatif olamaz.").optional().nullable(),
+    vendorName: z.string().trim().min(1, "Satıcı adı girilmelidir.").max(160),
+    description: z.string().trim().max(500).optional().nullable(),
+    receiptObjectKey: z.string().trim().max(500).optional().nullable(),
+    receiptUrl: z.string().trim().max(2048).optional().nullable(),
+    receiptContentType: z.string().trim().max(100).optional().nullable(),
+    receiptSize: z.coerce.number().int().nonnegative().optional().nullable(),
+    ocrStatus: z.enum(["PENDING", "COMPLETED", "FAILED", "SKIPPED"]).default("SKIPPED"),
+    ocrRawResult: z.unknown().optional().nullable(),
+    ocrConfidence: z.coerce.number().min(0).max(1).optional().nullable(),
+  })
+  .refine((value) => value.vatAmount === null || value.vatAmount === undefined || value.vatAmount <= value.amount, {
+    message: "KDV tutarı toplam tutarı geçemez.",
+    path: ["vatAmount"],
+  });
 
 const updateSchema = z.object({
   id: z.string().trim().min(1),
@@ -118,6 +125,8 @@ function mapDetail(item: ExpenseReportDetailRow): AdminExpenseReportDetail {
       receiptNo: line.receiptNo,
       amount: line.amount.toNumber(),
       currency: line.currency,
+      vatRate: toNumber(line.vatRate),
+      vatAmount: toNumber(line.vatAmount),
       vendorName: line.vendorName,
       description: line.description,
       receiptUrl: line.receiptUrl,
@@ -272,6 +281,8 @@ export class ExpenseReportService {
       receiptNo: parsed.receiptNo ?? null,
       amount: parsed.amount,
       currency: parsed.currency ?? report.currency,
+      vatRate: parsed.vatRate ?? null,
+      vatAmount: parsed.vatAmount ?? null,
       vendorName: parsed.vendorName,
       description: parsed.description ?? null,
       receiptObjectKey: parsed.receiptObjectKey ?? null,
@@ -333,9 +344,11 @@ export class ExpenseReportService {
     const updated = await this.repository.markApproved({ id, actorUserId: user.id });
 
     try {
+      const vatAmount = updated.items.reduce((sum, line) => sum + (line.vatAmount?.toNumber() ?? 0), 0);
       await financeAccountEntryService.postExpenseReportAccrual({
         expenseReportId: updated.id,
         amount: updated.totalAmount.toNumber(),
+        vatAmount,
         currency: updated.currency,
         entryAt: updated.decidedAt ?? new Date(),
         reportNumber: updated.reportNumber,
