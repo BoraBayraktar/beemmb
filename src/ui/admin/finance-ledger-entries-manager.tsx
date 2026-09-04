@@ -26,7 +26,7 @@ function formatDate(value: string) {
   return new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 }
 
-function formatSourceType(value: FinanceAccountEntrySourceType, copy: FinanceLedgerEntriesCopy) {
+export function formatSourceType(value: FinanceAccountEntrySourceType, copy: FinanceLedgerEntriesCopy) {
   switch (value) {
     case "COLLECTION":
       return copy.sourceCollection;
