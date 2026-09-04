@@ -6,6 +6,7 @@ import { buildTenantCacheKey } from "@/lib/cache-key";
 import { runWithTenantContext } from "@/lib/tenant-context";
 import { IdentityRepository } from "@/modules/identity/repositories/identity.repository";
 import { PlatformRepository } from "@/modules/platform/repositories/platform.repository";
+import { financeLedgerAccountService } from "@/modules/finance/services/finance-ledger-account.service";
 
 const ENTITLEMENT_CACHE_TTL_SECONDS = 300;
 
@@ -133,7 +134,7 @@ export class PlatformService {
 
     const passwordHash = await hash(parsed.adminUser.password, 10);
 
-    return this.repository.provisionTenant({
+    const result = await this.repository.provisionTenant({
       slug: parsed.slug,
       name: parsed.name,
       legalName: parsed.legalName,
@@ -144,6 +145,20 @@ export class PlatformService {
       adminUser: { email: parsed.adminUser.email, name: parsed.adminUser.name, passwordHash },
       actorUserId,
     });
+
+    // Finans defter kaydi (muhasebelestirme) hesap plani olmadan calismaz --
+    // yeni tenant'in hic hesap plani olmadan kalip, ilk masraf/kasa hareketi
+    // muhasebelestirmesinin sessizce basarisiz olmasini onlemek icin burada
+    // otomatik olusturulur (bkz. finance-ledger-account.service.ts).
+    try {
+      await runWithTenantContext({ tenantId: result.tenant.id, isPlatformOperator: true }, () =>
+        financeLedgerAccountService.seedDefaultChartOfAccounts(),
+      );
+    } catch (error) {
+      console.error("Yeni tenant icin varsayilan hesap plani olusturulamadi.", error);
+    }
+
+    return result;
   }
 
   /** Tenant detayinda gosterilecek yonetici kullanicilar (ADMIN rolu) -- platform operatoru

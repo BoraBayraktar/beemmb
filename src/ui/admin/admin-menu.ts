@@ -230,6 +230,7 @@ export function buildAdminMenuTree(dictionary: Dictionary, locale: Locale): Admi
         { href: `/${locale}/admin/finance/reports/trial-balance`, label: dictionary.admin.financeMenuTrialBalance, permissionKey: "financeTrialBalance.read" },
         { href: `/${locale}/admin/finance/exports`, label: dictionary.admin.financeMenuAdvisorExports, permissionKey: "finance.audit.read" },
         { href: `/${locale}/admin/finance/ledger-entries`, label: dictionary.admin.financeMenuLedgerEntries, permissionKey: "financeLedgerEntries.read" },
+        { href: `/${locale}/admin/finance/chart-of-accounts`, label: dictionary.admin.financeMenuChartOfAccounts, permissionKey: "financeLedgerEntries.read" },
       ],
     },
     {
