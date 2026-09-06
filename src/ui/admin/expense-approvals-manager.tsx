@@ -246,9 +246,15 @@ export function ExpenseApprovalsManager({
                   </div>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    <Button type="button" onClick={() => void approve()} disabled={pending}>{approveLabel}</Button>
-                    <Button type="button" variant="outline" onClick={() => setDecisionMode("return")} disabled={pending}>{returnLabel}</Button>
-                    <Button type="button" variant="outline" onClick={() => setDecisionMode("reject")} disabled={pending}>{rejectLabel}</Button>
+                    {currentStepInfo?.canApprove !== false ? (
+                      <Button type="button" onClick={() => void approve()} disabled={pending}>{approveLabel}</Button>
+                    ) : null}
+                    {currentStepInfo?.canReturn !== false ? (
+                      <Button type="button" variant="outline" onClick={() => setDecisionMode("return")} disabled={pending}>{returnLabel}</Button>
+                    ) : null}
+                    {currentStepInfo?.canReject !== false ? (
+                      <Button type="button" variant="outline" onClick={() => setDecisionMode("reject")} disabled={pending}>{rejectLabel}</Button>
+                    ) : null}
                   </div>
                 )}
               </div>

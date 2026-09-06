@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -20,6 +21,9 @@ type ChainStepRow = {
   approverUserId: string;
   notifyEmail: string;
   description: string;
+  canApprove: boolean;
+  canReject: boolean;
+  canReturn: boolean;
 };
 
 async function readErrorMessage(response: Response, fallback: string) {
@@ -34,6 +38,9 @@ function toRows(steps: AdminExpenseApprovalChainStepItem[]): ChainStepRow[] {
     approverUserId: step.approverUserId,
     notifyEmail: step.notifyEmail ?? "",
     description: step.description ?? "",
+    canApprove: step.canApprove,
+    canReject: step.canReject,
+    canReturn: step.canReturn,
   }));
 }
 
@@ -62,7 +69,16 @@ export function ExpenseSettingsManager({
     const nextOrder = rows.length > 0 ? Math.max(...rows.map((row) => row.stepOrder)) + 1 : 1;
     setRows((current) => [
       ...current,
-      { key: `${rowKeyPrefix}-${Date.now()}-${current.length}`, stepOrder: nextOrder, approverUserId: "", notifyEmail: "", description: "" },
+      {
+        key: `${rowKeyPrefix}-${Date.now()}-${current.length}`,
+        stepOrder: nextOrder,
+        approverUserId: "",
+        notifyEmail: "",
+        description: "",
+        canApprove: true,
+        canReject: true,
+        canReturn: true,
+      },
     ]);
     setChainSaved(false);
   }
@@ -93,6 +109,10 @@ export function ExpenseSettingsManager({
       setError("Aynı onaycı zincirde birden fazla kez yer alamaz.");
       return;
     }
+    if (rows.some((row) => !row.canApprove && !row.canReject && !row.canReturn)) {
+      setError("Her onaycı için en az bir işlem yetkisi (Onayla/Reddet/Geri Gönder) seçilmelidir.");
+      return;
+    }
 
     setChainPending(true);
     setChainSaved(false);
@@ -106,6 +126,9 @@ export function ExpenseSettingsManager({
             approverUserId: row.approverUserId,
             notifyEmail: row.notifyEmail || null,
             description: row.description || null,
+            canApprove: row.canApprove,
+            canReject: row.canReject,
+            canReturn: row.canReturn,
           })),
         }),
       });
@@ -177,7 +200,8 @@ export function ExpenseSettingsManager({
 
         <div className="mt-4 space-y-3">
           {sortedRows.map((row) => (
-            <div key={row.key} className="grid gap-3 rounded-2xl border border-[color:var(--color-border)] p-3 md:grid-cols-[80px_1.4fr_1.2fr_1.4fr_auto]">
+            <div key={row.key} className="space-y-3 rounded-2xl border border-[color:var(--color-border)] p-3">
+            <div className="grid gap-3 md:grid-cols-[80px_1.4fr_1.2fr_1.4fr_auto]">
               <div>
                 <Label>Sıra</Label>
                 <Input
@@ -217,6 +241,23 @@ export function ExpenseSettingsManager({
               <div className="flex items-end">
                 <Button type="button" variant="outline" onClick={() => removeRow(row.key)}>Çıkar</Button>
               </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4 border-t border-dashed border-[color:var(--color-border)] pt-3">
+              <span className="text-xs font-medium text-[color:var(--color-text-muted)]">Bu onaycı şunları yapabilir:</span>
+              <label className="flex items-center gap-2 text-sm text-[color:var(--color-text)]">
+                <Checkbox checked={row.canApprove} onCheckedChange={(checked) => updateRow(row.key, { canApprove: checked === true })} />
+                Onayla
+              </label>
+              <label className="flex items-center gap-2 text-sm text-[color:var(--color-text)]">
+                <Checkbox checked={row.canReject} onCheckedChange={(checked) => updateRow(row.key, { canReject: checked === true })} />
+                Reddet
+              </label>
+              <label className="flex items-center gap-2 text-sm text-[color:var(--color-text)]">
+                <Checkbox checked={row.canReturn} onCheckedChange={(checked) => updateRow(row.key, { canReturn: checked === true })} />
+                Geri Gönder
+              </label>
+            </div>
             </div>
           ))}
           {sortedRows.length === 0 ? (

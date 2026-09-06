@@ -57,6 +57,9 @@ export type AdminExpenseReportApprovalStepItem = {
   approverName: string;
   notifyEmail: string | null;
   description: string | null;
+  canApprove: boolean;
+  canReject: boolean;
+  canReturn: boolean;
   status: AdminExpenseReportApprovalStatus;
   decisionNote: string | null;
   decidedAt: string | null;

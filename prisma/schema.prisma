@@ -1251,6 +1251,9 @@ model ExpenseApprovalChainStep {
   approverUserId String
   notifyEmail    String?
   description    String?
+  canApprove     Boolean  @default(true)
+  canReject      Boolean  @default(true)
+  canReturn      Boolean  @default(true)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   tenant         Tenant   @relation(fields: [tenantId], references: [id])
@@ -1303,6 +1306,9 @@ model ExpenseReportApproval {
   approverUserId  String
   notifyEmail     String?
   description     String?
+  canApprove      Boolean                     @default(true)
+  canReject       Boolean                     @default(true)
+  canReturn       Boolean                     @default(true)
   status          ExpenseReportApprovalStatus @default(PENDING)
   decisionNote    String?
   decidedAt       DateTime?

@@ -21,6 +21,9 @@ export type AdminExpenseApprovalChainStepItem = {
   approverEmail: string;
   notifyEmail: string | null;
   description: string | null;
+  canApprove: boolean;
+  canReject: boolean;
+  canReturn: boolean;
 };
 
 export type AdminUpsertExpenseApprovalChainStepInput = {
@@ -28,6 +31,9 @@ export type AdminUpsertExpenseApprovalChainStepInput = {
   approverUserId: string;
   notifyEmail?: string | null;
   description?: string | null;
+  canApprove?: boolean;
+  canReject?: boolean;
+  canReturn?: boolean;
 };
 
 export type AdminUpsertExpenseApprovalChainInput = {

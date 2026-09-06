@@ -25,12 +25,19 @@ const upsertCategorySchema = z.object({
   sortOrder: z.coerce.number().int().min(0).max(999).default(0),
 });
 
-const chainStepSchema = z.object({
-  stepOrder: z.coerce.number().int().min(1),
-  approverUserId: z.string().trim().min(1),
-  notifyEmail: z.string().trim().email().max(160).optional().nullable().or(z.literal("")).transform((value) => value || null),
-  description: z.string().trim().max(200).optional().nullable().or(z.literal("")).transform((value) => value || null),
-});
+const chainStepSchema = z
+  .object({
+    stepOrder: z.coerce.number().int().min(1),
+    approverUserId: z.string().trim().min(1),
+    notifyEmail: z.string().trim().email().max(160).optional().nullable().or(z.literal("")).transform((value) => value || null),
+    description: z.string().trim().max(200).optional().nullable().or(z.literal("")).transform((value) => value || null),
+    canApprove: z.boolean().default(true),
+    canReject: z.boolean().default(true),
+    canReturn: z.boolean().default(true),
+  })
+  .refine((step) => step.canApprove || step.canReject || step.canReturn, {
+    message: "Her onaycı için en az bir işlem yetkisi (Onayla/Reddet/Geri Gönder) seçilmelidir.",
+  });
 
 const upsertChainSchema = z.object({
   steps: z.array(chainStepSchema).min(1, "En az bir onaycı tanımlamalısınız.").max(10, "En fazla 10 onaycı tanımlanabilir."),
@@ -53,6 +60,9 @@ function mapChainStep(row: {
   approverUserId: string;
   notifyEmail: string | null;
   description: string | null;
+  canApprove: boolean;
+  canReject: boolean;
+  canReturn: boolean;
   approver: { name: string; email: string };
 }): AdminExpenseApprovalChainStepItem {
   return {
@@ -63,6 +73,9 @@ function mapChainStep(row: {
     approverEmail: row.approver.email,
     notifyEmail: row.notifyEmail,
     description: row.description,
+    canApprove: row.canApprove,
+    canReject: row.canReject,
+    canReturn: row.canReturn,
   };
 }
 
@@ -146,6 +159,9 @@ export class ExpenseSettingsService {
         approverUserId: step.approverUserId,
         notifyEmail: step.notifyEmail ?? null,
         description: step.description ?? null,
+        canApprove: step.canApprove,
+        canReject: step.canReject,
+        canReturn: step.canReturn,
       }));
 
     const rows = await this.chainRepository.replace(orderedSteps);

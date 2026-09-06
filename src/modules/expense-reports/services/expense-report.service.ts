@@ -149,6 +149,9 @@ function mapDetail(item: ExpenseReportDetailRow): AdminExpenseReportDetail {
       approverName: approval.approver.name,
       notifyEmail: approval.notifyEmail,
       description: approval.description,
+      canApprove: approval.canApprove,
+      canReject: approval.canReject,
+      canReturn: approval.canReturn,
       status: approval.status,
       decisionNote: approval.decisionNote,
       decidedAt: approval.decidedAt ? approval.decidedAt.toISOString() : null,
@@ -259,6 +262,21 @@ export class ExpenseReportService {
     return approval;
   }
 
+  private assertActionAllowed(
+    approval: { canApprove: boolean; canReject: boolean; canReturn: boolean },
+    action: "approve" | "reject" | "return",
+    user: RequestingUser,
+  ) {
+    if (user.hasManage) {
+      return;
+    }
+    const allowed = action === "approve" ? approval.canApprove : action === "reject" ? approval.canReject : approval.canReturn;
+    if (!allowed) {
+      const actionLabel = action === "approve" ? "onaylama" : action === "reject" ? "reddetme" : "geri gönderme";
+      throw new ExpenseReportAdminError(`Bu onaycı için ${actionLabel} yetkisi tanımlanmamış.`, 403);
+    }
+  }
+
   private async notifyByEmailIfSet(notifyEmail: string | null, subject: string, text: string) {
     if (!notifyEmail) {
       return;
@@ -362,6 +380,9 @@ export class ExpenseReportService {
       approverUserId: step.approverUserId,
       notifyEmail: step.notifyEmail,
       description: step.description,
+      canApprove: step.canApprove,
+      canReject: step.canReject,
+      canReturn: step.canReturn,
     }));
 
     const updated = await this.repository.submit({ id, round, steps, actorUserId: user.id });
@@ -388,6 +409,7 @@ export class ExpenseReportService {
     const report = await this.findOrThrow(id);
     this.assertCanDecide(report, user);
     const approval = await this.findCurrentApprovalOrThrow(id);
+    this.assertActionAllowed(approval, "approve", user);
 
     const updated = await this.repository.approveCurrentStep({
       id,
@@ -499,6 +521,7 @@ export class ExpenseReportService {
     const report = await this.findOrThrow(parsed.id);
     this.assertCanDecide(report, user);
     const approval = await this.findCurrentApprovalOrThrow(parsed.id);
+    this.assertActionAllowed(approval, "reject", user);
 
     const updated = await this.repository.rejectCurrentStep({
       id: parsed.id,
@@ -524,6 +547,7 @@ export class ExpenseReportService {
     const report = await this.findOrThrow(parsed.id);
     this.assertCanDecide(report, user);
     const approval = await this.findCurrentApprovalOrThrow(parsed.id);
+    this.assertActionAllowed(approval, "return", user);
 
     const updated = await this.repository.returnCurrentStep({
       id: parsed.id,

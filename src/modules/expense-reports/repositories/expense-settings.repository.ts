@@ -98,7 +98,17 @@ export class ExpenseApprovalChainRepository {
     });
   }
 
-  async replace(steps: Array<{ stepOrder: number; approverUserId: string; notifyEmail: string | null; description: string | null }>) {
+  async replace(
+    steps: Array<{
+      stepOrder: number;
+      approverUserId: string;
+      notifyEmail: string | null;
+      description: string | null;
+      canApprove: boolean;
+      canReject: boolean;
+      canReturn: boolean;
+    }>,
+  ) {
     const tenantId = requireTenantId();
 
     return prisma.$transaction(async (tx) => {
@@ -112,6 +122,9 @@ export class ExpenseApprovalChainRepository {
             approverUserId: step.approverUserId,
             notifyEmail: step.notifyEmail,
             description: step.description,
+            canApprove: step.canApprove,
+            canReject: step.canReject,
+            canReturn: step.canReturn,
           })),
         });
       }

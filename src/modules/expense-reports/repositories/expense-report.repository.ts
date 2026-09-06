@@ -36,6 +36,9 @@ type ChainStepSnapshot = {
   approverUserId: string;
   notifyEmail: string | null;
   description: string | null;
+  canApprove: boolean;
+  canReject: boolean;
+  canReturn: boolean;
 };
 
 function buildWhere(filter: Pick<ListFilter, "search" | "status">, extra: Prisma.ExpenseReportWhereInput) {
@@ -285,6 +288,9 @@ export class ExpenseReportRepository {
           approverUserId: step.approverUserId,
           notifyEmail: step.notifyEmail,
           description: step.description,
+          canApprove: step.canApprove,
+          canReject: step.canReject,
+          canReturn: step.canReturn,
           status: "PENDING" as const,
         })),
       });
