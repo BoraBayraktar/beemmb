@@ -24,6 +24,8 @@ function formatDate(value: string | null) {
   return new Date(value).toLocaleDateString("tr-TR");
 }
 
+type DecisionMode = "reject" | "return" | null;
+
 export function ExpenseApprovalsManager({
   result,
   emptyLabel,
@@ -31,6 +33,9 @@ export function ExpenseApprovalsManager({
   rejectLabel,
   rejectNoteLabel,
   rejectNoteRequiredLabel,
+  returnLabel,
+  returnNoteLabel,
+  returnNoteRequiredLabel,
 }: {
   locale: string;
   result: AdminExpenseReportListResult;
@@ -39,6 +44,9 @@ export function ExpenseApprovalsManager({
   rejectLabel: string;
   rejectNoteLabel: string;
   rejectNoteRequiredLabel: string;
+  returnLabel: string;
+  returnNoteLabel: string;
+  returnNoteRequiredLabel: string;
 }) {
   const router = useRouter();
   const [items, setItems] = useState(result.items);
@@ -46,8 +54,8 @@ export function ExpenseApprovalsManager({
   const [pending, setPending] = useState(false);
   const [detail, setDetail] = useState<AdminExpenseReportDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [rejectNoteOpen, setRejectNoteOpen] = useState(false);
-  const [rejectNote, setRejectNote] = useState("");
+  const [decisionMode, setDecisionMode] = useState<DecisionMode>(null);
+  const [decisionNote, setDecisionNote] = useState("");
 
   async function refreshList() {
     const response = await fetch("/api/admin/expense-reports/approvals?pageSize=50");
@@ -60,8 +68,8 @@ export function ExpenseApprovalsManager({
   async function openDetail(id: string) {
     setDetailLoading(true);
     setError(null);
-    setRejectNoteOpen(false);
-    setRejectNote("");
+    setDecisionMode(null);
+    setDecisionNote("");
     try {
       const response = await fetch(`/api/admin/expense-reports/${id}`);
       if (!response.ok) {
@@ -93,34 +101,40 @@ export function ExpenseApprovalsManager({
     }
   }
 
-  async function reject() {
-    if (!detail) return;
-    if (!rejectNote.trim()) {
-      setError(rejectNoteRequiredLabel);
+  async function confirmDecision() {
+    if (!detail || !decisionMode) return;
+    if (!decisionNote.trim()) {
+      setError(decisionMode === "reject" ? rejectNoteRequiredLabel : returnNoteRequiredLabel);
       return;
     }
 
     setPending(true);
     setError(null);
     try {
-      const response = await fetch(`/api/admin/expense-reports/${detail.id}/reject`, {
+      const endpoint = decisionMode === "reject" ? "reject" : "return";
+      const response = await fetch(`/api/admin/expense-reports/${detail.id}/${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ decisionNote: rejectNote }),
+        body: JSON.stringify({ decisionNote }),
       });
       if (!response.ok) {
-        setError(await readErrorMessage(response, "Reddetme başarısız oldu."));
+        setError(await readErrorMessage(response, decisionMode === "reject" ? "Reddetme başarısız oldu." : "Geri gönderme başarısız oldu."));
         return;
       }
       setDetail(null);
-      setRejectNoteOpen(false);
-      setRejectNote("");
+      setDecisionMode(null);
+      setDecisionNote("");
       await refreshList();
       router.refresh();
     } finally {
       setPending(false);
     }
   }
+
+  const currentStepInfo = detail?.approvals.find(
+    (approval) => approval.round === detail.currentRound && approval.status === "PENDING" && approval.approverUserId === detail.currentApproverUserId,
+  );
+  const totalSteps = detail?.approvals.filter((approval) => approval.round === detail.currentRound).length ?? 0;
 
   return (
     <div className="space-y-6">
@@ -190,6 +204,11 @@ export function ExpenseApprovalsManager({
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge>{detail.employeeName}</Badge>
                   <span className="font-medium text-[color:var(--color-text)]">{formatCurrency(detail.totalAmount, detail.currency)}</span>
+                  {currentStepInfo && totalSteps > 1 ? (
+                    <Badge className="border-[color:var(--color-border)] bg-transparent text-[color:var(--color-text-muted)]">
+                      {currentStepInfo.stepOrder}. / {totalSteps} onaycı
+                    </Badge>
+                  ) : null}
                 </div>
 
                 {detail.note ? <p className="text-[color:var(--color-text-muted)]">{detail.note}</p> : null}
@@ -214,19 +233,22 @@ export function ExpenseApprovalsManager({
                   </div>
                 </div>
 
-                {rejectNoteOpen ? (
+                {decisionMode ? (
                   <div className="space-y-2 rounded-2xl border border-dashed border-[color:var(--color-border)] p-4">
-                    <Label>{rejectNoteLabel}</Label>
-                    <Textarea value={rejectNote} onChange={(event) => setRejectNote(event.target.value)} rows={3} />
+                    <Label>{decisionMode === "reject" ? rejectNoteLabel : returnNoteLabel}</Label>
+                    <Textarea value={decisionNote} onChange={(event) => setDecisionNote(event.target.value)} rows={3} />
                     <div className="flex gap-2">
-                      <Button type="button" variant="outline" onClick={() => void reject()} disabled={pending}>{rejectLabel}</Button>
-                      <Button type="button" variant="ghost" onClick={() => setRejectNoteOpen(false)}>Vazgeç</Button>
+                      <Button type="button" variant="outline" onClick={() => void confirmDecision()} disabled={pending}>
+                        {decisionMode === "reject" ? rejectLabel : returnLabel}
+                      </Button>
+                      <Button type="button" variant="ghost" onClick={() => { setDecisionMode(null); setDecisionNote(""); }}>Vazgeç</Button>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button type="button" onClick={() => void approve()} disabled={pending}>{approveLabel}</Button>
-                    <Button type="button" variant="outline" onClick={() => setRejectNoteOpen(true)} disabled={pending}>{rejectLabel}</Button>
+                    <Button type="button" variant="outline" onClick={() => setDecisionMode("return")} disabled={pending}>{returnLabel}</Button>
+                    <Button type="button" variant="outline" onClick={() => setDecisionMode("reject")} disabled={pending}>{rejectLabel}</Button>
                   </div>
                 )}
               </div>

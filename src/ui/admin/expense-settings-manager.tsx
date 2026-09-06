@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,51 +10,114 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ErrorToast } from "@/components/ui/toast";
 import type {
   AdminBackofficeUserOption,
-  AdminExpenseApproverSettingItem,
+  AdminExpenseApprovalChainStepItem,
   AdminExpenseCategoryItem,
 } from "@/modules/expense-reports/contracts/expense-settings.contract";
+
+type ChainStepRow = {
+  key: string;
+  stepOrder: number;
+  approverUserId: string;
+  notifyEmail: string;
+  description: string;
+};
 
 async function readErrorMessage(response: Response, fallback: string) {
   const payload = (await response.json().catch(() => null)) as { message?: string } | null;
   return payload?.message ?? fallback;
 }
 
+function toRows(steps: AdminExpenseApprovalChainStepItem[]): ChainStepRow[] {
+  return steps.map((step) => ({
+    key: step.id,
+    stepOrder: step.stepOrder,
+    approverUserId: step.approverUserId,
+    notifyEmail: step.notifyEmail ?? "",
+    description: step.description ?? "",
+  }));
+}
+
 export function ExpenseSettingsManager({
-  approver,
+  steps,
   candidates,
   categories,
 }: {
-  approver: AdminExpenseApproverSettingItem | null;
+  steps: AdminExpenseApprovalChainStepItem[];
   candidates: AdminBackofficeUserOption[];
   categories: AdminExpenseCategoryItem[];
 }) {
-  const [approverUserId, setApproverUserId] = useState(approver?.approverUserId ?? "");
-  const [notifyEmail, setNotifyEmail] = useState(approver?.notifyEmail ?? "");
-  const [approverPending, setApproverPending] = useState(false);
-  const [approverSaved, setApproverSaved] = useState(false);
+  const rowKeyPrefix = useId();
+  const [rows, setRows] = useState<ChainStepRow[]>(toRows(steps));
+  const [chainPending, setChainPending] = useState(false);
+  const [chainSaved, setChainSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [categoryList, setCategoryList] = useState(categories);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [categoryPending, setCategoryPending] = useState(false);
 
-  async function saveApprover() {
-    setApproverPending(true);
-    setApproverSaved(false);
+  const sortedRows = [...rows].sort((a, b) => a.stepOrder - b.stepOrder);
+
+  function addRow() {
+    const nextOrder = rows.length > 0 ? Math.max(...rows.map((row) => row.stepOrder)) + 1 : 1;
+    setRows((current) => [
+      ...current,
+      { key: `${rowKeyPrefix}-${Date.now()}-${current.length}`, stepOrder: nextOrder, approverUserId: "", notifyEmail: "", description: "" },
+    ]);
+    setChainSaved(false);
+  }
+
+  function removeRow(key: string) {
+    setRows((current) => current.filter((row) => row.key !== key));
+    setChainSaved(false);
+  }
+
+  function updateRow(key: string, patch: Partial<ChainStepRow>) {
+    setRows((current) => current.map((row) => (row.key === key ? { ...row, ...patch } : row)));
+    setChainSaved(false);
+  }
+
+  async function saveChain() {
     setError(null);
+
+    if (rows.length === 0) {
+      setError("En az bir onaycı tanımlamalısınız.");
+      return;
+    }
+    if (rows.some((row) => !row.approverUserId)) {
+      setError("Tüm satırlar için bir onaycı seçilmelidir.");
+      return;
+    }
+    const approverIds = rows.map((row) => row.approverUserId);
+    if (new Set(approverIds).size !== approverIds.length) {
+      setError("Aynı onaycı zincirde birden fazla kez yer alamaz.");
+      return;
+    }
+
+    setChainPending(true);
+    setChainSaved(false);
     try {
-      const response = await fetch("/api/admin/expense-reports/settings/approver", {
+      const response = await fetch("/api/admin/expense-reports/settings/approval-chain", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ approverUserId, notifyEmail: notifyEmail || null }),
+        body: JSON.stringify({
+          steps: sortedRows.map((row) => ({
+            stepOrder: row.stepOrder,
+            approverUserId: row.approverUserId,
+            notifyEmail: row.notifyEmail || null,
+            description: row.description || null,
+          })),
+        }),
       });
       if (!response.ok) {
-        setError(await readErrorMessage(response, "Onaycı kaydedilemedi."));
+        setError(await readErrorMessage(response, "Onay akışı kaydedilemedi."));
         return;
       }
-      setApproverSaved(true);
+      const payload = await response.json();
+      setRows(toRows(payload.steps ?? []));
+      setChainSaved(true);
     } finally {
-      setApproverPending(false);
+      setChainPending(false);
     }
   }
 
@@ -106,30 +169,67 @@ export function ExpenseSettingsManager({
       {error ? <ErrorToast message={error} onDismiss={() => setError(null)} /> : null}
 
       <section className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
-        <h2 className="text-lg font-semibold text-[color:var(--color-text)]">Onaycı</h2>
-        <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">Masraf bildirimleri onaya gönderildiğinde bu kişiye bildirim gider.</p>
+        <h2 className="text-lg font-semibold text-[color:var(--color-text)]">Onay Akışı</h2>
+        <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">
+          Masraf bildirimleri, aşağıdaki sıraya göre onaycılardan geçer. Bir onaycı onayladığında bildirim otomatik olarak sıradaki
+          onaycıya iletilir; son onaycı da onayladığında bildirim muhasebeleştirilir.
+        </p>
 
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <div>
-            <Label>Onaycı</Label>
-            <Select value={approverUserId} onValueChange={setApproverUserId}>
-              <SelectTrigger><SelectValue placeholder="Onaycı seçin" /></SelectTrigger>
-              <SelectContent>
-                {candidates.map((candidate) => (
-                  <SelectItem key={candidate.id} value={candidate.id}>{candidate.name} ({candidate.email})</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Bildirim e-postası (opsiyonel)</Label>
-            <Input value={notifyEmail} onChange={(event) => setNotifyEmail(event.target.value)} placeholder="onaycının e-postası farklıysa" />
-          </div>
+        <div className="mt-4 space-y-3">
+          {sortedRows.map((row) => (
+            <div key={row.key} className="grid gap-3 rounded-2xl border border-[color:var(--color-border)] p-3 md:grid-cols-[80px_1.4fr_1.2fr_1.4fr_auto]">
+              <div>
+                <Label>Sıra</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={row.stepOrder}
+                  onChange={(event) => updateRow(row.key, { stepOrder: Number(event.target.value) || 1 })}
+                />
+              </div>
+              <div>
+                <Label>Onaycı</Label>
+                <Select value={row.approverUserId} onValueChange={(value) => updateRow(row.key, { approverUserId: value })}>
+                  <SelectTrigger><SelectValue placeholder="Onaycı seçin" /></SelectTrigger>
+                  <SelectContent>
+                    {candidates.map((candidate) => (
+                      <SelectItem key={candidate.id} value={candidate.id}>{candidate.name} ({candidate.email})</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Bildirim e-postası (opsiyonel)</Label>
+                <Input
+                  value={row.notifyEmail}
+                  onChange={(event) => updateRow(row.key, { notifyEmail: event.target.value })}
+                  placeholder="onaycının e-postası farklıysa"
+                />
+              </div>
+              <div>
+                <Label>Açıklama (opsiyonel)</Label>
+                <Input
+                  value={row.description}
+                  onChange={(event) => updateRow(row.key, { description: event.target.value })}
+                  placeholder="ör. Finans Müdürü"
+                />
+              </div>
+              <div className="flex items-end">
+                <Button type="button" variant="outline" onClick={() => removeRow(row.key)}>Çıkar</Button>
+              </div>
+            </div>
+          ))}
+          {sortedRows.length === 0 ? (
+            <p className="rounded-2xl border border-dashed border-[color:var(--color-border)] p-4 text-sm text-[color:var(--color-text-muted)]">
+              Henüz bir onaycı tanımlanmadı.
+            </p>
+          ) : null}
         </div>
 
-        <div className="mt-4 flex items-center gap-3">
-          <Button type="button" onClick={() => void saveApprover()} disabled={approverPending || !approverUserId}>Onaycıyı Kaydet</Button>
-          {approverSaved ? <span className="text-sm text-emerald-600">Kaydedildi.</span> : null}
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <Button type="button" variant="outline" onClick={addRow}>Onaycı Ekle</Button>
+          <Button type="button" onClick={() => void saveChain()} disabled={chainPending}>Kaydet</Button>
+          {chainSaved ? <span className="text-sm text-emerald-600">Kaydedildi.</span> : null}
         </div>
       </section>
 

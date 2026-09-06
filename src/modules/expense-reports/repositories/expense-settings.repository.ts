@@ -86,24 +86,43 @@ export class ExpenseCategoryRepository {
   }
 }
 
-export class ExpenseApproverSettingRepository {
-  async get() {
-    return prisma.expenseApproverSetting.findFirst({
-      include: { approver: { select: { id: true, name: true, email: true } } },
+const chainStepInclude = {
+  approver: { select: { id: true, name: true, email: true } },
+} as const;
+
+export class ExpenseApprovalChainRepository {
+  async list() {
+    return prisma.expenseApprovalChainStep.findMany({
+      orderBy: { stepOrder: "asc" },
+      include: chainStepInclude,
     });
   }
 
-  async upsert(args: { approverUserId: string; notifyEmail: string | null }) {
+  async replace(steps: Array<{ stepOrder: number; approverUserId: string; notifyEmail: string | null; description: string | null }>) {
     const tenantId = requireTenantId();
 
-    return prisma.expenseApproverSetting.upsert({
-      where: { tenantId },
-      update: { approverUserId: args.approverUserId, notifyEmail: args.notifyEmail },
-      create: { tenantId, approverUserId: args.approverUserId, notifyEmail: args.notifyEmail },
-      include: { approver: { select: { id: true, name: true, email: true } } },
+    return prisma.$transaction(async (tx) => {
+      await tx.expenseApprovalChainStep.deleteMany({ where: { tenantId } });
+
+      if (steps.length > 0) {
+        await tx.expenseApprovalChainStep.createMany({
+          data: steps.map((step) => ({
+            tenantId,
+            stepOrder: step.stepOrder,
+            approverUserId: step.approverUserId,
+            notifyEmail: step.notifyEmail,
+            description: step.description,
+          })),
+        });
+      }
+
+      return tx.expenseApprovalChainStep.findMany({
+        orderBy: { stepOrder: "asc" },
+        include: chainStepInclude,
+      });
     });
   }
 }
 
 export const expenseCategoryRepository = new ExpenseCategoryRepository();
-export const expenseApproverSettingRepository = new ExpenseApproverSettingRepository();
+export const expenseApprovalChainRepository = new ExpenseApprovalChainRepository();

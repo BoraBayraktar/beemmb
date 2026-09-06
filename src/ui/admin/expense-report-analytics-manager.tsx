@@ -35,6 +35,7 @@ function statusLabel(status: AdminExpenseReportStatus) {
   if (status === "DRAFT") return "Gönderilmedi";
   if (status === "SUBMITTED") return "Onay Bekliyor";
   if (status === "APPROVED") return "Onaylandı";
+  if (status === "RETURNED") return "Düzenleme İçin Geri Gönderildi";
   return "Reddedildi";
 }
 
@@ -42,6 +43,7 @@ function statusBadgeClass(status: AdminExpenseReportStatus) {
   if (status === "APPROVED") return "border-emerald-200 bg-emerald-100 text-emerald-700";
   if (status === "SUBMITTED") return "border-sky-200 bg-sky-100 text-sky-700";
   if (status === "REJECTED") return "border-rose-200 bg-rose-100 text-rose-700";
+  if (status === "RETURNED") return "border-orange-200 bg-orange-100 text-orange-700";
   return "border-amber-200 bg-amber-100 text-amber-700";
 }
 
@@ -333,6 +335,7 @@ export function ExpenseReportAnalyticsManager({
               <SelectItem value="DRAFT">Gönderilmedi</SelectItem>
               <SelectItem value="SUBMITTED">Onay Bekliyor</SelectItem>
               <SelectItem value="APPROVED">Onaylandı</SelectItem>
+              <SelectItem value="RETURNED">Geri Gönderildi</SelectItem>
               <SelectItem value="REJECTED">Reddedildi</SelectItem>
             </SelectContent>
           </Select>

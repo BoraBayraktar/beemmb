@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Camera } from "lucide-react";
+import { Camera, CheckCircle2, Circle, Clock, RotateCcw, XCircle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,15 @@ export type ExpenseReportsCopy = {
   statusSubmitted: string;
   statusApproved: string;
   statusRejected: string;
+  statusReturned: string;
+  resubmit: string;
+  approvalFlowTitle: string;
+  approvalStepApproved: string;
+  approvalStepCurrent: string;
+  approvalStepWaiting: string;
+  approvalStepRejected: string;
+  approvalStepReturned: string;
+  approvalHistoryTitle: string;
   total: string;
   itemCount: string;
   addItem: string;
@@ -59,6 +68,7 @@ function statusLabel(status: AdminExpenseReportStatus, copy: ExpenseReportsCopy)
   if (status === "DRAFT") return copy.statusDraft;
   if (status === "SUBMITTED") return copy.statusSubmitted;
   if (status === "APPROVED") return copy.statusApproved;
+  if (status === "RETURNED") return copy.statusReturned;
   return copy.statusRejected;
 }
 
@@ -66,7 +76,12 @@ function statusBadgeClass(status: AdminExpenseReportStatus) {
   if (status === "APPROVED") return "border-emerald-200 bg-emerald-100 text-emerald-700";
   if (status === "SUBMITTED") return "border-sky-200 bg-sky-100 text-sky-700";
   if (status === "REJECTED") return "border-rose-200 bg-rose-100 text-rose-700";
+  if (status === "RETURNED") return "border-orange-200 bg-orange-100 text-orange-700";
   return "border-amber-200 bg-amber-100 text-amber-700";
+}
+
+function isEditableStatus(status: AdminExpenseReportStatus) {
+  return status === "DRAFT" || status === "RETURNED";
 }
 
 function formatCurrency(value: number, currency: string) {
@@ -147,6 +162,82 @@ function computeVatAmount(amount: string, rate: string) {
     return "";
   }
   return (amountValue - amountValue / (1 + rateValue / 100)).toFixed(2);
+}
+
+function ApprovalFlow({ detail, copy }: { detail: AdminExpenseReportDetail; copy: ExpenseReportsCopy }) {
+  const currentRoundApprovals = detail.approvals
+    .filter((approval) => approval.round === detail.currentRound)
+    .sort((a, b) => a.stepOrder - b.stepOrder);
+
+  if (currentRoundApprovals.length === 0) {
+    return null;
+  }
+
+  const previousRounds = Array.from({ length: Math.max(0, detail.currentRound - 1) }, (_, index) => index + 1);
+
+  return (
+    <div className="space-y-3 rounded-2xl border border-[color:var(--color-border)] p-4">
+      <h3 className="font-medium text-[color:var(--color-text)]">{copy.approvalFlowTitle}</h3>
+      <ol className="space-y-3">
+        {currentRoundApprovals.map((approval) => {
+          const isCurrent = approval.status === "PENDING" && approval.approverUserId === detail.currentApproverUserId;
+          const Icon =
+            approval.status === "APPROVED" ? CheckCircle2
+            : approval.status === "REJECTED" ? XCircle
+            : approval.status === "RETURNED" ? RotateCcw
+            : isCurrent ? Clock
+            : Circle;
+          const colorClass =
+            approval.status === "APPROVED" ? "text-emerald-600"
+            : approval.status === "REJECTED" ? "text-rose-600"
+            : approval.status === "RETURNED" ? "text-orange-600"
+            : isCurrent ? "text-sky-600"
+            : "text-[color:var(--color-text-muted)]";
+          const label =
+            approval.status === "APPROVED" ? copy.approvalStepApproved
+            : approval.status === "REJECTED" ? copy.approvalStepRejected
+            : approval.status === "RETURNED" ? copy.approvalStepReturned
+            : isCurrent ? copy.approvalStepCurrent
+            : copy.approvalStepWaiting;
+
+          return (
+            <li key={approval.id} className="flex items-start gap-3">
+              <Icon className={`mt-0.5 h-5 w-5 shrink-0 ${colorClass}`} />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs text-[color:var(--color-text-muted)]">{approval.stepOrder}.</span>
+                  <span className="font-medium text-[color:var(--color-text)]">{approval.approverName}</span>
+                  <span className={`text-xs font-medium ${colorClass}`}>{label}</span>
+                </div>
+                {approval.description ? <p className="text-xs text-[color:var(--color-text-muted)]">{approval.description}</p> : null}
+                {approval.decisionNote ? <p className="mt-1 text-xs text-[color:var(--color-text)]">{approval.decisionNote}</p> : null}
+                {approval.decidedAt ? <p className="text-xs text-[color:var(--color-text-muted)]">{formatDate(approval.decidedAt)}</p> : null}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+
+      {previousRounds.length > 0 ? (
+        <details className="rounded-xl border border-dashed border-[color:var(--color-border)] p-3">
+          <summary className="cursor-pointer text-xs font-medium text-[color:var(--color-text-muted)]">{copy.approvalHistoryTitle}</summary>
+          <div className="mt-2 space-y-2">
+            {previousRounds.map((round) => {
+              const closing = detail.approvals.find((approval) => approval.round === round && approval.status === "RETURNED");
+              if (!closing) return null;
+              return (
+                <div key={round} className="rounded-lg bg-[color:var(--color-bg-soft)] p-2 text-xs">
+                  <p className="font-medium text-[color:var(--color-text)]">{round}. tur • {closing.approverName}</p>
+                  {closing.decisionNote ? <p className="mt-1 text-[color:var(--color-text-muted)]">{closing.decisionNote}</p> : null}
+                  {closing.decidedAt ? <p className="mt-1 text-[color:var(--color-text-muted)]">{formatDate(closing.decidedAt)}</p> : null}
+                </div>
+              );
+            })}
+          </div>
+        </details>
+      ) : null}
+    </div>
+  );
 }
 
 export function ExpenseReportManager({
@@ -489,7 +580,7 @@ export function ExpenseReportManager({
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{formatCurrency(line.amount, line.currency)}</span>
-                            {detail.status === "DRAFT" ? (
+                            {isEditableStatus(detail.status) ? (
                               <Button type="button" variant="ghost" onClick={() => void removeItem(line.id)} disabled={pending}>{copy.itemRemove}</Button>
                             ) : null}
                           </div>
@@ -499,7 +590,7 @@ export function ExpenseReportManager({
                   </div>
                 </div>
 
-                {detail.status === "DRAFT" ? (
+                {isEditableStatus(detail.status) ? (
                   <div className="space-y-3 rounded-2xl border border-dashed border-[color:var(--color-border)] p-4">
                     <div>
                       <input
@@ -604,16 +695,18 @@ export function ExpenseReportManager({
                   </div>
                 ) : null}
 
-                {detail.status === "DRAFT" ? (
+                {isEditableStatus(detail.status) ? (
                   <div className="flex gap-2">
-                    <Button type="button" onClick={() => void submitReport()} disabled={pending || detail.items.length === 0}>{copy.submit}</Button>
-                    <Button type="button" variant="outline" onClick={() => void discardDraft()} disabled={pending}>{copy.discardDraft}</Button>
+                    <Button type="button" onClick={() => void submitReport()} disabled={pending || detail.items.length === 0}>
+                      {detail.status === "RETURNED" ? copy.resubmit : copy.submit}
+                    </Button>
+                    {detail.status === "DRAFT" ? (
+                      <Button type="button" variant="outline" onClick={() => void discardDraft()} disabled={pending}>{copy.discardDraft}</Button>
+                    ) : null}
                   </div>
                 ) : null}
 
-                {detail.decisionNote ? (
-                  <p className="rounded-xl border border-[color:var(--color-border)] p-3 text-xs text-[color:var(--color-text-muted)]">{detail.decisionNote}</p>
-                ) : null}
+                <ApprovalFlow detail={detail} copy={copy} />
               </div>
             ) : (
               <p className="mt-4 text-sm text-[color:var(--color-text-muted)]">Yükleniyor...</p>

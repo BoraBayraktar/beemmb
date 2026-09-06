@@ -13,16 +13,25 @@ export type AdminUpsertExpenseCategoryInput = {
   sortOrder?: number;
 };
 
-export type AdminExpenseApproverSettingItem = {
+export type AdminExpenseApprovalChainStepItem = {
+  id: string;
+  stepOrder: number;
   approverUserId: string;
   approverName: string;
   approverEmail: string;
   notifyEmail: string | null;
+  description: string | null;
 };
 
-export type AdminUpsertExpenseApproverSettingInput = {
+export type AdminUpsertExpenseApprovalChainStepInput = {
+  stepOrder: number;
   approverUserId: string;
   notifyEmail?: string | null;
+  description?: string | null;
+};
+
+export type AdminUpsertExpenseApprovalChainInput = {
+  steps: AdminUpsertExpenseApprovalChainStepInput[];
 };
 
 export type AdminBackofficeUserOption = {

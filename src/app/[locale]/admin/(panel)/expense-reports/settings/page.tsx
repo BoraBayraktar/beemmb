@@ -23,14 +23,14 @@ export default async function AdminExpenseReportsSettingsPage({ params }: { para
     notFound();
   }
 
-  const [approver, candidates, categories] = await runWithTenantContext(
+  const [steps, candidates, categories] = await runWithTenantContext(
     { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
     () => Promise.all([
-      expenseSettingsService.getApproverSetting(),
+      expenseSettingsService.listApprovalChain(),
       expenseSettingsService.listApproverCandidates(),
       expenseSettingsService.listAllCategories(),
     ]),
   );
 
-  return <ExpenseSettingsManager approver={approver} candidates={candidates} categories={categories} />;
+  return <ExpenseSettingsManager steps={steps} candidates={candidates} categories={categories} />;
 }

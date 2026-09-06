@@ -12,7 +12,7 @@ export async function GET(request: Request) {
         search: searchParams.get("search") ?? undefined,
         categoryId: searchParams.get("categoryId") ?? undefined,
         employeeUserId: searchParams.get("employeeUserId") ?? undefined,
-        status: (searchParams.get("status") as "all" | "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED" | null) ?? undefined,
+        status: (searchParams.get("status") as "all" | "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED" | "RETURNED" | null) ?? undefined,
         dateFrom: searchParams.get("dateFrom") ?? undefined,
         dateTo: searchParams.get("dateTo") ?? undefined,
         page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,

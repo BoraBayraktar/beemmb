@@ -8,6 +8,7 @@ import type {
   AdminExpenseReportListResult,
   AdminReimburseExpenseReportInput,
   AdminRejectExpenseReportInput,
+  AdminReturnExpenseReportInput,
   AdminUpdateExpenseReportInput,
 } from "@/modules/expense-reports/contracts/expense-report.contract";
 import { ExpenseReportRepository, expenseReportRepository } from "@/modules/expense-reports/repositories/expense-report.repository";
@@ -18,7 +19,7 @@ import { financeAccountEntryService } from "@/modules/finance/services/finance-a
 
 const listQuerySchema = z.object({
   search: z.string().trim().optional(),
-  status: z.enum(["all", "DRAFT", "SUBMITTED", "APPROVED", "REJECTED"]).default("all"),
+  status: z.enum(["all", "DRAFT", "SUBMITTED", "APPROVED", "REJECTED", "RETURNED"]).default("all"),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(50).default(10),
 });
@@ -57,6 +58,11 @@ const rejectSchema = z.object({
   decisionNote: z.string().trim().min(1, "Red gerekçesi girilmelidir.").max(500),
 });
 
+const returnSchema = z.object({
+  id: z.string().trim().min(1),
+  decisionNote: z.string().trim().min(1, "Geri gönderme gerekçesi girilmelidir.").max(500),
+});
+
 const reimburseSchema = z.object({
   id: z.string().trim().min(1),
   financialAccountId: z.string().trim().min(1, "Finans hesabı seçilmelidir."),
@@ -85,8 +91,8 @@ function mapListItem(item: ExpenseReportListRow): AdminExpenseReportListItem {
     status: item.status,
     employeeUserId: item.employeeUserId,
     employeeName: item.employee.name,
-    approverUserId: item.approverUserId,
-    approverName: item.approver?.name ?? null,
+    currentApproverUserId: item.currentApproverUserId,
+    currentApproverName: item.currentApprover?.name ?? null,
     currency: item.currency,
     totalAmount: item.totalAmount.toNumber(),
     itemCount: item._count.items,
@@ -105,8 +111,8 @@ function mapDetail(item: ExpenseReportDetailRow): AdminExpenseReportDetail {
     status: item.status,
     employeeUserId: item.employeeUserId,
     employeeName: item.employee.name,
-    approverUserId: item.approverUserId,
-    approverName: item.approver?.name ?? null,
+    currentApproverUserId: item.currentApproverUserId,
+    currentApproverName: item.currentApprover?.name ?? null,
     currency: item.currency,
     totalAmount: item.totalAmount.toNumber(),
     itemCount: item.items.length,
@@ -116,7 +122,7 @@ function mapDetail(item: ExpenseReportDetailRow): AdminExpenseReportDetail {
     createdAt: item.createdAt.toISOString(),
     updatedAt: item.updatedAt.toISOString(),
     note: item.note,
-    decisionNote: item.decisionNote,
+    currentRound: item.currentRound,
     items: item.items.map((line) => ({
       id: line.id,
       categoryId: line.categoryId,
@@ -134,6 +140,18 @@ function mapDetail(item: ExpenseReportDetailRow): AdminExpenseReportDetail {
       ocrStatus: line.ocrStatus,
       ocrConfidence: toNumber(line.ocrConfidence),
       createdAt: line.createdAt.toISOString(),
+    })),
+    approvals: item.approvals.map((approval) => ({
+      id: approval.id,
+      round: approval.round,
+      stepOrder: approval.stepOrder,
+      approverUserId: approval.approverUserId,
+      approverName: approval.approver.name,
+      notifyEmail: approval.notifyEmail,
+      description: approval.description,
+      status: approval.status,
+      decisionNote: approval.decisionNote,
+      decidedAt: approval.decidedAt ? approval.decidedAt.toISOString() : null,
     })),
     lifecycleEvents: item.lifecycleEvents.map((event) => ({
       id: event.id,
@@ -208,28 +226,47 @@ export class ExpenseReportService {
 
   private assertCanView(report: ExpenseReportDetailRow, user: RequestingUser) {
     const isOwner = report.employeeUserId === user.id;
-    const isApprover = report.approverUserId === user.id;
+    const isApprover = report.currentApproverUserId === user.id;
     if (!isOwner && !isApprover && !user.hasManage) {
       throw new ExpenseReportAdminError("Bu masraf bildirimini görüntüleme yetkiniz yok.", 403);
     }
   }
 
-  private assertOwnerDraft(report: ExpenseReportDetailRow, user: RequestingUser) {
+  private assertOwnerEditable(report: ExpenseReportDetailRow, user: RequestingUser) {
     if (report.employeeUserId !== user.id) {
       throw new ExpenseReportAdminError("Yalnızca kendi masraf bildiriminizi düzenleyebilirsiniz.", 403);
     }
-    if (report.status !== "DRAFT") {
-      throw new ExpenseReportAdminError("Yalnızca taslak durumundaki bildirimler düzenlenebilir.", 400);
+    if (report.status !== "DRAFT" && report.status !== "RETURNED") {
+      throw new ExpenseReportAdminError("Yalnızca taslak veya geri gönderilmiş bildirimler düzenlenebilir.", 400);
     }
   }
 
   private assertCanDecide(report: ExpenseReportDetailRow, user: RequestingUser) {
-    const isAssignedApprover = report.approverUserId === user.id;
+    const isAssignedApprover = report.currentApproverUserId === user.id;
     if (!isAssignedApprover && !user.hasManage) {
       throw new ExpenseReportAdminError("Bu masraf bildirimini onaylama/reddetme yetkiniz yok.", 403);
     }
     if (report.status !== "SUBMITTED") {
       throw new ExpenseReportAdminError("Yalnızca onaya gönderilmiş bildirimler karara bağlanabilir.", 400);
+    }
+  }
+
+  private async findCurrentApprovalOrThrow(reportId: string) {
+    const approval = await this.repository.findCurrentApproval(reportId);
+    if (!approval) {
+      throw new ExpenseReportAdminError("Bu bildirim için bekleyen bir onay adımı bulunamadı.", 400);
+    }
+    return approval;
+  }
+
+  private async notifyByEmailIfSet(notifyEmail: string | null, subject: string, text: string) {
+    if (!notifyEmail) {
+      return;
+    }
+    try {
+      await notificationService.sendEmail({ to: notifyEmail, subject, text });
+    } catch (error) {
+      console.error("Masraf bildirimi bilgilendirme e-postası gönderilemedi.", error);
     }
   }
 
@@ -247,7 +284,7 @@ export class ExpenseReportService {
   async updateNote(input: AdminUpdateExpenseReportInput, user: RequestingUser): Promise<AdminExpenseReportDetail> {
     const parsed = updateSchema.parse(input);
     const report = await this.findOrThrow(parsed.id);
-    this.assertOwnerDraft(report, user);
+    this.assertOwnerEditable(report, user);
 
     const updated = await this.repository.updateNote({ id: parsed.id, note: parsed.note ?? null });
     return mapDetail(updated);
@@ -255,13 +292,13 @@ export class ExpenseReportService {
 
   async discardDraft(id: string, user: RequestingUser): Promise<void> {
     const report = await this.findOrThrow(id);
-    this.assertOwnerDraft(report, user);
+    this.assertOwnerEditable(report, user);
     await this.repository.softDelete({ id, actorUserId: user.id });
   }
 
   async addItem(reportId: string, input: AdminAddExpenseReportItemInput, user: RequestingUser): Promise<AdminExpenseReportDetail> {
     const report = await this.findOrThrow(reportId);
-    this.assertOwnerDraft(report, user);
+    this.assertOwnerEditable(report, user);
 
     const parsed = addItemSchema.parse(input);
 
@@ -300,7 +337,7 @@ export class ExpenseReportService {
 
   async removeItem(reportId: string, itemId: string, user: RequestingUser): Promise<AdminExpenseReportDetail> {
     const report = await this.findOrThrow(reportId);
-    this.assertOwnerDraft(report, user);
+    this.assertOwnerEditable(report, user);
 
     const updated = await this.repository.removeItem({ expenseReportId: reportId, itemId, actorUserId: user.id });
     return mapDetail(updated);
@@ -308,31 +345,41 @@ export class ExpenseReportService {
 
   async submit(id: string, user: RequestingUser): Promise<AdminExpenseReportDetail> {
     const report = await this.findOrThrow(id);
-    this.assertOwnerDraft(report, user);
+    this.assertOwnerEditable(report, user);
 
     if (report.items.length === 0) {
       throw new ExpenseReportAdminError("En az bir harcama kalemi eklemelisiniz.", 400);
     }
 
-    const approverSetting = await expenseSettingsService.getApproverSetting();
-    if (!approverSetting) {
-      throw new ExpenseReportAdminError("Masraf onaycısı tanımlanmamış. Lütfen sistem yöneticinize başvurun.", 400);
+    const chain = await expenseSettingsService.listApprovalChain();
+    if (chain.length === 0) {
+      throw new ExpenseReportAdminError("Masraf onay akışı tanımlanmamış. Lütfen sistem yöneticinize başvurun.", 400);
     }
 
-    const updated = await this.repository.markSubmitted({
-      id,
-      approverUserId: approverSetting.approverUserId,
-      actorUserId: user.id,
-    });
+    const round = report.status === "RETURNED" ? report.currentRound + 1 : 1;
+    const steps = chain.map((step) => ({
+      stepOrder: step.stepOrder,
+      approverUserId: step.approverUserId,
+      notifyEmail: step.notifyEmail,
+      description: step.description,
+    }));
+
+    const updated = await this.repository.submit({ id, round, steps, actorUserId: user.id });
+    const firstStep = chain[0];
 
     await notificationService.createForRecipients({
-      recipients: [{ id: approverSetting.approverUserId }],
+      recipients: [{ id: firstStep.approverUserId }],
       type: "EXPENSE_REPORT_SUBMITTED",
       title: "Yeni masraf bildirimi onayınızı bekliyor",
       message: `${updated.employee.name} tarafından gönderilen ${updated.reportNumber} numaralı masraf bildirimi (${updated.totalAmount.toNumber()} ${updated.currency}) onayınızı bekliyor.`,
       linkUrl: "/admin/expense-reports/approvals",
       channels: ["IN_APP", "EMAIL"],
     });
+    await this.notifyByEmailIfSet(
+      firstStep.notifyEmail,
+      "Yeni masraf bildirimi onayınızı bekliyor",
+      `${updated.employee.name} tarafından gönderilen ${updated.reportNumber} numaralı masraf bildirimi onayınızı bekliyor.`,
+    );
 
     return mapDetail(updated);
   }
@@ -340,31 +387,60 @@ export class ExpenseReportService {
   async approve(id: string, user: RequestingUser): Promise<AdminExpenseReportDetail> {
     const report = await this.findOrThrow(id);
     this.assertCanDecide(report, user);
+    const approval = await this.findCurrentApprovalOrThrow(id);
 
-    const updated = await this.repository.markApproved({ id, actorUserId: user.id });
-
-    try {
-      const vatAmount = updated.items.reduce((sum, line) => sum + (line.vatAmount?.toNumber() ?? 0), 0);
-      await financeAccountEntryService.postExpenseReportAccrual({
-        expenseReportId: updated.id,
-        amount: updated.totalAmount.toNumber(),
-        vatAmount,
-        currency: updated.currency,
-        entryAt: updated.decidedAt ?? new Date(),
-        reportNumber: updated.reportNumber,
-      });
-    } catch (error) {
-      console.error("Masraf bildirimi tahakkuk kaydı oluşturulamadı.", error);
-    }
-
-    await notificationService.createForRecipients({
-      recipients: [{ id: updated.employeeUserId }],
-      type: "EXPENSE_REPORT_DECIDED",
-      title: "Masraf bildiriminiz onaylandı",
-      message: `${updated.reportNumber} numaralı masraf bildiriminiz onaylandı.`,
-      linkUrl: "/admin/expense-reports",
-      channels: ["IN_APP", "EMAIL"],
+    const updated = await this.repository.approveCurrentStep({
+      id,
+      approvalId: approval.id,
+      round: approval.round,
+      stepOrder: approval.stepOrder,
+      actorUserId: user.id,
     });
+
+    if (updated.status === "APPROVED") {
+      try {
+        const vatAmount = updated.items.reduce((sum, line) => sum + (line.vatAmount?.toNumber() ?? 0), 0);
+        await financeAccountEntryService.postExpenseReportAccrual({
+          expenseReportId: updated.id,
+          amount: updated.totalAmount.toNumber(),
+          vatAmount,
+          currency: updated.currency,
+          entryAt: updated.decidedAt ?? new Date(),
+          reportNumber: updated.reportNumber,
+        });
+      } catch (error) {
+        console.error("Masraf bildirimi tahakkuk kaydı oluşturulamadı.", error);
+      }
+
+      await notificationService.createForRecipients({
+        recipients: [{ id: updated.employeeUserId }],
+        type: "EXPENSE_REPORT_DECIDED",
+        title: "Masraf bildiriminiz onaylandı",
+        message: `${updated.reportNumber} numaralı masraf bildiriminiz tüm onaycılar tarafından onaylandı ve muhasebeleştirilmeye alındı.`,
+        linkUrl: "/admin/expense-reports",
+        channels: ["IN_APP", "EMAIL"],
+      });
+    } else {
+      const nextApproval = updated.approvals.find(
+        (item) => item.round === updated.currentRound && item.stepOrder === updated.currentApprovalStepOrder,
+      );
+
+      if (nextApproval) {
+        await notificationService.createForRecipients({
+          recipients: [{ id: nextApproval.approverUserId }],
+          type: "EXPENSE_REPORT_SUBMITTED",
+          title: "Yeni masraf bildirimi onayınızı bekliyor",
+          message: `${updated.employee.name} tarafından gönderilen ${updated.reportNumber} numaralı masraf bildirimi (${updated.totalAmount.toNumber()} ${updated.currency}) onayınızı bekliyor.`,
+          linkUrl: "/admin/expense-reports/approvals",
+          channels: ["IN_APP", "EMAIL"],
+        });
+        await this.notifyByEmailIfSet(
+          nextApproval.notifyEmail,
+          "Yeni masraf bildirimi onayınızı bekliyor",
+          `${updated.employee.name} tarafından gönderilen ${updated.reportNumber} numaralı masraf bildirimi onayınızı bekliyor.`,
+        );
+      }
+    }
 
     return mapDetail(updated);
   }
@@ -422,9 +498,11 @@ export class ExpenseReportService {
     const parsed = rejectSchema.parse(input);
     const report = await this.findOrThrow(parsed.id);
     this.assertCanDecide(report, user);
+    const approval = await this.findCurrentApprovalOrThrow(parsed.id);
 
-    const updated = await this.repository.markRejected({
+    const updated = await this.repository.rejectCurrentStep({
       id: parsed.id,
+      approvalId: approval.id,
       actorUserId: user.id,
       decisionNote: parsed.decisionNote,
     });
@@ -434,6 +512,31 @@ export class ExpenseReportService {
       type: "EXPENSE_REPORT_DECIDED",
       title: "Masraf bildiriminiz reddedildi",
       message: `${updated.reportNumber} numaralı masraf bildiriminiz reddedildi: ${parsed.decisionNote}`,
+      linkUrl: "/admin/expense-reports",
+      channels: ["IN_APP", "EMAIL"],
+    });
+
+    return mapDetail(updated);
+  }
+
+  async return(input: AdminReturnExpenseReportInput, user: RequestingUser): Promise<AdminExpenseReportDetail> {
+    const parsed = returnSchema.parse(input);
+    const report = await this.findOrThrow(parsed.id);
+    this.assertCanDecide(report, user);
+    const approval = await this.findCurrentApprovalOrThrow(parsed.id);
+
+    const updated = await this.repository.returnCurrentStep({
+      id: parsed.id,
+      approvalId: approval.id,
+      actorUserId: user.id,
+      decisionNote: parsed.decisionNote,
+    });
+
+    await notificationService.createForRecipients({
+      recipients: [{ id: updated.employeeUserId }],
+      type: "EXPENSE_REPORT_DECIDED",
+      title: "Masraf bildiriminiz düzenlemeniz için geri gönderildi",
+      message: `${updated.reportNumber} numaralı masraf bildiriminiz düzenlenmesi için geri gönderildi: ${parsed.decisionNote}`,
       linkUrl: "/admin/expense-reports",
       channels: ["IN_APP", "EMAIL"],
     });

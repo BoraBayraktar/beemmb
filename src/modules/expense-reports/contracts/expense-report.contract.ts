@@ -1,4 +1,6 @@
-export type AdminExpenseReportStatus = "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED";
+export type AdminExpenseReportStatus = "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED" | "RETURNED";
+
+export type AdminExpenseReportApprovalStatus = "PENDING" | "APPROVED" | "REJECTED" | "RETURNED";
 
 export type AdminExpenseItemOcrStatus = "PENDING" | "COMPLETED" | "FAILED" | "SKIPPED";
 
@@ -27,8 +29,8 @@ export type AdminExpenseReportListItem = {
   status: AdminExpenseReportStatus;
   employeeUserId: string;
   employeeName: string;
-  approverUserId: string | null;
-  approverName: string | null;
+  currentApproverUserId: string | null;
+  currentApproverName: string | null;
   currency: string;
   totalAmount: number;
   itemCount: number;
@@ -47,10 +49,24 @@ export type AdminExpenseReportLifecycleEventItem = {
   occurredAt: string;
 };
 
+export type AdminExpenseReportApprovalStepItem = {
+  id: string;
+  round: number;
+  stepOrder: number;
+  approverUserId: string;
+  approverName: string;
+  notifyEmail: string | null;
+  description: string | null;
+  status: AdminExpenseReportApprovalStatus;
+  decisionNote: string | null;
+  decidedAt: string | null;
+};
+
 export type AdminExpenseReportDetail = AdminExpenseReportListItem & {
   note: string | null;
-  decisionNote: string | null;
+  currentRound: number;
   items: AdminExpenseReportItem[];
+  approvals: AdminExpenseReportApprovalStepItem[];
   lifecycleEvents: AdminExpenseReportLifecycleEventItem[];
 };
 
@@ -97,6 +113,11 @@ export type AdminUpdateExpenseReportInput = {
 };
 
 export type AdminRejectExpenseReportInput = {
+  id: string;
+  decisionNote: string;
+};
+
+export type AdminReturnExpenseReportInput = {
   id: string;
   decisionNote: string;
 };

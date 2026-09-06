@@ -40,6 +40,9 @@ export default async function AdminExpenseReportApprovalsPage({ params }: { para
       rejectLabel={admin.expenseReportReject}
       rejectNoteLabel={admin.expenseReportRejectNoteLabel}
       rejectNoteRequiredLabel={admin.expenseReportRejectNoteRequired}
+      returnLabel={admin.expenseReportReturn}
+      returnNoteLabel={admin.expenseReportReturnNoteLabel}
+      returnNoteRequiredLabel={admin.expenseReportReturnNoteRequired}
     />
   );
 }

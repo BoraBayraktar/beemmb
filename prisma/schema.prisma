@@ -1208,6 +1208,14 @@ enum ExpenseReportStatus {
   SUBMITTED
   APPROVED
   REJECTED
+  RETURNED
+}
+
+enum ExpenseReportApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  RETURNED
 }
 
 enum ExpenseItemOcrStatus {
@@ -1236,47 +1244,76 @@ model ExpenseCategory {
   @@index([tenantId, deleted, isActive])
 }
 
-model ExpenseApproverSetting {
+model ExpenseApprovalChainStep {
   id             String   @id @default(cuid())
   tenantId       String
+  stepOrder      Int
   approverUserId String
   notifyEmail    String?
+  description    String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   tenant         Tenant   @relation(fields: [tenantId], references: [id])
-  approver       User     @relation("ExpenseApproverSettingApprover", fields: [approverUserId], references: [id])
+  approver       User     @relation("ExpenseApprovalChainStepApprover", fields: [approverUserId], references: [id])
 
-  @@unique([tenantId])
+  @@unique([tenantId, stepOrder])
+  @@unique([tenantId, approverUserId])
+  @@index([tenantId])
 }
 
 model ExpenseReport {
-  id              String                        @id @default(cuid())
-  tenantId        String
-  reportNumber    String
-  status          ExpenseReportStatus           @default(DRAFT)
-  employeeUserId  String
-  approverUserId  String?
-  currency        String                        @default("TRY")
-  totalAmount     Decimal                       @db.Decimal(10, 2)
-  note            String?
-  submittedAt     DateTime?
-  decidedAt       DateTime?
-  decisionNote    String?
-  reimbursedAt    DateTime?
-  createdAt       DateTime                      @default(now())
-  updatedAt       DateTime                      @updatedAt
-  deleted         Boolean                       @default(false)
-  deletedDate     DateTime?
-  deletedUserId   String?
-  employee        User                          @relation("ExpenseReportEmployee", fields: [employeeUserId], references: [id])
-  approver        User?                         @relation("ExpenseReportApprover", fields: [approverUserId], references: [id])
-  tenant          Tenant                        @relation(fields: [tenantId], references: [id])
-  items           ExpenseReportItem[]
-  lifecycleEvents ExpenseReportLifecycleEvent[]
+  id                       String                        @id @default(cuid())
+  tenantId                 String
+  reportNumber             String
+  status                   ExpenseReportStatus           @default(DRAFT)
+  employeeUserId           String
+  currentApproverUserId    String?
+  currentApprovalStepOrder Int?
+  currentRound             Int                           @default(1)
+  currency                 String                        @default("TRY")
+  totalAmount              Decimal                       @db.Decimal(10, 2)
+  note                     String?
+  submittedAt              DateTime?
+  decidedAt                DateTime?
+  reimbursedAt             DateTime?
+  createdAt                DateTime                      @default(now())
+  updatedAt                DateTime                      @updatedAt
+  deleted                  Boolean                       @default(false)
+  deletedDate              DateTime?
+  deletedUserId            String?
+  employee                 User                          @relation("ExpenseReportEmployee", fields: [employeeUserId], references: [id])
+  currentApprover          User?                         @relation("ExpenseReportCurrentApprover", fields: [currentApproverUserId], references: [id])
+  tenant                   Tenant                        @relation(fields: [tenantId], references: [id])
+  items                    ExpenseReportItem[]
+  approvals                ExpenseReportApproval[]
+  lifecycleEvents          ExpenseReportLifecycleEvent[]
 
   @@unique([tenantId, reportNumber])
   @@index([tenantId, status])
   @@index([employeeUserId, status])
+  @@index([currentApproverUserId, status])
+}
+
+model ExpenseReportApproval {
+  id              String                      @id @default(cuid())
+  tenantId        String
+  expenseReportId String
+  round           Int
+  stepOrder       Int
+  approverUserId  String
+  notifyEmail     String?
+  description     String?
+  status          ExpenseReportApprovalStatus @default(PENDING)
+  decisionNote    String?
+  decidedAt       DateTime?
+  createdAt       DateTime                    @default(now())
+  updatedAt       DateTime                    @updatedAt
+  tenant          Tenant                      @relation(fields: [tenantId], references: [id])
+  expenseReport   ExpenseReport               @relation(fields: [expenseReportId], references: [id])
+  approver        User                        @relation("ExpenseReportApprovalApprover", fields: [approverUserId], references: [id])
+
+  @@unique([expenseReportId, round, stepOrder])
+  @@index([tenantId])
   @@index([approverUserId, status])
 }
 
@@ -1977,9 +2014,10 @@ model Tenant {
   incomingInvoiceXmlArtifacts              IncomingInvoiceXmlArtifact[]
   incomingInvoiceLifecycleEvents           IncomingInvoiceLifecycleEvent[]
   expenseCategories                        ExpenseCategory[]
-  expenseApproverSettings                  ExpenseApproverSetting[]
+  expenseApprovalChainSteps                ExpenseApprovalChainStep[]
   expenseReports                           ExpenseReport[]
   expenseReportItems                       ExpenseReportItem[]
+  expenseReportApprovals                   ExpenseReportApproval[]
   expenseReportLifecycleEvents             ExpenseReportLifecycleEvent[]
   integrationSyncJobs                      IntegrationSyncJob[]
   integrationDeadLetters                   IntegrationDeadLetter[]
@@ -2046,27 +2084,28 @@ model TenantModuleEntitlement {
 }
 
 model User {
-  id                       String                   @id @default(cuid())
-  tenantId                 String
-  email                    String                   @unique
-  name                     String
-  passwordHash             String
-  role                     UserRole                 @default(EDITOR)
-  isSuperAdmin             Boolean                  @default(false)
-  createdAt                DateTime                 @default(now())
-  updatedAt                DateTime                 @updatedAt
-  deleted                  Boolean                  @default(false)
-  deletedDate              DateTime?
-  deletedUserId            String?
-  tenant                   Tenant                   @relation(fields: [tenantId], references: [id])
-  notifications            UserNotification[]
-  socialAccounts           SocialAccount[]
-  inventoryPreference      UserInventoryPreference?
-  inventoryExportHistories InventoryExportHistory[]
-  roleAssignments          UserRoleAssignment[]
-  expenseApproverSettings  ExpenseApproverSetting[] @relation("ExpenseApproverSettingApprover")
-  expenseReportsAsEmployee ExpenseReport[]          @relation("ExpenseReportEmployee")
-  expenseReportsAsApprover ExpenseReport[]          @relation("ExpenseReportApprover")
+  id                               String                     @id @default(cuid())
+  tenantId                         String
+  email                            String                     @unique
+  name                             String
+  passwordHash                     String
+  role                             UserRole                   @default(EDITOR)
+  isSuperAdmin                     Boolean                    @default(false)
+  createdAt                        DateTime                   @default(now())
+  updatedAt                        DateTime                   @updatedAt
+  deleted                          Boolean                    @default(false)
+  deletedDate                      DateTime?
+  deletedUserId                    String?
+  tenant                           Tenant                     @relation(fields: [tenantId], references: [id])
+  notifications                    UserNotification[]
+  socialAccounts                   SocialAccount[]
+  inventoryPreference              UserInventoryPreference?
+  inventoryExportHistories         InventoryExportHistory[]
+  roleAssignments                  UserRoleAssignment[]
+  expenseApprovalChainSteps        ExpenseApprovalChainStep[] @relation("ExpenseApprovalChainStepApprover")
+  expenseReportsAsEmployee         ExpenseReport[]            @relation("ExpenseReportEmployee")
+  expenseReportsAsCurrentApprover  ExpenseReport[]            @relation("ExpenseReportCurrentApprover")
+  expenseReportApprovalsAsApprover ExpenseReportApproval[]    @relation("ExpenseReportApprovalApprover")
 
   @@index([deleted])
   @@index([tenantId])

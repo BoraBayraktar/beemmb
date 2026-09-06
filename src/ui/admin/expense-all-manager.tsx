@@ -23,6 +23,7 @@ function statusLabel(status: AdminExpenseReportStatus) {
   if (status === "DRAFT") return "Gönderilmedi";
   if (status === "SUBMITTED") return "Onay Bekliyor";
   if (status === "APPROVED") return "Onaylandı";
+  if (status === "RETURNED") return "Düzenleme İçin Geri Gönderildi";
   return "Reddedildi";
 }
 
@@ -30,7 +31,20 @@ function statusBadgeClass(status: AdminExpenseReportStatus) {
   if (status === "APPROVED") return "border-emerald-200 bg-emerald-100 text-emerald-700";
   if (status === "SUBMITTED") return "border-sky-200 bg-sky-100 text-sky-700";
   if (status === "REJECTED") return "border-rose-200 bg-rose-100 text-rose-700";
+  if (status === "RETURNED") return "border-orange-200 bg-orange-100 text-orange-700";
   return "border-amber-200 bg-amber-100 text-amber-700";
+}
+
+function latestDecisionNote(detail: AdminExpenseReportDetail) {
+  const relevant = detail.approvals.filter((approval) => approval.status === "REJECTED" || approval.status === "RETURNED");
+  if (relevant.length === 0) {
+    return null;
+  }
+  return relevant.reduce((latest, current) => {
+    if (!latest.decidedAt) return current;
+    if (!current.decidedAt) return latest;
+    return current.decidedAt > latest.decidedAt ? current : latest;
+  });
 }
 
 function formatCurrency(value: number, currency: string) {
@@ -133,6 +147,7 @@ export function ExpenseAllManager({
               <SelectItem value="DRAFT">Gönderilmedi</SelectItem>
               <SelectItem value="SUBMITTED">Onay Bekliyor</SelectItem>
               <SelectItem value="APPROVED">Onaylandı</SelectItem>
+              <SelectItem value="RETURNED">Geri Gönderildi</SelectItem>
               <SelectItem value="REJECTED">Reddedildi</SelectItem>
             </SelectContent>
           </Select>
@@ -170,7 +185,7 @@ export function ExpenseAllManager({
                         ) : null}
                       </div>
                     </td>
-                    <td className="px-4 py-3">{item.approverName ?? "-"}</td>
+                    <td className="px-4 py-3">{item.currentApproverName ?? "-"}</td>
                     <td className="px-4 py-3">{formatCurrency(item.totalAmount, item.currency)}</td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-2">
@@ -204,11 +219,18 @@ export function ExpenseAllManager({
                   <span className="font-medium text-[color:var(--color-text)]">{formatCurrency(detail.totalAmount, detail.currency)}</span>
                 </div>
 
-                <p><span className="text-[color:var(--color-text-muted)]">Onaycı:</span> {detail.approverName ?? "-"}</p>
+                <p><span className="text-[color:var(--color-text-muted)]">Güncel onaycı:</span> {detail.currentApproverName ?? "-"}</p>
                 <p><span className="text-[color:var(--color-text-muted)]">Gönderilme:</span> {formatDate(detail.submittedAt)}</p>
                 <p><span className="text-[color:var(--color-text-muted)]">Karar:</span> {formatDate(detail.decidedAt)}</p>
                 <p><span className="text-[color:var(--color-text-muted)]">Ödeme:</span> {formatDate(detail.reimbursedAt)}</p>
-                {detail.decisionNote ? <p><span className="text-[color:var(--color-text-muted)]">Red gerekçesi:</span> {detail.decisionNote}</p> : null}
+                {latestDecisionNote(detail) ? (
+                  <p>
+                    <span className="text-[color:var(--color-text-muted)]">
+                      {latestDecisionNote(detail)?.status === "REJECTED" ? "Red gerekçesi:" : "Geri gönderme gerekçesi:"}
+                    </span>{" "}
+                    {latestDecisionNote(detail)?.decisionNote}
+                  </p>
+                ) : null}
 
                 <div>
                   <h3 className="font-medium text-[color:var(--color-text)]">Masraflar</h3>

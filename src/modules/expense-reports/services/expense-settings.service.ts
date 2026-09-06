@@ -2,15 +2,15 @@ import { z } from "zod";
 
 import type {
   AdminBackofficeUserOption,
-  AdminExpenseApproverSettingItem,
+  AdminExpenseApprovalChainStepItem,
   AdminExpenseCategoryItem,
-  AdminUpsertExpenseApproverSettingInput,
+  AdminUpsertExpenseApprovalChainInput,
   AdminUpsertExpenseCategoryInput,
 } from "@/modules/expense-reports/contracts/expense-settings.contract";
 import {
-  ExpenseApproverSettingRepository,
+  ExpenseApprovalChainRepository,
   ExpenseCategoryRepository,
-  expenseApproverSettingRepository,
+  expenseApprovalChainRepository,
   expenseCategoryRepository,
 } from "@/modules/expense-reports/repositories/expense-settings.repository";
 import { identityAdminService } from "@/modules/identity/services/identity-admin.service";
@@ -25,9 +25,15 @@ const upsertCategorySchema = z.object({
   sortOrder: z.coerce.number().int().min(0).max(999).default(0),
 });
 
-const upsertApproverSchema = z.object({
+const chainStepSchema = z.object({
+  stepOrder: z.coerce.number().int().min(1),
   approverUserId: z.string().trim().min(1),
   notifyEmail: z.string().trim().email().max(160).optional().nullable().or(z.literal("")).transform((value) => value || null),
+  description: z.string().trim().max(200).optional().nullable().or(z.literal("")).transform((value) => value || null),
+});
+
+const upsertChainSchema = z.object({
+  steps: z.array(chainStepSchema).min(1, "En az bir onaycı tanımlamalısınız.").max(10, "En fazla 10 onaycı tanımlanabilir."),
 });
 
 export class ExpenseSettingsAdminError extends Error {
@@ -41,6 +47,25 @@ function mapCategory(item: { id: string; slug: string; name: string; isActive: b
   return { id: item.id, slug: item.slug, name: item.name, isActive: item.isActive, sortOrder: item.sortOrder };
 }
 
+function mapChainStep(row: {
+  id: string;
+  stepOrder: number;
+  approverUserId: string;
+  notifyEmail: string | null;
+  description: string | null;
+  approver: { name: string; email: string };
+}): AdminExpenseApprovalChainStepItem {
+  return {
+    id: row.id,
+    stepOrder: row.stepOrder,
+    approverUserId: row.approverUserId,
+    approverName: row.approver.name,
+    approverEmail: row.approver.email,
+    notifyEmail: row.notifyEmail,
+    description: row.description,
+  };
+}
+
 function categoriesCacheKey() {
   return buildTenantCacheKey(requireTenantId(), "expenseReports", "categories", "active");
 }
@@ -52,7 +77,7 @@ async function invalidateCategoriesCache() {
 export class ExpenseSettingsService {
   constructor(
     private readonly categoryRepository: ExpenseCategoryRepository,
-    private readonly approverRepository: ExpenseApproverSettingRepository,
+    private readonly chainRepository: ExpenseApprovalChainRepository,
   ) {}
 
   async listActiveCategories(): Promise<AdminExpenseCategoryItem[]> {
@@ -101,33 +126,30 @@ export class ExpenseSettingsService {
     return mapCategory(created);
   }
 
-  async getApproverSetting(): Promise<AdminExpenseApproverSettingItem | null> {
-    const row = await this.approverRepository.get();
-    if (!row) {
-      return null;
-    }
-
-    return {
-      approverUserId: row.approverUserId,
-      approverName: row.approver.name,
-      approverEmail: row.approver.email,
-      notifyEmail: row.notifyEmail,
-    };
+  async listApprovalChain(): Promise<AdminExpenseApprovalChainStepItem[]> {
+    const rows = await this.chainRepository.list();
+    return rows.map(mapChainStep);
   }
 
-  async upsertApproverSetting(input: AdminUpsertExpenseApproverSettingInput): Promise<AdminExpenseApproverSettingItem> {
-    const parsed = upsertApproverSchema.parse(input);
-    const updated = await this.approverRepository.upsert({
-      approverUserId: parsed.approverUserId,
-      notifyEmail: parsed.notifyEmail,
-    });
+  async replaceApprovalChain(input: AdminUpsertExpenseApprovalChainInput): Promise<AdminExpenseApprovalChainStepItem[]> {
+    const parsed = upsertChainSchema.parse(input);
 
-    return {
-      approverUserId: updated.approverUserId,
-      approverName: updated.approver.name,
-      approverEmail: updated.approver.email,
-      notifyEmail: updated.notifyEmail,
-    };
+    const approverIds = parsed.steps.map((step) => step.approverUserId);
+    if (new Set(approverIds).size !== approverIds.length) {
+      throw new ExpenseSettingsAdminError("Aynı onaycı zincirde birden fazla kez yer alamaz.", 400);
+    }
+
+    const orderedSteps = [...parsed.steps]
+      .sort((a, b) => a.stepOrder - b.stepOrder)
+      .map((step, index) => ({
+        stepOrder: index + 1,
+        approverUserId: step.approverUserId,
+        notifyEmail: step.notifyEmail ?? null,
+        description: step.description ?? null,
+      }));
+
+    const rows = await this.chainRepository.replace(orderedSteps);
+    return rows.map(mapChainStep);
   }
 
   async listApproverCandidates(): Promise<AdminBackofficeUserOption[]> {
@@ -136,4 +158,4 @@ export class ExpenseSettingsService {
   }
 }
 
-export const expenseSettingsService = new ExpenseSettingsService(expenseCategoryRepository, expenseApproverSettingRepository);
+export const expenseSettingsService = new ExpenseSettingsService(expenseCategoryRepository, expenseApprovalChainRepository);

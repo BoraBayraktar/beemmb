@@ -6,17 +6,21 @@ import type { AdminExpenseReportStatus } from "@/modules/expense-reports/contrac
 
 const detailInclude = {
   employee: { select: { id: true, name: true, email: true } },
-  approver: { select: { id: true, name: true, email: true } },
+  currentApprover: { select: { id: true, name: true, email: true } },
   items: {
     include: { category: { select: { id: true, name: true } } },
     orderBy: { createdAt: "asc" as const },
+  },
+  approvals: {
+    orderBy: [{ round: "asc" as const }, { stepOrder: "asc" as const }],
+    include: { approver: { select: { id: true, name: true, email: true } } },
   },
   lifecycleEvents: { orderBy: { occurredAt: "desc" as const } },
 };
 
 const listInclude = {
   employee: { select: { id: true, name: true } },
-  approver: { select: { id: true, name: true } },
+  currentApprover: { select: { id: true, name: true } },
   _count: { select: { items: true } },
 };
 
@@ -25,6 +29,13 @@ type ListFilter = {
   status?: AdminExpenseReportStatus | "all";
   page: number;
   pageSize: number;
+};
+
+type ChainStepSnapshot = {
+  stepOrder: number;
+  approverUserId: string;
+  notifyEmail: string | null;
+  description: string | null;
 };
 
 function buildWhere(filter: Pick<ListFilter, "search" | "status">, extra: Prisma.ExpenseReportWhereInput) {
@@ -74,7 +85,10 @@ export class ExpenseReportRepository {
 
   async listForApprover(approverUserId: string, filter: ListFilter) {
     return prisma.expenseReport.findMany({
-      where: buildWhere(filter, { approverUserId, status: filter.status === "all" ? "SUBMITTED" : filter.status }),
+      where: buildWhere(filter, {
+        currentApproverUserId: approverUserId,
+        status: filter.status === "all" ? "SUBMITTED" : filter.status,
+      }),
       orderBy: { submittedAt: "asc" },
       skip: (filter.page - 1) * filter.pageSize,
       take: filter.pageSize,
@@ -84,7 +98,10 @@ export class ExpenseReportRepository {
 
   async countForApprover(approverUserId: string, filter: Pick<ListFilter, "search" | "status">) {
     return prisma.expenseReport.count({
-      where: buildWhere(filter, { approverUserId, status: filter.status === "all" ? "SUBMITTED" : filter.status }),
+      where: buildWhere(filter, {
+        currentApproverUserId: approverUserId,
+        status: filter.status === "all" ? "SUBMITTED" : filter.status,
+      }),
     });
   }
 
@@ -106,6 +123,13 @@ export class ExpenseReportRepository {
     return prisma.expenseReport.findFirst({
       where: { id, deleted: false },
       include: detailInclude,
+    });
+  }
+
+  async findCurrentApproval(reportId: string) {
+    return prisma.expenseReportApproval.findFirst({
+      where: { expenseReportId: reportId, status: "PENDING" },
+      orderBy: [{ round: "desc" }, { stepOrder: "asc" }],
     });
   }
 
@@ -247,46 +271,159 @@ export class ExpenseReportRepository {
     });
   }
 
-  async markSubmitted(args: { id: string; approverUserId: string; actorUserId: string }) {
+  async submit(args: { id: string; round: number; steps: ChainStepSnapshot[]; actorUserId: string }) {
     const tenantId = requireTenantId();
+    const firstStep = args.steps[0];
 
-    return prisma.expenseReport.update({
-      where: { id: args.id },
-      data: {
-        status: "SUBMITTED",
-        approverUserId: args.approverUserId,
-        submittedAt: new Date(),
-        lifecycleEvents: {
-          create: {
-            tenantId,
-            eventType: "SUBMITTED",
-            summary: "Masraf bildirimi onaya gönderildi.",
-            actorUserId: args.actorUserId,
+    return prisma.$transaction(async (tx) => {
+      await tx.expenseReportApproval.createMany({
+        data: args.steps.map((step) => ({
+          tenantId,
+          expenseReportId: args.id,
+          round: args.round,
+          stepOrder: step.stepOrder,
+          approverUserId: step.approverUserId,
+          notifyEmail: step.notifyEmail,
+          description: step.description,
+          status: "PENDING" as const,
+        })),
+      });
+
+      return tx.expenseReport.update({
+        where: { id: args.id },
+        data: {
+          status: "SUBMITTED",
+          submittedAt: new Date(),
+          currentRound: args.round,
+          currentApprovalStepOrder: firstStep.stepOrder,
+          currentApproverUserId: firstStep.approverUserId,
+          lifecycleEvents: {
+            create: {
+              tenantId,
+              eventType: args.round === 1 ? "SUBMITTED" : "RESUBMITTED",
+              summary:
+                args.round === 1
+                  ? "Masraf bildirimi onaya gönderildi."
+                  : `Masraf bildirimi düzenlenip tekrar onaya gönderildi (${args.round}. tur).`,
+              actorUserId: args.actorUserId,
+            },
           },
         },
-      },
-      include: detailInclude,
+        include: detailInclude,
+      });
     });
   }
 
-  async markApproved(args: { id: string; actorUserId: string }) {
+  async approveCurrentStep(args: { id: string; approvalId: string; round: number; stepOrder: number; actorUserId: string }) {
     const tenantId = requireTenantId();
 
-    return prisma.expenseReport.update({
-      where: { id: args.id },
-      data: {
-        status: "APPROVED",
-        decidedAt: new Date(),
-        lifecycleEvents: {
-          create: {
-            tenantId,
-            eventType: "APPROVED",
-            summary: "Masraf bildirimi onaylandı.",
-            actorUserId: args.actorUserId,
+    return prisma.$transaction(async (tx) => {
+      await tx.expenseReportApproval.update({
+        where: { id: args.approvalId },
+        data: { status: "APPROVED", decidedAt: new Date() },
+      });
+
+      const nextStep = await tx.expenseReportApproval.findFirst({
+        where: { expenseReportId: args.id, round: args.round, stepOrder: { gt: args.stepOrder }, status: "PENDING" },
+        orderBy: { stepOrder: "asc" },
+      });
+
+      if (nextStep) {
+        return tx.expenseReport.update({
+          where: { id: args.id },
+          data: {
+            currentApprovalStepOrder: nextStep.stepOrder,
+            currentApproverUserId: nextStep.approverUserId,
+            lifecycleEvents: {
+              create: {
+                tenantId,
+                eventType: "STEP_APPROVED",
+                summary: "Onay adımı tamamlandı, bildirim sıradaki onaycıya iletildi.",
+                actorUserId: args.actorUserId,
+              },
+            },
+          },
+          include: detailInclude,
+        });
+      }
+
+      return tx.expenseReport.update({
+        where: { id: args.id },
+        data: {
+          status: "APPROVED",
+          decidedAt: new Date(),
+          currentApprovalStepOrder: null,
+          currentApproverUserId: null,
+          lifecycleEvents: {
+            create: {
+              tenantId,
+              eventType: "APPROVED",
+              summary: "Masraf bildirimi tüm onaycılar tarafından onaylandı.",
+              actorUserId: args.actorUserId,
+            },
           },
         },
-      },
-      include: detailInclude,
+        include: detailInclude,
+      });
+    });
+  }
+
+  async rejectCurrentStep(args: { id: string; approvalId: string; actorUserId: string; decisionNote: string }) {
+    const tenantId = requireTenantId();
+
+    return prisma.$transaction(async (tx) => {
+      await tx.expenseReportApproval.update({
+        where: { id: args.approvalId },
+        data: { status: "REJECTED", decisionNote: args.decisionNote, decidedAt: new Date() },
+      });
+
+      return tx.expenseReport.update({
+        where: { id: args.id },
+        data: {
+          status: "REJECTED",
+          decidedAt: new Date(),
+          currentApprovalStepOrder: null,
+          currentApproverUserId: null,
+          lifecycleEvents: {
+            create: {
+              tenantId,
+              eventType: "REJECTED",
+              summary: `Masraf bildirimi reddedildi: ${args.decisionNote}`,
+              actorUserId: args.actorUserId,
+            },
+          },
+        },
+        include: detailInclude,
+      });
+    });
+  }
+
+  async returnCurrentStep(args: { id: string; approvalId: string; actorUserId: string; decisionNote: string }) {
+    const tenantId = requireTenantId();
+
+    return prisma.$transaction(async (tx) => {
+      await tx.expenseReportApproval.update({
+        where: { id: args.approvalId },
+        data: { status: "RETURNED", decisionNote: args.decisionNote, decidedAt: new Date() },
+      });
+
+      return tx.expenseReport.update({
+        where: { id: args.id },
+        data: {
+          status: "RETURNED",
+          currentApprovalStepOrder: null,
+          currentApproverUserId: null,
+          lifecycleEvents: {
+            create: {
+              tenantId,
+              eventType: "RETURNED",
+              summary: `Masraf bildirimi düzenlenmesi için gönderene geri gönderildi: ${args.decisionNote}`,
+              actorUserId: args.actorUserId,
+            },
+          },
+        },
+        include: detailInclude,
+      });
     });
   }
 
@@ -302,28 +439,6 @@ export class ExpenseReportRepository {
             tenantId,
             eventType: "REIMBURSED",
             summary: "Masraf bildirimi ödendi.",
-            actorUserId: args.actorUserId,
-          },
-        },
-      },
-      include: detailInclude,
-    });
-  }
-
-  async markRejected(args: { id: string; actorUserId: string; decisionNote: string }) {
-    const tenantId = requireTenantId();
-
-    return prisma.expenseReport.update({
-      where: { id: args.id },
-      data: {
-        status: "REJECTED",
-        decidedAt: new Date(),
-        decisionNote: args.decisionNote,
-        lifecycleEvents: {
-          create: {
-            tenantId,
-            eventType: "REJECTED",
-            summary: `Masraf bildirimi reddedildi: ${args.decisionNote}`,
             actorUserId: args.actorUserId,
           },
         },

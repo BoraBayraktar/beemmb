@@ -14,7 +14,7 @@ const listQuerySchema = z.object({
   search: z.string().trim().optional(),
   categoryId: z.string().trim().min(1).optional(),
   employeeUserId: z.string().trim().min(1).optional(),
-  status: z.enum(["all", "DRAFT", "SUBMITTED", "APPROVED", "REJECTED"]).default("all"),
+  status: z.enum(["all", "DRAFT", "SUBMITTED", "APPROVED", "REJECTED", "RETURNED"]).default("all"),
   dateFrom: dateFilterSchema,
   dateTo: dateFilterSchema,
   page: z.coerce.number().int().min(1).default(1),

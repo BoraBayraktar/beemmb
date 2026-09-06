@@ -11,7 +11,7 @@ export async function GET(request: Request) {
       const result = await expenseReportService.listAll({
         scope: "all",
         search: searchParams.get("search") ?? undefined,
-        status: (searchParams.get("status") as "all" | "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED" | null) ?? undefined,
+        status: (searchParams.get("status") as "all" | "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED" | "RETURNED" | null) ?? undefined,
         page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
         pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : 10,
       });
