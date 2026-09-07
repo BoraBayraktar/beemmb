@@ -36,6 +36,7 @@ export function ExpenseApprovalsManager({
   returnLabel,
   returnNoteLabel,
   returnNoteRequiredLabel,
+  delegatedToLabel,
 }: {
   locale: string;
   result: AdminExpenseReportListResult;
@@ -47,6 +48,7 @@ export function ExpenseApprovalsManager({
   returnLabel: string;
   returnNoteLabel: string;
   returnNoteRequiredLabel: string;
+  delegatedToLabel: string;
 }) {
   const router = useRouter();
   const [items, setItems] = useState(result.items);
@@ -151,6 +153,7 @@ export function ExpenseApprovalsManager({
                   <tr>
                     <th className="px-4 py-3">No</th>
                     <th className="px-4 py-3">Personel</th>
+                    <th className="px-4 py-3">Onaycı</th>
                     <th className="px-4 py-3">Masraf</th>
                     <th className="px-4 py-3">Tutar</th>
                     <th className="px-4 py-3">Gönderilme</th>
@@ -162,6 +165,14 @@ export function ExpenseApprovalsManager({
                     <tr key={item.id} className="border-t border-[color:var(--color-border)]">
                       <td className="px-4 py-3 font-medium text-[color:var(--color-text)]">{item.reportNumber}</td>
                       <td className="px-4 py-3">{item.employeeName}</td>
+                      <td className="px-4 py-3">
+                        <span>{item.currentApproverName}</span>
+                        {item.currentApproverDelegateNames.length > 0 ? (
+                          <span className="block text-xs text-[color:var(--color-text-muted)]">
+                            {delegatedToLabel}: {item.currentApproverDelegateNames.join(", ")}
+                          </span>
+                        ) : null}
+                      </td>
                       <td className="px-4 py-3">{item.itemCount}</td>
                       <td className="px-4 py-3">{formatCurrency(item.totalAmount, item.currency)}</td>
                       <td className="px-4 py-3">{formatDate(item.submittedAt)}</td>
@@ -182,6 +193,10 @@ export function ExpenseApprovalsManager({
                     <Badge>{item.employeeName}</Badge>
                   </div>
                   <p className="mt-1 font-medium text-[color:var(--color-text)]">{formatCurrency(item.totalAmount, item.currency)}</p>
+                  <p className="mt-1 text-[color:var(--color-text-muted)]">Onaycı: {item.currentApproverName}</p>
+                  {item.currentApproverDelegateNames.length > 0 ? (
+                    <p className="text-xs text-[color:var(--color-text-muted)]">{delegatedToLabel}: {item.currentApproverDelegateNames.join(", ")}</p>
+                  ) : null}
                   <p className="mt-1 text-[color:var(--color-text-muted)]">Gönderilme: {formatDate(item.submittedAt)}</p>
                   <Button type="button" variant="outline" className="mt-3 w-full" onClick={() => void openDetail(item.id)}>Detay</Button>
                 </article>
@@ -210,6 +225,12 @@ export function ExpenseApprovalsManager({
                     </Badge>
                   ) : null}
                 </div>
+
+                {detail.currentApproverDelegateNames.length > 0 ? (
+                  <p className="text-xs text-[color:var(--color-text-muted)]">
+                    {delegatedToLabel}: {detail.currentApproverDelegateNames.join(", ")}
+                  </p>
+                ) : null}
 
                 {detail.note ? <p className="text-[color:var(--color-text-muted)]">{detail.note}</p> : null}
 

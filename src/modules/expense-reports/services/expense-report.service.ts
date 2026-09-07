@@ -94,6 +94,7 @@ function mapListItem(item: ExpenseReportListRow): AdminExpenseReportListItem {
     employeeName: item.employee.name,
     currentApproverUserId: item.currentApproverUserId,
     currentApproverName: item.currentApprover?.name ?? null,
+    currentApproverDelegateNames: [],
     currency: item.currency,
     totalAmount: item.totalAmount.toNumber(),
     itemCount: item._count.items,
@@ -114,6 +115,7 @@ function mapDetail(item: ExpenseReportDetailRow): AdminExpenseReportDetail {
     employeeName: item.employee.name,
     currentApproverUserId: item.currentApproverUserId,
     currentApproverName: item.currentApprover?.name ?? null,
+    currentApproverDelegateNames: [],
     currency: item.currency,
     totalAmount: item.totalAmount.toNumber(),
     itemCount: item.items.length,
@@ -198,8 +200,15 @@ export class ExpenseReportService {
       this.repository.countForApprover(approverUserIds, parsed),
     ]);
 
+    const items = rows.map(mapListItem);
+    const approverIds = [...new Set(items.map((item) => item.currentApproverUserId).filter((id): id is string => Boolean(id)))];
+    const delegateNamesByApprover = await delegationService.getActiveDelegateNamesForGrantors(user.tenantId, approverIds);
+    for (const item of items) {
+      item.currentApproverDelegateNames = item.currentApproverUserId ? (delegateNamesByApprover[item.currentApproverUserId] ?? []) : [];
+    }
+
     return {
-      items: rows.map(mapListItem),
+      items,
       page: parsed.page,
       pageSize: parsed.pageSize,
       total,
@@ -231,15 +240,29 @@ export class ExpenseReportService {
     return existing;
   }
 
+  /**
+   * SUBMITTED durumdaki (bekleyen onay adimi olan) bir bildirimde "manage"
+   * izni goruntulemeyi bypass ETMEZ -- o adima atanmis onayci veya vekili
+   * disinda kimse bekleyen bir onayi goremez. Diger durumlarda (DRAFT/APPROVED/
+   * REJECTED/RETURNED) "manage" izni genel goruntuleme/denetim icin gecerlidir
+   * (bkz. "Tum Masraf Bildirimleri" sayfasi, expenseReports.manage).
+   */
   private async assertCanView(report: ExpenseReportDetailRow, user: RequestingUser) {
     const isOwner = report.employeeUserId === user.id;
     const isApprover = report.currentApproverUserId === user.id;
-    if (isOwner || isApprover || user.hasManage) {
+    if (isOwner || isApprover) {
       return;
     }
 
-    const delegatedGrantorIds = await delegationService.getActiveGrantorsFor(user.tenantId, user.id);
-    if (report.currentApproverUserId && delegatedGrantorIds.includes(report.currentApproverUserId)) {
+    if (report.status === "SUBMITTED") {
+      const delegatedGrantorIds = await delegationService.getActiveGrantorsFor(user.tenantId, user.id);
+      if (report.currentApproverUserId && delegatedGrantorIds.includes(report.currentApproverUserId)) {
+        return;
+      }
+      throw new ExpenseReportAdminError("Bu masraf bildirimini görüntüleme yetkiniz yok.", 403);
+    }
+
+    if (user.hasManage) {
       return;
     }
 
@@ -255,9 +278,16 @@ export class ExpenseReportService {
     }
   }
 
+  /**
+   * Karar (onay/red/geri gönder) yetkisi kasitli olarak "expenseReports.manage"
+   * iznine bakmaz -- bu izin sadece genel gorunurluk/yonetim icindir (bkz.
+   * assertCanView, reimburse). Bir adimi SADECE o adima atanmis onayci veya
+   * ondan aktif vekalet alan kisi karara baglayabilir; "manage" izni olan
+   * baska biri bu adimi bypass edemez.
+   */
   private async assertCanDecide(report: ExpenseReportDetailRow, user: RequestingUser) {
     const isAssignedApprover = report.currentApproverUserId === user.id;
-    if (!isAssignedApprover && !user.hasManage) {
+    if (!isAssignedApprover) {
       const delegatedGrantorIds = await delegationService.getActiveGrantorsFor(user.tenantId, user.id);
       if (!report.currentApproverUserId || !delegatedGrantorIds.includes(report.currentApproverUserId)) {
         throw new ExpenseReportAdminError("Bu masraf bildirimini onaylama/reddetme yetkiniz yok.", 403);
@@ -311,6 +341,9 @@ export class ExpenseReportService {
     const delegateNamesByApprover = await delegationService.getActiveDelegateNamesForGrantors(user.tenantId, approverIds);
     for (const approval of detail.approvals) {
       approval.delegateNames = delegateNamesByApprover[approval.approverUserId] ?? [];
+    }
+    if (detail.currentApproverUserId) {
+      detail.currentApproverDelegateNames = delegateNamesByApprover[detail.currentApproverUserId] ?? [];
     }
 
     return detail;

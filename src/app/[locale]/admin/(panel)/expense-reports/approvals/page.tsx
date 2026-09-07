@@ -49,6 +49,7 @@ export default async function AdminExpenseReportApprovalsPage({ params }: { para
       returnLabel={admin.expenseReportReturn}
       returnNoteLabel={admin.expenseReportReturnNoteLabel}
       returnNoteRequiredLabel={admin.expenseReportReturnNoteRequired}
+      delegatedToLabel={admin.expenseReportApprovalDelegatedTo}
     />
   );
 }

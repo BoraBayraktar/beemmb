@@ -31,6 +31,7 @@ export type AdminExpenseReportListItem = {
   employeeName: string;
   currentApproverUserId: string | null;
   currentApproverName: string | null;
+  currentApproverDelegateNames: string[];
   currency: string;
   totalAmount: number;
   itemCount: number;
