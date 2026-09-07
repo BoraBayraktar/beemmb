@@ -160,6 +160,16 @@ export class DelegationService {
   async getActiveGrantorsFor(tenantId: string, granteeUserId: string, at: Date = new Date()): Promise<string[]> {
     return this.repository.getActiveGrantorsFor(tenantId, granteeUserId, at);
   }
+
+  /** Verilen onaycı id'leri icin, su an aktif vekalet alan kisilerin adlarini dondurur (UI'da "vekaleten X" gostermek icin). */
+  async getActiveDelegateNamesForGrantors(tenantId: string, grantorUserIds: string[], at: Date = new Date()): Promise<Record<string, string[]>> {
+    const rows = await this.repository.findActiveByGrantors(tenantId, grantorUserIds, at);
+    const result: Record<string, string[]> = {};
+    for (const row of rows) {
+      result[row.grantorUserId] = [...(result[row.grantorUserId] ?? []), row.grantee.name];
+    }
+    return result;
+  }
 }
 
 export const delegationService = new DelegationService(new DelegationRepository());

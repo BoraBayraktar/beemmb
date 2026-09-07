@@ -39,6 +39,7 @@ export type ExpenseReportsCopy = {
   approvalStepWaiting: string;
   approvalStepRejected: string;
   approvalStepReturned: string;
+  approvalDelegatedTo: string;
   approvalHistoryTitle: string;
   total: string;
   itemCount: string;
@@ -209,6 +210,11 @@ function ApprovalFlow({ detail, copy }: { detail: AdminExpenseReportDetail; copy
                   <span className="font-medium text-[color:var(--color-text)]">{approval.approverName}</span>
                   <span className={`text-xs font-medium ${colorClass}`}>{label}</span>
                 </div>
+                {approval.delegateNames.length > 0 ? (
+                  <p className="text-xs text-[color:var(--color-text-muted)]">
+                    {copy.approvalDelegatedTo}: {approval.delegateNames.join(", ")}
+                  </p>
+                ) : null}
                 {approval.description ? <p className="text-xs text-[color:var(--color-text-muted)]">{approval.description}</p> : null}
                 {approval.decisionNote ? <p className="mt-1 text-xs text-[color:var(--color-text)]">{approval.decisionNote}</p> : null}
                 {approval.decidedAt ? <p className="text-xs text-[color:var(--color-text-muted)]">{formatDate(approval.decidedAt)}</p> : null}

@@ -76,6 +76,23 @@ export class DelegationRepository {
     });
   }
 
+  async findActiveByGrantors(tenantId: string, grantorUserIds: string[], at: Date) {
+    if (grantorUserIds.length === 0) {
+      return [];
+    }
+
+    return prisma.delegation.findMany({
+      where: {
+        tenantId,
+        grantorUserId: { in: grantorUserIds },
+        revokedAt: null,
+        startAt: { lte: at },
+        endAt: { gte: at },
+      },
+      select: { grantorUserId: true, grantee: { select: { name: true } } },
+    });
+  }
+
   async getActiveGrantorsFor(tenantId: string, granteeUserId: string, at: Date) {
     const rows = await prisma.delegation.findMany({
       where: {

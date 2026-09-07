@@ -55,6 +55,7 @@ export type AdminExpenseReportApprovalStepItem = {
   stepOrder: number;
   approverUserId: string;
   approverName: string;
+  delegateNames: string[];
   notifyEmail: string | null;
   description: string | null;
   canApprove: boolean;

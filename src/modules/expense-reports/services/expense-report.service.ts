@@ -148,6 +148,7 @@ function mapDetail(item: ExpenseReportDetailRow): AdminExpenseReportDetail {
       stepOrder: approval.stepOrder,
       approverUserId: approval.approverUserId,
       approverName: approval.approver.name,
+      delegateNames: [],
       notifyEmail: approval.notifyEmail,
       description: approval.description,
       canApprove: approval.canApprove,
@@ -304,7 +305,15 @@ export class ExpenseReportService {
   async getDetail(id: string, user: RequestingUser): Promise<AdminExpenseReportDetail> {
     const report = await this.findOrThrow(id);
     await this.assertCanView(report, user);
-    return mapDetail(report);
+    const detail = mapDetail(report);
+
+    const approverIds = [...new Set(detail.approvals.map((approval) => approval.approverUserId))];
+    const delegateNamesByApprover = await delegationService.getActiveDelegateNamesForGrantors(user.tenantId, approverIds);
+    for (const approval of detail.approvals) {
+      approval.delegateNames = delegateNamesByApprover[approval.approverUserId] ?? [];
+    }
+
+    return detail;
   }
 
   async createDraft(employeeUserId: string): Promise<AdminExpenseReportDetail> {

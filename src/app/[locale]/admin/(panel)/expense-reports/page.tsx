@@ -58,6 +58,7 @@ export default async function AdminExpenseReportsPage({ params }: { params: Prom
         approvalStepWaiting: admin.expenseReportApprovalStepWaiting,
         approvalStepRejected: admin.expenseReportApprovalStepRejected,
         approvalStepReturned: admin.expenseReportApprovalStepReturned,
+        approvalDelegatedTo: admin.expenseReportApprovalDelegatedTo,
         approvalHistoryTitle: admin.expenseReportApprovalHistoryTitle,
         total: admin.expenseReportTotal,
         itemCount: admin.expenseReportItemCount,
