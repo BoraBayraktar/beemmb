@@ -46,6 +46,8 @@ export type AdminExpenseReportLifecycleEventItem = {
   id: string;
   eventType: string;
   actorType: string;
+  actorUserId: string | null;
+  actorName: string | null;
   summary: string;
   occurredAt: string;
 };

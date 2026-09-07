@@ -452,6 +452,13 @@ export class ExpenseReportRepository {
       include: detailInclude,
     });
   }
+
+  async findUserNamesByIds(ids: string[]) {
+    if (ids.length === 0) {
+      return [];
+    }
+    return prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, name: true } });
+  }
 }
 
 export const expenseReportRepository = new ExpenseReportRepository();

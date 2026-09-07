@@ -24,7 +24,28 @@ function formatDate(value: string | null) {
   return new Date(value).toLocaleDateString("tr-TR");
 }
 
+function formatDateTime(value: string) {
+  return new Date(value).toLocaleString("tr-TR");
+}
+
+function eventTypeLabel(eventType: string) {
+  switch (eventType) {
+    case "CREATED": return "Oluşturuldu";
+    case "SUBMITTED": return "Onaya gönderildi";
+    case "RESUBMITTED": return "Tekrar onaya gönderildi";
+    case "ITEM_ADDED": return "Masraf kalemi eklendi";
+    case "ITEM_REMOVED": return "Masraf kalemi silindi";
+    case "STEP_APPROVED": return "Onay adımı onaylandı";
+    case "APPROVED": return "Onaylandı";
+    case "REJECTED": return "Reddedildi";
+    case "RETURNED": return "Geri gönderildi";
+    case "REIMBURSED": return "Ödendi";
+    default: return eventType;
+  }
+}
+
 type DecisionMode = "reject" | "return" | null;
+type DetailTab = "expenses" | "history";
 
 export function ExpenseApprovalsManager({
   result,
@@ -58,6 +79,7 @@ export function ExpenseApprovalsManager({
   const [detailLoading, setDetailLoading] = useState(false);
   const [decisionMode, setDecisionMode] = useState<DecisionMode>(null);
   const [decisionNote, setDecisionNote] = useState("");
+  const [activeTab, setActiveTab] = useState<DetailTab>("expenses");
 
   async function refreshList() {
     const response = await fetch("/api/admin/expense-reports/approvals?pageSize=50");
@@ -72,6 +94,7 @@ export function ExpenseApprovalsManager({
     setError(null);
     setDecisionMode(null);
     setDecisionNote("");
+    setActiveTab("expenses");
     try {
       const response = await fetch(`/api/admin/expense-reports/${id}`);
       if (!response.ok) {
@@ -234,9 +257,25 @@ export function ExpenseApprovalsManager({
 
                 {detail.note ? <p className="text-[color:var(--color-text-muted)]">{detail.note}</p> : null}
 
-                <div>
-                  <h3 className="font-medium text-[color:var(--color-text)]">Masraflar</h3>
-                  <div className="mt-2 space-y-1">
+                <div className="flex gap-2 border-b border-[color:var(--color-border)]">
+                  <button
+                    type="button"
+                    className={`px-3 py-2 text-sm font-medium ${activeTab === "expenses" ? "border-b-2 border-[color:var(--color-brand)] text-[color:var(--color-text)]" : "text-[color:var(--color-text-muted)]"}`}
+                    onClick={() => setActiveTab("expenses")}
+                  >
+                    Masraflar
+                  </button>
+                  <button
+                    type="button"
+                    className={`px-3 py-2 text-sm font-medium ${activeTab === "history" ? "border-b-2 border-[color:var(--color-brand)] text-[color:var(--color-text)]" : "text-[color:var(--color-text-muted)]"}`}
+                    onClick={() => setActiveTab("history")}
+                  >
+                    Akış Tarihçesi
+                  </button>
+                </div>
+
+                {activeTab === "expenses" ? (
+                  <div className="space-y-1">
                     {detail.items.map((line) => (
                       <div key={line.id} className="rounded-xl border border-[color:var(--color-border)] px-3 py-2">
                         <div className="flex items-center justify-between">
@@ -252,7 +291,20 @@ export function ExpenseApprovalsManager({
                       </div>
                     ))}
                   </div>
-                </div>
+                ) : (
+                  <ol className="space-y-3">
+                    {[...detail.lifecycleEvents].reverse().map((event) => (
+                      <li key={event.id} className="rounded-xl border border-[color:var(--color-border)] px-3 py-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="font-medium text-[color:var(--color-text)]">{eventTypeLabel(event.eventType)}</span>
+                          <span className="text-xs text-[color:var(--color-text-muted)]">{formatDateTime(event.occurredAt)}</span>
+                        </div>
+                        <p className="text-xs text-[color:var(--color-text-muted)]">{event.actorName ?? "Sistem"}</p>
+                        <p className="mt-1 text-xs text-[color:var(--color-text)]">{event.summary}</p>
+                      </li>
+                    ))}
+                  </ol>
+                )}
 
                 {decisionMode ? (
                   <div className="space-y-2 rounded-2xl border border-dashed border-[color:var(--color-border)] p-4">

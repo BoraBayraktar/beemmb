@@ -164,6 +164,8 @@ function mapDetail(item: ExpenseReportDetailRow): AdminExpenseReportDetail {
       id: event.id,
       eventType: event.eventType,
       actorType: event.actorType,
+      actorUserId: event.actorUserId,
+      actorName: null,
       summary: event.summary,
       occurredAt: event.occurredAt.toISOString(),
     })),
@@ -344,6 +346,13 @@ export class ExpenseReportService {
     }
     if (detail.currentApproverUserId) {
       detail.currentApproverDelegateNames = delegateNamesByApprover[detail.currentApproverUserId] ?? [];
+    }
+
+    const actorIds = [...new Set(detail.lifecycleEvents.map((event) => event.actorUserId).filter((value): value is string => Boolean(value)))];
+    const actors = await this.repository.findUserNamesByIds(actorIds);
+    const actorNameById = new Map(actors.map((actor) => [actor.id, actor.name]));
+    for (const event of detail.lifecycleEvents) {
+      event.actorName = event.actorUserId ? (actorNameById.get(event.actorUserId) ?? null) : null;
     }
 
     return detail;
