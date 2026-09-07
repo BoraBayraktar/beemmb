@@ -13,6 +13,7 @@ import type {
 } from "@/modules/expense-reports/contracts/expense-report.contract";
 import { ExpenseReportRepository, expenseReportRepository } from "@/modules/expense-reports/repositories/expense-report.repository";
 import { expenseSettingsService } from "@/modules/expense-reports/services/expense-settings.service";
+import { delegationService } from "@/modules/delegation/services/delegation.service";
 import { notificationService } from "@/modules/system/services/notification.service";
 import { cashTransactionsService } from "@/modules/finance/services/cash-transactions.service";
 import { financeAccountEntryService } from "@/modules/finance/services/finance-account-entry.service";
@@ -166,7 +167,7 @@ function mapDetail(item: ExpenseReportDetailRow): AdminExpenseReportDetail {
   };
 }
 
-export type RequestingUser = { id: string; hasManage: boolean };
+export type RequestingUser = { id: string; tenantId: string; hasManage: boolean };
 
 export class ExpenseReportService {
   constructor(private readonly repository: ExpenseReportRepository) {}
@@ -187,11 +188,13 @@ export class ExpenseReportService {
     };
   }
 
-  async listApprovals(approverUserId: string, query: AdminExpenseReportListQuery): Promise<AdminExpenseReportListResult> {
+  async listApprovals(user: RequestingUser, query: AdminExpenseReportListQuery): Promise<AdminExpenseReportListResult> {
     const parsed = listQuerySchema.parse(query);
+    const delegatedGrantorIds = await delegationService.getActiveGrantorsFor(user.tenantId, user.id);
+    const approverUserIds = [user.id, ...delegatedGrantorIds];
     const [rows, total] = await Promise.all([
-      this.repository.listForApprover(approverUserId, parsed),
-      this.repository.countForApprover(approverUserId, parsed),
+      this.repository.listForApprover(approverUserIds, parsed),
+      this.repository.countForApprover(approverUserIds, parsed),
     ]);
 
     return {
@@ -227,12 +230,19 @@ export class ExpenseReportService {
     return existing;
   }
 
-  private assertCanView(report: ExpenseReportDetailRow, user: RequestingUser) {
+  private async assertCanView(report: ExpenseReportDetailRow, user: RequestingUser) {
     const isOwner = report.employeeUserId === user.id;
     const isApprover = report.currentApproverUserId === user.id;
-    if (!isOwner && !isApprover && !user.hasManage) {
-      throw new ExpenseReportAdminError("Bu masraf bildirimini görüntüleme yetkiniz yok.", 403);
+    if (isOwner || isApprover || user.hasManage) {
+      return;
     }
+
+    const delegatedGrantorIds = await delegationService.getActiveGrantorsFor(user.tenantId, user.id);
+    if (report.currentApproverUserId && delegatedGrantorIds.includes(report.currentApproverUserId)) {
+      return;
+    }
+
+    throw new ExpenseReportAdminError("Bu masraf bildirimini görüntüleme yetkiniz yok.", 403);
   }
 
   private assertOwnerEditable(report: ExpenseReportDetailRow, user: RequestingUser) {
@@ -244,10 +254,13 @@ export class ExpenseReportService {
     }
   }
 
-  private assertCanDecide(report: ExpenseReportDetailRow, user: RequestingUser) {
+  private async assertCanDecide(report: ExpenseReportDetailRow, user: RequestingUser) {
     const isAssignedApprover = report.currentApproverUserId === user.id;
     if (!isAssignedApprover && !user.hasManage) {
-      throw new ExpenseReportAdminError("Bu masraf bildirimini onaylama/reddetme yetkiniz yok.", 403);
+      const delegatedGrantorIds = await delegationService.getActiveGrantorsFor(user.tenantId, user.id);
+      if (!report.currentApproverUserId || !delegatedGrantorIds.includes(report.currentApproverUserId)) {
+        throw new ExpenseReportAdminError("Bu masraf bildirimini onaylama/reddetme yetkiniz yok.", 403);
+      }
     }
     if (report.status !== "SUBMITTED") {
       throw new ExpenseReportAdminError("Yalnızca onaya gönderilmiş bildirimler karara bağlanabilir.", 400);
@@ -290,7 +303,7 @@ export class ExpenseReportService {
 
   async getDetail(id: string, user: RequestingUser): Promise<AdminExpenseReportDetail> {
     const report = await this.findOrThrow(id);
-    this.assertCanView(report, user);
+    await this.assertCanView(report, user);
     return mapDetail(report);
   }
 
@@ -407,7 +420,7 @@ export class ExpenseReportService {
 
   async approve(id: string, user: RequestingUser): Promise<AdminExpenseReportDetail> {
     const report = await this.findOrThrow(id);
-    this.assertCanDecide(report, user);
+    await this.assertCanDecide(report, user);
     const approval = await this.findCurrentApprovalOrThrow(id);
     this.assertActionAllowed(approval, "approve", user);
 
@@ -519,7 +532,7 @@ export class ExpenseReportService {
   async reject(input: AdminRejectExpenseReportInput, user: RequestingUser): Promise<AdminExpenseReportDetail> {
     const parsed = rejectSchema.parse(input);
     const report = await this.findOrThrow(parsed.id);
-    this.assertCanDecide(report, user);
+    await this.assertCanDecide(report, user);
     const approval = await this.findCurrentApprovalOrThrow(parsed.id);
     this.assertActionAllowed(approval, "reject", user);
 
@@ -545,7 +558,7 @@ export class ExpenseReportService {
   async return(input: AdminReturnExpenseReportInput, user: RequestingUser): Promise<AdminExpenseReportDetail> {
     const parsed = returnSchema.parse(input);
     const report = await this.findOrThrow(parsed.id);
-    this.assertCanDecide(report, user);
+    await this.assertCanDecide(report, user);
     const approval = await this.findCurrentApprovalOrThrow(parsed.id);
     this.assertActionAllowed(approval, "return", user);
 

@@ -7,7 +7,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   try {
     return await requirePermission("expenseReports.submit", async (user) => {
       const { id } = await context.params;
-      const updated = await expenseReportService.submit(id, { id: user.id, hasManage: false });
+      const updated = await expenseReportService.submit(id, { id: user.id, tenantId: user.tenantId, hasManage: false });
 
       await auditLogService.recordFromRequest(request, {
         entityType: "EXPENSE_REPORT",

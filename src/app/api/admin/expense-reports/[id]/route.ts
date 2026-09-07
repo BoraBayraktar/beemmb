@@ -11,7 +11,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     return await requireAnyPermission(["expenseReports.submit", "expenseReports.approve", "expenseReports.manage"], async (user) => {
       const { id } = await context.params;
       const hasManage = await rbacService.hasPermission(user, "expenseReports.manage");
-      const item = await expenseReportService.getDetail(id, { id: user.id, hasManage });
+      const item = await expenseReportService.getDetail(id, { id: user.id, tenantId: user.tenantId, hasManage });
 
       return noStoreJson({ item });
     });
@@ -33,7 +33,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     return await requireAnyPermission(["expenseReports.submit"], async (user) => {
       const { id } = await context.params;
       const payload = await request.json();
-      const updated = await expenseReportService.updateNote({ id, note: payload.note }, { id: user.id, hasManage: false });
+      const updated = await expenseReportService.updateNote({ id, note: payload.note }, { id: user.id, tenantId: user.tenantId, hasManage: false });
 
       await auditLogService.recordFromRequest(request, {
         entityType: "EXPENSE_REPORT",
@@ -67,7 +67,7 @@ export async function DELETE(request: Request, context: { params: Promise<{ id: 
   try {
     return await requireAnyPermission(["expenseReports.submit"], async (user) => {
       const { id } = await context.params;
-      await expenseReportService.discardDraft(id, { id: user.id, hasManage: false });
+      await expenseReportService.discardDraft(id, { id: user.id, tenantId: user.tenantId, hasManage: false });
 
       await auditLogService.recordFromRequest(request, {
         entityType: "EXPENSE_REPORT",

@@ -12,7 +12,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       const { id } = await context.params;
       const payload = await request.json();
       const hasManage = await rbacService.hasPermission(user, "expenseReports.manage");
-      const updated = await expenseReportService.reject({ id, decisionNote: payload.decisionNote }, { id: user.id, hasManage });
+      const updated = await expenseReportService.reject({ id, decisionNote: payload.decisionNote }, { id: user.id, tenantId: user.tenantId, hasManage });
 
       await auditLogService.recordFromRequest(request, {
         entityType: "EXPENSE_REPORT",

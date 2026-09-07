@@ -99,6 +99,10 @@ const TENANT_SCOPED_MODELS = new Set<Prisma.ModelName>([
   // calisir (bkz. auth-context.service.ts) -- User/SocialAccount ile ayni
   // bootstrap kisiti. tenantId, rbac.repository.ts'te ambient context'ten
   // degil, cagiran user.tenantId'sinden acikca parametre olarak tasinir.
+  // NOT: Delegation de kasitli olarak buraya EKLENMEZ -- ayni bootstrap
+  // kisiti: rbacService.getEffectivePermissions() bu modeli
+  // runWithTenantContext KURULMADAN ONCE sorgulayabilir. tenantId,
+  // delegation.repository.ts'te acikca parametre olarak tasinir.
 ]);
 
 const WHERE_MANY_OPERATIONS = new Set([

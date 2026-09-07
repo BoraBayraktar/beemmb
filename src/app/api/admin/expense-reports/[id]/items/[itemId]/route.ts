@@ -7,7 +7,7 @@ export async function DELETE(request: Request, context: { params: Promise<{ id: 
   try {
     return await requirePermission("expenseReports.submit", async (user) => {
       const { id, itemId } = await context.params;
-      const updated = await expenseReportService.removeItem(id, itemId, { id: user.id, hasManage: false });
+      const updated = await expenseReportService.removeItem(id, itemId, { id: user.id, tenantId: user.tenantId, hasManage: false });
 
       await auditLogService.recordFromRequest(request, {
         entityType: "EXPENSE_REPORT",

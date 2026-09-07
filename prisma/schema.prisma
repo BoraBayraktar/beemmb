@@ -1970,6 +1970,7 @@ model Tenant {
   deletedDate                              DateTime?
   deletedUserId                            String?
   users                                    User[]
+  delegations                              Delegation[]
   entitlements                             TenantModuleEntitlement[]
   warehouses                               Warehouse[]
   categories                               Category[]
@@ -2112,9 +2113,36 @@ model User {
   expenseReportsAsEmployee         ExpenseReport[]            @relation("ExpenseReportEmployee")
   expenseReportsAsCurrentApprover  ExpenseReport[]            @relation("ExpenseReportCurrentApprover")
   expenseReportApprovalsAsApprover ExpenseReportApproval[]    @relation("ExpenseReportApprovalApprover")
+  delegationsGiven                Delegation[]               @relation("DelegationGrantor")
+  delegationsReceived             Delegation[]               @relation("DelegationGrantee")
 
   @@index([deleted])
   @@index([tenantId])
+}
+
+// NOT: Delegation, RBAC modelleri (Role/RolePermission/UserRoleAssignment) ile
+// AYNI bootstrap kisitina tabidir ve KASITLI OLARAK TENANT_SCOPED_MODELS'e
+// (src/lib/prisma.ts) EKLENMEZ: rbacService.getEffectivePermissions() bu modeli
+// requirePermission() icinde runWithTenantContext KURULMADAN ONCE sorgulayabilir
+// (bkz. auth-context.service.ts). tenantId bu yuzden ambient context'ten degil,
+// cagiran tarafin acikca gectigi parametreden alinir (bkz. delegation.repository.ts).
+model Delegation {
+  id              String    @id @default(cuid())
+  tenantId        String
+  grantorUserId   String
+  granteeUserId   String
+  startAt         DateTime
+  endAt           DateTime
+  revokedAt       DateTime?
+  revokedByUserId String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  tenant          Tenant    @relation(fields: [tenantId], references: [id])
+  grantor         User      @relation("DelegationGrantor", fields: [grantorUserId], references: [id])
+  grantee         User      @relation("DelegationGrantee", fields: [granteeUserId], references: [id])
+
+  @@index([tenantId, granteeUserId, startAt, endAt])
+  @@index([tenantId, grantorUserId])
 }
 
 // NOT: Role/RolePermission/UserRoleAssignment KASITLI OLARAK
@@ -2750,6 +2778,7 @@ enum UserNotificationType {
   STOCK_COUNT_APPLIED
   EXPENSE_REPORT_SUBMITTED
   EXPENSE_REPORT_DECIDED
+  DELEGATION_GRANTED
 }
 
 enum UserNotificationChannel {

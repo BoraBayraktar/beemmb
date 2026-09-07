@@ -3,7 +3,8 @@ export type UserNotificationType =
   | "INVENTORY_ALERT_CREATED"
   | "STOCK_COUNT_APPLIED"
   | "EXPENSE_REPORT_SUBMITTED"
-  | "EXPENSE_REPORT_DECIDED";
+  | "EXPENSE_REPORT_DECIDED"
+  | "DELEGATION_GRANTED";
 
 export type UserNotificationChannel = "IN_APP" | "EMAIL";
 

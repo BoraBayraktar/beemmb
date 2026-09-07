@@ -23,6 +23,7 @@ export const AUDIT_LOG_ENTITY_TYPES = [
   "STOREFRONT_ITEM",
   "AUTH",
   "TENANT",
+  "DELEGATION",
 ] as const;
 
 export const AUDIT_LOG_ACTIONS = [

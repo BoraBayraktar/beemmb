@@ -42,6 +42,7 @@ export const auditLogEntityLabels: Record<AuditLogEntityType, string> = {
   STOREFRONT_ITEM: "Mağaza İçeriği",
   AUTH: "Oturum",
   TENANT: "Tenant",
+  DELEGATION: "Vekalet",
 };
 
 export const auditLogActionLabels: Record<AuditLogAction, string> = {

@@ -2,13 +2,15 @@ import { ZodError } from "zod";
 
 import { noStoreJson } from "@/lib/no-store-json-response";
 import { AuthContextError, requirePermission } from "@/modules/identity/services/auth-context.service";
+import { rbacService } from "@/modules/identity/services/rbac.service";
 import { ExpenseReportAdminError, expenseReportService } from "@/modules/expense-reports/services/expense-report.service";
 
 export async function GET(request: Request) {
   try {
     return await requirePermission("expenseReports.approve", async (user) => {
       const { searchParams } = new URL(request.url);
-      const result = await expenseReportService.listApprovals(user.id, {
+      const hasManage = await rbacService.hasPermission(user, "expenseReports.manage");
+      const result = await expenseReportService.listApprovals({ id: user.id, tenantId: user.tenantId, hasManage }, {
         scope: "approvals",
         search: searchParams.get("search") ?? undefined,
         status: (searchParams.get("status") as "all" | "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED" | null) ?? undefined,

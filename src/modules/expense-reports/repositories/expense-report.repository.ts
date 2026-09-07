@@ -86,10 +86,10 @@ export class ExpenseReportRepository {
     return prisma.expenseReport.count({ where: buildWhere(filter, { employeeUserId }) });
   }
 
-  async listForApprover(approverUserId: string, filter: ListFilter) {
+  async listForApprover(approverUserIds: string[], filter: ListFilter) {
     return prisma.expenseReport.findMany({
       where: buildWhere(filter, {
-        currentApproverUserId: approverUserId,
+        currentApproverUserId: { in: approverUserIds },
         status: filter.status === "all" ? "SUBMITTED" : filter.status,
       }),
       orderBy: { submittedAt: "asc" },
@@ -99,10 +99,10 @@ export class ExpenseReportRepository {
     });
   }
 
-  async countForApprover(approverUserId: string, filter: Pick<ListFilter, "search" | "status">) {
+  async countForApprover(approverUserIds: string[], filter: Pick<ListFilter, "search" | "status">) {
     return prisma.expenseReport.count({
       where: buildWhere(filter, {
-        currentApproverUserId: approverUserId,
+        currentApproverUserId: { in: approverUserIds },
         status: filter.status === "all" ? "SUBMITTED" : filter.status,
       }),
     });

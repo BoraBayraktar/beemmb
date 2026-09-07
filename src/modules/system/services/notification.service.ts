@@ -26,6 +26,7 @@ const createUserNotificationsSchema = z.object({
     "STOCK_COUNT_APPLIED",
     "EXPENSE_REPORT_SUBMITTED",
     "EXPENSE_REPORT_DECIDED",
+    "DELEGATION_GRANTED",
   ]),
   title: z.string().trim().min(1).max(180),
   message: z.string().trim().min(1).max(2000),

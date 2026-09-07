@@ -28,7 +28,13 @@ export default async function AdminExpenseReportApprovalsPage({ params }: { para
 
   const result = await runWithTenantContext(
     { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
-    () => expenseReportService.listApprovals(user.id, { scope: "approvals", page: 1, pageSize: 50 }),
+    async () => {
+      const hasManage = await rbacService.hasPermission(user, "expenseReports.manage");
+      return expenseReportService.listApprovals(
+        { id: user.id, tenantId: user.tenantId, hasManage },
+        { scope: "approvals", page: 1, pageSize: 50 },
+      );
+    },
   );
 
   return (

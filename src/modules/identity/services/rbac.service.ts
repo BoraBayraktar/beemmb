@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { delegationService } from "@/modules/delegation/services/delegation.service";
 import { ALL_PERMISSION_KEYS, type EffectiveRbac, type PermissionKey, type RbacRoleSummary } from "@/modules/identity/contracts/rbac.contract";
 import { RbacRepository } from "@/modules/identity/repositories/rbac.repository";
 
@@ -124,6 +125,26 @@ export class RbacService {
           permissionKeys.add(rolePermission.permission.key as PermissionKey);
         }
       }
+    }
+
+    // Aktif vekalet varsa (bkz. src/modules/delegation), vekalet verenin izinleri
+    // gecici olarak buraya union edilir -- bu kontrolun sonu size===0 fallback'inden
+    // ONCE olmasi kritiktir, aksi halde kendi izni bos olan bir kullanici legacy
+    // fallback'e duser ve devredilen izinleri hic goremez.
+    try {
+      const activeGrantorIds = await delegationService.getActiveGrantorsFor(user.tenantId, user.id);
+      for (const grantorId of activeGrantorIds) {
+        const grantorAssignments = await this.repository.getEffectiveRolesForUser(user.tenantId, grantorId);
+        for (const assignment of grantorAssignments) {
+          for (const rolePermission of assignment.role.permissions) {
+            if (ALL_PERMISSION_KEYS.includes(rolePermission.permission.key as PermissionKey)) {
+              permissionKeys.add(rolePermission.permission.key as PermissionKey);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Vekalet yetkileri okunamadi, yalnizca kendi yetkileriyle devam edilecek.", error);
     }
 
     if (permissionKeys.size === 0) {

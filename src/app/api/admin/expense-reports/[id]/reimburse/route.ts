@@ -17,7 +17,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
           transactionAt: payload.transactionAt,
           note: payload.note,
         },
-        { id: user.id, hasManage: true },
+        { id: user.id, tenantId: user.tenantId, hasManage: true },
       );
 
       await auditLogService.recordFromRequest(request, {

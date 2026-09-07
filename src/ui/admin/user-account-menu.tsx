@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, LogOut, MoreVertical } from "lucide-react";
+import { KeyRound, LogOut, MoreVertical, UserCog } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,7 @@ import {
 
 export type AccountMenuLabels = {
   menuLabel: string;
+  delegation: string;
   logout: string;
   loading: string;
   changePassword: string;
@@ -149,6 +150,10 @@ export function UserAccountMenu({ locale, labels }: Props) {
           <DropdownMenuItem onSelect={openChangePasswordDialog}>
             <KeyRound className="h-4 w-4" />
             {labels.changePassword}
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => router.push(`/${locale}/admin/delegation`)}>
+            <UserCog className="h-4 w-4" />
+            {labels.delegation}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem disabled={loggingOut} onSelect={handleLogout}>

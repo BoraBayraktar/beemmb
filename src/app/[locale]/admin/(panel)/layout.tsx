@@ -60,6 +60,7 @@ export default async function AdminPanelLayout({
       loadingLabel={dictionary.common.loading}
       accountMenu={{
         menuLabel: dictionary.admin.accountMenuLabel,
+        delegation: dictionary.admin.delegationMenuLabel,
         logout: dictionary.admin.logout,
         loading: dictionary.common.loading,
         changePassword: dictionary.admin.changePassword,
