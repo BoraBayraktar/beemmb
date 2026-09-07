@@ -248,28 +248,21 @@ export class ExpenseReportService {
   }
 
   /**
-   * SUBMITTED durumdaki (bekleyen onay adimi olan) bir bildirimde "manage"
-   * izni goruntulemeyi bypass ETMEZ -- o adima atanmis onayci veya vekili
-   * disinda kimse bekleyen bir onayi goremez. Diger durumlarda (DRAFT/APPROVED/
-   * REJECTED/RETURNED) "manage" izni genel goruntuleme/denetim icin gecerlidir
-   * (bkz. "Tum Masraf Bildirimleri" sayfasi, expenseReports.manage).
+   * Goruntuleme, karar vermeden (assertCanDecide) daha genis tutulur: "manage"
+   * izni olan biri, kendisine atanmamis veya vekaletini almadigi bir bekleyen
+   * onayi da (Tum Bildirimler / denetim sayfasi uzerinden) GOREBILIR, durumdan
+   * bagimsiz. Sadece KARAR (approve/reject/return) sirasinda assertCanDecide
+   * bunu atanmis onayci veya vekiliyle sinirlar.
    */
   private async assertCanView(report: ExpenseReportDetailRow, user: RequestingUser) {
     const isOwner = report.employeeUserId === user.id;
     const isApprover = report.currentApproverUserId === user.id;
-    if (isOwner || isApprover) {
+    if (isOwner || isApprover || user.hasManage) {
       return;
     }
 
-    if (report.status === "SUBMITTED") {
-      const delegatedGrantorIds = await delegationService.getActiveGrantorsFor(user.tenantId, user.id);
-      if (report.currentApproverUserId && delegatedGrantorIds.includes(report.currentApproverUserId)) {
-        return;
-      }
-      throw new ExpenseReportAdminError("Bu masraf bildirimini görüntüleme yetkiniz yok.", 403);
-    }
-
-    if (user.hasManage) {
+    const delegatedGrantorIds = await delegationService.getActiveGrantorsFor(user.tenantId, user.id);
+    if (report.currentApproverUserId && delegatedGrantorIds.includes(report.currentApproverUserId)) {
       return;
     }
 
