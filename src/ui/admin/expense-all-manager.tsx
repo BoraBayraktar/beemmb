@@ -51,27 +51,22 @@ function formatCurrency(value: number, currency: string) {
   return new Intl.NumberFormat("tr-TR", { style: "currency", currency }).format(value);
 }
 
-function formatDate(value: string | null) {
+function formatDateTime(value: string | null) {
   if (!value) return "-";
-  return new Date(value).toLocaleDateString("tr-TR");
-}
-
-function formatDateTime(value: string) {
   return new Date(value).toLocaleString("tr-TR");
 }
+
+const HISTORY_EVENT_TYPES = new Set(["CREATED", "SUBMITTED", "RESUBMITTED", "STEP_APPROVED", "APPROVED", "REJECTED", "RETURNED"]);
 
 function eventTypeLabel(eventType: string) {
   switch (eventType) {
     case "CREATED": return "Oluşturuldu";
-    case "SUBMITTED": return "Onaya gönderildi";
-    case "RESUBMITTED": return "Tekrar onaya gönderildi";
-    case "ITEM_ADDED": return "Masraf kalemi eklendi";
-    case "ITEM_REMOVED": return "Masraf kalemi silindi";
-    case "STEP_APPROVED": return "Onay adımı onaylandı";
+    case "SUBMITTED": return "Gönderildi";
+    case "RESUBMITTED": return "Tekrar gönderildi";
+    case "STEP_APPROVED": return "Onaylandı";
     case "APPROVED": return "Onaylandı";
     case "REJECTED": return "Reddedildi";
     case "RETURNED": return "Geri gönderildi";
-    case "REIMBURSED": return "Ödendi";
     default: return eventType;
   }
 }
@@ -254,9 +249,9 @@ export function ExpenseAllManager({
                 {detail.currentApproverDelegateNames.length > 0 ? (
                   <p><span className="text-[color:var(--color-text-muted)]">Vekaleten:</span> {detail.currentApproverDelegateNames.join(", ")}</p>
                 ) : null}
-                <p><span className="text-[color:var(--color-text-muted)]">Gönderilme:</span> {formatDate(detail.submittedAt)}</p>
-                <p><span className="text-[color:var(--color-text-muted)]">Karar:</span> {formatDate(detail.decidedAt)}</p>
-                <p><span className="text-[color:var(--color-text-muted)]">Ödeme:</span> {formatDate(detail.reimbursedAt)}</p>
+                <p><span className="text-[color:var(--color-text-muted)]">Gönderilme:</span> {formatDateTime(detail.submittedAt)}</p>
+                <p><span className="text-[color:var(--color-text-muted)]">Karar:</span> {formatDateTime(detail.decidedAt)}</p>
+                <p><span className="text-[color:var(--color-text-muted)]">Ödeme:</span> {formatDateTime(detail.reimbursedAt)}</p>
                 {latestDecisionNote(detail) ? (
                   <p>
                     <span className="text-[color:var(--color-text-muted)]">
@@ -301,16 +296,26 @@ export function ExpenseAllManager({
                   </div>
                 ) : (
                   <ol className="space-y-3">
-                    {[...detail.lifecycleEvents].reverse().map((event) => (
-                      <li key={event.id} className="rounded-xl border border-[color:var(--color-border)] px-3 py-2">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <span className="font-medium text-[color:var(--color-text)]">{eventTypeLabel(event.eventType)}</span>
-                          <span className="text-xs text-[color:var(--color-text-muted)]">{formatDateTime(event.occurredAt)}</span>
-                        </div>
-                        <p className="text-xs text-[color:var(--color-text-muted)]">{event.actorName ?? "Sistem"}</p>
-                        <p className="mt-1 text-xs text-[color:var(--color-text)]">{event.summary}</p>
-                      </li>
-                    ))}
+                    {[...detail.lifecycleEvents].reverse().filter((event) => HISTORY_EVENT_TYPES.has(event.eventType)).map((event) => {
+                      const isDelegated = Boolean(event.assignedApproverUserId && event.actorUserId !== event.assignedApproverUserId);
+                      const primaryName = isDelegated ? event.assignedApproverName : event.actorName;
+                      return (
+                        <li key={event.id} className="rounded-xl border border-[color:var(--color-border)] px-3 py-2">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="font-medium text-[color:var(--color-text)]">{eventTypeLabel(event.eventType)}</span>
+                            <span className="text-xs text-[color:var(--color-text-muted)]">{formatDateTime(event.occurredAt)}</span>
+                          </div>
+                          <p className="text-xs text-[color:var(--color-text-muted)]">
+                            {primaryName ?? "Sistem"}
+                            {event.assignedApproverDescription ? ` (${event.assignedApproverDescription})` : ""}
+                          </p>
+                          {isDelegated ? (
+                            <p className="text-xs text-[color:var(--color-text-muted)]">Vekaleten: {event.actorName}</p>
+                          ) : null}
+                          <p className="mt-1 text-xs text-[color:var(--color-text)]">{event.summary}</p>
+                        </li>
+                      );
+                    })}
                   </ol>
                 )}
               </div>

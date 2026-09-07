@@ -160,15 +160,21 @@ function mapDetail(item: ExpenseReportDetailRow): AdminExpenseReportDetail {
       decisionNote: approval.decisionNote,
       decidedAt: approval.decidedAt ? approval.decidedAt.toISOString() : null,
     })),
-    lifecycleEvents: item.lifecycleEvents.map((event) => ({
-      id: event.id,
-      eventType: event.eventType,
-      actorType: event.actorType,
-      actorUserId: event.actorUserId,
-      actorName: null,
-      summary: event.summary,
-      occurredAt: event.occurredAt.toISOString(),
-    })),
+    lifecycleEvents: item.lifecycleEvents.map((event) => {
+      const metadata = event.metadata as { assignedApproverUserId?: string } | null;
+      return {
+        id: event.id,
+        eventType: event.eventType,
+        actorType: event.actorType,
+        actorUserId: event.actorUserId,
+        actorName: null,
+        assignedApproverUserId: metadata?.assignedApproverUserId ?? null,
+        assignedApproverName: null,
+        assignedApproverDescription: null,
+        summary: event.summary,
+        occurredAt: event.occurredAt.toISOString(),
+      };
+    }),
   };
 }
 
@@ -348,11 +354,18 @@ export class ExpenseReportService {
       detail.currentApproverDelegateNames = delegateNamesByApprover[detail.currentApproverUserId] ?? [];
     }
 
-    const actorIds = [...new Set(detail.lifecycleEvents.map((event) => event.actorUserId).filter((value): value is string => Boolean(value)))];
+    const assignedApproverIds = detail.lifecycleEvents.map((event) => event.assignedApproverUserId).filter((value): value is string => Boolean(value));
+    const actorIds = [...new Set([
+      ...detail.lifecycleEvents.map((event) => event.actorUserId).filter((value): value is string => Boolean(value)),
+      ...assignedApproverIds,
+    ])];
     const actors = await this.repository.findUserNamesByIds(actorIds);
     const actorNameById = new Map(actors.map((actor) => [actor.id, actor.name]));
+    const descriptionByApprover = new Map(detail.approvals.map((approval) => [approval.approverUserId, approval.description]));
     for (const event of detail.lifecycleEvents) {
       event.actorName = event.actorUserId ? (actorNameById.get(event.actorUserId) ?? null) : null;
+      event.assignedApproverName = event.assignedApproverUserId ? (actorNameById.get(event.assignedApproverUserId) ?? null) : null;
+      event.assignedApproverDescription = event.assignedApproverUserId ? (descriptionByApprover.get(event.assignedApproverUserId) ?? null) : null;
     }
 
     return detail;
@@ -481,6 +494,7 @@ export class ExpenseReportService {
       round: approval.round,
       stepOrder: approval.stepOrder,
       actorUserId: user.id,
+      assignedApproverUserId: approval.approverUserId,
     });
 
     if (updated.status === "APPROVED") {
@@ -591,6 +605,7 @@ export class ExpenseReportService {
       id: parsed.id,
       approvalId: approval.id,
       actorUserId: user.id,
+      assignedApproverUserId: approval.approverUserId,
       decisionNote: parsed.decisionNote,
     });
 
@@ -617,6 +632,7 @@ export class ExpenseReportService {
       id: parsed.id,
       approvalId: approval.id,
       actorUserId: user.id,
+      assignedApproverUserId: approval.approverUserId,
       decisionNote: parsed.decisionNote,
     });
 

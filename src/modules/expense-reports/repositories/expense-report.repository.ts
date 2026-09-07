@@ -320,7 +320,7 @@ export class ExpenseReportRepository {
     });
   }
 
-  async approveCurrentStep(args: { id: string; approvalId: string; round: number; stepOrder: number; actorUserId: string }) {
+  async approveCurrentStep(args: { id: string; approvalId: string; round: number; stepOrder: number; actorUserId: string; assignedApproverUserId: string }) {
     const tenantId = requireTenantId();
 
     return prisma.$transaction(async (tx) => {
@@ -346,6 +346,7 @@ export class ExpenseReportRepository {
                 eventType: "STEP_APPROVED",
                 summary: "Onay adımı tamamlandı, bildirim sıradaki onaycıya iletildi.",
                 actorUserId: args.actorUserId,
+                metadata: { assignedApproverUserId: args.assignedApproverUserId },
               },
             },
           },
@@ -366,6 +367,7 @@ export class ExpenseReportRepository {
               eventType: "APPROVED",
               summary: "Masraf bildirimi tüm onaycılar tarafından onaylandı.",
               actorUserId: args.actorUserId,
+              metadata: { assignedApproverUserId: args.assignedApproverUserId },
             },
           },
         },
@@ -374,7 +376,7 @@ export class ExpenseReportRepository {
     });
   }
 
-  async rejectCurrentStep(args: { id: string; approvalId: string; actorUserId: string; decisionNote: string }) {
+  async rejectCurrentStep(args: { id: string; approvalId: string; actorUserId: string; assignedApproverUserId: string; decisionNote: string }) {
     const tenantId = requireTenantId();
 
     return prisma.$transaction(async (tx) => {
@@ -396,6 +398,7 @@ export class ExpenseReportRepository {
               eventType: "REJECTED",
               summary: `Masraf bildirimi reddedildi: ${args.decisionNote}`,
               actorUserId: args.actorUserId,
+              metadata: { assignedApproverUserId: args.assignedApproverUserId },
             },
           },
         },
@@ -404,7 +407,7 @@ export class ExpenseReportRepository {
     });
   }
 
-  async returnCurrentStep(args: { id: string; approvalId: string; actorUserId: string; decisionNote: string }) {
+  async returnCurrentStep(args: { id: string; approvalId: string; actorUserId: string; assignedApproverUserId: string; decisionNote: string }) {
     const tenantId = requireTenantId();
 
     return prisma.$transaction(async (tx) => {
@@ -425,6 +428,7 @@ export class ExpenseReportRepository {
               eventType: "RETURNED",
               summary: `Masraf bildirimi düzenlenmesi için gönderene geri gönderildi: ${args.decisionNote}`,
               actorUserId: args.actorUserId,
+              metadata: { assignedApproverUserId: args.assignedApproverUserId },
             },
           },
         },

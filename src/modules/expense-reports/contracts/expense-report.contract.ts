@@ -48,6 +48,9 @@ export type AdminExpenseReportLifecycleEventItem = {
   actorType: string;
   actorUserId: string | null;
   actorName: string | null;
+  assignedApproverUserId: string | null;
+  assignedApproverName: string | null;
+  assignedApproverDescription: string | null;
   summary: string;
   occurredAt: string;
 };
