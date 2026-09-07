@@ -30,7 +30,7 @@ export default async function AdminExpenseReportsAllPage({ params }: { params: P
   const [result, financialAccountOptions] = await runWithTenantContext(
     { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
     () => Promise.all([
-      expenseReportService.listAll({ scope: "all", page: 1, pageSize: 50 }),
+      expenseReportService.listAll({ scope: "all", page: 1, pageSize: 50 }, user.tenantId),
       financialAccountsService.listAccountOptions(),
     ]),
   );

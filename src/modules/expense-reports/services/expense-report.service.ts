@@ -216,15 +216,22 @@ export class ExpenseReportService {
     };
   }
 
-  async listAll(query: AdminExpenseReportListQuery): Promise<AdminExpenseReportListResult> {
+  async listAll(query: AdminExpenseReportListQuery, tenantId: string): Promise<AdminExpenseReportListResult> {
     const parsed = listQuerySchema.parse(query);
     const [rows, total] = await Promise.all([
       this.repository.listAll(parsed),
       this.repository.countAll(parsed),
     ]);
 
+    const items = rows.map(mapListItem);
+    const approverIds = [...new Set(items.map((item) => item.currentApproverUserId).filter((id): id is string => Boolean(id)))];
+    const delegateNamesByApprover = await delegationService.getActiveDelegateNamesForGrantors(tenantId, approverIds);
+    for (const item of items) {
+      item.currentApproverDelegateNames = item.currentApproverUserId ? (delegateNamesByApprover[item.currentApproverUserId] ?? []) : [];
+    }
+
     return {
-      items: rows.map(mapListItem),
+      items,
       page: parsed.page,
       pageSize: parsed.pageSize,
       total,

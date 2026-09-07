@@ -185,7 +185,14 @@ export function ExpenseAllManager({
                         ) : null}
                       </div>
                     </td>
-                    <td className="px-4 py-3">{item.currentApproverName ?? "-"}</td>
+                    <td className="px-4 py-3">
+                      <span>{item.currentApproverName ?? "-"}</span>
+                      {item.currentApproverDelegateNames.length > 0 ? (
+                        <span className="block text-xs text-[color:var(--color-text-muted)]">
+                          Vekaleten: {item.currentApproverDelegateNames.join(", ")}
+                        </span>
+                      ) : null}
+                    </td>
                     <td className="px-4 py-3">{formatCurrency(item.totalAmount, item.currency)}</td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-2">
@@ -220,6 +227,9 @@ export function ExpenseAllManager({
                 </div>
 
                 <p><span className="text-[color:var(--color-text-muted)]">Güncel onaycı:</span> {detail.currentApproverName ?? "-"}</p>
+                {detail.currentApproverDelegateNames.length > 0 ? (
+                  <p><span className="text-[color:var(--color-text-muted)]">Vekaleten:</span> {detail.currentApproverDelegateNames.join(", ")}</p>
+                ) : null}
                 <p><span className="text-[color:var(--color-text-muted)]">Gönderilme:</span> {formatDate(detail.submittedAt)}</p>
                 <p><span className="text-[color:var(--color-text-muted)]">Karar:</span> {formatDate(detail.decidedAt)}</p>
                 <p><span className="text-[color:var(--color-text-muted)]">Ödeme:</span> {formatDate(detail.reimbursedAt)}</p>

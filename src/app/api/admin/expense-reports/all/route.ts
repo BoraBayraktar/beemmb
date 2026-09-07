@@ -6,7 +6,7 @@ import { ExpenseReportAdminError, expenseReportService } from "@/modules/expense
 
 export async function GET(request: Request) {
   try {
-    return await requirePermission("expenseReports.manage", async () => {
+    return await requirePermission("expenseReports.manage", async (user) => {
       const { searchParams } = new URL(request.url);
       const result = await expenseReportService.listAll({
         scope: "all",
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
         status: (searchParams.get("status") as "all" | "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED" | "RETURNED" | null) ?? undefined,
         page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
         pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : 10,
-      });
+      }, user.tenantId);
 
       return noStoreJson(result);
     });
