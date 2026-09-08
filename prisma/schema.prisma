@@ -2115,6 +2115,7 @@ model User {
   expenseReportApprovalsAsApprover ExpenseReportApproval[]    @relation("ExpenseReportApprovalApprover")
   delegationsGiven                Delegation[]               @relation("DelegationGrantor")
   delegationsReceived             Delegation[]               @relation("DelegationGrantee")
+  delegationsCreated              Delegation[]               @relation("DelegationCreator")
 
   @@index([deleted])
   @@index([tenantId])
@@ -2135,14 +2136,21 @@ model Delegation {
   endAt           DateTime
   revokedAt       DateTime?
   revokedByUserId String?
+  // Bu vekaleti fiilen kim olusturdu: self-servis akista grantorUserId ile
+  // ayni, "Vekalet Yonetimi" ekranindan (delegations.manage izniyle)
+  // baskasi adina olusturulduysa yetkili admin'in id'si. Nullable: mevcut
+  // prod kayitlarinda (bu alan eklenmeden once) bilgi yok.
+  createdByUserId String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   tenant          Tenant    @relation(fields: [tenantId], references: [id])
   grantor         User      @relation("DelegationGrantor", fields: [grantorUserId], references: [id])
   grantee         User      @relation("DelegationGrantee", fields: [granteeUserId], references: [id])
+  creator         User?     @relation("DelegationCreator", fields: [createdByUserId], references: [id])
 
   @@index([tenantId, granteeUserId, startAt, endAt])
   @@index([tenantId, grantorUserId])
+  @@index([tenantId, createdAt])
 }
 
 // NOT: Role/RolePermission/UserRoleAssignment KASITLI OLARAK

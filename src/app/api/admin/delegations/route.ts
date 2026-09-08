@@ -1,24 +1,14 @@
 import { ZodError } from "zod";
 
 import { noStoreJson } from "@/lib/no-store-json-response";
-import { runWithTenantContext } from "@/lib/tenant-context";
 import { DelegationPolicyError, delegationService } from "@/modules/delegation/services/delegation.service";
-import { AuthContextError, getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
+import { AuthContextError, requirePermission } from "@/modules/identity/services/auth-context.service";
 
 export async function GET() {
   try {
-    const user = await getCurrentUserFromContext();
-    if (!user) {
-      throw new AuthContextError(401, "Unauthorized");
-    }
-
-    return await runWithTenantContext({ tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin }, async () => {
-      const [given, received] = await Promise.all([
-        delegationService.listGivenByUser(user.tenantId, user.id),
-        delegationService.listReceivedByUser(user.tenantId, user.id),
-      ]);
-
-      return noStoreJson({ given: given.items, received: received.items });
+    return await requirePermission("delegations.manage", async (user) => {
+      const all = await delegationService.listAll(user.tenantId);
+      return noStoreJson({ items: all.items });
     });
   } catch (error) {
     if (error instanceof AuthContextError) {
@@ -31,15 +21,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const user = await getCurrentUserFromContext();
-    if (!user) {
-      throw new AuthContextError(401, "Unauthorized");
-    }
-
-    return await runWithTenantContext({ tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin }, async () => {
+    return await requirePermission("delegations.manage", async (user) => {
       const payload = await request.json();
       const created = await delegationService.createDelegation(user.tenantId, {
-        grantorUserId: user.id,
+        grantorUserId: payload.grantorUserId,
         granteeUserId: payload.granteeUserId,
         startAt: payload.startAt,
         endAt: payload.endAt,

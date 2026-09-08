@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 const summaryInclude = {
   grantor: { select: { id: true, name: true } },
   grantee: { select: { id: true, name: true } },
+  creator: { select: { id: true, name: true } },
 };
 
 export class DelegationRepository {
@@ -12,6 +13,7 @@ export class DelegationRepository {
     granteeUserId: string;
     startAt: Date;
     endAt: Date;
+    createdByUserId: string;
   }) {
     return prisma.delegation.create({
       data: {
@@ -20,7 +22,16 @@ export class DelegationRepository {
         granteeUserId: input.granteeUserId,
         startAt: input.startAt,
         endAt: input.endAt,
+        createdByUserId: input.createdByUserId,
       },
+      include: summaryInclude,
+    });
+  }
+
+  async listAll(tenantId: string) {
+    return prisma.delegation.findMany({
+      where: { tenantId },
+      orderBy: { createdAt: "desc" },
       include: summaryInclude,
     });
   }

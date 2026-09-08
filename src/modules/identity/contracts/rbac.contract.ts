@@ -56,6 +56,7 @@ export const RBAC_PERMISSIONS = [
   { key: "customers.manage", module: "users", action: "customersManage", menuKey: "customers", name: "Müşteri kullanıcılarını yönetme" },
   { key: "systemUsers.manage", module: "users", action: "systemUsersManage", menuKey: "system-users", name: "Sistem kullanıcılarını yönetme" },
   { key: "roles.manage", module: "users", action: "rolesManage", menuKey: "roles", name: "Rolleri yönetme" },
+  { key: "delegations.manage", module: "delegations", action: "manage", menuKey: "delegations", name: "Kullanıcılar adına vekalet yönetme" },
   { key: "expenseReports.submit", module: "expenseReports", action: "submit", menuKey: "expense-reports", name: "Masraf bildirimi oluşturma ve gönderme" },
   { key: "expenseReports.approve", module: "expenseReports", action: "approve", menuKey: "expense-reports-approvals", name: "Masraf bildirimlerini onaylama/reddetme" },
   { key: "expenseReports.manage", module: "expenseReports", action: "manage", menuKey: "expense-reports-all", name: "Tüm masraf bildirimlerini yönetme" },
