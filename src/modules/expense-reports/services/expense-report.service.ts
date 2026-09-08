@@ -340,13 +340,17 @@ export class ExpenseReportService {
     }
   }
 
-  async getDetail(id: string, user: RequestingUser): Promise<AdminExpenseReportDetail> {
-    const report = await this.findOrThrow(id);
-    await this.assertCanView(report, user);
-    const detail = mapDetail(report);
-
+  /**
+   * mapDetail() ham DB satirini contract'a cevirir ama delegateNames/actorName/
+   * assignedApprover* alanlarini bos birakir (bunlar ayrica DB sorgusu gerektirir).
+   * Detay donen HER public metot (getDetail, submit, approve, reject, return, vb.)
+   * cagirdiktan sonra bu zenginlestirmeden gecmek ZORUNDADIR -- aksi halde UI'da
+   * "Vekaleten" bilgisi/onaycı unvani gorunmez (bkz. submit() sonrasi acik kalan
+   * detay ekraninin bu zenginlestirmeyi atlamasindan kaynaklanan gecmis hata).
+   */
+  private async enrichDetail(detail: AdminExpenseReportDetail, tenantId: string): Promise<AdminExpenseReportDetail> {
     const approverIds = [...new Set(detail.approvals.map((approval) => approval.approverUserId))];
-    const delegateNamesByApprover = await delegationService.getActiveDelegateNamesForGrantors(user.tenantId, approverIds);
+    const delegateNamesByApprover = await delegationService.getActiveDelegateNamesForGrantors(tenantId, approverIds);
     for (const approval of detail.approvals) {
       approval.delegateNames = delegateNamesByApprover[approval.approverUserId] ?? [];
     }
@@ -371,6 +375,12 @@ export class ExpenseReportService {
     return detail;
   }
 
+  async getDetail(id: string, user: RequestingUser): Promise<AdminExpenseReportDetail> {
+    const report = await this.findOrThrow(id);
+    await this.assertCanView(report, user);
+    return this.enrichDetail(mapDetail(report), user.tenantId);
+  }
+
   async createDraft(employeeUserId: string): Promise<AdminExpenseReportDetail> {
     const created = await this.repository.createDraft({ employeeUserId });
     return mapDetail(created);
@@ -382,7 +392,7 @@ export class ExpenseReportService {
     this.assertOwnerEditable(report, user);
 
     const updated = await this.repository.updateNote({ id: parsed.id, note: parsed.note ?? null });
-    return mapDetail(updated);
+    return this.enrichDetail(mapDetail(updated), user.tenantId);
   }
 
   async discardDraft(id: string, user: RequestingUser): Promise<void> {
@@ -427,7 +437,7 @@ export class ExpenseReportService {
       actorUserId: user.id,
     });
 
-    return mapDetail(updated);
+    return this.enrichDetail(mapDetail(updated), user.tenantId);
   }
 
   async removeItem(reportId: string, itemId: string, user: RequestingUser): Promise<AdminExpenseReportDetail> {
@@ -435,7 +445,7 @@ export class ExpenseReportService {
     this.assertOwnerEditable(report, user);
 
     const updated = await this.repository.removeItem({ expenseReportId: reportId, itemId, actorUserId: user.id });
-    return mapDetail(updated);
+    return this.enrichDetail(mapDetail(updated), user.tenantId);
   }
 
   async submit(id: string, user: RequestingUser): Promise<AdminExpenseReportDetail> {
@@ -479,7 +489,7 @@ export class ExpenseReportService {
       `${updated.employee.name} tarafından gönderilen ${updated.reportNumber} numaralı masraf bildirimi onayınızı bekliyor.`,
     );
 
-    return mapDetail(updated);
+    return this.enrichDetail(mapDetail(updated), user.tenantId);
   }
 
   async approve(id: string, user: RequestingUser): Promise<AdminExpenseReportDetail> {
@@ -542,7 +552,7 @@ export class ExpenseReportService {
       }
     }
 
-    return mapDetail(updated);
+    return this.enrichDetail(mapDetail(updated), user.tenantId);
   }
 
   async reimburse(input: AdminReimburseExpenseReportInput, user: RequestingUser): Promise<AdminExpenseReportDetail> {
@@ -591,7 +601,7 @@ export class ExpenseReportService {
       channels: ["IN_APP", "EMAIL"],
     });
 
-    return mapDetail(updated);
+    return this.enrichDetail(mapDetail(updated), user.tenantId);
   }
 
   async reject(input: AdminRejectExpenseReportInput, user: RequestingUser): Promise<AdminExpenseReportDetail> {
@@ -618,7 +628,7 @@ export class ExpenseReportService {
       channels: ["IN_APP", "EMAIL"],
     });
 
-    return mapDetail(updated);
+    return this.enrichDetail(mapDetail(updated), user.tenantId);
   }
 
   async return(input: AdminReturnExpenseReportInput, user: RequestingUser): Promise<AdminExpenseReportDetail> {
@@ -645,7 +655,7 @@ export class ExpenseReportService {
       channels: ["IN_APP", "EMAIL"],
     });
 
-    return mapDetail(updated);
+    return this.enrichDetail(mapDetail(updated), user.tenantId);
   }
 }
 
