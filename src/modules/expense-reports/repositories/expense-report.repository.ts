@@ -68,7 +68,7 @@ function generateReportNumber() {
   const mm = String(now.getUTCMonth() + 1).padStart(2, "0");
   const dd = String(now.getUTCDate()).padStart(2, "0");
   const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
-  return `EXP-${yyyy}${mm}${dd}-${suffix}`;
+  return `MSR-${yyyy}${mm}${dd}-${suffix}`;
 }
 
 export class ExpenseReportRepository {
