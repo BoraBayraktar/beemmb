@@ -62,7 +62,7 @@ export class TrendyolProductSyncService {
       throw new Error("TRENDYOL_PRODUCT_SYNC_PRODUCT_NOT_FOUND");
     }
 
-    const aggregateAvailableStock = resolveAggregateAvailableStock(target.inventoryItem?.inventoryLevels ?? [], target.stock);
+    const aggregateAvailableStock = resolveAggregateAvailableStock(target.inventoryItem?.inventoryLevels ?? [], 0);
 
     const blockingIssues: string[] = [];
     const warnings: string[] = [];
@@ -207,12 +207,13 @@ export class TrendyolProductSyncService {
                 title: target.name,
                 priceOverride: null,
                 compareAtPriceOverride: null,
-                stockOverride: aggregateAvailableStock,
                 imageUrl: null,
                 imageUrls: [],
                 salesEnabled: true,
                 attributeValues: [],
+                inventoryItem: target.inventoryItem,
               }]).map((variant) => {
+            const variantAvailableStock = resolveAggregateAvailableStock(variant.inventoryItem?.inventoryLevels ?? [], aggregateAvailableStock);
             const variantSalePrice = decimalToNumber(variant.priceOverride) || salePrice;
             const variantCompareAtPrice = decimalToNumber(variant.compareAtPriceOverride) || compareAtPrice;
             const variantListPrice = variantCompareAtPrice > 0 ? Math.max(variantCompareAtPrice, variantSalePrice) : listPrice;
@@ -228,7 +229,7 @@ export class TrendyolProductSyncService {
               productMainId: target.sku,
               brandId: target.brand!.trendyolBrandId,
               categoryId: target.category!.trendyolCategoryId,
-              quantity: Math.max(0, variant.stockOverride ?? aggregateAvailableStock),
+              quantity: Math.max(0, variantAvailableStock),
               stockCode: variant.sku,
               description: target.description,
               currencyType: "TRY",

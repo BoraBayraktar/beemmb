@@ -363,7 +363,6 @@ model Product {
   deletedUserId                String?
   sku                          String
   compareAtPrice               Decimal?                      @db.Decimal(10, 2)
-  stock                        Int                           @default(0)
   tenant                       Tenant                        @relation(fields: [tenantId], references: [id])
   orderItems                   OrderItem[]
   brand                        Brand?                        @relation(fields: [brandId], references: [id])
@@ -395,7 +394,6 @@ model Product {
   @@index([status, salesEnabled])
   @@index([preferredSalesWarehouseId])
   @@index([preferredPurchaseWarehouseId])
-  @@index([stock])
 }
 
 model ProductAttributeLink {
@@ -431,7 +429,6 @@ model ProductVariant {
   compareAtPriceOverride Decimal?                       @db.Decimal(10, 2)
   imageUrl               String?
   imageUrls              String[]                       @default([])
-  stockOverride          Int?
   salesEnabled           Boolean                        @default(true)
   isDefault              Boolean                        @default(false)
   sortOrder              Int                            @default(0)

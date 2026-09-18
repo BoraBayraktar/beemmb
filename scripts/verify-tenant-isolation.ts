@@ -60,6 +60,15 @@ async function cleanupTenant(slug: string) {
   await prisma.role.deleteMany({ where: { tenantId: tenant.id } });
   await prisma.tenantModuleEntitlement.deleteMany({ where: { tenantId: tenant.id } });
   await prisma.auditLog.deleteMany({ where: { tenantId: tenant.id } });
+  // provisionTenant artık Stok Kartı için bir "Genel Depo" otomatik oluşturuyor
+  // (bkz. inventoryService.seedDefaultWarehouse) -- temizlik bunu da (ve depo
+  // oluşturma sırasında yazılan işlem geçmişi kaydını) silmeli.
+  await prisma.inventoryHistoryEvent.deleteMany({ where: { tenantId: tenant.id } });
+  await prisma.warehouse.deleteMany({ where: { tenantId: tenant.id } });
+  // financeLedgerAccountService.seedDefaultChartOfAccounts() de provisionTenant
+  // içinde otomatik çalışıyor (Stok Kartı işiyle ilgisiz, önceden var olan bir
+  // temizlik boşluğu) -- aynı sebeple burada da temizlenmesi gerekiyor.
+  await prisma.financeLedgerAccount.deleteMany({ where: { tenantId: tenant.id } });
   await prisma.tenant.deleteMany({ where: { id: tenant.id } });
 }
 

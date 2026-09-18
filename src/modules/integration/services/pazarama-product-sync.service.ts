@@ -48,7 +48,7 @@ export class PazaramaProductSyncService {
       throw new Error("PAZARAMA_PRODUCT_SYNC_PRODUCT_NOT_FOUND");
     }
 
-    const aggregateAvailableStock = resolveAggregateAvailableStock(target.inventoryItem?.inventoryLevels ?? [], target.stock);
+    const aggregateAvailableStock = resolveAggregateAvailableStock(target.inventoryItem?.inventoryLevels ?? [], 0);
 
     const blockingIssues: string[] = [];
     const warnings: string[] = [];
@@ -170,11 +170,11 @@ export class PazaramaProductSyncService {
               sku: target.sku,
               barcode: target.barcode,
               title: target.name,
-              stockOverride: aggregateAvailableStock,
               priceOverride: target.price,
               compareAtPriceOverride: target.compareAtPrice,
               imageUrl: target.imageUrl,
               imageUrls: target.imageUrls,
+              inventoryItem: target.inventoryItem,
             },
           ]).map((variant) => {
             const salePrice = decimalToNumber(variant.priceOverride) || decimalToNumber(target.price);
@@ -182,6 +182,7 @@ export class PazaramaProductSyncService {
               ? decimalToNumber(variant.compareAtPriceOverride)
               : decimalToNumber(target.compareAtPrice);
             const listPrice = compareAtPrice > 0 ? Math.max(compareAtPrice, salePrice) : salePrice;
+            const variantAvailableStock = resolveAggregateAvailableStock(variant.inventoryItem?.inventoryLevels ?? [], aggregateAvailableStock);
 
             return {
               Name: variant.title ?? target.name,
@@ -191,7 +192,7 @@ export class PazaramaProductSyncService {
               Desi: 1,
               Code: (variant.barcode ?? target.barcode)!,
               groupCode: target.sku.slice(0, 10),
-              StockCount: Math.max(0, variant.stockOverride ?? aggregateAvailableStock),
+              StockCount: Math.max(0, variantAvailableStock),
               stockCode: variant.sku,
               VatRate: target.vatRate,
               ListPrice: listPrice,

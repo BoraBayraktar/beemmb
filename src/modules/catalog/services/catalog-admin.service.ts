@@ -431,7 +431,6 @@ function mapProduct(product: {
   price: { toNumber: () => number };
   purchasePrice: { toNumber: () => number } | null;
   compareAtPrice: { toNumber: () => number } | null;
-  stock: number;
   currency: string;
   vatRate: number;
   stockTrackingEnabled: boolean;
@@ -466,7 +465,6 @@ function mapProduct(product: {
     compareAtPriceOverride: { toNumber: () => number } | null;
     imageUrl: string | null;
     imageUrls: string[];
-    stockOverride: number | null;
     salesEnabled: boolean;
     isDefault: boolean;
     sortOrder: number;
@@ -474,6 +472,12 @@ function mapProduct(product: {
       attributeDefinitionId: string;
       value: string;
     }>;
+    inventoryItem: {
+      inventoryLevels: Array<{
+        onHand: number;
+        reserved: number;
+      }>;
+    } | null;
   }>;
   inventoryItem?: {
     averageUnitCost?: { toNumber: () => number } | null;
@@ -501,7 +505,7 @@ function mapProduct(product: {
     ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
     : null;
   const inventoryLevels = product.inventoryItem?.inventoryLevels ?? [];
-  const aggregateStock = resolveAggregateAvailableStock(inventoryLevels, product.stock);
+  const aggregateStock = resolveAggregateAvailableStock(inventoryLevels, 0);
   const averageUnitCost = product.inventoryItem?.averageUnitCost?.toNumber()
     ?? product.purchasePrice?.toNumber()
     ?? null;
@@ -579,7 +583,7 @@ function mapProduct(product: {
       compareAtPriceOverride: variant.compareAtPriceOverride?.toNumber() ?? null,
       imageUrl: variant.imageUrl,
       imageUrls: variant.imageUrls ?? [],
-      stockOverride: variant.stockOverride ?? null,
+      stockOverride: resolveAggregateAvailableStock(variant.inventoryItem?.inventoryLevels ?? [], 0),
       salesEnabled: variant.salesEnabled,
       isDefault: variant.isDefault,
       sortOrder: variant.sortOrder,
@@ -672,6 +676,36 @@ export class CatalogCategoryDeleteError extends Error {
 
 export class CatalogAdminService {
   constructor(private readonly repository: CatalogAdminRepository) {}
+
+  /**
+   * Ürün oluşturma/güncelleme varyant yazarken sadece stockOverride girdisini
+   * doğrudan bir kolona yazmakla yetinirdi; varyantın kendi InventoryItem/
+   * InventoryLevel'ı hiç oluşmuyordu. Bu, Stok Kartı'nın depo bazlı gerçek
+   * stok defterini varyant seviyesinde de tek kaynak yapmak için -- ürün
+   * seviyesinde zaten yapılan inventoryService.syncProductInventoryState
+   * çağrısının varyant karşılığı. `stockOverride` burada saklanan bir kolon
+   * DEĞİL, sadece "başlangıç/hedef stok" girdisidir -- gerçek değer
+   * InventoryLevel'da tutulur, bu yüzden DB'den geri okunan varyant satırından
+   * değil, admin'in gönderdiği ham girdiden (inputStockOverrideBySku) alınır.
+   */
+  private async syncVariantInventoryStates(args: {
+    productId: string;
+    variants: Array<{ id: string; sku: string }>;
+    inputStockOverrideBySku: Map<string, number | null>;
+    warehouseId?: string | null;
+    note: string;
+  }) {
+    for (const variant of args.variants) {
+      await inventoryService.syncProductInventoryState({
+        productId: args.productId,
+        variantId: variant.id,
+        sku: variant.sku,
+        warehouseId: args.warehouseId ?? undefined,
+        targetOnHandStock: args.inputStockOverrideBySku.get(variant.sku) ?? 0,
+        note: args.note,
+      });
+    }
+  }
 
   private async assertProductRelations(args: {
     categoryId: string | null;
@@ -1035,6 +1069,15 @@ export class CatalogAdminService {
       targetOnHandStock: parsed.stock,
       note: "Ürün yönetimi ilk stok kurulumu",
     });
+    if (created.variants.length > 0) {
+      await this.syncVariantInventoryStates({
+        productId: created.id,
+        variants: created.variants,
+        inputStockOverrideBySku: new Map((parsed.variants ?? []).map((variant) => [variant.sku, variant.stockOverride ?? null])),
+        warehouseId: parsed.preferredPurchaseWarehouseId ?? parsed.preferredSalesWarehouseId,
+        note: "Ürün yönetimi ilk varyant stok kurulumu",
+      });
+    }
     const hydrated = await this.repository.findActiveProductForAdminById(created.id);
     if (!hydrated) {
       throw new Error("Product not found");
@@ -1167,7 +1210,20 @@ export class CatalogAdminService {
       });
     }
 
-    const hydrated = parsed.stock !== undefined || parsed.sku !== undefined
+    if (parsed.variants !== undefined && updated.variants.length > 0) {
+      await this.syncVariantInventoryStates({
+        productId: updated.id,
+        variants: updated.variants,
+        inputStockOverrideBySku: new Map(parsed.variants.map((variant) => [variant.sku, variant.stockOverride ?? null])),
+        warehouseId: parsed.preferredPurchaseWarehouseId
+          ?? parsed.preferredSalesWarehouseId
+          ?? updated.preferredPurchaseWarehouseId
+          ?? updated.preferredSalesWarehouseId,
+        note: "Ürün yönetimi varyant stok güncellemesi",
+      });
+    }
+
+    const hydrated = parsed.stock !== undefined || parsed.sku !== undefined || parsed.variants !== undefined
       ? await this.repository.findActiveProductForAdminById(updated.id)
       : updated;
 
@@ -1213,6 +1269,16 @@ export class CatalogAdminService {
       attributeLinks: parsed.attributeLinks,
       variants: parsed.variants,
     });
+
+    if (updated.variants.length > 0) {
+      await this.syncVariantInventoryStates({
+        productId: updated.id,
+        variants: updated.variants,
+        inputStockOverrideBySku: new Map(parsed.variants.map((variant) => [variant.sku, variant.stockOverride ?? null])),
+        warehouseId: updated.preferredPurchaseWarehouseId ?? updated.preferredSalesWarehouseId,
+        note: "Ürün yönetimi varyant stok güncellemesi",
+      });
+    }
 
     await invalidateCatalogCache();
     return mapProduct(updated);

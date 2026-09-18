@@ -2,10 +2,7 @@ import { Prisma } from "@prisma/client";
 
 import { prisma, type PrismaTransactionClient } from "@/lib/prisma";
 import { requireTenantId } from "@/lib/tenant-context";
-import {
-  resolveAggregateAvailableStock,
-  toAvailableStock,
-} from "@/modules/inventory/services/inventory-stock-aggregate";
+import { toAvailableStock } from "@/modules/inventory/services/inventory-stock-aggregate";
 import type {
   AdminInventoryExportHistoryItem,
   AdminInventoryListPreferences,
@@ -93,7 +90,6 @@ export class InventoryRepository {
       select: {
         id: true,
         sku: true,
-        stock: true,
         purchasePrice: true,
         inventoryItem: {
           select: {
@@ -252,38 +248,6 @@ export class InventoryRepository {
     });
   }
 
-  // Product.stock is a legacy summary. Aggregate truth always comes from active inventory levels.
-  private async recalculateProductStock(tx: PrismaTransactionClient, productId: string) {
-    const activeLevels = await tx.inventoryLevel.findMany({
-      where: {
-        inventoryItem: {
-          OR: [
-            { productId },
-            { productVariant: { productId } },
-          ],
-        },
-        warehouse: {
-          isActive: true,
-        },
-      },
-      select: {
-        onHand: true,
-        reserved: true,
-      },
-    });
-
-    const availableStock = resolveAggregateAvailableStock(activeLevels, 0);
-
-    await tx.product.update({
-      where: {
-        id: productId,
-      },
-      data: {
-        stock: availableStock,
-      },
-    });
-  }
-
   async listInventoryOverview(args: { search?: string; warehouseCode?: string; productId?: string }) {
     return prisma.product.findMany({
       where: {
@@ -326,7 +290,6 @@ export class InventoryRepository {
         price: true,
         purchasePrice: true,
         compareAtPrice: true,
-        stock: true,
         preferredSalesWarehouse: {
           select: {
             code: true,
@@ -471,7 +434,6 @@ export class InventoryRepository {
         currency: true,
         price: true,
         compareAtPrice: true,
-        stock: true,
         inventoryItem: {
           select: {
             id: true,
@@ -625,7 +587,6 @@ export class InventoryRepository {
         currency: true,
         price: true,
         compareAtPrice: true,
-        stock: true,
         inventoryItem: {
           select: {
             id: true,
@@ -1452,7 +1413,7 @@ export class InventoryRepository {
       }
 
       const existingLevel = inventoryItem?.inventoryLevels.find((level) => level.warehouse.id === warehouse.id);
-      let onHandStock = existingLevel?.onHand ?? product.stock;
+      let onHandStock = existingLevel?.onHand ?? 0;
       const reservedStock = existingLevel?.reserved ?? 0;
 
       if (!existingLevel) {
@@ -1476,7 +1437,7 @@ export class InventoryRepository {
               warehouseId: warehouse.id,
               type: "INITIAL_LOAD",
               quantity: onHandStock,
-              note: "Envanter temeli Product.stock özetinden başlatıldı",
+              note: "Envanter temeli oluşturuldu",
             },
           });
         }
@@ -1551,7 +1512,6 @@ export class InventoryRepository {
         }
       }
 
-      await this.recalculateProductStock(tx, product.id);
     });
   }
 
@@ -1754,7 +1714,6 @@ export class InventoryRepository {
         },
       });
 
-      await this.recalculateProductStock(tx, product.id);
     });
   }
 
@@ -1994,7 +1953,6 @@ export class InventoryRepository {
         },
       });
 
-      await this.recalculateProductStock(tx, product.id);
     });
   }
 
@@ -2434,7 +2392,6 @@ export class InventoryRepository {
         note: stockCount.note ?? `Stock count ${stockCount.countNumber}`,
       });
 
-      const touchedInventoryItemIds = new Set<string>();
 
       for (const line of linesToApply) {
         const currentLevel = await tx.inventoryLevel.findUnique({
@@ -2468,7 +2425,6 @@ export class InventoryRepository {
 
         const countedOnHand = line.countedOnHand ?? line.systemOnHand;
         const delta = countedOnHand - line.systemOnHand;
-        touchedInventoryItemIds.add(line.inventoryItemId);
 
         await tx.inventoryLevel.update({
           where: {
@@ -2515,28 +2471,6 @@ export class InventoryRepository {
               },
             },
           });
-        }
-      }
-
-      for (const inventoryItemId of touchedInventoryItemIds) {
-        const inventoryItem = await tx.inventoryItem.findUnique({
-          where: {
-            id: inventoryItemId,
-          },
-          select: {
-            id: true,
-            productId: true,
-            productVariant: {
-              select: {
-                productId: true,
-              },
-            },
-          },
-        });
-
-        const productId = inventoryItem?.productId ?? inventoryItem?.productVariant?.productId ?? null;
-        if (productId) {
-          await this.recalculateProductStock(tx, productId);
         }
       }
 
@@ -2755,50 +2689,6 @@ export class InventoryRepository {
         { warehouse: { code: "asc" } },
         { inventoryItem: { skuSnapshot: "asc" } },
       ],
-    });
-  }
-
-  async listInventoryConsistencyRows() {
-    return prisma.product.findMany({
-      where: {
-        deleted: false,
-        stockTrackingEnabled: true,
-        productType: {
-          not: "SERVICE",
-        },
-      },
-      select: {
-        id: true,
-        name: true,
-        sku: true,
-        categoryId: true,
-        productType: true,
-        stock: true,
-        category: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        inventoryItem: {
-          select: {
-            inventoryLevels: {
-              where: {
-                warehouse: {
-                  isActive: true,
-                },
-              },
-              select: {
-                onHand: true,
-                reserved: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: {
-        updatedAt: "desc",
-      },
     });
   }
 

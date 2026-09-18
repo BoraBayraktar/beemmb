@@ -100,7 +100,6 @@ async function main() {
       name: "HB Cargo Test Product",
       description: "temp",
       price: 30,
-      stock: 2,
       imageUrl: "https://example.com/x.png",
     },
   });

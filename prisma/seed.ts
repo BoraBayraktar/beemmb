@@ -372,6 +372,22 @@ async function main() {
     },
   };
 
+  // Product.stock kolonu kaldirildi -- gercek stok InventoryLevel'da tutulur.
+  // Seed script raw Prisma kullandigi icin (servis katmanini atlar,
+  // syncProductInventoryState cagrilmaz) burada tek seferlik bir "Genel Depo"
+  // ve her urun icin InventoryItem/InventoryLevel bizzat olusturulur.
+  const seedWarehouse = await prisma.warehouse.upsert({
+    where: { tenantId_code: { tenantId: "tenant-beemmb-platform", code: "GENEL" } },
+    update: {},
+    create: {
+      tenantId: "tenant-beemmb-platform",
+      code: "GENEL",
+      name: "Genel Depo",
+      isActive: true,
+      isDefault: true,
+    },
+  });
+
   const seededProductIds: Array<{ id: string; slug: string }> = [];
 
   for (const product of products) {
@@ -383,7 +399,6 @@ async function main() {
         description: encodeDescriptionWithFeatures(product.description, product.features),
         price: product.price,
         compareAtPrice: product.compareAtPrice,
-        stock: product.stock,
         imageUrl: product.imageUrl,
         categoryId: product.categoryId,
         deleted: false,
@@ -398,10 +413,30 @@ async function main() {
         description: encodeDescriptionWithFeatures(product.description, product.features),
         price: product.price,
         compareAtPrice: product.compareAtPrice,
-        stock: product.stock,
         imageUrl: product.imageUrl,
         categoryId: product.categoryId,
         currency: "TRY",
+      },
+    });
+
+    const inventoryItem = await prisma.inventoryItem.upsert({
+      where: { productId: upserted.id },
+      update: { skuSnapshot: upserted.sku },
+      create: {
+        tenantId: "tenant-beemmb-platform",
+        productId: upserted.id,
+        skuSnapshot: upserted.sku,
+      },
+    });
+
+    await prisma.inventoryLevel.upsert({
+      where: { inventoryItemId_warehouseId: { inventoryItemId: inventoryItem.id, warehouseId: seedWarehouse.id } },
+      update: { onHand: product.stock ?? 0 },
+      create: {
+        tenantId: "tenant-beemmb-platform",
+        inventoryItemId: inventoryItem.id,
+        warehouseId: seedWarehouse.id,
+        onHand: product.stock ?? 0,
       },
     });
 

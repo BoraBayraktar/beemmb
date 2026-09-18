@@ -461,7 +461,6 @@ export class MarketplaceIntegrationRepository {
         barcode: true,
         price: true,
         compareAtPrice: true,
-        stock: true,
         status: true,
         salesEnabled: true,
         inventoryIntegrationMappings: {
@@ -523,7 +522,6 @@ export class MarketplaceIntegrationRepository {
         productType: true,
         price: true,
         compareAtPrice: true,
-        stock: true,
         currency: true,
         vatRate: true,
         inventoryItem: {
@@ -568,10 +566,24 @@ export class MarketplaceIntegrationRepository {
             title: true,
             priceOverride: true,
             compareAtPriceOverride: true,
-            stockOverride: true,
             imageUrl: true,
             imageUrls: true,
             salesEnabled: true,
+            inventoryItem: {
+              select: {
+                inventoryLevels: {
+                  where: {
+                    warehouse: {
+                      isActive: true,
+                    },
+                  },
+                  select: {
+                    onHand: true,
+                    reserved: true,
+                  },
+                },
+              },
+            },
             attributeValues: {
               select: {
                 value: true,

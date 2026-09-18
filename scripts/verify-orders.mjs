@@ -16,7 +16,6 @@ async function readAggregateStock(productId) {
       id: productId,
     },
     select: {
-      stock: true,
       inventoryItem: {
         select: {
           inventoryLevels: {
@@ -38,12 +37,9 @@ async function readAggregateStock(productId) {
   assert(product, "Product missing while reading aggregate stock");
 
   const levels = product.inventoryItem?.inventoryLevels ?? [];
-  const aggregateStock = levels.length > 0
-    ? levels.reduce((sum, level) => sum + Math.max(0, level.onHand - level.reserved), 0)
-    : product.stock;
+  const aggregateStock = levels.reduce((sum, level) => sum + Math.max(0, level.onHand - level.reserved), 0);
 
   return {
-    summaryStock: product.stock,
     aggregateStock,
   };
 }
@@ -246,9 +242,7 @@ async function main() {
     assert(typeof cancelledOrder?.lastRestockedAt === "string", "Cancelled order should include last restocked timestamp");
 
     const restockedAfterCancel = await readAggregateStock(productId);
-    assert(restockedAfterCancel.summaryStock === initialProductStock, `Cancelled order should restore summary stock to ${initialProductStock}`);
     assert(restockedAfterCancel.aggregateStock === initialProductStock, `Cancelled order should restore aggregate stock to ${initialProductStock}`);
-    assert(restockedAfterCancel.summaryStock === restockedAfterCancel.aggregateStock, "Cancelled order should keep summary and aggregate stock aligned");
 
     const refundCheckoutResponse = await fetch(`${baseUrl}/api/commerce/checkout`, {
       method: "POST",
@@ -303,9 +297,7 @@ async function main() {
     assert(typeof refundedOrder?.lastRestockedAt === "string", "Refunded order should include last restocked timestamp");
 
     const restockedAfterRefund = await readAggregateStock(productId);
-    assert(restockedAfterRefund.summaryStock === initialProductStock, `Refunded order should restore summary stock to ${initialProductStock}`);
     assert(restockedAfterRefund.aggregateStock === initialProductStock, `Refunded order should restore aggregate stock to ${initialProductStock}`);
-    assert(restockedAfterRefund.summaryStock === restockedAfterRefund.aggregateStock, "Refunded order should keep summary and aggregate stock aligned");
 
     const editorDeleteResponse = await authFetch(`/api/admin/orders/${createdOrderId}`, editorCookie, {
       method: "DELETE",

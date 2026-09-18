@@ -99,7 +99,6 @@ function mapProduct(product: {
   barcode?: string | null;
   price: { toNumber: () => number };
   compareAtPrice: { toNumber: () => number } | null;
-  stock: number;
   currency: string;
   imageUrl: string;
   imageUrls: string[];
@@ -118,7 +117,7 @@ function mapProduct(product: {
     ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
     : null;
   const inventoryLevels = product.inventoryItem?.inventoryLevels ?? [];
-  const aggregateStock = resolveAggregateAvailableStock(inventoryLevels, product.stock);
+  const aggregateStock = resolveAggregateAvailableStock(inventoryLevels, 0);
 
   return {
     id: product.id,
@@ -157,7 +156,6 @@ function mapVariant(item: {
   compareAtPriceOverride: { toNumber: () => number } | null;
   imageUrl: string | null;
   imageUrls: string[];
-  stockOverride: number | null;
   salesEnabled: boolean;
   isDefault: boolean;
   inventoryItem?: {
@@ -179,11 +177,9 @@ function mapVariant(item: {
   const price = item.priceOverride?.toNumber() ?? base.price;
   const compareAtPrice = item.compareAtPriceOverride?.toNumber() ?? base.compareAtPrice;
   const variantInventoryLevels = item.inventoryItem?.inventoryLevels ?? [];
-  // Varyantın kendi deposu tanımlıysa depo agregatı otoritedir; değilse admin'in
-  // elle girdiği stockOverride'a, o da yoksa ürünün toplam stoğuna düşülür.
-  const stock = variantInventoryLevels.length > 0
-    ? resolveAggregateAvailableStock(variantInventoryLevels, item.stockOverride ?? base.stock)
-    : item.stockOverride ?? base.stock;
+  // Varyantın kendi depo stoğu artık tek kaynak; InventoryLevel oluşmamışsa
+  // (kuramsal olarak beklenmez, bkz. syncVariantInventoryStates) 0'a düşülür.
+  const stock = resolveAggregateAvailableStock(variantInventoryLevels, 0);
   const discountRate = compareAtPrice && compareAtPrice > price
     ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
     : null;

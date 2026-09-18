@@ -10,8 +10,9 @@ export function resolveAggregateAvailabilityFromLevels(
   legacySummaryStock: number,
 ) {
   if (inventoryLevels.length === 0) {
-    // Depoya hic InventoryLevel yazilmamissa (ornegin depo hic tanimlanmamis bir tenant'ta)
-    // Product.stock/ProductVariant.stockOverride'a legacy fallback olarak dusulur.
+    // Depoya hic InventoryLevel yazilmamissa (kuramsal olarak beklenmez, tum
+    // urun/varyantlar create/update sirasinda senkronize edilir) caller'in
+    // verdigi varsayilan degere (genelde 0) dusulur.
     return {
       onHandStock: legacySummaryStock,
       reservedStock: 0,

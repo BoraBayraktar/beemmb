@@ -509,10 +509,10 @@ export class CommerceService {
         return mapQuoteLine({ line, product: undefined });
       }
 
-      const variantCap = sellable.variantStockOverride;
-      const availableStock = typeof variantCap === "number"
-        ? Math.max(0, Math.min(availability.availableStock, variantCap))
-        : availability.availableStock;
+      // availability.availableStock zaten varyantın kendi InventoryLevel'ından
+      // (getProductAvailability, variant verildiğinde variant'ın InventoryItem'ını
+      // önceliklendirir) geliyor -- ayrıca bir stockOverride tavanı gerekmiyor.
+      const availableStock = availability.availableStock;
 
       return mapQuoteLine({
         line,

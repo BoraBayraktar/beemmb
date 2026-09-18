@@ -63,7 +63,6 @@ async function main() {
       name: "Shipment Sync Test Product",
       description: "temp",
       price: 40,
-      stock: 3,
       imageUrl: "https://example.com/x.png",
     },
   });

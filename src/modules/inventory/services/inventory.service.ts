@@ -18,7 +18,6 @@ import type {
   AdminExternalStockEventMonitoring,
   AdminInventoryAlertItem,
   AdminInventoryAlertSummary,
-  AdminInventoryConsistencyReportItem,
   AdminInventoryExportHistoryItem,
   AdminInventoryIntegrationSummary,
   AdminInventoryIntegrationMappingItem,
@@ -505,9 +504,9 @@ function buildInventoryOverviewItems(
           unitPrice: target.unitPrice,
           purchasePrice: target.purchasePrice,
           compareAtPrice: target.compareAtPrice,
-          onHandStock: target.variantId ? 0 : product.stock,
+          onHandStock: 0,
           reservedStock: 0,
-          availableStock: target.variantId ? 0 : product.stock,
+          availableStock: 0,
           reorderPoint: 0,
           safetyStock: 0,
           warehouseCode: null,
@@ -521,7 +520,7 @@ function buildInventoryOverviewItems(
           recentMovements: includeRecentMovements
             ? inventoryMovements.map((movement) => mapMovementPreview(movement))
             : [],
-          stockStatus: toStockStatus(target.variantId ? 0 : product.stock),
+          stockStatus: toStockStatus(0),
           lastMovementAt: inventoryMovements[0]?.createdAt?.toISOString() ?? null,
         });
         continue;
@@ -715,32 +714,6 @@ function inferInventoryTransactionSource(item: {
     externalReference: null,
     externalSystemStatus: null,
     counterpartyName: null,
-  };
-}
-
-function mapInventoryConsistencyItem(item: {
-  id: string;
-  name: string;
-  sku: string;
-  stock: number;
-  inventoryItem?: {
-    inventoryLevels: Array<{
-      onHand: number;
-      reserved: number;
-    }>;
-  } | null;
-}): AdminInventoryConsistencyReportItem {
-  const inventoryLevels = item.inventoryItem?.inventoryLevels ?? [];
-  const aggregateAvailableStock = inventoryLevels.reduce((sum, level) => sum + toAvailableStock(level.onHand, level.reserved), 0);
-
-  return {
-    productId: item.id,
-    productName: item.name,
-    sku: item.sku,
-    legacyStock: item.stock,
-    aggregateAvailableStock,
-    difference: aggregateAvailableStock - item.stock,
-    hasInventoryLevels: inventoryLevels.length > 0,
   };
 }
 
@@ -1670,13 +1643,12 @@ export class InventoryService {
     previousPeriodStart.setUTCDate(previousPeriodStart.getUTCDate() - parsed.periodDays);
     previousPeriodStart.setUTCHours(0, 0, 0, 0);
 
-    const [levels, movements, consistencyRows] = await Promise.all([
+    const [levels, movements] = await Promise.all([
       this.repository.listInventoryReportLevels(),
       this.repository.listInventoryReportMovements({
         startDate: parsed.comparePreviousPeriod ? previousPeriodStart : currentPeriodStart,
         endDate: currentPeriodEnd,
       }),
-      this.repository.listInventoryConsistencyRows(),
     ]);
     const levelsWithProducts = levels.filter((level) => level.inventoryItem.product !== null);
     const movementsWithProducts = movements.filter((movement) => movement.inventoryItem.product !== null);
@@ -1746,7 +1718,6 @@ export class InventoryService {
     });
 
     const filteredInventoryItemIds = new Set(filteredLevels.map((level) => level.inventoryItemId));
-    const filteredProductIds = new Set(filteredLevels.map((level) => level.inventoryItem.product!.id));
     const filteredWarehouseCodes = new Set(filteredLevels.map((level) => level.warehouse.code));
 
     const filteredMovements = movementsWithProducts.filter((movement) => {
@@ -1783,29 +1754,6 @@ export class InventoryService {
       }
 
       if (filteredWarehouseCodes.size > 0 && !filteredWarehouseCodes.has(movement.warehouse.code)) {
-        return false;
-      }
-
-      return true;
-    });
-
-    const filteredConsistencyRows = consistencyRows.filter((item) => {
-      if (
-        filteredLevels.length === 0
-        && (parsed.warehouseCode || parsed.stockStatus || parsed.reservationStatus)
-      ) {
-        return false;
-      }
-
-      if (parsed.categoryId && item.categoryId !== parsed.categoryId) {
-        return false;
-      }
-
-      if (parsed.productType && item.productType !== parsed.productType) {
-        return false;
-      }
-
-      if (filteredProductIds.size > 0 && !filteredProductIds.has(item.id)) {
         return false;
       }
 
@@ -2007,18 +1955,6 @@ export class InventoryService {
       });
     }
 
-    const consistency = filteredConsistencyRows
-      .map(mapInventoryConsistencyItem)
-      .filter((item) => !item.hasInventoryLevels || item.difference !== 0)
-      .sort((left, right) => {
-        if (left.hasInventoryLevels !== right.hasInventoryLevels) {
-          return left.hasInventoryLevels ? 1 : -1;
-        }
-
-        return Math.abs(right.difference) - Math.abs(left.difference);
-      })
-      .slice(0, 8);
-
     const velocity = Array.from(productAnalyticsMap.values())
       .filter((item) => item.availableUnits > 0 || item.outboundUnits30d > 0)
       .map((item) => {
@@ -2127,16 +2063,11 @@ export class InventoryService {
         warehouseCount: warehouseMap.size,
         lowStockRowCount,
         outOfStockRowCount,
-        legacyStockFallbackCount: filteredConsistencyRows.filter((item) => (item.inventoryItem?.inventoryLevels?.length ?? 0) === 0).length,
-        stockMismatchCount: filteredConsistencyRows.filter((item) => {
-          const inventoryLevels = item.inventoryItem?.inventoryLevels ?? [];
-          if (inventoryLevels.length === 0) {
-            return false;
-          }
-
-          const aggregateAvailableStock = inventoryLevels.reduce((sum, level) => sum + toAvailableStock(level.onHand, level.reserved), 0);
-          return aggregateAvailableStock !== item.stock;
-        }).length,
+        // Product.stock/ProductVariant.stockOverride kaldırıldı; "legacy vs aggregate"
+        // tutarsızlığı artık yapısal olarak mümkün değil, bu yüzden bu iki metrik
+        // her zaman 0 döner (UI'daki KPI kartları bilinçli olarak korunuyor).
+        legacyStockFallbackCount: 0,
+        stockMismatchCount: 0,
       },
       periodDays: parsed.periodDays,
       comparison: {
@@ -2164,7 +2095,9 @@ export class InventoryService {
       velocity,
       slowMoving,
       abcSegments,
-      consistency,
+      // bkz. yukarıdaki legacyStockFallbackCount/stockMismatchCount notu -- aynı
+      // sebeple bu liste artık her zaman boştur.
+      consistency: [],
     };
 
     await redisCache.set(cacheKey, result, 300);
@@ -2356,7 +2289,7 @@ export class InventoryService {
       }
 
       const inventoryLevels = target.variant?.inventoryItem?.inventoryLevels ?? target.product.inventoryItem?.inventoryLevels ?? [];
-      const availability = resolveAggregateAvailabilityFromLevels(inventoryLevels, target.product.stock);
+      const availability = resolveAggregateAvailabilityFromLevels(inventoryLevels, 0);
       const defaultWarehouse = inventoryLevels.find((level) => level.warehouse.isDefault) ?? inventoryLevels[0];
 
       return [{

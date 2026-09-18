@@ -66,13 +66,17 @@ for (const file of [
 }
 
 // 4) commerce.repository.ts / inventory.repository.ts artık paylaşılan aritmetiği kullanıyor.
+// (Faz C'de Product.stock kolonu kaldırıldığı için mirror-yazan
+// recalculateProductStock*/sumAvailableStock fonksiyonları da kaldırıldı;
+// geriye kalan tek paylaşılan çağrı toAvailableStock.)
 for (const file of [
   "src/modules/commerce/repositories/commerce.repository.ts",
   "src/modules/inventory/repositories/inventory.repository.ts",
 ]) {
   const content = read(file);
   assertIncludes(content, "inventory-stock-aggregate", `${file} merkezi stok-aggregate yardımcısını import etmiyor.`);
-  assertIncludes(content, "resolveAggregateAvailableStock(", `${file} artık ortak resolveAggregateAvailableStock'u çağırmıyor.`);
+  assertIncludes(content, "toAvailableStock(", `${file} artık ortak toAvailableStock'u çağırmıyor.`);
+  assertNotIncludes(content, "stock: availableStock", `${file} hâlâ kaldırılmış Product.stock mirror alanına yazıyor.`);
 }
 
 // 5) Yeni tenant provisioning'de varsayılan depo otomatik açılıyor.
@@ -90,4 +94,15 @@ const catalogRepository = read("src/modules/catalog/repositories/catalog.reposit
 const variantsSection = catalogRepository.slice(catalogRepository.indexOf("variants: {"), catalogRepository.indexOf("variants: {") + 1200);
 assertIncludes(variantsSection, "inventoryItem", "findBySlug varyant include'unda inventoryItem eksik.");
 
-console.log("Stok Kartı birleştirme (Faz A) doğrulamaları başarıyla geçti.");
+// 7) Faz C: Product.stock/ProductVariant.stockOverride kolonları şemadan kaldırıldı.
+const schema = read("prisma/schema.prisma");
+const productModelSection = schema.slice(schema.indexOf("model Product {"), schema.indexOf("model ProductAttributeLink {"));
+assertNotIncludes(productModelSection, "\n  stock ", "prisma/schema.prisma Product modelinde hâlâ stock kolonu var.");
+const variantModelSection = schema.slice(schema.indexOf("model ProductVariant {"), schema.indexOf("model ProductVariantAttributeValue {"));
+assertNotIncludes(variantModelSection, "stockOverride", "prisma/schema.prisma ProductVariant modelinde hâlâ stockOverride kolonu var.");
+
+const catalogAdminRepo = read("src/modules/catalog/repositories/catalog-admin.repository.ts");
+assertNotIncludes(catalogAdminRepo, "stock: 0,", "catalog-admin.repository.ts hâlâ kaldırılmış stock kolonuna yazıyor.");
+assertNotIncludes(catalogAdminRepo, "stockOverride: variant.stockOverride ?? null,", "catalog-admin.repository.ts hâlâ kaldırılmış stockOverride kolonuna yazıyor.");
+
+console.log("Stok Kartı birleştirme (Faz A-C) doğrulamaları başarıyla geçti.");

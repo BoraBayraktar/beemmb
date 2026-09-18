@@ -353,6 +353,21 @@ export class CatalogAdminRepository {
                 attributeDefinition: true,
               },
             },
+            inventoryItem: {
+              select: {
+                inventoryLevels: {
+                  where: {
+                    warehouse: {
+                      isActive: true,
+                    },
+                  },
+                  select: {
+                    onHand: true,
+                    reserved: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
@@ -464,7 +479,6 @@ export class CatalogAdminRepository {
         price: input.price,
         purchasePrice: input.purchasePrice ?? null,
         compareAtPrice: input.compareAtPrice ?? null,
-        stock: 0,
         currency: input.currency ?? "TRY",
         vatRate: input.vatRate ?? 20,
         stockTrackingEnabled: input.stockTrackingEnabled ?? true,
@@ -503,7 +517,6 @@ export class CatalogAdminRepository {
                 compareAtPriceOverride: variant.compareAtPriceOverride ?? null,
                 imageUrl: variant.imageUrl ?? null,
                 imageUrls: variant.imageUrls ?? [],
-                stockOverride: variant.stockOverride ?? null,
                 salesEnabled: variant.salesEnabled ?? true,
                 isDefault: variant.isDefault ?? index === 0,
                 sortOrder: variant.sortOrder ?? index,
@@ -557,6 +570,21 @@ export class CatalogAdminRepository {
             attributeValues: {
               include: {
                 attributeDefinition: true,
+              },
+            },
+            inventoryItem: {
+              select: {
+                inventoryLevels: {
+                  where: {
+                    warehouse: {
+                      isActive: true,
+                    },
+                  },
+                  select: {
+                    onHand: true,
+                    reserved: true,
+                  },
+                },
               },
             },
           },
@@ -625,7 +653,6 @@ export class CatalogAdminRepository {
                   compareAtPriceOverride: variant.compareAtPriceOverride ?? null,
                   imageUrl: variant.imageUrl ?? null,
                   imageUrls: variant.imageUrls ?? [],
-                  stockOverride: variant.stockOverride ?? null,
                   salesEnabled: variant.salesEnabled ?? true,
                   isDefault: variant.isDefault ?? index === 0,
                   sortOrder: variant.sortOrder ?? index,
@@ -680,6 +707,21 @@ export class CatalogAdminRepository {
             attributeValues: {
               include: {
                 attributeDefinition: true,
+              },
+            },
+            inventoryItem: {
+              select: {
+                inventoryLevels: {
+                  where: {
+                    warehouse: {
+                      isActive: true,
+                    },
+                  },
+                  select: {
+                    onHand: true,
+                    reserved: true,
+                  },
+                },
               },
             },
           },
@@ -756,7 +798,6 @@ export class CatalogAdminRepository {
                 compareAtPriceOverride: variant.compareAtPriceOverride ?? null,
                 imageUrl: variant.imageUrl ?? null,
                 imageUrls: variant.imageUrls ?? [],
-                stockOverride: variant.stockOverride ?? null,
                 salesEnabled: variant.salesEnabled ?? true,
                 isDefault: variant.isDefault ?? index === 0,
                 sortOrder: variant.sortOrder ?? index,
@@ -796,7 +837,6 @@ export class CatalogAdminRepository {
               compareAtPriceOverride: variant.compareAtPriceOverride ?? null,
               imageUrl: variant.imageUrl ?? null,
               imageUrls: variant.imageUrls ?? [],
-              stockOverride: variant.stockOverride ?? null,
               salesEnabled: variant.salesEnabled ?? true,
               isDefault: variant.isDefault ?? index === 0,
               sortOrder: variant.sortOrder ?? index,
@@ -864,6 +904,21 @@ export class CatalogAdminRepository {
             attributeValues: {
               include: {
                 attributeDefinition: true,
+              },
+            },
+            inventoryItem: {
+              select: {
+                inventoryLevels: {
+                  where: {
+                    warehouse: {
+                      isActive: true,
+                    },
+                  },
+                  select: {
+                    onHand: true,
+                    reserved: true,
+                  },
+                },
               },
             },
           },

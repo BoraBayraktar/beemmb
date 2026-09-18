@@ -21,7 +21,6 @@ async function createTestProduct(unique: number) {
       name: "Marketplace Shipment Test Product",
       description: "temp",
       price: 60,
-      stock: 5,
       imageUrl: "https://example.com/x.png",
     },
   });

@@ -15,7 +15,6 @@ async function readAggregateStock(productId) {
       id: productId,
     },
     select: {
-      stock: true,
       inventoryItem: {
         select: {
           inventoryLevels: {
@@ -37,65 +36,58 @@ async function readAggregateStock(productId) {
   assert(product, "Product missing while reading aggregate stock");
 
   const levels = product.inventoryItem?.inventoryLevels ?? [];
-  const aggregateStock = levels.length > 0
-    ? levels.reduce((sum, level) => sum + Math.max(0, level.onHand - level.reserved), 0)
-    : product.stock;
+  const aggregateStock = levels.reduce((sum, level) => sum + Math.max(0, level.onHand - level.reserved), 0);
 
   return {
-    summaryStock: product.stock,
     aggregateStock,
   };
 }
 
 async function main() {
-  let product = await prisma.product.findFirst({
-    where: {
-      deleted: false,
-      stock: {
-        gte: 2,
+  // Product.stock kolonu kaldırıldı; artık her zaman izole bir test ürünü
+  // oluşturup InventoryLevel'ı bizzat seed ediyoruz (mevcut bir ürünü ödünç
+  // almak yerine -- daha basit ve yan etkisiz).
+  const warehouse = await prisma.warehouse.findFirst({
+    where: { tenantId: "tenant-beemmb-platform", isActive: true },
+    orderBy: [{ isDefault: "desc" }, { code: "asc" }],
+    select: { id: true },
+  });
+  assert(warehouse, "Expected at least one active warehouse for tenant-beemmb-platform");
+
+  const unique = Date.now();
+  const initialStock = 5;
+  const product = await prisma.product.create({
+    data: {
+      tenantId: "tenant-beemmb-platform",
+      slug: `checkout-verify-${unique}`,
+      sku: `checkout-verify-sku-${unique}`,
+      name: "Checkout Verify Product",
+      description: "Temporary product for checkout verification",
+      price: 149.9,
+      compareAtPrice: 179.9,
+      currency: "TRY",
+      imageUrl: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1200&q=80",
+      inventoryItem: {
+        create: {
+          tenantId: "tenant-beemmb-platform",
+          skuSnapshot: `checkout-verify-sku-${unique}`,
+          inventoryLevels: {
+            create: {
+              tenantId: "tenant-beemmb-platform",
+              warehouseId: warehouse.id,
+              onHand: initialStock,
+            },
+          },
+        },
       },
     },
     select: {
       id: true,
-      stock: true,
       price: true,
       currency: true,
     },
-    orderBy: {
-      updatedAt: "desc",
-    },
   });
 
-  let createdProductId = null;
-
-  if (!product) {
-    const unique = Date.now();
-    const created = await prisma.product.create({
-      data: {
-        tenantId: "tenant-beemmb-platform",
-        slug: `checkout-verify-${unique}`,
-        sku: `checkout-verify-sku-${unique}`,
-        name: "Checkout Verify Product",
-        description: "Temporary product for checkout verification",
-        price: 149.9,
-        compareAtPrice: 179.9,
-        stock: 5,
-        currency: "TRY",
-        imageUrl: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1200&q=80",
-      },
-      select: {
-        id: true,
-        stock: true,
-        price: true,
-        currency: true,
-      },
-    });
-
-    product = created;
-    createdProductId = created.id;
-  }
-
-  const initialStock = product.stock;
   let createdOrderNumber = null;
 
   try {
@@ -150,9 +142,7 @@ async function main() {
     assert(savedOrder.paymentStatusHistory.length >= 1, "Checkout should persist payment status history");
 
     const afterCheckout = await readAggregateStock(product.id);
-    assert(afterCheckout.summaryStock === initialStock - 1, "Checkout should sync summary stock by 1");
     assert(afterCheckout.aggregateStock === initialStock - 1, "Checkout should decrement aggregate stock by 1");
-    assert(afterCheckout.summaryStock === afterCheckout.aggregateStock, "Checkout should keep summary and aggregate stock aligned");
 
     const outOfStockResponse = await fetch(`${baseUrl}/api/commerce/checkout`, {
       method: "POST",
@@ -186,14 +176,9 @@ async function main() {
         id: product.id,
       },
       data: {
-        stock: initialStock,
-        ...(createdProductId
-          ? {
-              deleted: true,
-              deletedDate: new Date(),
-              deletedUserId: "integration-test-cleanup",
-            }
-          : {}),
+        deleted: true,
+        deletedDate: new Date(),
+        deletedUserId: "integration-test-cleanup",
       },
     });
   }

@@ -40,7 +40,12 @@ function buildWhere(args: {
   minPrice?: number;
   maxPrice?: number;
 }) {
-  const { search, categoryIds, inStockOnly, outOfStockOnly, lowStockOnly, newOnly, discountedOnly, minPrice, maxPrice } = args;
+  // inStockOnly/outOfStockOnly/lowStockOnly burada bilinçli olarak yok sayılır:
+  // Product.stock kolonu kaldırıldığından DB düzeyinde filtrelenemez; gerçek
+  // stok InventoryLevel'dan agregat olarak hesaplanır ve bu filtreler
+  // catalog.service.ts'de aggregate üzerinden bellek içi uygulanır (bkz.
+  // productMatchesStockFilters / hasAggregateStockFilters).
+  const { search, categoryIds, newOnly, discountedOnly, minPrice, maxPrice } = args;
   const createdAtGte = newOnly ? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) : undefined;
 
   return {
@@ -59,28 +64,6 @@ function buildWhere(args: {
       ? {
           categoryId: {
             in: categoryIds,
-          },
-        }
-      : {}),
-    ...(inStockOnly
-      ? {
-          stock: {
-            gt: 0,
-          },
-        }
-      : {}),
-    ...(outOfStockOnly
-      ? {
-          stock: {
-            lte: 0,
-          },
-        }
-      : {}),
-    ...(lowStockOnly
-      ? {
-          stock: {
-            gt: 0,
-            lte: 5,
           },
         }
       : {}),

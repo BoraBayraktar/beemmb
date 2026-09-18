@@ -3,10 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma, type PrismaTransactionClient } from "@/lib/prisma";
 import { requireTenantId } from "@/lib/tenant-context";
 import type { AdminOrderListQuery, CommerceLineQuote } from "@/modules/commerce/contracts/commerce.contract";
-import {
-  resolveAggregateAvailableStock,
-  toAvailableStock,
-} from "@/modules/inventory/services/inventory-stock-aggregate";
+import { toAvailableStock } from "@/modules/inventory/services/inventory-stock-aggregate";
 
 export class CommerceRepository {
   private readonly serializableRetryCount = 3;
@@ -37,11 +34,6 @@ export class CommerceRepository {
     }
 
     throw new Error("SERIALIZABLE_TRANSACTION_FAILED");
-  }
-
-  private sumAvailableStock(levels: Array<{ onHand: number; reserved: number }>, fallbackStock: number) {
-    // Product.stock sipariş otoritesi değildir; sadece aggregate yoksa legacy summary fallback'tir.
-    return resolveAggregateAvailableStock(levels, fallbackStock);
   }
 
   private async getOrCreateDefaultWarehouse(tx: PrismaTransactionClient) {
@@ -92,7 +84,6 @@ export class CommerceRepository {
       select: {
         id: true,
         sku: true,
-        stock: true,
         inventoryItem: {
           select: {
             id: true,
@@ -160,33 +151,22 @@ export class CommerceRepository {
     })) ?? [];
 
     if (levels.length === 0) {
-      // Legacy summary değerinden tek seferlik aggregate bootstrap yapılır; sonrasında otorite inventory level'dır.
+      // Buraya normalde hiç girilmez -- her ürün/varyant artık syncProductInventoryState
+      // (ürün/varyant kaydı) ve backfill-inventory-levels script'i sayesinde en az bir
+      // InventoryLevel ile oluşturuluyor. Salt savunma amaçlı: hiç level yoksa 0 ile başlatılır.
       await tx.inventoryLevel.create({
         data: {
           tenantId,
           inventoryItemId,
           warehouseId: defaultWarehouse.id,
-          onHand: product.stock,
+          onHand: 0,
           reserved: 0,
         },
       });
 
-      if (product.stock > 0) {
-        await tx.inventoryMovement.create({
-          data: {
-            tenantId,
-            inventoryItemId,
-            warehouseId: defaultWarehouse.id,
-            type: "INITIAL_LOAD",
-            quantity: product.stock,
-            note: "Sipariş akışında legacy stok özetinden envanter başlatıldı",
-          },
-        });
-      }
-
       levels = [{
         warehouseId: defaultWarehouse.id,
-        onHand: product.stock,
+        onHand: 0,
         reserved: 0,
         isDefault: true,
         warehouseCode: "MAIN",
@@ -208,36 +188,6 @@ export class CommerceRepository {
       inventoryItemId,
       levels,
     };
-  }
-
-  private async recalculateProductStockSummary(
-    tx: PrismaTransactionClient,
-    productId: string,
-    inventoryItemId: string,
-  ) {
-    const levels = await tx.inventoryLevel.findMany({
-      where: {
-        inventoryItemId,
-        warehouse: {
-          isActive: true,
-        },
-      },
-      select: {
-        onHand: true,
-        reserved: true,
-      },
-    });
-
-    const availableStock = resolveAggregateAvailableStock(levels, 0);
-
-    await tx.product.update({
-      where: {
-        id: productId,
-      },
-      data: {
-        stock: availableStock,
-      },
-    });
   }
 
   private async getActiveLevelSnapshot(
@@ -276,7 +226,6 @@ export class CommerceRepository {
         currency: true,
         price: true,
         compareAtPrice: true,
-        stock: true,
       },
     });
   }
@@ -336,7 +285,6 @@ export class CommerceRepository {
         variantSku: variant?.sku ?? null,
         variantTitle: variant?.title ?? null,
         variantOptionSummary: variant?.optionSummary ?? null,
-        variantStockOverride: variant?.stockOverride ?? null,
       }];
     });
   }
@@ -615,14 +563,6 @@ export class CommerceRepository {
           },
         });
 
-      }
-      const touchedProductStates = new Map<string, string>();
-      for (const hold of holds) {
-        touchedProductStates.set(hold.productId, hold.inventoryItemId);
-      }
-
-      for (const [productId, inventoryItemId] of touchedProductStates.entries()) {
-        await this.recalculateProductStockSummary(tx, productId, inventoryItemId);
       }
 
       return {
@@ -1232,29 +1172,6 @@ export class CommerceRepository {
         });
       }
 
-      const restockedProductIds = new Set(order.items.map((item) => item.productId).filter((productId): productId is string => productId != null));
-
-      for (const productId of restockedProductIds) {
-        const product = await tx.product.findFirst({
-          where: {
-            id: productId,
-            deleted: false,
-          },
-          select: {
-            inventoryItem: {
-              select: {
-                id: true,
-              },
-            },
-          },
-        });
-
-        if (!product?.inventoryItem?.id) {
-          continue;
-        }
-
-        await this.recalculateProductStockSummary(tx, productId, product.inventoryItem.id);
-      }
     });
   }
 

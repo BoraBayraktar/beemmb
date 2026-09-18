@@ -54,7 +54,8 @@ function resolveAvailableQuantity(target: NonNullable<Awaited<ReturnType<Marketp
     : levels;
 
   if (scopedLevels.length === 0) {
-    return Math.max(0, target.stock);
+    // InventoryLevel hiç oluşmamışsa (kuramsal, bkz. syncVariantInventoryStates) 0 döner.
+    return 0;
   }
 
   return Math.max(0, scopedLevels.reduce((total, level) => total + level.onHand - level.reserved, 0));
