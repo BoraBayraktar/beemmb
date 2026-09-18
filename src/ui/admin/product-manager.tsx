@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Maximize2, Minimize2, MoreHorizontal, Plus, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -12,9 +12,22 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { Locale } from "@/lib/i18n";
+import type { AdminSupplierItem } from "@/modules/catalog/contracts/catalog-admin.contract";
 import type { ProductFeature } from "@/modules/catalog/contracts/catalog.contract";
 import type { AdminInventoryItem, AdminWarehouseItem } from "@/modules/inventory/contracts/inventory.contract";
-import { InventoryDrawerDistributionPanel } from "@/ui/admin/inventory-manager-panels";
+import {
+  InventoryDrawerDistributionPanel,
+  InventoryDrawerOperationPanel,
+} from "@/ui/admin/inventory-manager-panels";
+import {
+  formatDate as formatInventoryDrawerDate,
+  formatInventoryNote,
+  formatSourceDocument,
+  getCurrentDateTimeLocalValue,
+  movementTypeClass,
+  subscribeNoop,
+  type DrawerMode as InventoryOperationDrawerMode,
+} from "@/ui/admin/inventory-manager.shared";
 
 const checkboxClassName = "h-4 w-4 rounded border-[color:var(--color-border)] text-[color:var(--color-text)] focus:ring-2 focus:ring-[color:var(--color-border)]";
 
@@ -28,16 +41,6 @@ type Brand = {
   id: string;
   slug: string;
   name: string;
-  isActive: boolean;
-};
-
-type Supplier = {
-  id: string;
-  slug: string;
-  name: string;
-  taxNumber: string | null;
-  email: string | null;
-  phone: string | null;
   isActive: boolean;
 };
 
@@ -343,6 +346,55 @@ type Labels = {
   createEntity: string;
   loading: string;
   notSpecified: string;
+  inventoryAdjustStock: string;
+  inventoryAdjustmentNote: string;
+  inventoryApplyAdjustment: string;
+  inventoryApplyTransfer: string;
+  inventoryAvailableStock: string;
+  inventoryDrawerInfo: string;
+  inventoryMovementAllTime: string;
+  inventoryMovementCounterpartyWarehouse: string;
+  inventoryMovementDateRange: string;
+  inventoryMovementLast24Hours: string;
+  inventoryMovementLast30Days: string;
+  inventoryMovementLast7Days: string;
+  inventoryMovementQuantityLabel: string;
+  inventoryMovementReference: string;
+  inventoryNoRecentMovements: string;
+  inventoryOnHandStock: string;
+  inventoryRecentMovements: string;
+  inventoryReorderPoint: string;
+  inventoryReservedStock: string;
+  inventorySafetyStock: string;
+  inventoryStockIn: string;
+  inventoryStockOut: string;
+  inventoryTargetOnHandStock: string;
+  inventoryTargetReorderPoint: string;
+  inventoryTargetSafetyStock: string;
+  inventoryTransferNote: string;
+  inventoryTransferQuantity: string;
+  inventoryTransferStock: string;
+  inventoryTransferTargetWarehouse: string;
+  inventoryViewAllHistory: string;
+  inventoryMovementInitialLoad: string;
+  inventoryMovementManualAdjustment: string;
+  inventoryMovementPurchaseReceipt: string;
+  inventoryMovementTransferOut: string;
+  inventoryMovementTransferIn: string;
+  inventoryMovementReservationHold: string;
+  inventoryMovementReservationRelease: string;
+  inventoryMovementOrderCommit: string;
+  inventoryMovementOrderCancelRestock: string;
+  inventoryMovementReturnRestock: string;
+  inventoryMovementDamageWriteOff: string;
+  inventoryAdjustmentSaved: string;
+  inventoryAdjustmentFailed: string;
+  inventoryTransferSaved: string;
+  inventoryTransferFailed: string;
+  inventoryStockInSaved: string;
+  inventoryStockInFailed: string;
+  inventoryStockOutSaved: string;
+  inventoryStockOutFailed: string;
 };
 
 type ProductManagerProps = {
@@ -364,7 +416,7 @@ type ProductManagerProps = {
   };
   categories: Category[];
   brands: Brand[];
-  suppliers: Supplier[];
+  suppliers: AdminSupplierItem[];
   attributeDefinitions: AttributeDefinition[];
   warehouses: AdminWarehouseItem[];
   canDelete: boolean;
@@ -1031,6 +1083,29 @@ function differenceInDays(value: string) {
   return Math.max(0, Math.floor(diff / (24 * 60 * 60 * 1000)));
 }
 
+function movementTypeLabel(movementType: string | null, labels: Labels) {
+  if (!movementType) {
+    return labels.notSpecified;
+  }
+
+  const map: Record<string, string> = {
+    INITIAL_LOAD: labels.inventoryMovementInitialLoad,
+    MANUAL_ADJUSTMENT: labels.inventoryMovementManualAdjustment,
+    PURCHASE_RECEIPT: labels.inventoryMovementPurchaseReceipt,
+    COUNT_ADJUSTMENT: labels.inventoryAdjustStock,
+    TRANSFER_OUT: labels.inventoryMovementTransferOut,
+    TRANSFER_IN: labels.inventoryMovementTransferIn,
+    RESERVATION_HOLD: labels.inventoryMovementReservationHold,
+    RESERVATION_RELEASE: labels.inventoryMovementReservationRelease,
+    ORDER_COMMIT: labels.inventoryMovementOrderCommit,
+    ORDER_CANCEL_RESTOCK: labels.inventoryMovementOrderCancelRestock,
+    RETURN_RESTOCK: labels.inventoryMovementReturnRestock,
+    DAMAGE_WRITE_OFF: labels.inventoryMovementDamageWriteOff,
+  };
+
+  return map[movementType] ?? labels.notSpecified;
+}
+
 export function ProductManager({
   labels,
   locale,
@@ -1053,6 +1128,31 @@ export function ProductManager({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [activeEditTab, setActiveEditTab] = useState<EditDrawerTab>("general");
   const [inventoryOverviewStatus, setInventoryOverviewStatus] = useState<InventoryOverviewStatus>(null);
+  const [operationTargetItem, setOperationTargetItem] = useState<AdminInventoryItem | null>(null);
+  const [operationMode, setOperationMode] = useState<InventoryOperationDrawerMode>("view");
+  const [operationPendingRowKey, setOperationPendingRowKey] = useState<string | null>(null);
+  const [operationFeedback, setOperationFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [opTargetOnHand, setOpTargetOnHand] = useState("");
+  const [opReorderPoint, setOpReorderPoint] = useState("");
+  const [opSafetyStock, setOpSafetyStock] = useState("");
+  const [opNote, setOpNote] = useState("");
+  const [opMovementQuantity, setOpMovementQuantity] = useState("");
+  const [opTransferWarehouseCode, setOpTransferWarehouseCode] = useState("");
+  const [opTransferQuantity, setOpTransferQuantity] = useState("");
+  const [opTransferNote, setOpTransferNote] = useState("");
+  const [opPurchaseDocumentNumber, setOpPurchaseDocumentNumber] = useState("");
+  const [opPurchaseSupplierId, setOpPurchaseSupplierId] = useState("");
+  const [opPurchaseDocumentDate, setOpPurchaseDocumentDate] = useState("");
+  const [opPurchaseDocumentType, setOpPurchaseDocumentType] = useState<"PURCHASE_DOCUMENT" | "DELIVERY_NOTE" | "E_INVOICE" | "E_DISPATCH">("PURCHASE_DOCUMENT");
+  const [opPurchaseReference, setOpPurchaseReference] = useState("");
+  const [opPurchaseExternalStatus, setOpPurchaseExternalStatus] = useState<"NOT_SENT" | "QUEUED" | "SENT" | "FAILED">("NOT_SENT");
+  const [opPurchaseUnitCost, setOpPurchaseUnitCost] = useState("");
+  const [opSelectedVariantId, setOpSelectedVariantId] = useState("");
+  const defaultDateTimeLocal = useSyncExternalStore(
+    subscribeNoop,
+    getCurrentDateTimeLocalValue,
+    () => "",
+  );
   const [variantDrawerProduct, setVariantDrawerProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState(initialQuery.search);
   const [categoryFilter, setCategoryFilter] = useState(initialQuery.categoryId);
@@ -1088,7 +1188,7 @@ export function ProductManager({
   const [hepsiburadaProductSyncBusyId, setHepsiburadaProductSyncBusyId] = useState<string | null>(null);
   const [hepsiburadaProductSyncTracking, setHepsiburadaProductSyncTracking] = useState<HepsiburadaProductSyncTracking | null>(null);
   const [brandOptions, setBrandOptions] = useState<Brand[]>(brands);
-  const [supplierOptions, setSupplierOptions] = useState<Supplier[]>(suppliers);
+  const [supplierOptions, setSupplierOptions] = useState<AdminSupplierItem[]>(suppliers);
   const [attributeDefinitionOptions, setAttributeDefinitionOptions] = useState<AttributeDefinition[]>(attributeDefinitions);
   const imageFileInputRef = useRef<HTMLInputElement | null>(null);
   const importFileInputRef = useRef<HTMLInputElement | null>(null);
@@ -1260,6 +1360,197 @@ export function ProductManager({
     };
   }, [drawerMode, activeEditTab, editingId, inventoryOverviewStatus, labels.opFailed]);
 
+  function operationRowKey(item: AdminInventoryItem) {
+    return `${item.productId}:${item.variantId ?? "base"}:${item.warehouseCode ?? "none"}`;
+  }
+
+  function openOperationDrawer(item: AdminInventoryItem, mode: InventoryOperationDrawerMode) {
+    setOperationTargetItem(item);
+    setOperationMode(mode);
+    setOperationFeedback(null);
+    setOpTargetOnHand(String(item.onHandStock));
+    setOpReorderPoint(String(item.reorderPoint));
+    setOpSafetyStock(String(item.safetyStock));
+    setOpNote("");
+    setOpMovementQuantity("");
+    setOpTransferWarehouseCode("");
+    setOpTransferQuantity("");
+    setOpTransferNote("");
+    setOpPurchaseDocumentNumber("");
+    setOpPurchaseSupplierId("");
+    setOpPurchaseDocumentDate("");
+    setOpPurchaseDocumentType("PURCHASE_DOCUMENT");
+    setOpPurchaseReference("");
+    setOpPurchaseExternalStatus("NOT_SENT");
+    setOpPurchaseUnitCost("");
+  }
+
+  function closeOperationDrawer() {
+    setOperationTargetItem(null);
+    setOperationMode("view");
+  }
+
+  function refreshInventoryOverviewAfterOperation() {
+    setInventoryOverviewStatus(null);
+    router.refresh();
+  }
+
+  async function applyOperationAdjustment() {
+    if (!operationTargetItem) {
+      return;
+    }
+
+    const targetOnHandStock = Number(opTargetOnHand);
+    const reorderPoint = Number(opReorderPoint);
+    const safetyStock = Number(opSafetyStock);
+    if (
+      !Number.isInteger(targetOnHandStock) || targetOnHandStock < 0
+      || !Number.isInteger(reorderPoint) || reorderPoint < 0
+      || !Number.isInteger(safetyStock) || safetyStock < 0
+    ) {
+      setOperationFeedback({ type: "error", message: labels.inventoryAdjustmentFailed });
+      return;
+    }
+
+    const rowKey = operationRowKey(operationTargetItem);
+    setOperationPendingRowKey(rowKey);
+    setOperationFeedback(null);
+
+    try {
+      const response = await fetch("/api/admin/inventory/adjust", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: operationTargetItem.productId,
+          variantId: operationTargetItem.variantId ?? undefined,
+          sku: operationTargetItem.sku,
+          warehouseCode: operationTargetItem.warehouseCode ?? undefined,
+          targetOnHandStock,
+          reorderPoint,
+          safetyStock,
+          note: opNote.trim() || "Stok Kartı manuel stok düzeltmesi",
+        }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+        setOperationFeedback({ type: "error", message: payload?.message ?? labels.inventoryAdjustmentFailed });
+        return;
+      }
+
+      setOperationFeedback({ type: "success", message: labels.inventoryAdjustmentSaved });
+      closeOperationDrawer();
+      refreshInventoryOverviewAfterOperation();
+    } catch {
+      setOperationFeedback({ type: "error", message: labels.inventoryAdjustmentFailed });
+    } finally {
+      setOperationPendingRowKey(null);
+    }
+  }
+
+  async function applyOperationTransfer() {
+    if (!operationTargetItem || !operationTargetItem.warehouseCode) {
+      return;
+    }
+
+    const quantity = Number(opTransferQuantity);
+    if (!opTransferWarehouseCode.trim() || !Number.isInteger(quantity) || quantity <= 0) {
+      setOperationFeedback({ type: "error", message: labels.inventoryTransferFailed });
+      return;
+    }
+
+    const rowKey = operationRowKey(operationTargetItem);
+    setOperationPendingRowKey(rowKey);
+    setOperationFeedback(null);
+
+    try {
+      const response = await fetch("/api/admin/inventory/transfer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: operationTargetItem.productId,
+          variantId: operationTargetItem.variantId ?? undefined,
+          sku: operationTargetItem.sku,
+          fromWarehouseCode: operationTargetItem.warehouseCode,
+          toWarehouseCode: opTransferWarehouseCode,
+          quantity,
+          note: opTransferNote.trim() || "Stok Kartı depo transferi",
+        }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+        setOperationFeedback({ type: "error", message: payload?.message ?? labels.inventoryTransferFailed });
+        return;
+      }
+
+      setOperationFeedback({ type: "success", message: labels.inventoryTransferSaved });
+      closeOperationDrawer();
+      refreshInventoryOverviewAfterOperation();
+    } catch {
+      setOperationFeedback({ type: "error", message: labels.inventoryTransferFailed });
+    } finally {
+      setOperationPendingRowKey(null);
+    }
+  }
+
+  async function applyOperationMovement(mode: "stock_in" | "stock_out") {
+    if (!operationTargetItem || !operationTargetItem.warehouseCode) {
+      return;
+    }
+
+    const quantity = Number(opMovementQuantity);
+    if (!Number.isInteger(quantity) || quantity <= 0) {
+      setOperationFeedback({ type: "error", message: mode === "stock_in" ? labels.inventoryStockInFailed : labels.inventoryStockOutFailed });
+      return;
+    }
+
+    const rowKey = operationRowKey(operationTargetItem);
+    setOperationPendingRowKey(rowKey);
+    setOperationFeedback(null);
+
+    try {
+      const endpoint = mode === "stock_in" ? "/api/admin/inventory/stock-in" : "/api/admin/inventory/stock-out";
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: operationTargetItem.productId,
+          variantId: operationTargetItem.variantId ?? undefined,
+          sku: operationTargetItem.sku,
+          warehouseCode: operationTargetItem.warehouseCode,
+          quantity,
+          note: opNote.trim() || (mode === "stock_in" ? "Stok Kartı stok girişi" : "Stok Kartı stok çıkışı"),
+          ...(mode === "stock_in" && opPurchaseDocumentNumber.trim()
+            ? {
+                documentType: opPurchaseDocumentType,
+                sourceDocumentNumber: opPurchaseDocumentNumber.trim(),
+                sourceDocumentSupplierId: opPurchaseSupplierId || undefined,
+                sourceDocumentDate: opPurchaseDocumentDate ? new Date(opPurchaseDocumentDate).toISOString() : undefined,
+                sourceDocumentReference: opPurchaseReference.trim() || undefined,
+                externalSystemStatus: opPurchaseExternalStatus,
+                unitCost: opPurchaseUnitCost.trim() ? Number(opPurchaseUnitCost) : null,
+              }
+            : {}),
+        }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+        setOperationFeedback({ type: "error", message: payload?.message ?? (mode === "stock_in" ? labels.inventoryStockInFailed : labels.inventoryStockOutFailed) });
+        return;
+      }
+
+      setOperationFeedback({ type: "success", message: mode === "stock_in" ? labels.inventoryStockInSaved : labels.inventoryStockOutSaved });
+      closeOperationDrawer();
+      refreshInventoryOverviewAfterOperation();
+    } catch {
+      setOperationFeedback({ type: "error", message: mode === "stock_in" ? labels.inventoryStockInFailed : labels.inventoryStockOutFailed });
+    } finally {
+      setOperationPendingRowKey(null);
+    }
+  }
+
   const currentDecisionAlerts = useMemo(() => {
     if (!currentEditingProduct) {
       return [];
@@ -1298,6 +1589,45 @@ export function ProductManager({
     labels.reviewTransactions,
     locale,
   ]);
+
+  const inventoryDrawerLabels = useMemo(() => ({
+    adjustStock: labels.inventoryAdjustStock,
+    adjustmentNote: labels.inventoryAdjustmentNote,
+    applyAdjustment: labels.inventoryApplyAdjustment,
+    applyTransfer: labels.inventoryApplyTransfer,
+    availableStock: labels.inventoryAvailableStock,
+    drawerInfo: labels.inventoryDrawerInfo,
+    movementAllTime: labels.inventoryMovementAllTime,
+    movementCounterpartyWarehouse: labels.inventoryMovementCounterpartyWarehouse,
+    movementDateRange: labels.inventoryMovementDateRange,
+    movementLast24Hours: labels.inventoryMovementLast24Hours,
+    movementLast30Days: labels.inventoryMovementLast30Days,
+    movementLast7Days: labels.inventoryMovementLast7Days,
+    movementQuantity: labels.inventoryMovementQuantityLabel,
+    movementReference: labels.inventoryMovementReference,
+    next: labels.next,
+    noRecentMovements: labels.inventoryNoRecentMovements,
+    notSpecified: labels.notSpecified,
+    onHandStock: labels.inventoryOnHandStock,
+    page: labels.page,
+    prev: labels.prev,
+    recentMovements: labels.inventoryRecentMovements,
+    reorderPoint: labels.inventoryReorderPoint,
+    reservedStock: labels.inventoryReservedStock,
+    safetyStock: labels.inventorySafetyStock,
+    sku: labels.sku,
+    stockIn: labels.inventoryStockIn,
+    stockOut: labels.inventoryStockOut,
+    targetOnHandStock: labels.inventoryTargetOnHandStock,
+    targetReorderPoint: labels.inventoryTargetReorderPoint,
+    targetSafetyStock: labels.inventoryTargetSafetyStock,
+    title: labels.title,
+    transferNote: labels.inventoryTransferNote,
+    transferQuantity: labels.inventoryTransferQuantity,
+    transferStock: labels.inventoryTransferStock,
+    transferTargetWarehouse: labels.inventoryTransferTargetWarehouse,
+    viewAllHistory: labels.inventoryViewAllHistory,
+  }), [labels]);
 
   function pushQuery(next: {
     search: string;
@@ -3517,7 +3847,72 @@ export function ProductManager({
 
             {drawerMode === "edit" && activeEditTab === "inventory" ? (
               <div className="grid gap-4 p-5">
-                {inventoryOverviewStatus === null ? (
+                {operationTargetItem ? (
+                  <div className="grid gap-3">
+                    <Button type="button" variant="secondary" onClick={closeOperationDrawer}>
+                      ← Depo listesine dön
+                    </Button>
+                    {operationFeedback ? (
+                      <p className={`rounded-lg border px-3 py-2 text-sm font-medium ${operationFeedback.type === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-red-200 bg-red-50 text-red-700"}`}>
+                        {operationFeedback.message}
+                      </p>
+                    ) : null}
+                    <InventoryDrawerOperationPanel
+                      item={operationTargetItem}
+                      labels={inventoryDrawerLabels}
+                      locale={locale}
+                      warehouses={warehouses}
+                      suppliers={supplierOptions}
+                      drawerMode={operationMode}
+                      pendingRowKey={operationPendingRowKey}
+                      drawerTargetOnHand={opTargetOnHand}
+                      drawerReorderPoint={opReorderPoint}
+                      drawerSafetyStock={opSafetyStock}
+                      drawerNote={opNote}
+                      drawerMovementQuantity={opMovementQuantity}
+                      drawerTransferWarehouseCode={opTransferWarehouseCode}
+                      drawerTransferQuantity={opTransferQuantity}
+                      drawerTransferNote={opTransferNote}
+                      drawerPurchaseDocumentNumber={opPurchaseDocumentNumber}
+                      drawerPurchaseSupplierId={opPurchaseSupplierId}
+                      drawerPurchaseDocumentDate={opPurchaseDocumentDate || defaultDateTimeLocal}
+                      drawerPurchaseDocumentType={opPurchaseDocumentType}
+                      drawerPurchaseReference={opPurchaseReference}
+                      drawerPurchaseExternalStatus={opPurchaseExternalStatus}
+                      drawerPurchaseUnitCost={opPurchaseUnitCost}
+                      drawerProductVariants={[]}
+                      drawerSelectedVariantId={opSelectedVariantId}
+                      pendingDrawerVariants={false}
+                      setDrawerMode={setOperationMode}
+                      setDrawerTargetOnHand={setOpTargetOnHand}
+                      setDrawerReorderPoint={setOpReorderPoint}
+                      setDrawerSafetyStock={setOpSafetyStock}
+                      setDrawerNote={setOpNote}
+                      setDrawerMovementQuantity={setOpMovementQuantity}
+                      setDrawerTransferWarehouseCode={setOpTransferWarehouseCode}
+                      setDrawerTransferQuantity={setOpTransferQuantity}
+                      setDrawerTransferNote={setOpTransferNote}
+                      setDrawerPurchaseDocumentNumber={setOpPurchaseDocumentNumber}
+                      setDrawerPurchaseSupplierId={setOpPurchaseSupplierId}
+                      setDrawerPurchaseDocumentDate={setOpPurchaseDocumentDate}
+                      setDrawerPurchaseDocumentType={setOpPurchaseDocumentType}
+                      setDrawerPurchaseReference={setOpPurchaseReference}
+                      setDrawerPurchaseExternalStatus={setOpPurchaseExternalStatus}
+                      setDrawerPurchaseUnitCost={setOpPurchaseUnitCost}
+                      setDrawerSelectedVariantId={setOpSelectedVariantId}
+                      formatDate={formatInventoryDrawerDate}
+                      formatInventoryNote={formatInventoryNote}
+                      formatSourceDocument={formatSourceDocument}
+                      movementTypeClass={movementTypeClass}
+                      movementTypeLabel={(type, drawerLabels) => movementTypeLabel(type, { ...labels, ...drawerLabels })}
+                      onHistoryShortcut={() => {}}
+                      onViewAllHistory={closeOperationDrawer}
+                      onApplyAdjustment={applyOperationAdjustment}
+                      onApplyMovement={applyOperationMovement}
+                      onApplyTransfer={applyOperationTransfer}
+                    />
+                  </div>
+                ) : inventoryOverviewStatus === null ? (
                   <p className="text-sm text-[color:var(--color-text-muted)]">{labels.loading}</p>
                 ) : "error" in inventoryOverviewStatus ? (
                   <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{inventoryOverviewStatus.error}</p>
@@ -3525,13 +3920,51 @@ export function ProductManager({
                   <p className="text-sm text-[color:var(--color-text-muted)]">Bu ürün için depo stok kaydı bulunamadı.</p>
                 ) : (
                   inventoryOverviewStatus.items.map((item) => (
-                    <div key={`${item.productId}-${item.variantId ?? "base"}`} className="grid gap-3">
+                    <div key={`${item.productId}-${item.variantId ?? "base"}-${item.warehouseCode ?? "none"}`} className="grid gap-3">
                       {item.variantTitle ? (
                         <p className="text-sm font-semibold text-[color:var(--color-text)]">
                           {item.variantTitle}{item.variantOptionSummary ? ` · ${item.variantOptionSummary}` : ""}
                         </p>
                       ) : null}
                       <InventoryDrawerDistributionPanel item={item} />
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          disabled={!item.warehouseCode}
+                          onClick={() => openOperationDrawer(item, "edit")}
+                        >
+                          Stok düzelt
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          disabled={!item.warehouseCode}
+                          onClick={() => openOperationDrawer(item, "transfer")}
+                        >
+                          Transfer
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          disabled={!item.warehouseCode}
+                          onClick={() => openOperationDrawer(item, "stock_in")}
+                        >
+                          Stok girişi
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          disabled={!item.warehouseCode}
+                          onClick={() => openOperationDrawer(item, "stock_out")}
+                        >
+                          Stok çıkışı
+                        </Button>
+                      </div>
                       <section className="rounded-2xl border border-[color:var(--color-border)] p-4">
                         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Son Hareketler</p>
                         {item.recentMovements.length === 0 ? (
@@ -3543,11 +3976,13 @@ export function ProductManager({
                                 key={`${item.productId}-movement-${index}`}
                                 className="flex items-center justify-between gap-3 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-2 text-xs"
                               >
-                                <span className="font-medium text-[color:var(--color-text)]">{movement.type}</span>
+                                <span className={`rounded-full px-2 py-0.5 font-medium ${movementTypeClass(movement.type)}`}>
+                                  {movementTypeLabel(movement.type, labels)}
+                                </span>
                                 <span className={movement.quantity < 0 ? "text-red-600" : "text-emerald-600"}>
                                   {movement.quantity > 0 ? `+${movement.quantity}` : movement.quantity}
                                 </span>
-                                <span className="text-[color:var(--color-text-muted)]">{new Date(movement.createdAt).toLocaleString("tr-TR")}</span>
+                                <span className="text-[color:var(--color-text-muted)]">{formatInventoryDrawerDate(movement.createdAt, locale, "-")}</span>
                               </li>
                             ))}
                           </ul>
@@ -3556,12 +3991,12 @@ export function ProductManager({
                     </div>
                   ))
                 )}
-                {currentEditingProduct ? (
+                {!operationTargetItem && currentEditingProduct ? (
                   <Link
                     href={`/${locale}/admin/inventory/products?search=${encodeURIComponent(currentEditingProduct.sku)}`}
                     className="text-sm font-medium text-[color:var(--color-text)] underline decoration-neutral-300 underline-offset-4"
                   >
-                    Depo işlemleri (transfer, sayım, düzeltme) için Stok Yönetimi&apos;ne git →
+                    Sayım ve toplu işlemler için Stok Yönetimi&apos;ne git →
                   </Link>
                 ) : null}
               </div>

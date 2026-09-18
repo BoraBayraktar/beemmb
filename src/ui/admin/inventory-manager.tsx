@@ -30,14 +30,20 @@ import type {
 import {
   alertTypeLabel,
   formatCurrency,
+  formatDate,
+  formatInventoryNote,
+  formatSourceDocument,
+  getCurrentDateTimeLocalValue,
   getInventoryPageMeta,
   getSectionPanelClass,
   inventoryListPreferenceKey,
   inventorySectionAnchors,
   inventorySectionGroups,
+  movementTypeClass,
   normalizeInventoryListPreferences,
   quickActionPreferenceKey,
   quickActionSerialModePreferenceKey,
+  subscribeNoop,
 } from "@/ui/admin/inventory-manager.shared";
 import type {
   DrawerMode,
@@ -339,17 +345,6 @@ type Labels = {
   notSpecified: string;
 };
 
-function formatDate(value: string | null, locale: Locale, fallback: string) {
-  if (!value) {
-    return fallback;
-  }
-
-  return new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "tr-TR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
-
 function statusLabel(status: AdminInventoryListResult["items"][number]["stockStatus"], labels: Labels) {
   if (status === "OUT_OF_STOCK") {
     return labels.outOfStock;
@@ -428,42 +423,6 @@ function movementTypeLabel(movementType: string | null, labels: Labels) {
   }
 
   return labels.notSpecified;
-}
-
-function movementTypeClass(movementType: string | null) {
-  if (movementType === "MANUAL_ADJUSTMENT") {
-    return "bg-sky-100 text-sky-700";
-  }
-
-  if (movementType === "COUNT_ADJUSTMENT") {
-    return "bg-indigo-100 text-indigo-700";
-  }
-
-  if (movementType === "TRANSFER_OUT") {
-    return "bg-orange-100 text-orange-700";
-  }
-
-  if (movementType === "TRANSFER_IN") {
-    return "bg-teal-100 text-teal-700";
-  }
-
-  if (movementType === "ORDER_COMMIT" || movementType === "DAMAGE_WRITE_OFF") {
-    return "bg-rose-100 text-rose-700";
-  }
-
-  if (movementType === "ORDER_CANCEL_RESTOCK" || movementType === "RETURN_RESTOCK" || movementType === "PURCHASE_RECEIPT") {
-    return "bg-emerald-100 text-emerald-700";
-  }
-
-  if (movementType === "RESERVATION_HOLD" || movementType === "RESERVATION_RELEASE") {
-    return "bg-amber-100 text-amber-700";
-  }
-
-  if (movementType === "INITIAL_LOAD") {
-    return "bg-violet-100 text-violet-700";
-  }
-
-  return "bg-[color:var(--color-bg-soft)] text-[color:var(--color-text-muted)]";
 }
 
 function stockCountStatusLabel(status: AdminStockCountItem["status"], labels: Labels) {
@@ -557,58 +516,6 @@ type Props = {
   initialSection?: InventorySectionId;
 };
 
-function formatSourceDocumentType(type: string | null) {
-  if (!type) {
-    return null;
-  }
-
-  const typeLabelMap: Record<string, string> = {
-    INVENTORY_ADJUSTMENT: "Stok Düzeltme",
-    WAREHOUSE_TRANSFER: "Depo Transferi",
-    PURCHASE_RECEIPT: "Stok Girişi",
-    STOCK_WRITE_OFF: "Stok Çıkışı",
-    STOCK_COUNT: "Stok Sayımı",
-    ORDER: "Sipariş",
-    RETURN: "İade",
-    INVOICE: "Fatura",
-    WAYBILL: "İrsaliye",
-    PURCHASE_DOCUMENT: "Satın Alma Belgesi",
-    DELIVERY_NOTE: "İrsaliye",
-    E_INVOICE: "E-Fatura",
-    E_DISPATCH: "E-İrsaliye",
-  };
-
-  return typeLabelMap[type] ?? type;
-}
-
-function formatInventoryNote(note: string | null | undefined) {
-  if (!note) {
-    return note ?? null;
-  }
-
-  const noteLabelMap: Record<string, string> = {
-    "Inventory manager stock in": "Stok yöneticisi stok girişi",
-    "Inventory manager stock out": "Stok yöneticisi stok çıkışı",
-    "Inventory manager manual adjustment": "Stok yöneticisi manuel stok düzeltmesi",
-    "Inventory manager warehouse transfer": "Stok yöneticisi depo transferi",
-    "Catalog admin initial stock setup": "Ürün yönetimi ilk stok kurulumu",
-  };
-
-  return noteLabelMap[note] ?? note;
-}
-
-function formatSourceDocument(source: {
-  type: string | null;
-  number: string | null;
-}) {
-  if (!source.type && !source.number) {
-    return null;
-  }
-
-  const typeLabel = formatSourceDocumentType(source.type) ?? "Belge";
-  return source.number ? `${typeLabel} • ${source.number}` : typeLabel;
-}
-
 function formatSourceDocumentMeta(source: {
   date: string | null;
   externalReference: string | null;
@@ -699,14 +606,6 @@ function subscribeQuickActionCameraSupport(onStoreChange: () => void) {
   return () => {
     window.removeEventListener("focus", onStoreChange);
   };
-}
-
-function subscribeNoop() {
-  return () => {};
-}
-
-function getCurrentDateTimeLocalValue() {
-  return new Date().toISOString().slice(0, 16);
 }
 
 function formatTransactionType(
