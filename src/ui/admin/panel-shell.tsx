@@ -263,7 +263,7 @@ function getActiveAdminGuide(pathname: string, searchParams: Pick<URLSearchParam
   if (adminPath === "/admin/products") {
     return createGuide({
       eyebrow: "Ürün rehberi",
-      title: "Ürünler ekranı nasıl kullanılır?",
+      title: "Stok Kartları ekranı nasıl kullanılır?",
       description: "Bu ekran satışa açılacak ürünleri hazırlamak için kullanılır. Ürün kartı burada hazırlanır, stok ve kanal hazırlığı sonraki ekranlarda tamamlanır.",
       sections: [
         {
@@ -308,7 +308,7 @@ function getActiveAdminGuide(pathname: string, searchParams: Pick<URLSearchParam
             "Önce ana kategori yapısını oluşturun.",
             "Alt kategorileri ürün ailesine göre sade ve anlaşılır şekilde bağlayın.",
             "Kategori adını, slug bilgisini ve sıralamasını kontrol edin.",
-            "Ürün kartlarında doğru kategori seçildiğini Ürünler ekranından doğrulayın.",
+            "Ürün kartlarında doğru kategori seçildiğini Stok Kartları ekranından doğrulayın.",
           ],
         },
         {
@@ -331,7 +331,7 @@ function getActiveAdminGuide(pathname: string, searchParams: Pick<URLSearchParam
         {
           title: "Sonraki gidilecek ekranlar",
           items: [
-            "Kategoriye ürün bağlamak için Ürünler ekranına geçin.",
+            "Kategoriye ürün bağlamak için Stok Kartları ekranına geçin.",
             "Mağaza görünümünü kontrol etmek için Storefront ekranını açın.",
             "Marketplace kategori eşleşmesi gerekiyorsa Entegrasyonlar ekranına gidin.",
           ],
@@ -385,13 +385,13 @@ function getActiveAdminGuide(pathname: string, searchParams: Pick<URLSearchParam
           items: [
             "Önce marka adını standart yazımla oluşturun.",
             "Aynı markanın farklı yazımlarını tek kayıtta toplayın.",
-            "Ürünler ekranında ilgili ürünlere markayı bağlayın.",
+            "Stok Kartları ekranında ilgili ürünlere markayı bağlayın.",
           ],
         },
         {
           title: "Sonraki gidilecek ekranlar",
           items: [
-            "Ürüne marka bağlamak için Ürünler ekranını açın.",
+            "Ürüne marka bağlamak için Stok Kartları ekranını açın.",
             "Pazaryeri marka eşleşmesini kontrol etmek için Entegrasyonlar ekranına geçin.",
           ],
         },
@@ -416,7 +416,7 @@ function getActiveAdminGuide(pathname: string, searchParams: Pick<URLSearchParam
         {
           title: "Sonraki gidilecek ekranlar",
           items: [
-            "Özelliği ürüne bağlamak için Ürünler ekranına geçin.",
+            "Özelliği ürüne bağlamak için Stok Kartları ekranına geçin.",
             "Marketplace attribute eşleşmesi için Entegrasyonlar ekranını kontrol edin.",
           ],
         },
@@ -441,7 +441,7 @@ function getActiveAdminGuide(pathname: string, searchParams: Pick<URLSearchParam
         {
           title: "Bağlı modüller",
           items: [
-            "Ürün bilgileri Ürünler ekranından gelir.",
+            "Ürün bilgileri Stok Kartları ekranından gelir.",
             "Stok uygunluğu Envanter ekranındaki değerlerden etkilenir.",
             "Kategori düzeni Kategori yönetimiyle birlikte çalışır.",
           ],
@@ -575,7 +575,7 @@ function getActiveAdminGuide(pathname: string, searchParams: Pick<URLSearchParam
           title: "Sonraki gidilecek ekranlar",
           items: [
             "Dış kanal farkı varsa Entegrasyonlar ekranına gidin.",
-            "Ürün kartı eksikse Ürünler ekranını açın.",
+            "Ürün kartı eksikse Stok Kartları ekranını açın.",
             "Satış etkisini görmek için Siparişler ekranına geçin.",
           ],
         },
@@ -817,7 +817,7 @@ function getActiveAdminGuide(pathname: string, searchParams: Pick<URLSearchParam
         {
           title: "Sonraki gidilecek ekranlar",
           items: [
-            "Ürün hatalarında Ürünler ekranına gidin.",
+            "Ürün hatalarında Stok Kartları ekranına gidin.",
             "Sipariş kaynaklı sorunlarda Siparişler ekranına geçin.",
             "Belge hatalarında Belgeler ekranını açın.",
           ],

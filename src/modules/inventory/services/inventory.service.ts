@@ -1511,6 +1511,39 @@ export class InventoryService {
     return result;
   }
 
+  /**
+   * Stok Kartı ekranının (product-manager.tsx) "Depo Stokları"/"Hareketler"
+   * sekmeleri için tek bir ürünün (ve varsa varyantlarının) depo dağılımı +
+   * son hareketlerini döner. listInventoryOverview'in tam liste/sayfalama
+   * mantığından bilinçli olarak arınmış, tek ürüne özel basit bir sorgu.
+   */
+  async getInventoryOverviewItemsForProduct(productId: string): Promise<AdminInventoryItem[]> {
+    const products = await this.repository.listInventoryOverview({ productId });
+    if (products.length === 0) {
+      return [];
+    }
+
+    const inventoryItemIds = products.flatMap((product) => [
+      product.inventoryItem?.id,
+      ...product.variants.map((variant) => variant.inventoryItem?.id),
+    ]).filter((id): id is string => Boolean(id));
+
+    const movements = await this.repository.listInventoryOverviewMovements(inventoryItemIds, 12);
+    const movementsByInventoryItemId = new Map<string, OverviewMovement[]>();
+    for (const movement of movements) {
+      const current = movementsByInventoryItemId.get(movement.inventoryItemId) ?? [];
+      if (current.length < 12) {
+        current.push(movement);
+        movementsByInventoryItemId.set(movement.inventoryItemId, current);
+      }
+    }
+
+    return buildInventoryOverviewItems(products, movementsByInventoryItemId, {
+      includeWarehouseDistribution: true,
+      includeRecentMovements: true,
+    });
+  }
+
   async findInventoryItemQuickMatch(rawQuery: string): Promise<AdminInventoryQuickLookupResult> {
     const query = rawQuery.trim();
     if (!query) {

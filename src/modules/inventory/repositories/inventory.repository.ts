@@ -284,10 +284,11 @@ export class InventoryRepository {
     });
   }
 
-  async listInventoryOverview(args: { search?: string; warehouseCode?: string }) {
+  async listInventoryOverview(args: { search?: string; warehouseCode?: string; productId?: string }) {
     return prisma.product.findMany({
       where: {
         deleted: false,
+        ...(args.productId ? { id: args.productId } : {}),
         ...(args.search
           ? {
               OR: [

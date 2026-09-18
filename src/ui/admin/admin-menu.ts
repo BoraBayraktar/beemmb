@@ -163,7 +163,7 @@ export function buildAdminMenuTree(dictionary: Dictionary, locale: Locale): Admi
       permissionKey: "products.read",
       moduleKey: "products",
       children: [
-        { href: `/${locale}/admin/products`, label: "Ürünler", permissionKey: "products.read" },
+        { href: `/${locale}/admin/products`, label: "Stok Kartları", permissionKey: "products.read" },
         { href: `/${locale}/admin/product-questions`, label: dictionary.admin.questionManager, permissionKey: "productQuestions.read" },
         { href: `/${locale}/admin/categories`, label: dictionary.admin.categoryManager, permissionKey: "categories.manage" },
         { href: `/${locale}/admin/storefront`, label: dictionary.admin.storefrontManager, permissionKey: "storefront.manage" },
@@ -181,7 +181,6 @@ export function buildAdminMenuTree(dictionary: Dictionary, locale: Locale): Admi
       children: [
         { href: `/${locale}/admin/inventory`, label: "Genel Bakış", permissionKey: "inventory.read" },
         { href: `/${locale}/admin/inventory/quick-actions`, label: "Hızlı Barkod İşlemleri", permissionKey: "inventoryQuickActions.manage" },
-        { href: `/${locale}/admin/inventory/products`, label: "Ürün Stokları", permissionKey: "inventoryProducts.read" },
         { href: `/${locale}/admin/inventory/transactions`, label: dictionary.admin.inventoryTransactionsTitle, permissionKey: "inventoryTransactions.read" },
         { href: `/${locale}/admin/inventory/counts`, label: dictionary.admin.inventoryStockCountTitle, permissionKey: "inventoryCounts.manage" },
         { href: `/${locale}/admin/inventory/warehouses`, label: dictionary.admin.inventoryWarehousesTitle, permissionKey: "warehouses.manage" },

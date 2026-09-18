@@ -13,7 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import type { Locale } from "@/lib/i18n";
 import type { ProductFeature } from "@/modules/catalog/contracts/catalog.contract";
-import type { AdminWarehouseItem } from "@/modules/inventory/contracts/inventory.contract";
+import type { AdminInventoryItem, AdminWarehouseItem } from "@/modules/inventory/contracts/inventory.contract";
+import { InventoryDrawerDistributionPanel } from "@/ui/admin/inventory-manager-panels";
 
 const checkboxClassName = "h-4 w-4 rounded border-[color:var(--color-border)] text-[color:var(--color-text)] focus:ring-2 focus:ring-[color:var(--color-border)]";
 
@@ -402,6 +403,19 @@ type ProductForm = {
 };
 
 type DrawerMode = "create" | "edit" | "variants";
+
+type EditDrawerTab = "general" | "inventory" | "marketplace";
+
+type InventoryOverviewStatus =
+  | { items: AdminInventoryItem[] }
+  | { error: string }
+  | null;
+
+const EDIT_DRAWER_TABS: Array<{ id: EditDrawerTab; label: string }> = [
+  { id: "general", label: "Genel Bilgi" },
+  { id: "inventory", label: "Depo Stokları" },
+  { id: "marketplace", label: "Pazaryeri Eşlemeleri" },
+];
 
 type TrendyolPreflightResult = {
   productId: string;
@@ -1037,6 +1051,8 @@ export function ProductManager({
   const [loading, setLoading] = useState(false);
   const [drawerMode, setDrawerMode] = useState<DrawerMode | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [activeEditTab, setActiveEditTab] = useState<EditDrawerTab>("general");
+  const [inventoryOverviewStatus, setInventoryOverviewStatus] = useState<InventoryOverviewStatus>(null);
   const [variantDrawerProduct, setVariantDrawerProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState(initialQuery.search);
   const [categoryFilter, setCategoryFilter] = useState(initialQuery.categoryId);
@@ -1212,6 +1228,37 @@ export function ProductManager({
       document.removeEventListener("mousedown", handlePointerDown);
     };
   }, [variantAxisPickerOpen]);
+
+  useEffect(() => {
+    if (drawerMode !== "edit" || activeEditTab !== "inventory" || !editingId || inventoryOverviewStatus !== null) {
+      return;
+    }
+
+    let cancelled = false;
+
+    fetch(`/api/admin/products/${editingId}/inventory-overview`)
+      .then(async (response) => {
+        if (!response.ok) {
+          const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+          throw new Error(payload?.message ?? labels.opFailed);
+        }
+        return response.json() as Promise<{ items: AdminInventoryItem[] }>;
+      })
+      .then((payload) => {
+        if (!cancelled) {
+          setInventoryOverviewStatus({ items: payload.items });
+        }
+      })
+      .catch((fetchError: unknown) => {
+        if (!cancelled) {
+          setInventoryOverviewStatus({ error: fetchError instanceof Error ? fetchError.message : labels.opFailed });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [drawerMode, activeEditTab, editingId, inventoryOverviewStatus, labels.opFailed]);
 
   const currentDecisionAlerts = useMemo(() => {
     if (!currentEditingProduct) {
@@ -1483,6 +1530,8 @@ export function ProductManager({
       imageFileInputRef.current.value = "";
     }
     setDrawerFullscreen(false);
+    setActiveEditTab("general");
+    setInventoryOverviewStatus(null);
     setDrawerMode("edit");
   }
 
@@ -2159,6 +2208,105 @@ export function ProductManager({
     });
   }
 
+  // restrictToProductId verildiğinde sonuç sadece o ürüne aitse gösterilir --
+  // Stok Kartı drawer'ının "Pazaryeri Eşlemeleri" sekmesi bunu kullanır,
+  // sayfa düzeyindeki liste satırı aksiyonları kısıtlamadan (undefined) çağırır.
+  function renderTrendyolPreflightSection(restrictToProductId?: string | null) {
+    if (!trendyolPreflightResult || (restrictToProductId && trendyolPreflightResult.productId !== restrictToProductId)) {
+      return null;
+    }
+
+    return renderPreflightCard({
+      label: labels.trendyolPreflight,
+      title: trendyolPreflightResult.title,
+      summary: `${trendyolPreflightResult.readyForTrendyolProductV2 ? labels.trendyolPreflightReady : labels.trendyolPreflightBlocked} SKU: ${trendyolPreflightResult.sku} • Varyant: ${trendyolPreflightResult.variantCount} • Mapping: ${trendyolPreflightResult.mappedAttributeValueCount}${trendyolPreflightResult.productV2DraftPayload ? ` • Payload item: ${trendyolPreflightResult.productV2DraftPayload.items.length}` : ""}`,
+      ready: trendyolPreflightResult.readyForTrendyolProductV2,
+      issuesLabel: labels.trendyolPreflightIssues,
+      warningsLabel: labels.trendyolPreflightWarnings,
+      draftLabel: labels.trendyolDraftPayload,
+      issues: trendyolPreflightResult.blockingIssues,
+      warnings: trendyolPreflightResult.warnings,
+      draftPayload: trendyolPreflightResult.productV2DraftPayload,
+      canQueue: trendyolPreflightResult.readyForTrendyolProductV2 && canManageIntegrations,
+      queueBusy: trendyolProductSyncBusyId === trendyolPreflightResult.productId,
+      queueLabel: labels.trendyolQueueProductSync,
+      onQueue: () => void queueTrendyolProductSync(trendyolPreflightResult),
+      onClose: () => setTrendyolPreflightResult(null),
+    }, labels.loading, labels.cancel);
+  }
+
+  function renderPazaramaPreflightSection(restrictToProductId?: string | null) {
+    if (!pazaramaPreflightResult || (restrictToProductId && pazaramaPreflightResult.productId !== restrictToProductId)) {
+      return null;
+    }
+
+    return renderPreflightCard({
+      label: labels.pazaramaPreflight,
+      title: pazaramaPreflightResult.title,
+      summary: `${pazaramaPreflightResult.readyForPazaramaProductSync ? labels.pazaramaPreflightReady : labels.pazaramaPreflightBlocked} SKU: ${pazaramaPreflightResult.sku} • Varyant: ${pazaramaPreflightResult.variantCount} • Mapping: ${pazaramaPreflightResult.mappedAttributeValueCount}${pazaramaPreflightResult.draftPayload ? ` • Payload ürün: ${pazaramaPreflightResult.draftPayload.products.length}` : ""}`,
+      ready: pazaramaPreflightResult.readyForPazaramaProductSync,
+      issuesLabel: labels.pazaramaPreflightIssues,
+      warningsLabel: labels.pazaramaPreflightWarnings,
+      draftLabel: labels.pazaramaDraftPayload,
+      issues: pazaramaPreflightResult.blockingIssues,
+      warnings: pazaramaPreflightResult.warnings,
+      draftPayload: pazaramaPreflightResult.draftPayload,
+      canQueue: pazaramaPreflightResult.readyForPazaramaProductSync && canManageIntegrations,
+      queueBusy: pazaramaProductSyncBusyId === pazaramaPreflightResult.productId,
+      queueLabel: labels.pazaramaQueueProductSync,
+      onQueue: () => void queuePazaramaProductSync(pazaramaPreflightResult),
+      onClose: () => setPazaramaPreflightResult(null),
+    }, labels.loading, labels.cancel);
+  }
+
+  function renderN11PreflightSection(restrictToProductId?: string | null) {
+    if (!n11PreflightResult || (restrictToProductId && n11PreflightResult.productId !== restrictToProductId)) {
+      return null;
+    }
+
+    return renderPreflightCard({
+      label: labels.n11Preflight,
+      title: n11PreflightResult.sku,
+      summary: `${n11PreflightResult.readyForN11ProductUpdate ? labels.n11PreflightReady : labels.n11PreflightBlocked} SKU: ${n11PreflightResult.sku} • KDV: %${n11PreflightResult.vatRate} • Açıklama: ${n11PreflightResult.descriptionLength} karakter${n11PreflightResult.draftPayload ? ` • Payload item: ${n11PreflightResult.draftPayload.payload.skus.length}` : ""}`,
+      ready: n11PreflightResult.readyForN11ProductUpdate,
+      issuesLabel: labels.n11PreflightIssues,
+      warningsLabel: labels.n11PreflightWarnings,
+      draftLabel: labels.n11DraftPayload,
+      issues: n11PreflightResult.blockingIssues,
+      warnings: n11PreflightResult.warnings,
+      draftPayload: n11PreflightResult.draftPayload,
+      canQueue: n11PreflightResult.readyForN11ProductUpdate && canManageIntegrations,
+      queueBusy: n11ProductSyncBusyId === n11PreflightResult.productId,
+      queueLabel: labels.n11QueueProductSync,
+      onQueue: () => void queueN11ProductSync(n11PreflightResult),
+      onClose: () => setN11PreflightResult(null),
+    }, labels.loading, labels.cancel);
+  }
+
+  function renderHepsiburadaPreflightSection(restrictToProductId?: string | null) {
+    if (!hepsiburadaPreflightResult || (restrictToProductId && hepsiburadaPreflightResult.productId !== restrictToProductId)) {
+      return null;
+    }
+
+    return renderPreflightCard({
+      label: labels.hepsiburadaPreflight,
+      title: hepsiburadaPreflightResult.hbSku,
+      summary: `${hepsiburadaPreflightResult.readyForHepsiburadaProductUpdate ? labels.hepsiburadaPreflightReady : labels.hepsiburadaPreflightBlocked} hbSku: ${hepsiburadaPreflightResult.hbSku} • Görsel: ${hepsiburadaPreflightResult.imageCount} • Açıklama: ${hepsiburadaPreflightResult.descriptionLength} karakter${hepsiburadaPreflightResult.draftPayload ? ` • Payload item: ${hepsiburadaPreflightResult.draftPayload.items.length}` : ""}`,
+      ready: hepsiburadaPreflightResult.readyForHepsiburadaProductUpdate,
+      issuesLabel: labels.hepsiburadaPreflightIssues,
+      warningsLabel: labels.hepsiburadaPreflightWarnings,
+      draftLabel: labels.hepsiburadaDraftPayload,
+      issues: hepsiburadaPreflightResult.blockingIssues,
+      warnings: hepsiburadaPreflightResult.warnings,
+      draftPayload: hepsiburadaPreflightResult.draftPayload,
+      canQueue: hepsiburadaPreflightResult.readyForHepsiburadaProductUpdate && canManageIntegrations,
+      queueBusy: hepsiburadaProductSyncBusyId === hepsiburadaPreflightResult.productId,
+      queueLabel: labels.hepsiburadaQueueProductSync,
+      onQueue: () => void queueHepsiburadaProductSync(hepsiburadaPreflightResult),
+      onClose: () => setHepsiburadaPreflightResult(null),
+    }, labels.loading, labels.cancel);
+  }
+
   async function refreshN11ProductSyncTracking(tracking: N11ProductSyncTracking) {
     if (!tracking.jobId) {
       await checkN11Preflight(tracking.productId);
@@ -2561,74 +2709,10 @@ export function ProductManager({
           onRefresh: () => void checkHepsiburadaPreflight(hepsiburadaProductSyncTracking.productId),
           onClose: () => setHepsiburadaProductSyncTracking(null),
         }, labels.loading, labels.cancel) : null}
-        {trendyolPreflightResult ? renderPreflightCard({
-          label: labels.trendyolPreflight,
-          title: trendyolPreflightResult.title,
-          summary: `${trendyolPreflightResult.readyForTrendyolProductV2 ? labels.trendyolPreflightReady : labels.trendyolPreflightBlocked} SKU: ${trendyolPreflightResult.sku} • Varyant: ${trendyolPreflightResult.variantCount} • Mapping: ${trendyolPreflightResult.mappedAttributeValueCount}${trendyolPreflightResult.productV2DraftPayload ? ` • Payload item: ${trendyolPreflightResult.productV2DraftPayload.items.length}` : ""}`,
-          ready: trendyolPreflightResult.readyForTrendyolProductV2,
-          issuesLabel: labels.trendyolPreflightIssues,
-          warningsLabel: labels.trendyolPreflightWarnings,
-          draftLabel: labels.trendyolDraftPayload,
-          issues: trendyolPreflightResult.blockingIssues,
-          warnings: trendyolPreflightResult.warnings,
-          draftPayload: trendyolPreflightResult.productV2DraftPayload,
-          canQueue: trendyolPreflightResult.readyForTrendyolProductV2 && canManageIntegrations,
-          queueBusy: trendyolProductSyncBusyId === trendyolPreflightResult.productId,
-          queueLabel: labels.trendyolQueueProductSync,
-          onQueue: () => void queueTrendyolProductSync(trendyolPreflightResult),
-          onClose: () => setTrendyolPreflightResult(null),
-        }, labels.loading, labels.cancel) : null}
-        {pazaramaPreflightResult ? renderPreflightCard({
-          label: labels.pazaramaPreflight,
-          title: pazaramaPreflightResult.title,
-          summary: `${pazaramaPreflightResult.readyForPazaramaProductSync ? labels.pazaramaPreflightReady : labels.pazaramaPreflightBlocked} SKU: ${pazaramaPreflightResult.sku} • Varyant: ${pazaramaPreflightResult.variantCount} • Mapping: ${pazaramaPreflightResult.mappedAttributeValueCount}${pazaramaPreflightResult.draftPayload ? ` • Payload ürün: ${pazaramaPreflightResult.draftPayload.products.length}` : ""}`,
-          ready: pazaramaPreflightResult.readyForPazaramaProductSync,
-          issuesLabel: labels.pazaramaPreflightIssues,
-          warningsLabel: labels.pazaramaPreflightWarnings,
-          draftLabel: labels.pazaramaDraftPayload,
-          issues: pazaramaPreflightResult.blockingIssues,
-          warnings: pazaramaPreflightResult.warnings,
-          draftPayload: pazaramaPreflightResult.draftPayload,
-          canQueue: pazaramaPreflightResult.readyForPazaramaProductSync && canManageIntegrations,
-          queueBusy: pazaramaProductSyncBusyId === pazaramaPreflightResult.productId,
-          queueLabel: labels.pazaramaQueueProductSync,
-          onQueue: () => void queuePazaramaProductSync(pazaramaPreflightResult),
-          onClose: () => setPazaramaPreflightResult(null),
-        }, labels.loading, labels.cancel) : null}
-        {n11PreflightResult ? renderPreflightCard({
-          label: labels.n11Preflight,
-          title: n11PreflightResult.sku,
-          summary: `${n11PreflightResult.readyForN11ProductUpdate ? labels.n11PreflightReady : labels.n11PreflightBlocked} SKU: ${n11PreflightResult.sku} • KDV: %${n11PreflightResult.vatRate} • Açıklama: ${n11PreflightResult.descriptionLength} karakter${n11PreflightResult.draftPayload ? ` • Payload item: ${n11PreflightResult.draftPayload.payload.skus.length}` : ""}`,
-          ready: n11PreflightResult.readyForN11ProductUpdate,
-          issuesLabel: labels.n11PreflightIssues,
-          warningsLabel: labels.n11PreflightWarnings,
-          draftLabel: labels.n11DraftPayload,
-          issues: n11PreflightResult.blockingIssues,
-          warnings: n11PreflightResult.warnings,
-          draftPayload: n11PreflightResult.draftPayload,
-          canQueue: n11PreflightResult.readyForN11ProductUpdate && canManageIntegrations,
-          queueBusy: n11ProductSyncBusyId === n11PreflightResult.productId,
-          queueLabel: labels.n11QueueProductSync,
-          onQueue: () => void queueN11ProductSync(n11PreflightResult),
-          onClose: () => setN11PreflightResult(null),
-        }, labels.loading, labels.cancel) : null}
-        {hepsiburadaPreflightResult ? renderPreflightCard({
-          label: labels.hepsiburadaPreflight,
-          title: hepsiburadaPreflightResult.hbSku,
-          summary: `${hepsiburadaPreflightResult.readyForHepsiburadaProductUpdate ? labels.hepsiburadaPreflightReady : labels.hepsiburadaPreflightBlocked} hbSku: ${hepsiburadaPreflightResult.hbSku} • Görsel: ${hepsiburadaPreflightResult.imageCount} • Açıklama: ${hepsiburadaPreflightResult.descriptionLength} karakter${hepsiburadaPreflightResult.draftPayload ? ` • Payload item: ${hepsiburadaPreflightResult.draftPayload.items.length}` : ""}`,
-          ready: hepsiburadaPreflightResult.readyForHepsiburadaProductUpdate,
-          issuesLabel: labels.hepsiburadaPreflightIssues,
-          warningsLabel: labels.hepsiburadaPreflightWarnings,
-          draftLabel: labels.hepsiburadaDraftPayload,
-          issues: hepsiburadaPreflightResult.blockingIssues,
-          warnings: hepsiburadaPreflightResult.warnings,
-          draftPayload: hepsiburadaPreflightResult.draftPayload,
-          canQueue: hepsiburadaPreflightResult.readyForHepsiburadaProductUpdate && canManageIntegrations,
-          queueBusy: hepsiburadaProductSyncBusyId === hepsiburadaPreflightResult.productId,
-          queueLabel: labels.hepsiburadaQueueProductSync,
-          onQueue: () => void queueHepsiburadaProductSync(hepsiburadaPreflightResult),
-          onClose: () => setHepsiburadaPreflightResult(null),
-        }, labels.loading, labels.cancel) : null}
+        {renderTrendyolPreflightSection()}
+        {renderPazaramaPreflightSection()}
+        {renderN11PreflightSection()}
+        {renderHepsiburadaPreflightSection()}
         <p className="mb-4 text-sm text-[color:var(--color-text-muted)]">{labels.importHint}</p>
         <form className="mb-5 grid gap-3 md:grid-cols-2 2xl:grid-cols-[1.4fr_220px_220px_220px_220px_auto]" onSubmit={applyFilters}>
           <Input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder={labels.search} />
@@ -2913,6 +2997,22 @@ export function ProductManager({
               </div>
             </div>
 
+            {drawerMode === "edit" ? (
+              <div className="flex flex-wrap gap-2 border-b border-[color:var(--color-border)] px-5 pt-3">
+                {EDIT_DRAWER_TABS.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveEditTab(tab.id)}
+                    className={`inline-flex h-10 items-center justify-center rounded-2xl border px-4 text-sm font-medium transition ${activeEditTab === tab.id ? "border-neutral-900 bg-neutral-900 text-white" : "border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)]"}`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+
+            {drawerMode !== "edit" || activeEditTab === "general" ? (
             <form className="grid gap-5 p-5" onSubmit={submitProduct}>
               <section className="grid gap-4 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
                 <div>
@@ -3413,6 +3513,102 @@ export function ProductManager({
                 </Button>
               </div>
             </form>
+            ) : null}
+
+            {drawerMode === "edit" && activeEditTab === "inventory" ? (
+              <div className="grid gap-4 p-5">
+                {inventoryOverviewStatus === null ? (
+                  <p className="text-sm text-[color:var(--color-text-muted)]">{labels.loading}</p>
+                ) : "error" in inventoryOverviewStatus ? (
+                  <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{inventoryOverviewStatus.error}</p>
+                ) : inventoryOverviewStatus.items.length === 0 ? (
+                  <p className="text-sm text-[color:var(--color-text-muted)]">Bu ürün için depo stok kaydı bulunamadı.</p>
+                ) : (
+                  inventoryOverviewStatus.items.map((item) => (
+                    <div key={`${item.productId}-${item.variantId ?? "base"}`} className="grid gap-3">
+                      {item.variantTitle ? (
+                        <p className="text-sm font-semibold text-[color:var(--color-text)]">
+                          {item.variantTitle}{item.variantOptionSummary ? ` · ${item.variantOptionSummary}` : ""}
+                        </p>
+                      ) : null}
+                      <InventoryDrawerDistributionPanel item={item} />
+                      <section className="rounded-2xl border border-[color:var(--color-border)] p-4">
+                        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Son Hareketler</p>
+                        {item.recentMovements.length === 0 ? (
+                          <p className="text-xs text-[color:var(--color-text-muted)]">Henüz hareket kaydı yok.</p>
+                        ) : (
+                          <ul className="grid gap-2">
+                            {item.recentMovements.slice(0, 5).map((movement, index) => (
+                              <li
+                                key={`${item.productId}-movement-${index}`}
+                                className="flex items-center justify-between gap-3 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-2 text-xs"
+                              >
+                                <span className="font-medium text-[color:var(--color-text)]">{movement.type}</span>
+                                <span className={movement.quantity < 0 ? "text-red-600" : "text-emerald-600"}>
+                                  {movement.quantity > 0 ? `+${movement.quantity}` : movement.quantity}
+                                </span>
+                                <span className="text-[color:var(--color-text-muted)]">{new Date(movement.createdAt).toLocaleString("tr-TR")}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </section>
+                    </div>
+                  ))
+                )}
+                {currentEditingProduct ? (
+                  <Link
+                    href={`/${locale}/admin/inventory/products?search=${encodeURIComponent(currentEditingProduct.sku)}`}
+                    className="text-sm font-medium text-[color:var(--color-text)] underline decoration-neutral-300 underline-offset-4"
+                  >
+                    Depo işlemleri (transfer, sayım, düzeltme) için Stok Yönetimi&apos;ne git →
+                  </Link>
+                ) : null}
+              </div>
+            ) : null}
+
+            {drawerMode === "edit" && activeEditTab === "marketplace" ? (
+              <div className="grid gap-4 p-5">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={!editingId || trendyolPreflightBusyId === editingId}
+                    onClick={() => editingId && void checkTrendyolPreflight(editingId)}
+                  >
+                    {trendyolPreflightBusyId === editingId ? labels.loading : labels.trendyolPreflight}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={!editingId || pazaramaPreflightBusyId === editingId}
+                    onClick={() => editingId && void checkPazaramaPreflight(editingId)}
+                  >
+                    {pazaramaPreflightBusyId === editingId ? labels.loading : labels.pazaramaPreflight}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={!editingId || n11PreflightBusyId === editingId}
+                    onClick={() => editingId && void checkN11Preflight(editingId)}
+                  >
+                    {n11PreflightBusyId === editingId ? labels.loading : labels.n11Preflight}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={!editingId || hepsiburadaPreflightBusyId === editingId}
+                    onClick={() => editingId && void checkHepsiburadaPreflight(editingId)}
+                  >
+                    {hepsiburadaPreflightBusyId === editingId ? labels.loading : labels.hepsiburadaPreflight}
+                  </Button>
+                </div>
+                {renderTrendyolPreflightSection(editingId)}
+                {renderPazaramaPreflightSection(editingId)}
+                {renderN11PreflightSection(editingId)}
+                {renderHepsiburadaPreflightSection(editingId)}
+              </div>
+            ) : null}
           </aside>
           ) : (
             <aside className={`absolute right-0 top-0 flex h-full w-full flex-col overflow-y-auto border-l border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-2xl ${drawerFullscreen ? "max-w-none" : "max-w-5xl"}`}>
