@@ -6,6 +6,7 @@ import { buildTenantCacheKey } from "@/lib/cache-key";
 import { redisCache } from "@/lib/redis";
 import { requireTenantId } from "@/lib/tenant-context";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
+import { invalidateCatalogCache } from "@/modules/catalog/services/catalog-cache";
 import { identityAdminService } from "@/modules/identity/services/identity-admin.service";
 import { integrationService } from "@/modules/integration/services/integration.service";
 import type { IntegrationChannel, MarketplaceIntegrationChannel } from "@/modules/integration/contracts/integration.contract";
@@ -50,6 +51,10 @@ import type {
   TransferProductInventoryInput,
 } from "@/modules/inventory/contracts/inventory.contract";
 import { InventoryRepository } from "@/modules/inventory/repositories/inventory.repository";
+import {
+  resolveAggregateAvailabilityFromLevels,
+  toAvailableStock,
+} from "@/modules/inventory/services/inventory-stock-aggregate";
 import { notificationService } from "@/modules/system/services/notification.service";
 
 const adminDictionary = tr.admin;
@@ -291,38 +296,6 @@ const updateWarehouseSchema = z.object({
 ), {
   message: "At least one warehouse field must be provided",
 });
-
-function toAvailableStock(onHandStock: number, reservedStock: number) {
-  return Math.max(0, onHandStock - reservedStock);
-}
-
-function resolveAggregateAvailabilityFromLevels(
-  inventoryLevels: Array<{
-    onHand: number;
-    reserved: number;
-  }>,
-  legacySummaryStock: number,
-) {
-  if (inventoryLevels.length === 0) {
-    // Sprint 1 kuralı: Product.stock burada yalnızca aggregate oluşmamış ürünler için legacy summary fallback'tir.
-    return {
-      onHandStock: legacySummaryStock,
-      reservedStock: 0,
-      availableStock: legacySummaryStock,
-      usedLegacySummaryFallback: true,
-    };
-  }
-
-  const onHandStock = inventoryLevels.reduce((sum, level) => sum + level.onHand, 0);
-  const reservedStock = inventoryLevels.reduce((sum, level) => sum + level.reserved, 0);
-
-  return {
-    onHandStock,
-    reservedStock,
-    availableStock: toAvailableStock(onHandStock, reservedStock),
-    usedLegacySummaryFallback: false,
-  };
-}
 
 function differenceInCalendarDays(from: Date, to: Date) {
   const day = 24 * 60 * 60 * 1000;
@@ -1140,13 +1113,6 @@ function getDefaultInventoryListPreferences(): AdminInventoryListPreferences {
       preference: false,
     },
   };
-}
-
-async function invalidateCatalogCache() {
-  await Promise.all([
-    redisCache.delByPrefix("catalog:list:"),
-    redisCache.delByPrefix("catalog:detail:"),
-  ]);
 }
 
 async function invalidateInventoryCache() {
@@ -2501,6 +2467,28 @@ export class InventoryService {
   async listWarehouses(): Promise<AdminWarehouseItem[]> {
     const warehouses = await this.repository.listWarehouses();
     return warehouses.map(mapWarehouse);
+  }
+
+  /**
+   * Stok Kartı'nın (InventoryItem/InventoryLevel) her `products` entitlement'lı
+   * tenant'ta -- `inventory` modülünü hiç satın almamış olsa bile -- çalışabilmesi
+   * için en az bir depo gerekir. Tenant provisioning'de bir kez çağrılır
+   * (bkz. platform.service.ts provisionTenant, financeLedgerAccountService.seedDefaultChartOfAccounts
+   * ile aynı desen); tenant'ın zaten deposu varsa no-op'tur.
+   */
+  async seedDefaultWarehouse(): Promise<AdminWarehouseItem> {
+    const existing = await this.repository.listWarehouses();
+    const defaultExisting = existing.find((warehouse) => warehouse.isDefault) ?? existing[0];
+    if (defaultExisting) {
+      return mapWarehouse(defaultExisting);
+    }
+
+    return this.createWarehouse({
+      code: "GENEL",
+      name: "Genel Depo",
+      isActive: true,
+      isDefault: true,
+    });
   }
 
   async createWarehouse(input: AdminCreateWarehouseInput): Promise<AdminWarehouseItem> {

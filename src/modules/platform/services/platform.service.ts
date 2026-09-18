@@ -7,6 +7,7 @@ import { runWithTenantContext } from "@/lib/tenant-context";
 import { IdentityRepository } from "@/modules/identity/repositories/identity.repository";
 import { PlatformRepository } from "@/modules/platform/repositories/platform.repository";
 import { financeLedgerAccountService } from "@/modules/finance/services/finance-ledger-account.service";
+import { inventoryService } from "@/modules/inventory/services/inventory.service";
 
 const ENTITLEMENT_CACHE_TTL_SECONDS = 300;
 
@@ -156,6 +157,19 @@ export class PlatformService {
       );
     } catch (error) {
       console.error("Yeni tenant icin varsayilan hesap plani olusturulamadi.", error);
+    }
+
+    // Stok Karti (InventoryItem/InventoryLevel) depo olmadan calismaz -- `inventory`
+    // modulunu hic satin almamis bir tenant'ta bile temel stok takibi (tek depo,
+    // onHand/reserved) calissin diye burada bir "Genel Depo" otomatik acilir
+    // (bkz. inventory.service.ts seedDefaultWarehouse). Tenant zaten depo
+    // olusturmussa no-op'tur.
+    try {
+      await runWithTenantContext({ tenantId: result.tenant.id, isPlatformOperator: true }, () =>
+        inventoryService.seedDefaultWarehouse(),
+      );
+    } catch (error) {
+      console.error("Yeni tenant icin varsayilan depo olusturulamadi.", error);
     }
 
     return result;

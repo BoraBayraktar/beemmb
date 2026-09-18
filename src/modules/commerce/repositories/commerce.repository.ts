@@ -3,12 +3,16 @@ import { Prisma } from "@prisma/client";
 import { prisma, type PrismaTransactionClient } from "@/lib/prisma";
 import { requireTenantId } from "@/lib/tenant-context";
 import type { AdminOrderListQuery, CommerceLineQuote } from "@/modules/commerce/contracts/commerce.contract";
+import {
+  resolveAggregateAvailableStock,
+  toAvailableStock,
+} from "@/modules/inventory/services/inventory-stock-aggregate";
 
 export class CommerceRepository {
   private readonly serializableRetryCount = 3;
 
   private toAvailableStock(onHand: number, reserved: number) {
-    return Math.max(0, onHand - reserved);
+    return toAvailableStock(onHand, reserved);
   }
 
   private async runSerializableTransaction<T>(
@@ -36,12 +40,8 @@ export class CommerceRepository {
   }
 
   private sumAvailableStock(levels: Array<{ onHand: number; reserved: number }>, fallbackStock: number) {
-    if (levels.length === 0) {
-      // Sprint 1 kuralı: Product.stock sipariş otoritesi değildir; sadece aggregate yoksa legacy summary fallback'tir.
-      return fallbackStock;
-    }
-
-    return levels.reduce((sum, level) => sum + this.toAvailableStock(level.onHand, level.reserved), 0);
+    // Product.stock sipariş otoritesi değildir; sadece aggregate yoksa legacy summary fallback'tir.
+    return resolveAggregateAvailableStock(levels, fallbackStock);
   }
 
   private async getOrCreateDefaultWarehouse(tx: PrismaTransactionClient) {
@@ -228,10 +228,7 @@ export class CommerceRepository {
       },
     });
 
-    const availableStock = levels.reduce(
-      (sum, level) => sum + this.toAvailableStock(level.onHand, level.reserved),
-      0,
-    );
+    const availableStock = resolveAggregateAvailableStock(levels, 0);
 
     await tx.product.update({
       where: {

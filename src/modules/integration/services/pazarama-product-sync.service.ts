@@ -2,6 +2,7 @@ import { PazaramaClient, type PazaramaCreateProductItem } from "@/modules/integr
 import { IntegrationRepository } from "@/modules/integration/repositories/integration.repository";
 import { MarketplaceIntegrationRepository } from "@/modules/integration/repositories/marketplace-integration.repository";
 import { integrationSecretCryptoService } from "@/modules/integration/services/integration-secret-crypto.service";
+import { resolveAggregateAvailableStock } from "@/modules/inventory/services/inventory-stock-aggregate";
 
 function normalizeValue(value: string) {
   return value.trim().toLocaleLowerCase("tr-TR");
@@ -46,6 +47,8 @@ export class PazaramaProductSyncService {
     if (!target) {
       throw new Error("PAZARAMA_PRODUCT_SYNC_PRODUCT_NOT_FOUND");
     }
+
+    const aggregateAvailableStock = resolveAggregateAvailableStock(target.inventoryItem?.inventoryLevels ?? [], target.stock);
 
     const blockingIssues: string[] = [];
     const warnings: string[] = [];
@@ -167,7 +170,7 @@ export class PazaramaProductSyncService {
               sku: target.sku,
               barcode: target.barcode,
               title: target.name,
-              stockOverride: target.stock,
+              stockOverride: aggregateAvailableStock,
               priceOverride: target.price,
               compareAtPriceOverride: target.compareAtPrice,
               imageUrl: target.imageUrl,
@@ -188,7 +191,7 @@ export class PazaramaProductSyncService {
               Desi: 1,
               Code: (variant.barcode ?? target.barcode)!,
               groupCode: target.sku.slice(0, 10),
-              StockCount: Math.max(0, variant.stockOverride ?? target.stock),
+              StockCount: Math.max(0, variant.stockOverride ?? aggregateAvailableStock),
               stockCode: variant.sku,
               VatRate: target.vatRate,
               ListPrice: listPrice,

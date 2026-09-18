@@ -24,7 +24,14 @@ import {
   formatFeatureFiltersForUrl,
   productMatchesFeatureFilters,
 } from "@/modules/catalog/services/product-features.codec";
+import {
+  buildCatalogCategoriesCacheKey,
+  buildCatalogDetailCacheKey,
+  buildCatalogListCacheKey,
+  invalidateProductDetailCache,
+} from "@/modules/catalog/services/catalog-cache";
 import { identityAdminService } from "@/modules/identity/services/identity-admin.service";
+import { resolveAggregateAvailableStock } from "@/modules/inventory/services/inventory-stock-aggregate";
 import { notificationService } from "@/modules/system/services/notification.service";
 
 const adminDictionary = tr.admin;
@@ -82,25 +89,6 @@ const createQuestionSchema = z.object({
   askedBy: z.string().trim().min(2).max(120),
   question: z.string().trim().min(6).max(1000),
 });
-
-async function invalidateProductDetailCache(slug: string) {
-  await redisCache.del(`catalog:detail:${slug}`);
-}
-
-function resolveAggregateAvailableStock(
-  inventoryLevels: Array<{
-    onHand: number;
-    reserved: number;
-  }>,
-  legacySummaryStock: number,
-) {
-  if (inventoryLevels.length === 0) {
-    // Sprint 1 kuralı: Product.stock yalnızca legacy summary fallback olarak okunabilir.
-    return legacySummaryStock;
-  }
-
-  return inventoryLevels.reduce((sum, level) => sum + Math.max(0, level.onHand - level.reserved), 0);
-}
 
 function mapProduct(product: {
   id: string;
@@ -172,6 +160,12 @@ function mapVariant(item: {
   stockOverride: number | null;
   salesEnabled: boolean;
   isDefault: boolean;
+  inventoryItem?: {
+    inventoryLevels: Array<{
+      onHand: number;
+      reserved: number;
+    }>;
+  } | null;
   attributeValues: Array<{
     value: string;
     attributeDefinition: {
@@ -184,7 +178,12 @@ function mapVariant(item: {
 }, base: ProductCard): ProductVariantOption {
   const price = item.priceOverride?.toNumber() ?? base.price;
   const compareAtPrice = item.compareAtPriceOverride?.toNumber() ?? base.compareAtPrice;
-  const stock = item.stockOverride ?? base.stock;
+  const variantInventoryLevels = item.inventoryItem?.inventoryLevels ?? [];
+  // Varyantın kendi deposu tanımlıysa depo agregatı otoritedir; değilse admin'in
+  // elle girdiği stockOverride'a, o da yoksa ürünün toplam stoğuna düşülür.
+  const stock = variantInventoryLevels.length > 0
+    ? resolveAggregateAvailableStock(variantInventoryLevels, item.stockOverride ?? base.stock)
+    : item.stockOverride ?? base.stock;
   const discountRate = compareAtPrice && compareAtPrice > price
     ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
     : null;
@@ -396,8 +395,7 @@ export class CatalogService {
     const hasFeatureFilters = featureFilters.length > 0;
     const hasAggregateStockFilters = parsed.inStockOnly || parsed.outOfStockOnly || parsed.lowStockOnly;
     const categoryIds = await this.resolveCategoryIds(parsed.categorySlug);
-    const cacheKey = [
-      "catalog:list",
+    const cacheKey = buildCatalogListCacheKey([
       parsed.search ?? "",
       parsed.categorySlug ?? "",
       parsed.sort,
@@ -411,7 +409,7 @@ export class CatalogService {
       featureFilters.length > 0 ? featureFilters.slice().sort().join("|") : "all-features",
       parsed.page,
       parsed.pageSize,
-    ].join(":");
+    ]);
 
     const cached = await redisCache.get<ProductListResult>(cacheKey);
     if (cached) {
@@ -523,7 +521,7 @@ export class CatalogService {
   }
 
   async getProductBySlug(slug: string): Promise<ProductDetail | null> {
-    const cacheKey = `catalog:detail:${slug}`;
+    const cacheKey = buildCatalogDetailCacheKey(slug);
     const cached = await redisCache.get<ProductDetail>(cacheKey);
     if (
       cached
@@ -582,7 +580,7 @@ export class CatalogService {
    * her zaman platform tenant'ina (Beemmb'nin kendi magazasi) sabitlenir.
    */
   async listCategories(): Promise<CategoryOption[]> {
-    const cacheKey = "catalog:categories";
+    const cacheKey = buildCatalogCategoriesCacheKey();
     const cached = await redisCache.get<CategoryOption[]>(cacheKey);
     if (cached) {
       return cached;

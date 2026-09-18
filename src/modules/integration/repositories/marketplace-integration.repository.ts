@@ -526,6 +526,21 @@ export class MarketplaceIntegrationRepository {
         stock: true,
         currency: true,
         vatRate: true,
+        inventoryItem: {
+          select: {
+            inventoryLevels: {
+              where: {
+                warehouse: {
+                  isActive: true,
+                },
+              },
+              select: {
+                onHand: true,
+                reserved: true,
+              },
+            },
+          },
+        },
         category: {
           select: {
             id: true,

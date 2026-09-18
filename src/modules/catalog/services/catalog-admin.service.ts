@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-import { redisCache } from "@/lib/redis";
 import type {
   AdminAnswerProductQuestionInput,
   AdminCreateProductAttributeDefinitionInput,
@@ -36,7 +35,12 @@ import type {
 } from "@/modules/catalog/contracts/catalog-admin.contract";
 import { CatalogAdminRepository } from "@/modules/catalog/repositories/catalog-admin.repository";
 import { cariService } from "@/modules/cari/services/cari.service";
+import {
+  invalidateCatalogCache,
+  invalidateProductDetailCache,
+} from "@/modules/catalog/services/catalog-cache";
 import { inventoryService } from "@/modules/inventory/services/inventory.service";
+import { resolveAggregateAvailableStock } from "@/modules/inventory/services/inventory-stock-aggregate";
 import {
   decodeProductDescriptionWithFeatures,
   encodeProductDescriptionWithFeatures,
@@ -257,21 +261,6 @@ const bulkModerateQuestionsSchema = z
       });
     }
   });
-
-function resolveAggregateAvailableStock(
-  inventoryLevels: Array<{
-    onHand: number;
-    reserved: number;
-  }>,
-  legacySummaryStock: number,
-) {
-  if (inventoryLevels.length === 0) {
-    // Sprint 1 kuralı: admin listeleme bile aggregate yoksa ancak legacy summary fallback kullanır.
-    return legacySummaryStock;
-  }
-
-  return inventoryLevels.reduce((sum, level) => sum + Math.max(0, level.onHand - level.reserved), 0);
-}
 
 function normalizeKeywordList(keywords: string[]) {
   return Array.from(
@@ -679,18 +668,6 @@ export class CatalogCategoryDeleteError extends Error {
     super(message);
     this.name = "CatalogCategoryDeleteError";
   }
-}
-
-async function invalidateCatalogCache() {
-  await Promise.all([
-    redisCache.delByPrefix("catalog:list:"),
-    redisCache.delByPrefix("catalog:detail:"),
-    redisCache.del("catalog:categories"),
-  ]);
-}
-
-async function invalidateProductDetailCache(slug: string) {
-  await redisCache.del(`catalog:detail:${slug}`);
 }
 
 export class CatalogAdminService {

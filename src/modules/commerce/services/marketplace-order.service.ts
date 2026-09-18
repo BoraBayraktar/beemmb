@@ -1,7 +1,7 @@
-import { redisCache } from "@/lib/redis";
 import type { CommerceLineQuote } from "@/modules/commerce/contracts/commerce.contract";
 import { CommerceRepository } from "@/modules/commerce/repositories/commerce.repository";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
+import { invalidateCatalogCache } from "@/modules/catalog/services/catalog-cache";
 import { cariService } from "@/modules/cari/services/cari.service";
 
 export type MarketplaceOrderLineInput = {
@@ -101,14 +101,6 @@ export class MarketplaceOrderCreationError extends Error {
     super(message);
     this.name = "MarketplaceOrderCreationError";
   }
-}
-
-async function invalidateCatalogCache() {
-  await Promise.all([
-    redisCache.delByPrefix("catalog:list:"),
-    redisCache.delByPrefix("catalog:detail:"),
-    redisCache.del("catalog:categories"),
-  ]);
 }
 
 export class MarketplaceOrderService {

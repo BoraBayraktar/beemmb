@@ -202,6 +202,21 @@ export class CatalogRepository {
                 attributeDefinition: true,
               },
             },
+            inventoryItem: {
+              select: {
+                inventoryLevels: {
+                  where: {
+                    warehouse: {
+                      isActive: true,
+                    },
+                  },
+                  select: {
+                    onHand: true,
+                    reserved: true,
+                  },
+                },
+              },
+            },
           },
           orderBy: [
             { isDefault: "desc" },

@@ -2,6 +2,10 @@ import { Prisma } from "@prisma/client";
 
 import { prisma, type PrismaTransactionClient } from "@/lib/prisma";
 import { requireTenantId } from "@/lib/tenant-context";
+import {
+  resolveAggregateAvailableStock,
+  toAvailableStock,
+} from "@/modules/inventory/services/inventory-stock-aggregate";
 import type {
   AdminInventoryExportHistoryItem,
   AdminInventoryListPreferences,
@@ -180,7 +184,7 @@ export class InventoryRepository {
   }
 
   private toAvailableStock(onHand: number, reserved: number) {
-    return Math.max(0, onHand - reserved);
+    return toAvailableStock(onHand, reserved);
   }
 
   private async runSerializableTransaction<T>(
@@ -268,7 +272,7 @@ export class InventoryRepository {
       },
     });
 
-    const availableStock = activeLevels.reduce((sum, level) => sum + this.toAvailableStock(level.onHand, level.reserved), 0);
+    const availableStock = resolveAggregateAvailableStock(activeLevels, 0);
 
     await tx.product.update({
       where: {

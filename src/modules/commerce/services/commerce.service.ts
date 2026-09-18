@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-import { redisCache } from "@/lib/redis";
 import type {
   AdminOrderDetail,
   AdminOrderFinancialMovementEntry,
@@ -25,6 +24,7 @@ import type {
   UpdateOrderShipmentInput,
 } from "@/modules/commerce/contracts/commerce.contract";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
+import { invalidateCatalogCache } from "@/modules/catalog/services/catalog-cache";
 import { cariService } from "@/modules/cari/services/cari.service";
 import { CommerceRepository } from "@/modules/commerce/repositories/commerce.repository";
 import { integrationService } from "@/modules/integration/services/integration.service";
@@ -180,13 +180,6 @@ function mapQuoteLine(args: {
   };
 }
 
-async function invalidateCatalogCache() {
-  await Promise.all([
-    redisCache.delByPrefix("catalog:list:"),
-    redisCache.delByPrefix("catalog:detail:"),
-    redisCache.del("catalog:categories"),
-  ]);
-}
 
 function mapOrderDetailItem(item: {
   id: string;

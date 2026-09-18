@@ -16,6 +16,8 @@
     "db:seed": "prisma db seed",
     "db:create-super-admin": "tsx --tsconfig tsconfig.json scripts/create-super-admin.ts",
     "db:repair:duplicate-skus": "node scripts/repair-duplicate-skus.mjs",
+    "db:backfill:default-warehouse": "node scripts/backfill-default-warehouse.mjs",
+    "verify:inventory:stock-card": "node scripts/verify-stock-card-unification.mjs",
     "verify:rbac": "node scripts/verify-rbac.mjs",
     "verify:rbac:v2": "node scripts/verify-rbac-v2.mjs",
     "verify:crud": "node scripts/verify-product-crud.mjs",

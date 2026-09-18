@@ -1,6 +1,7 @@
 import { MarketplaceIntegrationRepository } from "@/modules/integration/repositories/marketplace-integration.repository";
 import { TrendyolClient, type TrendyolProductV2CreateItem } from "@/modules/integration/connectors/trendyol.client";
 import { integrationSecretCryptoService } from "@/modules/integration/services/integration-secret-crypto.service";
+import { resolveAggregateAvailableStock } from "@/modules/inventory/services/inventory-stock-aggregate";
 
 function decimalToNumber(value: { toNumber?: () => number; toString: () => string } | number | null | undefined) {
   if (typeof value === "number") {
@@ -60,6 +61,8 @@ export class TrendyolProductSyncService {
     if (!target) {
       throw new Error("TRENDYOL_PRODUCT_SYNC_PRODUCT_NOT_FOUND");
     }
+
+    const aggregateAvailableStock = resolveAggregateAvailableStock(target.inventoryItem?.inventoryLevels ?? [], target.stock);
 
     const blockingIssues: string[] = [];
     const warnings: string[] = [];
@@ -204,7 +207,7 @@ export class TrendyolProductSyncService {
                 title: target.name,
                 priceOverride: null,
                 compareAtPriceOverride: null,
-                stockOverride: target.stock,
+                stockOverride: aggregateAvailableStock,
                 imageUrl: null,
                 imageUrls: [],
                 salesEnabled: true,
@@ -225,7 +228,7 @@ export class TrendyolProductSyncService {
               productMainId: target.sku,
               brandId: target.brand!.trendyolBrandId,
               categoryId: target.category!.trendyolCategoryId,
-              quantity: Math.max(0, variant.stockOverride ?? target.stock),
+              quantity: Math.max(0, variant.stockOverride ?? aggregateAvailableStock),
               stockCode: variant.sku,
               description: target.description,
               currencyType: "TRY",
