@@ -35,7 +35,7 @@ function eventTypeLabel(eventType: string) {
     case "APPROVED": return "Onaylandı";
     case "REJECTED": return "Reddedildi";
     case "RETURNED": return "Geri gönderildi";
-    default: return eventType;
+    default: return "Diğer";
   }
 }
 

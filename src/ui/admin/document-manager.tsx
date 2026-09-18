@@ -179,8 +179,10 @@ function getDocumentTypeLabel(value: AdminBusinessDocumentType) {
       return "E-fatura";
     case "E_DISPATCH":
       return "E-irsaliye";
-    default:
-      return value;
+    default: {
+      const exhaustiveCheck: never = value;
+      return exhaustiveCheck;
+    }
   }
 }
 
@@ -194,8 +196,10 @@ function getDocumentStatusLabel(value: AdminBusinessDocumentStatus) {
       return "Kesildi";
     case "CANCELLED":
       return "İptal";
-    default:
-      return value;
+    default: {
+      const exhaustiveCheck: never = value;
+      return exhaustiveCheck;
+    }
   }
 }
 

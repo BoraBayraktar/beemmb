@@ -8,8 +8,62 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type {
   AdminBusinessDocumentDetail,
+  AdminBusinessDocumentStatus,
+  AdminBusinessDocumentSyncStatus,
+  AdminBusinessDocumentType,
   AdminPendingInvoiceDeliveryNoteListResult,
 } from "@/modules/documents/contracts/document.contract";
+
+function documentTypeLabel(value: AdminBusinessDocumentType) {
+  switch (value) {
+    case "PURCHASE_DOCUMENT":
+      return "Satın alma belgesi";
+    case "DELIVERY_NOTE":
+      return "İrsaliye";
+    case "E_INVOICE":
+      return "E-fatura";
+    case "E_DISPATCH":
+      return "E-irsaliye";
+    default: {
+      const exhaustiveCheck: never = value;
+      return exhaustiveCheck;
+    }
+  }
+}
+
+function documentStatusLabel(value: AdminBusinessDocumentStatus) {
+  switch (value) {
+    case "DRAFT":
+      return "Taslak";
+    case "LINKED":
+      return "Bağlı";
+    case "ISSUED":
+      return "Kesildi";
+    case "CANCELLED":
+      return "İptal";
+    default: {
+      const exhaustiveCheck: never = value;
+      return exhaustiveCheck;
+    }
+  }
+}
+
+function syncStatusLabel(value: AdminBusinessDocumentSyncStatus) {
+  switch (value) {
+    case "NOT_SENT":
+      return "Hazır";
+    case "QUEUED":
+      return "Kuyrukta";
+    case "SENT":
+      return "Gönderildi";
+    case "FAILED":
+      return "Hata";
+    default: {
+      const exhaustiveCheck: never = value;
+      return exhaustiveCheck;
+    }
+  }
+}
 
 type Labels = {
   title: string;
@@ -168,8 +222,8 @@ export function PendingInvoiceManager({ locale, result, initialSearch, labels }:
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge className="border-amber-200 bg-amber-100 text-amber-700">{item.documentType}</Badge>
-                  <Badge className="border-emerald-200 bg-emerald-100 text-emerald-700">{item.status}</Badge>
+                  <Badge className="border-amber-200 bg-amber-100 text-amber-700">{documentTypeLabel(item.documentType)}</Badge>
+                  <Badge className="border-emerald-200 bg-emerald-100 text-emerald-700">{documentStatusLabel(item.status)}</Badge>
                   {cardStatuses[item.id] ? (
                     <Badge
                       className={
@@ -240,7 +294,7 @@ export function PendingInvoiceManager({ locale, result, initialSearch, labels }:
           <div className="flex h-full w-full max-w-2xl flex-col overflow-y-auto bg-[color:var(--color-surface)] p-5 shadow-2xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{detail.documentType}</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">{documentTypeLabel(detail.documentType)}</p>
                 <h3 className="mt-1 text-xl font-semibold text-[color:var(--color-text)]">{detail.documentNumber}</h3>
               </div>
               <Button type="button" onClick={() => setDetail(null)} variant="secondary" size="sm">
@@ -255,8 +309,8 @@ export function PendingInvoiceManager({ locale, result, initialSearch, labels }:
                 <p className="mt-2">{labels.inventoryTransactionNumber}: {detail.inventoryTransactionNumber ?? labels.notSpecified}</p>
               </div>
               <div className="rounded-2xl border border-[color:var(--color-border)] p-4 text-sm text-[color:var(--color-text)]">
-                <p>{labels.documentStatus}: {detail.status}</p>
-                <p className="mt-2">{labels.externalSystemStatus}: {detail.externalSystemStatus}</p>
+                <p>{labels.documentStatus}: {documentStatusLabel(detail.status)}</p>
+                <p className="mt-2">{labels.externalSystemStatus}: {syncStatusLabel(detail.externalSystemStatus)}</p>
                 <p className="mt-2">{labels.externalReference}: {detail.externalReference ?? labels.notSpecified}</p>
               </div>
             </div>

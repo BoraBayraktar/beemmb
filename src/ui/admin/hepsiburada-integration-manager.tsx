@@ -231,6 +231,42 @@ function formatDate(value: string | null) {
   }).format(new Date(value));
 }
 
+function importStatusLabel(status: MarketplacePackage["importStatus"], labels: Pick<Labels, "readyForOrder" | "needsReview">) {
+  switch (status) {
+    case "RECEIVED":
+      return "Alındı";
+    case "READY_FOR_ORDER":
+      return labels.readyForOrder;
+    case "NEEDS_REVIEW":
+      return labels.needsReview;
+    case "ORDER_CREATED":
+      return "Sipariş oluşturuldu";
+    case "FAILED":
+      return "Başarısız";
+    default: {
+      const exhaustiveCheck: never = status;
+      return exhaustiveCheck;
+    }
+  }
+}
+
+function matchStatusLabel(status: MarketplacePackageLine["matchStatus"]) {
+  switch (status) {
+    case "MATCHED":
+      return "Eşleşti";
+    case "UNMATCHED":
+      return "Eşleşmedi";
+    case "AMBIGUOUS":
+      return "Belirsiz";
+    case "IGNORED":
+      return "Yok sayıldı";
+    default: {
+      const exhaustiveCheck: never = status;
+      return exhaustiveCheck;
+    }
+  }
+}
+
 function statusClass(status: MarketplacePackage["importStatus"]) {
   if (status === "READY_FOR_ORDER") {
     return "bg-emerald-100 text-emerald-700";
@@ -983,7 +1019,7 @@ export function HepsiburadaIntegrationManager({
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-semibold text-[color:var(--color-text)]">{item.externalOrderNumber}</p>
-                  <Badge className={statusClass(item.importStatus)}>{item.importStatus}</Badge>
+                  <Badge className={statusClass(item.importStatus)}>{importStatusLabel(item.importStatus, labels)}</Badge>
                 </div>
                 <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{item.customerName ?? item.configName} - {item.externalPackageId}</p>
               </div>
@@ -1125,7 +1161,7 @@ export function HepsiburadaIntegrationManager({
                 <article className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3">
                   <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.lastSync}</p>
                   <p className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">{formatDate(selectedPackage.updatedAt)}</p>
-                  <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{selectedPackage.importStatus}</p>
+                  <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{importStatusLabel(selectedPackage.importStatus, labels)}</p>
                 </article>
               </div>
 
@@ -1254,7 +1290,7 @@ export function HepsiburadaIntegrationManager({
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-semibold text-[color:var(--color-text)]">{line.productName}</p>
                       <Badge className={line.matchStatus === "MATCHED" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}>
-                        {line.matchStatus}
+                        {matchStatusLabel(line.matchStatus)}
                       </Badge>
                     </div>
                     <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">

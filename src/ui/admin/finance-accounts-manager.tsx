@@ -97,29 +97,38 @@ function typeLabel(type: AdminFinanceAccountsResult["items"][number]["type"], la
       return labels.cashIn;
     case "CASH_OUT":
       return labels.cashOut;
-    default:
-      return type;
+    default: {
+      const exhaustiveCheck: never = type;
+      return exhaustiveCheck;
+    }
   }
 }
 
 function formatStatusLabel(value: string) {
-  if (value === "PENDING") {
-    return "Bekleyen ödeme";
+  switch (value) {
+    case "PENDING":
+      return "Bekleyen ödeme";
+    case "AUTHORIZED":
+      return "Provizyonlu";
+    case "PAID":
+      return "Ödendi";
+    case "FAILED":
+      return "Başarısız ödeme";
+    case "REFUNDED":
+      return "İade edildi";
+    case "RECORDED":
+      return "Kaydedildi";
+    case "CANCELLED":
+      return "İptal";
+    case "DRAFT":
+      return "Taslak";
+    case "LINKED":
+      return "Bağlı";
+    case "ISSUED":
+      return "Kesildi";
+    default:
+      return "Bilinmiyor";
   }
-
-  if (value === "AUTHORIZED") {
-    return "Provizyonlu";
-  }
-
-  if (value === "FAILED") {
-    return "Başarısız ödeme";
-  }
-
-  if (value === "RECORDED") {
-    return "Kaydedildi";
-  }
-
-  return value;
 }
 
 export function FinanceAccountsManager({ locale, result, initialSearch, initialType, labels }: Props) {

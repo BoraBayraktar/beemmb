@@ -287,6 +287,8 @@ function formatFinancialMovementSource(value: OrderDetail["financialMovements"][
       return labels.financialMovementSourceRefund;
     case "TRANSFER":
       return labels.financialMovementSourceTransfer;
+    case "EXPENSE_REPORT":
+      return "Masraf Bildirimi";
     default:
       return labels.financialMovementSourceManual;
   }
@@ -312,8 +314,14 @@ function formatMovementType(value: OrderDetail["inventoryMovements"][number]["ty
       return labels.inventoryMovementReturnRestock;
     case "DAMAGE_WRITE_OFF":
       return labels.inventoryMovementDamageWriteOff;
+    case "COUNT_ADJUSTMENT":
+      return "Sayım düzeltmesi";
+    case "TRANSFER_OUT":
+      return "Transfer çıkışı";
+    case "TRANSFER_IN":
+      return "Transfer girişi";
     default:
-      return value;
+      return "Diğer hareket";
   }
 }
 
@@ -359,8 +367,44 @@ function formatDocumentType(value: OrderDetail["documents"][number]["documentTyp
       return "E-fatura";
     case "E_DISPATCH":
       return "E-irsaliye";
-    default:
-      return value;
+    default: {
+      const exhaustiveCheck: never = value;
+      return exhaustiveCheck;
+    }
+  }
+}
+
+function formatDocumentStatus(value: OrderDetail["documents"][number]["status"]) {
+  switch (value) {
+    case "DRAFT":
+      return "Taslak";
+    case "LINKED":
+      return "Bağlı";
+    case "ISSUED":
+      return "Kesildi";
+    case "CANCELLED":
+      return "İptal";
+    default: {
+      const exhaustiveCheck: never = value;
+      return exhaustiveCheck;
+    }
+  }
+}
+
+function formatDocumentSyncStatus(value: OrderDetail["documents"][number]["externalSystemStatus"]) {
+  switch (value) {
+    case "NOT_SENT":
+      return "Gönderilmedi";
+    case "QUEUED":
+      return "Sırada";
+    case "SENT":
+      return "Gönderildi";
+    case "FAILED":
+      return "Başarısız";
+    default: {
+      const exhaustiveCheck: never = value;
+      return exhaustiveCheck;
+    }
   }
 }
 
@@ -896,8 +940,8 @@ export function OrderDetailManager({ locale, order, labels, canManage, accountOp
                 <div className="grid gap-2 text-sm text-[color:var(--color-text)] md:grid-cols-2">
                   <p><span className="font-medium text-[color:var(--color-text)]">Belge:</span> {document.documentNumber}</p>
                   <p><span className="font-medium text-[color:var(--color-text)]">Tür:</span> {formatDocumentType(document.documentType)}</p>
-                  <p><span className="font-medium text-[color:var(--color-text)]">Durum:</span> {document.status}</p>
-                  <p><span className="font-medium text-[color:var(--color-text)]">Dış sistem:</span> {document.externalSystemStatus}</p>
+                  <p><span className="font-medium text-[color:var(--color-text)]">Durum:</span> {formatDocumentStatus(document.status)}</p>
+                  <p><span className="font-medium text-[color:var(--color-text)]">Dış sistem:</span> {formatDocumentSyncStatus(document.externalSystemStatus)}</p>
                   <p><span className="font-medium text-[color:var(--color-text)]">{labels.historyAt}:</span> {formatDate(document.issueDate, locale)}</p>
                   <p><span className="font-medium text-[color:var(--color-text)]">İşlem no:</span> {document.inventoryTransactionNumber ?? labels.notSpecified}</p>
                   <p><span className="font-medium text-[color:var(--color-text)]">{labels.orderTotal}:</span> {document.totalAmount !== null ? formatMoney(document.totalAmount, document.currency, locale) : labels.notSpecified}</p>

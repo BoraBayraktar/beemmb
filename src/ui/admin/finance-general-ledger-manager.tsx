@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { AdminGeneralLedgerReport } from "@/modules/finance/contracts/finance-general-ledger.contract";
+import type { AdminFinanceLedgerAccountCategory } from "@/modules/finance/contracts/finance-ledger-account.contract";
 import type { FinanceLedgerEntriesCopy } from "@/modules/finance/services/finance-ledger-entries-copy.resolver";
 import { formatSourceType } from "@/ui/admin/finance-ledger-entries-manager";
 
@@ -33,6 +34,25 @@ function formatMoney(value: number, currency: string) {
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium" }).format(new Date(value));
+}
+
+function categoryLabel(category: AdminFinanceLedgerAccountCategory) {
+  switch (category) {
+    case "ASSET":
+      return "Aktif (Varlık)";
+    case "LIABILITY":
+      return "Pasif (Borç)";
+    case "EQUITY":
+      return "Özkaynak";
+    case "INCOME":
+      return "Gelir";
+    case "EXPENSE":
+      return "Gider";
+    default: {
+      const exhaustiveCheck: never = category;
+      return exhaustiveCheck;
+    }
+  }
 }
 
 export function FinanceGeneralLedgerManager({
@@ -117,7 +137,7 @@ export function FinanceGeneralLedgerManager({
                   <div className="flex items-center gap-3">
                     <span className="font-mono text-sm font-semibold text-[color:var(--color-text)]">{account.code}</span>
                     <span className="font-medium text-[color:var(--color-text)]">{account.name}</span>
-                    <Badge>{account.category}</Badge>
+                    <Badge>{categoryLabel(account.category)}</Badge>
                   </div>
                   <div className="flex flex-wrap items-center gap-4 text-xs text-[color:var(--color-text-muted)]">
                     <span>{copy.openingBalance}: {formatMoney(account.openingDebit, report.currency)} / {formatMoney(account.openingCredit, report.currency)}</span>

@@ -36,8 +36,10 @@ function categoryLabel(category: AdminFinanceLedgerAccountCategory, copy: Financ
       return copy.categoryIncome;
     case "EXPENSE":
       return copy.categoryExpense;
-    default:
-      return category;
+    default: {
+      const exhaustiveCheck: never = category;
+      return exhaustiveCheck;
+    }
   }
 }
 

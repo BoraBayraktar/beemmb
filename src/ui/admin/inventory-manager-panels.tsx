@@ -874,8 +874,10 @@ export function InventorySyncPanel({
         return "Başarısız";
       case "DUPLICATE":
         return "Tekrarlı";
-      default:
-        return value;
+      default: {
+        const exhaustiveCheck: never = value;
+        return exhaustiveCheck;
+      }
     }
   };
 
@@ -887,8 +889,10 @@ export function InventorySyncPanel({
         return "Harici SKU";
       case "UNRESOLVED":
         return "Çözümlenmedi";
-      default:
-        return value;
+      default: {
+        const exhaustiveCheck: never = value;
+        return exhaustiveCheck;
+      }
     }
   };
 
@@ -900,8 +904,10 @@ export function InventorySyncPanel({
         return "Varsayılan depo";
       case "UNRESOLVED":
         return "Depo çözümlenmedi";
-      default:
-        return value;
+      default: {
+        const exhaustiveCheck: never = value;
+        return exhaustiveCheck;
+      }
     }
   };
 
@@ -915,8 +921,10 @@ export function InventorySyncPanel({
         return "Başarısız";
       case "DUPLICATE":
         return "Tekrarlı";
-      default:
-        return value;
+      default: {
+        const exhaustiveCheck: never = value;
+        return exhaustiveCheck;
+      }
     }
   };
 
@@ -937,7 +945,7 @@ export function InventorySyncPanel({
       return labels.channelHepsiburada;
     }
 
-    return value;
+    return "Test entegrasyonu";
   };
 
   return (

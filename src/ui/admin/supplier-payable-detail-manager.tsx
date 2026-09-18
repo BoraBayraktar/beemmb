@@ -2,7 +2,42 @@ import Link from "next/link";
 
 import type { AdminSupplierPayableDetail } from "@/modules/finance/contracts/payables.contract";
 import type { AdminInventoryPayableSummary } from "@/modules/finance/contracts/inventory-payable-summary.contract";
+import type { AdminBusinessDocumentStatus, AdminBusinessDocumentType } from "@/modules/documents/contracts/document.contract";
 import { FinanceInventoryPayableSummaryPanel } from "@/ui/admin/finance-inventory-payable-summary-panel";
+
+function documentTypeLabel(value: AdminBusinessDocumentType) {
+  switch (value) {
+    case "PURCHASE_DOCUMENT":
+      return "Satın alma belgesi";
+    case "DELIVERY_NOTE":
+      return "İrsaliye";
+    case "E_INVOICE":
+      return "E-fatura";
+    case "E_DISPATCH":
+      return "E-irsaliye";
+    default: {
+      const exhaustiveCheck: never = value;
+      return exhaustiveCheck;
+    }
+  }
+}
+
+function documentStatusLabel(value: AdminBusinessDocumentStatus) {
+  switch (value) {
+    case "DRAFT":
+      return "Taslak";
+    case "LINKED":
+      return "Bağlı";
+    case "ISSUED":
+      return "Kesildi";
+    case "CANCELLED":
+      return "İptal";
+    default: {
+      const exhaustiveCheck: never = value;
+      return exhaustiveCheck;
+    }
+  }
+}
 
 type Labels = {
   title: string;
@@ -98,13 +133,13 @@ export function SupplierPayableDetailManager({ locale, item, inventorySummary, l
         {item.documents.map((document) => (
           <article key={document.id} className="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-sm">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-neutral-200 px-3 py-1 text-xs font-semibold text-neutral-900">{document.documentType}</span>
-              <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">{document.status}</span>
+              <span className="rounded-full bg-neutral-200 px-3 py-1 text-xs font-semibold text-neutral-900">{documentTypeLabel(document.documentType)}</span>
+              <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">{documentStatusLabel(document.status)}</span>
             </div>
             <h2 className="mt-3 text-lg font-semibold text-[color:var(--color-text)]">{document.documentNumber}</h2>
             <div className="mt-3 grid gap-2 text-sm text-[color:var(--color-text)] md:grid-cols-2 xl:grid-cols-3">
-              <p>{labels.documentStatus}: {document.status}</p>
-              <p>{labels.documentType}: {document.documentType}</p>
+              <p>{labels.documentStatus}: {documentStatusLabel(document.status)}</p>
+              <p>{labels.documentType}: {documentTypeLabel(document.documentType)}</p>
               <p>{labels.orderNumber}: {document.orderNumber ?? labels.notSpecified}</p>
               <p>{labels.inventoryTransactionNumber}: {document.inventoryTransactionNumber ?? labels.notSpecified}</p>
               <p>{labels.lastIssueDate}: {new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(document.issueDate))}</p>

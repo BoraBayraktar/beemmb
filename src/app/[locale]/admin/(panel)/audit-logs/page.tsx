@@ -72,7 +72,7 @@ function getEntityBadgeClass(entityType: string) {
 }
 
 function getEntityTypeLabel(entityType: string) {
-  return auditLogEntityLabels[entityType as AuditLogEntityType] ?? entityType;
+  return auditLogEntityLabels[entityType as AuditLogEntityType] ?? `Diğer (${entityType})`;
 }
 
 function getActionBadgeClass(action: string) {
@@ -97,7 +97,7 @@ function getActionBadgeClass(action: string) {
 }
 
 function getActionLabel(action: string) {
-  return auditLogActionLabels[action as AuditLogAction] ?? action;
+  return auditLogActionLabels[action as AuditLogAction] ?? `Diğer (${action})`;
 }
 
 function formatAuditSummary(summary: string | null, fallback: string) {
