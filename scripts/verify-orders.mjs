@@ -102,7 +102,7 @@ async function main() {
     },
   });
 
-  await prisma.user.upsert({
+  const editorUser = await prisma.user.upsert({
     where: { email: "editor@beemmb.local" },
     update: {
       name: "Editor User",
@@ -118,6 +118,28 @@ async function main() {
       name: "Editor User",
       role: "EDITOR",
       passwordHash: editorPasswordHash,
+    },
+  });
+
+  // Bu test'in amacı "orders.manage yetkisi olmayan bir kullanıcı sipariş
+  // PATCH'i deneyince 403 almalı" -- ama editor@beemmb.local'ın RBAC rol
+  // ataması hangi rol olursa olsun (legacy EDITOR alanı RBAC izinlerini
+  // belirlemez) ortamdan ortama değişebilir; geçmişte bu hesap "operation"
+  // rolüne atanmıştı ve o rol orders.manage İÇERİYOR, bu da testi anlamsız
+  // kılıyordu. Test'i deterministik ve doğru yapmak için burada bilinçli
+  // olarak salt-okunur "auditor" (Denetçi) rolüne sabitliyoruz: orders.read
+  // var (GET 200 kontrolü için) ama orders.manage yok (PATCH 403 kontrolü için).
+  const auditorRole = await prisma.role.findFirst({
+    where: { tenantId: "tenant-beemmb-platform", key: "auditor" },
+    select: { id: true },
+  });
+  assert(auditorRole, "Beklenen sistem rolü bulunamadı: auditor");
+  await prisma.userRoleAssignment.deleteMany({ where: { userId: editorUser.id } });
+  await prisma.userRoleAssignment.create({
+    data: {
+      tenantId: "tenant-beemmb-platform",
+      userId: editorUser.id,
+      roleId: auditorRole.id,
     },
   });
 
@@ -276,12 +298,18 @@ async function main() {
     });
     assert(paidOrderPatchResponse.status === 200, `Refund order paid patch expected 200, got ${paidOrderPatchResponse.status}`);
 
+    const refundFinancialAccount = await prisma.financialAccount.findFirst({
+      where: { tenantId: "tenant-beemmb-platform", isActive: true },
+      select: { id: true },
+    });
+    assert(refundFinancialAccount, "Expected at least one active financial account for refund");
+
     const refundedOrderPatchResponse = await authFetch(`/api/admin/orders/${refundOrderId}`, adminCookie, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ paymentStatus: "REFUNDED" }),
+      body: JSON.stringify({ paymentStatus: "REFUNDED", refundFinancialAccountId: refundFinancialAccount.id }),
     });
     assert(refundedOrderPatchResponse.status === 200, `Refund order refund patch expected 200, got ${refundedOrderPatchResponse.status}`);
     const refundedPayload = await refundedOrderPatchResponse.json();
