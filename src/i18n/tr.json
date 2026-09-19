@@ -268,6 +268,7 @@
     "name": "Ad Soyad",
     "role": "Rol",
     "productManager": "Ürün Yönetimi",
+    "catalogManager": "Katalog Yönetimi",
     "inventoryManager": "Stok Yönetimi",
     "questionManager": "Ürün Soru Moderasyonu",
     "orderManager": "Sipariş Yönetimi",

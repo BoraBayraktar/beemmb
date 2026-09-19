@@ -158,33 +158,45 @@ export function findFirstAccessibleHref(
 export function buildAdminMenuTree(dictionary: Dictionary, locale: Locale): AdminMenuItem[] {
   return [
     {
-      href: `/${locale}/admin/products`,
-      label: dictionary.admin.productManager,
-      permissionKey: "products.read",
+      href: `/${locale}/admin/categories`,
+      label: dictionary.admin.catalogManager,
+      permissionKey: "categories.manage",
       moduleKey: "products",
       children: [
-        { href: `/${locale}/admin/products`, label: "Stok Kartları", permissionKey: "products.read" },
-        { href: `/${locale}/admin/product-questions`, label: dictionary.admin.questionManager, permissionKey: "productQuestions.read" },
         { href: `/${locale}/admin/categories`, label: dictionary.admin.categoryManager, permissionKey: "categories.manage" },
-        { href: `/${locale}/admin/storefront`, label: dictionary.admin.storefrontManager, permissionKey: "storefront.manage" },
-        { href: `/${locale}/admin/product-attributes`, label: dictionary.admin.productAttributesTitle, permissionKey: "productAttributes.manage" },
-        { href: `/${locale}/admin/orders`, label: dictionary.admin.orderManager, permissionKey: "orders.read" },
-        { href: `/${locale}/admin/orders/shipping-report`, label: dictionary.admin.shippingReportTitle, permissionKey: "ordersShippingReport.read" },
         { href: `/${locale}/admin/brands`, label: dictionary.admin.brandsTitle, permissionKey: "brands.manage" },
+        { href: `/${locale}/admin/product-attributes`, label: dictionary.admin.productAttributesTitle, permissionKey: "productAttributes.manage" },
+        { href: `/${locale}/admin/storefront`, label: dictionary.admin.storefrontManager, permissionKey: "storefront.manage" },
+        { href: `/${locale}/admin/product-questions`, label: dictionary.admin.questionManager, permissionKey: "productQuestions.read" },
       ],
     },
     {
-      href: `/${locale}/admin/inventory`,
+      // NOT: bu grup "products" (Stok Kartları) ve "inventory" (depo araçları)
+      // moduleKey'lerini bir arada barındırıyor. Üst node bilerek moduleKey
+      // TAŞIMIYOR (miras almasın diye) -- her çocuk kendi moduleKey'ini
+      // açıkça taşır, aksi halde bir tenant'ta yanlış modül entitlement'ı
+      // miras alınıp Stok Kartları veya depo araçları hatalı gizlenir/gösterilir.
+      href: `/${locale}/admin/products`,
       label: dictionary.admin.inventoryManager,
-      permissionKey: "inventory.read",
-      moduleKey: "inventory",
+      permissionKey: "products.read",
       children: [
-        { href: `/${locale}/admin/inventory`, label: "Genel Bakış", permissionKey: "inventory.read" },
-        { href: `/${locale}/admin/inventory/quick-actions`, label: "Hızlı Barkod İşlemleri", permissionKey: "inventoryQuickActions.manage" },
-        { href: `/${locale}/admin/inventory/transactions`, label: dictionary.admin.inventoryTransactionsTitle, permissionKey: "inventoryTransactions.read" },
-        { href: `/${locale}/admin/inventory/counts`, label: dictionary.admin.inventoryStockCountTitle, permissionKey: "inventoryCounts.manage" },
-        { href: `/${locale}/admin/inventory/warehouses`, label: dictionary.admin.inventoryWarehousesTitle, permissionKey: "warehouses.manage" },
-        { href: `/${locale}/admin/inventory/exports`, label: "Dışa Aktarım Geçmişi", permissionKey: "inventoryExports.read" },
+        { href: `/${locale}/admin/products`, label: "Stok Kartları", permissionKey: "products.read", moduleKey: "products" },
+        { href: `/${locale}/admin/inventory`, label: "Genel Bakış", permissionKey: "inventory.read", moduleKey: "inventory" },
+        { href: `/${locale}/admin/inventory/quick-actions`, label: "Hızlı Barkod İşlemleri", permissionKey: "inventoryQuickActions.manage", moduleKey: "inventory" },
+        { href: `/${locale}/admin/inventory/transactions`, label: dictionary.admin.inventoryTransactionsTitle, permissionKey: "inventoryTransactions.read", moduleKey: "inventory" },
+        { href: `/${locale}/admin/inventory/counts`, label: dictionary.admin.inventoryStockCountTitle, permissionKey: "inventoryCounts.manage", moduleKey: "inventory" },
+        { href: `/${locale}/admin/inventory/warehouses`, label: dictionary.admin.inventoryWarehousesTitle, permissionKey: "warehouses.manage", moduleKey: "inventory" },
+        { href: `/${locale}/admin/inventory/exports`, label: "Dışa Aktarım Geçmişi", permissionKey: "inventoryExports.read", moduleKey: "inventory" },
+      ],
+    },
+    {
+      href: `/${locale}/admin/orders`,
+      label: dictionary.admin.orderManager,
+      permissionKey: "orders.read",
+      moduleKey: "products",
+      children: [
+        { href: `/${locale}/admin/orders`, label: dictionary.admin.orderList, permissionKey: "orders.read" },
+        { href: `/${locale}/admin/orders/shipping-report`, label: dictionary.admin.shippingReportTitle, permissionKey: "ordersShippingReport.read" },
       ],
     },
     {
