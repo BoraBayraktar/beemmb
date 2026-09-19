@@ -73,7 +73,7 @@ export default async function AdminCategoriesPage({
         search: dictionary.admin.searchCategory,
         allParents: dictionary.admin.allParentCategories,
         slug: dictionary.admin.slug,
-        name: dictionary.admin.name,
+        name: dictionary.admin.categoryName,
         productCount: dictionary.admin.productCount,
         trendyolId: dictionary.admin.trendyolId,
         trendyolSearch: dictionary.admin.trendyolCategorySearch,
