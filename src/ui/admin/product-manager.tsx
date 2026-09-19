@@ -1997,6 +1997,7 @@ export function ProductManager({
       }
 
       const filesToUpload = imageFiles.slice(0, availableSlots);
+      const skippedCount = imageFiles.length - filesToUpload.length;
       const uploadedUrls: string[] = [];
 
       for (const imageFile of filesToUpload) {
@@ -2054,6 +2055,10 @@ export function ProductManager({
           imageUrls: mergedGallery.filter((value) => value !== primaryImage),
         };
       });
+
+      if (skippedCount > 0) {
+        setError(`${skippedCount} dosya, en fazla ${MAX_PRODUCT_IMAGES} görsel sınırı nedeniyle yüklenmedi.`);
+      }
 
       setImageFiles([]);
       if (imageFileInputRef.current) {
