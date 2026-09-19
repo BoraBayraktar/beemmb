@@ -7,6 +7,7 @@ import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.se
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
 import { inventoryService } from "@/modules/inventory/services/inventory.service";
+import { platformService } from "@/modules/platform/services/platform.service";
 import { ProductManager } from "@/ui/admin/product-manager";
 
 export default async function AdminProductsPage({
@@ -40,6 +41,7 @@ export default async function AdminProductsPage({
     notFound();
   }
 
+  const enabledModuleKeys = await platformService.getEnabledModuleKeys(user.tenantId);
   const query = await searchParams;
   const [productResult, categories, warehouses, brands, suppliers, attributeDefinitions] = await runWithTenantContext(
     { tenantId: user.tenantId, isPlatformOperator: user.isSuperAdmin },
@@ -80,6 +82,7 @@ export default async function AdminProductsPage({
       warehouses={warehouses}
       canDelete={await rbacService.hasPermission(user, "products.manage")}
       canManageIntegrations={await rbacService.hasPermission(user, "integrations.manage")}
+      canManageSuppliers={enabledModuleKeys.has("finance")}
       labels={{
         title: dictionary.admin.productManager,
         createTitle: dictionary.admin.createProduct,

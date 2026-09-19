@@ -421,6 +421,7 @@ type ProductManagerProps = {
   warehouses: AdminWarehouseItem[];
   canDelete: boolean;
   canManageIntegrations: boolean;
+  canManageSuppliers: boolean;
 };
 
 type ProductForm = {
@@ -1119,6 +1120,7 @@ export function ProductManager({
   warehouses,
   canDelete,
   canManageIntegrations,
+  canManageSuppliers,
 }: ProductManagerProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -3595,34 +3597,36 @@ export function ProductManager({
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2">
-                  <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.supplier}</p>
-                    <div className="mt-2 grid gap-2">
-                      <Label>{labels.supplier}</Label>
-                      <div className="grid gap-2">
-                        <SearchableSelect
-                          value={activeForm.primarySupplierId || NONE_VALUE}
-                          onValueChange={(value) => patchActiveField("primarySupplierId", value === NONE_VALUE ? "" : value)}
-                          options={[
-                            { value: NONE_VALUE, label: labels.notSpecified },
-                            ...supplierOptions
-                              .filter((supplier) => supplier.isActive)
-                              .map((supplier) => ({
-                                value: supplier.id,
-                                label: supplier.name,
-                                description: supplier.taxNumber || supplier.email || supplier.phone || undefined,
-                              })),
-                          ]}
-                          placeholder={labels.notSpecified}
-                          searchPlaceholder={labels.searchSupplier}
-                          emptyLabel={labels.noSupplierResults}
-                        />
-                        <Link href={`/${locale}/admin/cari`} className="text-xs font-medium text-[color:var(--color-text-muted)] underline underline-offset-4">
-                          {labels.manageSuppliers}
-                        </Link>
+                  {canManageSuppliers ? (
+                    <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
+                      <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.supplier}</p>
+                      <div className="mt-2 grid gap-2">
+                        <Label>{labels.supplier}</Label>
+                        <div className="grid gap-2">
+                          <SearchableSelect
+                            value={activeForm.primarySupplierId || NONE_VALUE}
+                            onValueChange={(value) => patchActiveField("primarySupplierId", value === NONE_VALUE ? "" : value)}
+                            options={[
+                              { value: NONE_VALUE, label: labels.notSpecified },
+                              ...supplierOptions
+                                .filter((supplier) => supplier.isActive)
+                                .map((supplier) => ({
+                                  value: supplier.id,
+                                  label: supplier.name,
+                                  description: supplier.taxNumber || supplier.email || supplier.phone || undefined,
+                                })),
+                            ]}
+                            placeholder={labels.notSpecified}
+                            searchPlaceholder={labels.searchSupplier}
+                            emptyLabel={labels.noSupplierResults}
+                          />
+                          <Link href={`/${locale}/admin/cari`} className="text-xs font-medium text-[color:var(--color-text-muted)] underline underline-offset-4">
+                            {labels.manageSuppliers}
+                          </Link>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ) : null}
                   <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
                     <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">Satın alma deposu</p>
                     <div className="mt-2 grid gap-2">
