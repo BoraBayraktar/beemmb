@@ -323,6 +323,8 @@ type Labels = {
   validationVariantRequired: string;
   validationVariantAttributes: string;
   validationVariantImageUrl: string;
+  validationVariantDuplicateSku: string;
+  variantDuplicateSkuWarning: string;
   uploadImage: string;
   uploadImages: string;
   uploadingImage: string;
@@ -816,6 +818,10 @@ function isVariantRowEmpty(variant: ProductVariant) {
   ].some((value) => value.trim());
 }
 
+function normalizeSku(sku: string) {
+  return sku.trim().toLocaleUpperCase("tr-TR");
+}
+
 function toPayload(form: ProductForm, options: { includeVariants?: boolean } = {}) {
   const stockTrackingEnabled = form.productType === "SERVICE" ? false : form.stockTrackingEnabled;
   const compareAtPrice = form.compareAtPrice.trim() ? Number(form.compareAtPrice) : null;
@@ -1240,6 +1246,20 @@ export function ProductManager({
   const activeSubmit = drawerMode === "edit" ? labels.save : labels.create;
   const isStockManaged = activeForm.stockTrackingEnabled && activeForm.productType !== "SERVICE";
   const activeVariantEditor = variantEditorIndex !== null ? activeForm.variants[variantEditorIndex] ?? null : null;
+  const duplicateVariantSkuSet = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const variant of activeForm.variants) {
+      const normalized = normalizeSku(variant.sku);
+      if (!normalized) {
+        continue;
+      }
+      counts.set(normalized, (counts.get(normalized) ?? 0) + 1);
+    }
+    return new Set(Array.from(counts.entries()).filter(([, count]) => count > 1).map(([sku]) => sku));
+  }, [activeForm.variants]);
+  const activeVariantEditorHasDuplicateSku = activeVariantEditor
+    ? duplicateVariantSkuSet.has(normalizeSku(activeVariantEditor.sku))
+    : false;
   const selectedVariantAxisDefinitions = useMemo(
     () => activeForm.attributeLinks
       .map((link) => attributeDefinitionOptions.find((item) => item.id === link.attributeDefinitionId))
@@ -1717,6 +1737,7 @@ export function ProductManager({
     const activeVariantAxisIds = form.attributeLinks
       .filter((link) => link.attributeDefinitionId && link.isVariantAxis)
       .map((link) => link.attributeDefinitionId);
+    const seenSkus = new Set<string>();
 
     for (const variant of form.variants) {
       if (isVariantRowEmpty(variant)) {
@@ -1726,6 +1747,12 @@ export function ProductManager({
       if (!variant.slug.trim() || !variant.sku.trim() || !variant.title.trim() || !variant.optionSummary.trim()) {
         return labels.validationVariantRequired;
       }
+
+      const normalizedSku = normalizeSku(variant.sku);
+      if (seenSkus.has(normalizedSku)) {
+        return labels.validationVariantDuplicateSku;
+      }
+      seenSkus.add(normalizedSku);
 
       if (variant.imageUrl.trim() && !isValidHttpUrl(variant.imageUrl)) {
         return labels.validationVariantImageUrl;
@@ -3968,8 +3995,11 @@ export function ProductManager({
                                   </div>
                                 </td>
                                 <td className="px-3 py-3 text-[color:var(--color-text-muted)]">
-                                  <div>{variant.sku || labels.sku}</div>
+                                  <div className={duplicateVariantSkuSet.has(normalizeSku(variant.sku)) ? "font-medium text-red-600" : undefined}>{variant.sku || labels.sku}</div>
                                   <div className="text-xs text-[color:var(--color-text-muted)]">{variant.slug || labels.slug}</div>
+                                  {duplicateVariantSkuSet.has(normalizeSku(variant.sku)) ? (
+                                    <div className="mt-1 text-xs font-medium text-red-600">{labels.variantDuplicateSkuWarning}</div>
+                                  ) : null}
                                 </td>
                                 <td className="px-3 py-3 text-[color:var(--color-text-muted)]">
                                   {variant.priceOverride.trim()
@@ -4299,7 +4329,15 @@ export function ProductManager({
                     </div>
                     <div className="grid gap-2">
                       <Label>{labels.sku}</Label>
-                      <Input value={activeVariantEditor.sku} onChange={(event) => patchVariant(variantEditorIndex as number, { sku: event.target.value })} />
+                      <Input
+                        value={activeVariantEditor.sku}
+                        onChange={(event) => patchVariant(variantEditorIndex as number, { sku: event.target.value })}
+                        aria-invalid={activeVariantEditorHasDuplicateSku}
+                        className={activeVariantEditorHasDuplicateSku ? "border-red-400 focus-visible:ring-red-400" : undefined}
+                      />
+                      {activeVariantEditorHasDuplicateSku ? (
+                        <p className="text-xs font-medium text-red-600">{labels.variantDuplicateSkuWarning}</p>
+                      ) : null}
                     </div>
                     <div className="grid gap-2">
                       <Label>{labels.barcode}</Label>

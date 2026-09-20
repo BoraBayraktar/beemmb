@@ -263,6 +263,8 @@ export default async function AdminProductsPage({
         validationVariantRequired: dictionary.admin.validationVariantRequired,
         validationVariantAttributes: dictionary.admin.validationVariantAttributes,
         validationVariantImageUrl: dictionary.admin.validationVariantImageUrl,
+        validationVariantDuplicateSku: dictionary.admin.validationVariantDuplicateSku,
+        variantDuplicateSkuWarning: dictionary.admin.variantDuplicateSkuWarning,
         uploadImage: dictionary.admin.uploadImage,
         uploadImages: dictionary.admin.uploadImages,
         uploadingImage: dictionary.admin.uploadingImage,

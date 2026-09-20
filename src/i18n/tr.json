@@ -798,6 +798,8 @@
     "validationVariantRequired": "Her varyant için başlık, slug, SKU ve seçenek özetini doldurun.",
     "validationVariantAttributes": "Her varyantta seçilen tüm varyant özellikleri için değer girin.",
     "validationVariantImageUrl": "Varyant görseli için geçerli bir URL girin.",
+    "validationVariantDuplicateSku": "Aynı SKU birden fazla varyantta kullanılamaz. Her varyantın SKU'su benzersiz olmalıdır.",
+    "variantDuplicateSkuWarning": "Bu SKU başka bir varyantta da kullanılıyor.",
     "sort": "Sıralama",
     "sortPriority": "Öncelik",
     "sortLatest": "En yeni",
