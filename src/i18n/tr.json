@@ -600,7 +600,7 @@
     "productCardName": "Ürün Adı",
     "categoryName": "Kategori Adı",
     "slug": "Slug",
-    "sku": "SKU",
+    "sku": "Stok Kodu",
     "brand": "Marka",
     "barcode": "Barkod",
     "description": "Açıklama",
