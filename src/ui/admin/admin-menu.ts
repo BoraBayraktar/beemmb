@@ -247,12 +247,19 @@ export function buildAdminMenuTree(dictionary: Dictionary, locale: Locale): Admi
       ],
     },
     {
+      // NOT: grup adi bilerek ModuleCatalog'daki "integrations" adiyla
+      // ("Entegrasyonlar") hizalandi -- dictionary.admin.integrationManager
+      // ("Pazaryeri Yonetimi") bu grubun sadece bir kismini (Trendyol/N11/
+      // Pazarama/Hepsiburada) anlatiyor, "Harici Stok Eventleri" gibi genel
+      // entegrasyon/senkron icerigini kapsamiyor. O anahtar hala
+      // integrations/page.tsx'in kendi sayfa basligi icin kullaniliyor,
+      // sadece menu grubu/ilk cocuk etiketinden kaldirildi.
       href: `/${locale}/admin/integrations`,
-      label: dictionary.admin.integrationManager,
+      label: "Entegrasyonlar",
       permissionKey: "integrations.read",
       moduleKey: "integrations",
       children: [
-        { href: `/${locale}/admin/integrations`, label: dictionary.admin.integrationManager, permissionKey: "integrations.read" },
+        { href: `/${locale}/admin/integrations`, label: "Genel Bakış", permissionKey: "integrations.read" },
         { href: `/${locale}/admin/integrations/trendyol`, label: dictionary.admin.integrationMarketplaceTrendyol, permissionKey: "integrationsTrendyol.manage" },
         { href: `/${locale}/admin/integrations/n11`, label: dictionary.admin.integrationMarketplaceN11, permissionKey: "integrationsN11.manage" },
         { href: `/${locale}/admin/integrations/pazarama`, label: dictionary.admin.integrationMarketplacePazarama, permissionKey: "integrationsPazarama.manage" },
