@@ -214,7 +214,7 @@ export function CategoryManager({ initialResult, parentCandidates, labels, canDe
 
   const getParentBreadcrumb = (category: Category) => {
     if (!category.parentId) {
-      return labels.noParent;
+      return "";
     }
 
     const path: string[] = [];
@@ -238,7 +238,7 @@ export function CategoryManager({ initialResult, parentCandidates, labels, canDe
     }
 
     if (path.length === 0) {
-      return category.parentName ?? labels.noParent;
+      return category.parentName ?? "";
     }
 
     return path.join(" > ");
