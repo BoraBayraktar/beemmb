@@ -3596,6 +3596,12 @@ export function ProductManager({
                   </label>
                 </div>
 
+                {drawerMode === "edit" && currentEditingProduct && currentEditingProduct.variantCount > 0 ? (
+                  <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                    {`Bu Stok Kartı'nın ${currentEditingProduct.variantCount} varyantı var. Buradaki stok/fiyat değerleri sadece kendi override'ı olmayan varyantlar için varsayılan olarak kullanılır — her varyantın kendi stoğunu ve fiyatını "Varyantlar & Özellikler" sekmesinden ayrı yönetebilirsiniz.`}
+                  </p>
+                ) : null}
+
                 <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                   <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
                     <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.stock}</p>
