@@ -191,10 +191,13 @@ type Labels = {
   createSupplier: string;
   manageBrands: string;
   manageSuppliers: string;
+  manageCategories: string;
   searchBrand: string;
   searchSupplier: string;
+  searchCategory: string;
   noBrandResults: string;
   noSupplierResults: string;
+  noCategoryResults: string;
   createAttributeDefinition: string;
   manageAttributeDefinitions: string;
   attributesTitle: string;
@@ -3429,21 +3432,24 @@ export function ProductManager({
                   </div>
                 </div>
                 <div className="grid gap-2 md:grid-cols-2">
-                  <Label>{labels.category}</Label>
                   <div className="grid gap-2">
-                    <Select value={activeForm.categoryId || NONE_VALUE} onValueChange={(value) => patchActiveField("categoryId", value === NONE_VALUE ? "" : value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={labels.notSpecified} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={NONE_VALUE}>{labels.notSpecified}</SelectItem>
-                        {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label>{labels.category}</Label>
+                    <div className="grid gap-2">
+                      <SearchableSelect
+                        value={activeForm.categoryId || NONE_VALUE}
+                        onValueChange={(value) => patchActiveField("categoryId", value === NONE_VALUE ? "" : value)}
+                        options={[
+                          { value: NONE_VALUE, label: labels.notSpecified },
+                          ...categories.map((category) => ({ value: category.id, label: category.name })),
+                        ]}
+                        placeholder={labels.notSpecified}
+                        searchPlaceholder={labels.searchCategory}
+                        emptyLabel={labels.noCategoryResults}
+                      />
+                      <Link href={`/${locale}/admin/categories`} className="text-xs font-medium text-[color:var(--color-text-muted)] underline underline-offset-4">
+                        {labels.manageCategories}
+                      </Link>
+                    </div>
                   </div>
                   <div className="grid gap-2">
                     <Label>{labels.brand}</Label>
