@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { Maximize2, Minimize2, MoreHorizontal, Plus, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Maximize2, Minimize2, MoreHorizontal, Plus, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -160,6 +160,7 @@ type Labels = {
   prev: string;
   next: string;
   slug: string;
+  sort: string;
   sku: string;
   barcode: string;
   name: string;
@@ -222,6 +223,8 @@ type Labels = {
   variantSalesEnabled: string;
   variantAttributeValue: string;
   variantDetails: string;
+  moveVariantUp: string;
+  moveVariantDown: string;
   variantEmptyState: string;
   variantAxisDeleteConfirm: string;
   variantAxisDeleteBlocked: string;
@@ -2268,6 +2271,32 @@ export function ProductManager({
     }));
   }
 
+  function moveVariantRow(index: number, direction: "up" | "down") {
+    const activeVariants = drawerMode === "edit" ? editForm.variants : createForm.variants;
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+
+    if (targetIndex < 0 || targetIndex >= activeVariants.length) {
+      return;
+    }
+
+    patchActiveForm((prev) => {
+      const nextVariants = [...prev.variants];
+      const [moved] = nextVariants.splice(index, 1);
+      nextVariants.splice(targetIndex, 0, moved);
+
+      return {
+        ...prev,
+        variants: nextVariants.map((variant, variantIndex) => ({ ...variant, sortOrder: String(variantIndex) })),
+      };
+    });
+
+    if (variantEditorIndex === index) {
+      setVariantEditorIndex(targetIndex);
+    } else if (variantEditorIndex === targetIndex) {
+      setVariantEditorIndex(index);
+    }
+  }
+
   function patchVariantAttribute(index: number, attributeDefinitionId: string, value: string) {
     patchActiveForm((prev) => ({
       ...prev,
@@ -3985,6 +4014,9 @@ export function ProductManager({
                         <table className="min-w-full divide-y divide-[color:var(--color-border)] bg-[color:var(--color-surface)] text-sm">
                           <thead className="bg-[color:var(--color-bg-soft)] text-left text-xs uppercase tracking-wide text-[color:var(--color-text-muted)]">
                             <tr>
+                              <th className="px-3 py-2 font-medium">
+                                <span className="sr-only">{labels.sort}</span>
+                              </th>
                               <th className="px-3 py-2 font-medium">{labels.variantTitle}</th>
                               <th className="px-3 py-2 font-medium">{labels.sku}</th>
                               <th className="px-3 py-2 font-medium">{labels.price}</th>
@@ -3997,6 +4029,32 @@ export function ProductManager({
                           <tbody className="divide-y divide-[color:var(--color-border)]">
                             {activeForm.variants.map((variant, index) => (
                               <tr key={`variant-${index}`} className="align-top">
+                                <td className="px-3 py-3">
+                                  <div className="flex flex-col gap-1">
+                                    <Button
+                                      type="button"
+                                      size="icon"
+                                      variant="secondary"
+                                      disabled={index === 0}
+                                      onClick={() => moveVariantRow(index, "up")}
+                                      aria-label={labels.moveVariantUp}
+                                      title={labels.moveVariantUp}
+                                    >
+                                      <ChevronUp className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      size="icon"
+                                      variant="secondary"
+                                      disabled={index === activeForm.variants.length - 1}
+                                      onClick={() => moveVariantRow(index, "down")}
+                                      aria-label={labels.moveVariantDown}
+                                      title={labels.moveVariantDown}
+                                    >
+                                      <ChevronDown className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </td>
                                 <td className="px-3 py-3">
                                   <div className="space-y-1">
                                     <p className="font-medium text-[color:var(--color-text)]">
@@ -4377,7 +4435,7 @@ export function ProductManager({
                     </div>
                   </div>
 
-                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                     <div className="grid gap-2">
                       <Label>{labels.variantImageUrl}</Label>
                       <Input value={activeVariantEditor.imageUrl} onChange={(event) => patchVariant(variantEditorIndex as number, { imageUrl: event.target.value })} />
@@ -4385,10 +4443,6 @@ export function ProductManager({
                     <div className="grid gap-2">
                       <Label>{labels.variantStockOverride}</Label>
                       <Input value={activeVariantEditor.stockOverride} type="number" min="0" step="1" onChange={(event) => patchVariant(variantEditorIndex as number, { stockOverride: event.target.value })} />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>{labels.page}</Label>
-                      <Input value={activeVariantEditor.sortOrder} type="number" min="0" step="1" onChange={(event) => patchVariant(variantEditorIndex as number, { sortOrder: event.target.value })} />
                     </div>
                     <div className="grid gap-2">
                       <Label>{labels.stockStatus}</Label>

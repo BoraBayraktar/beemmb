@@ -670,6 +670,8 @@
     "variantSalesEnabled": "Satışa açık",
     "variantAttributeValue": "Özellik değeri",
     "variantDetails": "Detayı düzenle",
+    "moveVariantUp": "Yukarı taşı",
+    "moveVariantDown": "Aşağı taşı",
     "variantEmptyState": "Henüz varyant eklenmedi. Önce özellikleri seçin, sonra varyant oluşturun.",
     "variantAxisDeleteConfirm": "Bu varyant özelliği tanımını silmek istediğinize emin misiniz?",
     "variantAxisDeleteBlocked": "Bu varyant özelliği şu anda silinemiyor.",
