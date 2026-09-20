@@ -95,7 +95,7 @@ export default async function AdminProductsPage({
         slug: dictionary.admin.slug,
         sku: dictionary.admin.sku,
         barcode: dictionary.admin.barcode,
-        name: dictionary.admin.name,
+        name: dictionary.admin.productCardName,
         description: dictionary.admin.description,
         productType: dictionary.admin.productType,
         unitType: dictionary.admin.unitType,
