@@ -174,7 +174,13 @@ export class InventoryRepository {
     return {
       product,
       variant,
-      inventoryItem: variant?.inventoryItem ?? product.inventoryItem ?? null,
+      // `variant` hedeflenmisse (args.variantId verildiyse) SADECE o varyantin
+      // kendi inventoryItem'i (ya da henuz yoksa null) kullanilmali -- product'a
+      // duserse (`?? product.inventoryItem`), henuz kendi InventoryItem'i
+      // olusmamis bir varyant icin yapilan ilk stok yazimi yanlislikla URUNUN
+      // kendi InventoryItem'ini gunceller (skuSnapshot ve onHand varyantinkiyle
+      // ezilir), varyanta hic kendi InventoryItem'i olusturulmaz.
+      inventoryItem: variant ? (variant.inventoryItem ?? null) : (product.inventoryItem ?? null),
       inventoryOwner: variant ? "VARIANT" as const : "PRODUCT" as const,
     };
   }

@@ -109,6 +109,14 @@ function mapProduct(product: {
       reserved: number;
     }>;
   } | null;
+  variants?: Array<{
+    inventoryItem?: {
+      inventoryLevels: Array<{
+        onHand: number;
+        reserved: number;
+      }>;
+    } | null;
+  }>;
 }): ProductCard {
   const { cleanDescription, features } = decodeProductDescriptionWithFeatures(product.description);
   const price = product.price.toNumber();
@@ -116,8 +124,17 @@ function mapProduct(product: {
   const discountRate = compareAtPrice && compareAtPrice > price
     ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
     : null;
-  const inventoryLevels = product.inventoryItem?.inventoryLevels ?? [];
-  const aggregateStock = resolveAggregateAvailableStock(inventoryLevels, 0);
+  // Varyantlı ürünlerde stok varyant bazlı InventoryItem'larda tutuluyor,
+  // ürünün kendi InventoryItem'ı boş kalır -- bu yüzden varyantı varsa
+  // toplam stok varyantların toplamından hesaplanır (bkz. syncProductInventoryState /
+  // resolveInventoryTarget: varyant hedeflenince artık ürünün kendi kaydına yazılmıyor).
+  const hasVariants = (product.variants?.length ?? 0) > 0;
+  const aggregateStock = hasVariants
+    ? (product.variants ?? []).reduce(
+      (sum, variant) => sum + resolveAggregateAvailableStock(variant.inventoryItem?.inventoryLevels ?? [], 0),
+      0,
+    )
+    : resolveAggregateAvailableStock(product.inventoryItem?.inventoryLevels ?? [], 0);
 
   return {
     id: product.id,

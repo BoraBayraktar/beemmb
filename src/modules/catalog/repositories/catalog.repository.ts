@@ -125,6 +125,28 @@ export class CatalogRepository {
             },
           },
         },
+        variants: {
+          where: {
+            deleted: false,
+          },
+          select: {
+            inventoryItem: {
+              select: {
+                inventoryLevels: {
+                  where: {
+                    warehouse: {
+                      isActive: true,
+                    },
+                  },
+                  select: {
+                    onHand: true,
+                    reserved: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
       orderBy: resolveOrderBy(args.sort),
       skip: args.skip,

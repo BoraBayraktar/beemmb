@@ -504,8 +504,17 @@ function mapProduct(product: {
   const discountRate = compareAtPrice && compareAtPrice > price
     ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
     : null;
-  const inventoryLevels = product.inventoryItem?.inventoryLevels ?? [];
-  const aggregateStock = resolveAggregateAvailableStock(inventoryLevels, 0);
+  // Varyantlı ürünlerde stok varyant bazlı InventoryItem'larda tutuluyor,
+  // ürünün kendi InventoryItem'ı boş kalır -- bu yüzden varyantı varsa
+  // toplam stok varyantların toplamından hesaplanır (bkz. resolveInventoryTarget:
+  // bir varyant hedeflenince artık ürünün kendi kaydına yazılmıyor).
+  const hasVariants = product.variants.length > 0;
+  const aggregateStock = hasVariants
+    ? product.variants.reduce(
+      (sum, variant) => sum + resolveAggregateAvailableStock(variant.inventoryItem?.inventoryLevels ?? [], 0),
+      0,
+    )
+    : resolveAggregateAvailableStock(product.inventoryItem?.inventoryLevels ?? [], 0);
   const averageUnitCost = product.inventoryItem?.averageUnitCost?.toNumber()
     ?? product.purchasePrice?.toNumber()
     ?? null;
