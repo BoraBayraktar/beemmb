@@ -271,7 +271,7 @@ function getActiveAdminGuide(pathname: string, searchParams: Pick<URLSearchParam
           items: [
             "Önce ürün temel bilgilerini, fiyatını ve durumunu girin.",
             "Kategori, marka, tedarikçi ve özellik eşleşmelerini tamamlayın.",
-            "Varyantlı ürünlerde eksenleri ve varyant satırlarını oluşturun.",
+            "Varyantlı ürünlerde varyant özelliklerini ve varyant satırlarını oluşturun.",
             "Ürünü kaydettikten sonra stok hazırlığı için Envanter ekranına geçin.",
           ],
         },
@@ -409,7 +409,7 @@ function getActiveAdminGuide(pathname: string, searchParams: Pick<URLSearchParam
           title: "Önerilen sıra",
           items: [
             "Önce renk, beden, hacim gibi tekrar kullanılacak özellikleri tanımlayın.",
-            "Varyant oluşturacak özellikleri ürün ekranında varyant ekseni olarak seçin.",
+            "Varyant oluşturacak özellikleri ürün ekranında varyant özelliği olarak seçin.",
             "Filtre deneyimini sade tutmak için gereksiz özellik çoğaltmayın.",
           ],
         },

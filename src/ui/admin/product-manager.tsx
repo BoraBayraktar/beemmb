@@ -3130,7 +3130,7 @@ export function ProductManager({
                     <p className={`font-medium ${product.variantCount > 0 ? "text-[color:var(--color-text)]" : "text-amber-700"}`}>
                       {product.variantCount > 0 ? `${product.variantCount} varyant` : "Varyant yok"}
                     </p>
-                    <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{product.variantAxisCount} eksen</p>
+                    <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{product.variantAxisCount} özellik</p>
                     <Button
                       type="button"
                       size="sm"
