@@ -171,6 +171,7 @@ type Labels = {
   statusDraft: string;
   statusActive: string;
   statusArchived: string;
+  variantActiveBadge: string;
   unitType: string;
   price: string;
   purchasePrice: string;
@@ -4020,7 +4021,7 @@ export function ProductManager({
                                       <span className="rounded-full bg-neutral-200 px-2 py-1 text-xs font-medium text-neutral-900">{labels.outOfStock}</span>
                                     ) : null}
                                     {variant.salesEnabled && !variant.isDefault ? (
-                                      <span className="rounded-full bg-[color:var(--color-bg-soft)] px-2 py-1 text-xs font-medium text-[color:var(--color-text)]">{labels.statusActive}</span>
+                                      <span className="rounded-full bg-[color:var(--color-bg-soft)] px-2 py-1 text-xs font-medium text-[color:var(--color-text)]">{labels.variantActiveBadge}</span>
                                     ) : null}
                                   </div>
                                 </td>
