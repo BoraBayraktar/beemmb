@@ -253,6 +253,7 @@ export default async function AdminProductsPage({
         stockStatus: dictionary.admin.stockStatus,
         inStock: dictionary.admin.inStock,
         outOfStock: dictionary.admin.outOfStock,
+        lowStock: dictionary.admin.lowStockOnly,
         save: dictionary.admin.save,
         create: dictionary.admin.create,
         edit: dictionary.admin.edit,

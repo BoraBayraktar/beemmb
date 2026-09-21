@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { ChevronDown, ChevronUp, Maximize2, Minimize2, MoreHorizontal, Plus, X } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronUp, Maximize2, Minimize2, MoreHorizontal, Plus, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -311,6 +311,7 @@ type Labels = {
   stockStatus: string;
   inStock: string;
   outOfStock: string;
+  lowStock: string;
   save: string;
   create: string;
   edit: string;
@@ -827,6 +828,30 @@ function normalizeSku(sku: string) {
   return sku.trim().toLocaleUpperCase("tr-TR");
 }
 
+function stockStatusBadgeClass(status: AdminInventoryItem["stockStatus"]) {
+  if (status === "OUT_OF_STOCK") {
+    return "bg-rose-100 text-rose-700";
+  }
+
+  if (status === "LOW_STOCK") {
+    return "bg-amber-100 text-amber-700";
+  }
+
+  return "bg-emerald-100 text-emerald-700";
+}
+
+function stockStatusBadgeLabel(status: AdminInventoryItem["stockStatus"], labels: Labels) {
+  if (status === "OUT_OF_STOCK") {
+    return labels.outOfStock;
+  }
+
+  if (status === "LOW_STOCK") {
+    return labels.lowStock;
+  }
+
+  return labels.inStock;
+}
+
 function toPayload(form: ProductForm, options: { includeVariants?: boolean } = {}) {
   const stockTrackingEnabled = form.productType === "SERVICE" ? false : form.stockTrackingEnabled;
   const compareAtPrice = form.compareAtPrice.trim() ? Number(form.compareAtPrice) : null;
@@ -1142,6 +1167,7 @@ export function ProductManager({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [activeEditTab, setActiveEditTab] = useState<EditDrawerTab>("general");
   const [inventoryOverviewStatus, setInventoryOverviewStatus] = useState<InventoryOverviewStatus>(null);
+  const [selectedInventoryItemKey, setSelectedInventoryItemKey] = useState<string | null>(null);
   const [operationTargetItem, setOperationTargetItem] = useState<AdminInventoryItem | null>(null);
   const [operationMode, setOperationMode] = useState<InventoryOperationDrawerMode>("view");
   const [operationPendingRowKey, setOperationPendingRowKey] = useState<string | null>(null);
@@ -1392,6 +1418,14 @@ export function ProductManager({
   function operationRowKey(item: AdminInventoryItem) {
     return `${item.productId}:${item.variantId ?? "base"}:${item.warehouseCode ?? "none"}`;
   }
+
+  const inventoryOverviewItems = inventoryOverviewStatus && "items" in inventoryOverviewStatus ? inventoryOverviewStatus.items : [];
+  // Tek varyantlı/varyantsız ürünlerde liste-detay gezinmesine gerek yok --
+  // doğrudan tek kaydın detayı gösterilir. Birden fazla varyant varsa
+  // kullanıcının seçtiği (ya da henüz seçmediği => null => master liste) kayıt.
+  const selectedInventoryItem = inventoryOverviewItems.length === 1
+    ? inventoryOverviewItems[0]
+    : inventoryOverviewItems.find((item) => operationRowKey(item) === selectedInventoryItemKey) ?? null;
 
   function openOperationDrawer(item: AdminInventoryItem, mode: InventoryOperationDrawerMode) {
     setOperationTargetItem(item);
@@ -1905,6 +1939,7 @@ export function ProductManager({
     setDrawerFullscreen(false);
     setActiveEditTab(initialTab);
     setInventoryOverviewStatus(null);
+    setSelectedInventoryItemKey(null);
     setDrawerMode("edit");
   }
 
@@ -4224,80 +4259,110 @@ export function ProductManager({
                   <p className="text-sm text-[color:var(--color-text-muted)]">{labels.loading}</p>
                 ) : "error" in inventoryOverviewStatus ? (
                   <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{inventoryOverviewStatus.error}</p>
-                ) : inventoryOverviewStatus.items.length === 0 ? (
+                ) : inventoryOverviewItems.length === 0 ? (
                   <p className="text-sm text-[color:var(--color-text-muted)]">Bu ürün için depo stok kaydı bulunamadı.</p>
-                ) : (
-                  inventoryOverviewStatus.items.map((item) => (
-                    <div key={`${item.productId}-${item.variantId ?? "base"}-${item.warehouseCode ?? "none"}`} className="grid gap-3">
-                      {item.variantOptionSummary || item.variantTitle ? (
-                        <p className="text-sm font-semibold text-[color:var(--color-text)]">
-                          {item.variantOptionSummary || item.variantTitle}
-                        </p>
-                      ) : null}
-                      <InventoryDrawerDistributionPanel item={item} />
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="secondary"
-                          disabled={!item.warehouseCode}
-                          onClick={() => openOperationDrawer(item, "edit")}
-                        >
-                          Stok düzelt
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="secondary"
-                          disabled={!item.warehouseCode}
-                          onClick={() => openOperationDrawer(item, "transfer")}
-                        >
-                          Transfer
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="secondary"
-                          disabled={!item.warehouseCode}
-                          onClick={() => openOperationDrawer(item, "stock_in")}
-                        >
-                          Stok girişi
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="secondary"
-                          disabled={!item.warehouseCode}
-                          onClick={() => openOperationDrawer(item, "stock_out")}
-                        >
-                          Stok çıkışı
-                        </Button>
-                      </div>
-                      <section className="rounded-2xl border border-[color:var(--color-border)] p-4">
-                        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Son Hareketler</p>
-                        {item.recentMovements.length === 0 ? (
-                          <p className="text-xs text-[color:var(--color-text-muted)]">Henüz hareket kaydı yok.</p>
-                        ) : (
-                          <ul className="grid gap-2">
-                            {item.recentMovements.slice(0, 5).map((movement, index) => (
-                              <li
-                                key={`${item.productId}-movement-${index}`}
-                                className="flex items-center justify-between gap-3 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-2 text-xs"
-                              >
-                                <span className={`rounded-full px-2 py-0.5 font-medium ${movementTypeClass(movement.type)}`}>
-                                  {movementTypeLabel(movement.type, labels)}
-                                </span>
-                                <span className={movement.quantity < 0 ? "text-red-600" : "text-emerald-600"}>
-                                  {movement.quantity > 0 ? `+${movement.quantity}` : movement.quantity}
-                                </span>
-                                <span className="text-[color:var(--color-text-muted)]">{formatInventoryDrawerDate(movement.createdAt, locale, "-")}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </section>
+                ) : selectedInventoryItem ? (
+                  <div className="grid gap-3">
+                    {inventoryOverviewItems.length > 1 ? (
+                      <Button type="button" variant="secondary" onClick={() => setSelectedInventoryItemKey(null)}>
+                        ← Varyant listesine dön
+                      </Button>
+                    ) : null}
+                    {selectedInventoryItem.variantOptionSummary || selectedInventoryItem.variantTitle ? (
+                      <p className="text-sm font-semibold text-[color:var(--color-text)]">
+                        {selectedInventoryItem.variantOptionSummary || selectedInventoryItem.variantTitle}
+                      </p>
+                    ) : null}
+                    <InventoryDrawerDistributionPanel item={selectedInventoryItem} />
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        disabled={!selectedInventoryItem.warehouseCode}
+                        onClick={() => openOperationDrawer(selectedInventoryItem, "edit")}
+                      >
+                        Stok düzelt
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        disabled={!selectedInventoryItem.warehouseCode}
+                        onClick={() => openOperationDrawer(selectedInventoryItem, "transfer")}
+                      >
+                        Transfer
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        disabled={!selectedInventoryItem.warehouseCode}
+                        onClick={() => openOperationDrawer(selectedInventoryItem, "stock_in")}
+                      >
+                        Stok girişi
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        disabled={!selectedInventoryItem.warehouseCode}
+                        onClick={() => openOperationDrawer(selectedInventoryItem, "stock_out")}
+                      >
+                        Stok çıkışı
+                      </Button>
                     </div>
-                  ))
+                    <section className="rounded-2xl border border-[color:var(--color-border)] p-4">
+                      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Son Hareketler</p>
+                      {selectedInventoryItem.recentMovements.length === 0 ? (
+                        <p className="text-xs text-[color:var(--color-text-muted)]">Henüz hareket kaydı yok.</p>
+                      ) : (
+                        <ul className="grid gap-2">
+                          {selectedInventoryItem.recentMovements.slice(0, 5).map((movement, index) => (
+                            <li
+                              key={`${selectedInventoryItem.productId}-movement-${index}`}
+                              className="flex items-center justify-between gap-3 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-2 text-xs"
+                            >
+                              <span className={`rounded-full px-2 py-0.5 font-medium ${movementTypeClass(movement.type)}`}>
+                                {movementTypeLabel(movement.type, labels)}
+                              </span>
+                              <span className={movement.quantity < 0 ? "text-red-600" : "text-emerald-600"}>
+                                {movement.quantity > 0 ? `+${movement.quantity}` : movement.quantity}
+                              </span>
+                              <span className="text-[color:var(--color-text-muted)]">{formatInventoryDrawerDate(movement.createdAt, locale, "-")}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </section>
+                  </div>
+                ) : (
+                  <div className="grid gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">
+                      {inventoryOverviewItems.length} varyant
+                    </p>
+                    {inventoryOverviewItems.map((item) => (
+                      <button
+                        key={operationRowKey(item)}
+                        type="button"
+                        onClick={() => setSelectedInventoryItemKey(operationRowKey(item))}
+                        className="flex items-center justify-between gap-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 text-left transition hover:bg-[color:var(--color-bg-soft)]"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-[color:var(--color-text)]">
+                            {item.variantOptionSummary || item.variantTitle || item.name}
+                          </p>
+                          <p className="mt-0.5 truncate text-xs text-[color:var(--color-text-muted)]">{item.sku}</p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <span className={`inline-flex whitespace-nowrap rounded-full px-2 py-1 text-[11px] font-semibold ${stockStatusBadgeClass(item.stockStatus)}`}>
+                            {stockStatusBadgeLabel(item.stockStatus, labels)} ({item.availableStock})
+                          </span>
+                          <ChevronRight className="h-4 w-4 shrink-0 text-[color:var(--color-text-muted)]" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 )}
                 {!operationTargetItem && currentEditingProduct ? (
                   <Link
