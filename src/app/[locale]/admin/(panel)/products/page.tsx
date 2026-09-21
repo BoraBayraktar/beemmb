@@ -290,6 +290,7 @@ export default async function AdminProductsPage({
         notSpecified: dictionary.common.notSpecified,
         inventoryAdjustStock: dictionary.admin.inventoryAdjustStock,
         inventoryAdjustmentNote: dictionary.admin.inventoryAdjustmentNote,
+        inventoryMovementNote: dictionary.admin.inventoryMovementNote,
         inventoryApplyAdjustment: dictionary.admin.inventoryApplyAdjustment,
         inventoryApplyTransfer: dictionary.admin.inventoryApplyTransfer,
         inventoryAvailableStock: dictionary.admin.inventoryAvailableStock,

@@ -1934,6 +1934,7 @@
     "inventoryTargetReorderPoint": "Hedef sipariş noktası",
     "inventoryTargetSafetyStock": "Hedef emniyet stoku",
     "inventoryAdjustmentNote": "Düzeltme notu",
+    "inventoryMovementNote": "Not",
     "inventoryApplyAdjustment": "Uygula",
     "inventoryAdjustmentSaved": "Stok düzeltmesi kaydedildi.",
     "inventoryAdjustmentFailed": "Stok düzeltmesi başarısız oldu.",

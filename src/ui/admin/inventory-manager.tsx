@@ -134,6 +134,7 @@ type Labels = {
   applyAdjustment: string;
   adjustmentSaved: string;
   adjustmentFailed: string;
+  movementNote: string;
   movementQuantity: string;
   stockInSaved: string;
   stockInFailed: string;

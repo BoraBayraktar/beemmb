@@ -393,6 +393,7 @@ function buildInventoryRouteLabels(dictionary: ReturnType<typeof getDictionary>)
       targetReorderPoint: dictionary.admin.inventoryTargetReorderPoint,
       targetSafetyStock: dictionary.admin.inventoryTargetSafetyStock,
       adjustmentNote: dictionary.admin.inventoryAdjustmentNote,
+      movementNote: dictionary.admin.inventoryMovementNote,
       applyAdjustment: dictionary.admin.inventoryApplyAdjustment,
       adjustmentSaved: dictionary.admin.inventoryAdjustmentSaved,
       adjustmentFailed: dictionary.admin.inventoryAdjustmentFailed,

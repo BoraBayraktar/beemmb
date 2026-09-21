@@ -218,6 +218,7 @@ type InventoryDrawerLabels = Pick<
   | "movementLast24Hours"
   | "movementLast30Days"
   | "movementLast7Days"
+  | "movementNote"
   | "movementQuantity"
   | "movementReference"
   | "next"
@@ -2602,8 +2603,8 @@ export function InventoryDrawerOperationPanel({
             </div>
           ) : null}
           <div className="grid gap-2">
-            <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.adjustmentNote}</label>
-            <Textarea value={drawerNote} onChange={(event) => setDrawerNote(event.target.value)} placeholder={labels.adjustmentNote} rows={3} />
+            <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.movementNote}</label>
+            <Textarea value={drawerNote} onChange={(event) => setDrawerNote(event.target.value)} placeholder={labels.movementNote} rows={3} />
           </div>
           <div className="flex justify-end">
             <Button type="submit" disabled={Boolean(pendingRowKey)}>
