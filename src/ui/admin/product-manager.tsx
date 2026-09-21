@@ -3628,26 +3628,28 @@ export function ProductManager({
 
                 {drawerMode === "edit" && currentEditingProduct && currentEditingProduct.variantCount > 0 ? (
                   <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                    {`Bu Stok Kartı'nın ${currentEditingProduct.variantCount} varyantı var. Stok alanı bu yüzden devre dışı -- her varyantın stoğu kendine ait, buradan girilen bir değerin varyantlara hiçbir etkisi olmaz. Fiyat/Alış Fiyatı/İndirimsiz Fiyat ise kendi override'ı olmayan varyantlar için varsayılan olarak kullanılmaya devam eder. Varyant stoklarını "Varyantlar & Özellikler" sekmesinden yönetin.`}
+                    {`Bu Stok Kartı'nın ${currentEditingProduct.variantCount} varyantı var. Stok alanı bu yüzden burada gösterilmiyor -- her varyantın stoğu kendine ait ve "Varyantlar & Özellikler" sekmesinden ayrı ayrı girilir. Fiyat/Alış Fiyatı/İndirimsiz Fiyat ise kendi override'ı olmayan varyantlar için varsayılan olarak kullanılmaya devam eder.`}
                   </p>
                 ) : null}
 
                 <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                  <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.stock}</p>
-                    <div className="mt-2 grid gap-2">
-                      <Label>{labels.stock}</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="1"
-                        value={activeForm.stock}
-                        onChange={(event) => patchActiveField("stock", event.target.value)}
-                        required={isStockManaged && !hasVariantsForStockField}
-                        disabled={!isStockManaged || hasVariantsForStockField}
-                      />
+                  {!hasVariantsForStockField ? (
+                    <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
+                      <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.stock}</p>
+                      <div className="mt-2 grid gap-2">
+                        <Label>{labels.stock}</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={activeForm.stock}
+                          onChange={(event) => patchActiveField("stock", event.target.value)}
+                          required={isStockManaged}
+                          disabled={!isStockManaged}
+                        />
+                      </div>
                     </div>
-                  </div>
+                  ) : null}
                   <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
                     <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.purchasePrice}</p>
                     <div className="mt-2 grid gap-2">
