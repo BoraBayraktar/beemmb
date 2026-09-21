@@ -1305,6 +1305,7 @@ export function ProductManager({
     [editingId, initialResult.items],
   );
   const activeCurrency = currentEditingProduct?.currency ?? "TRY";
+  const hasVariantsForStockField = drawerMode === "edit" && (currentEditingProduct?.variantCount ?? 0) > 0;
 
   useEffect(() => {
     if (!openProductActionMenuId) {
@@ -3627,7 +3628,7 @@ export function ProductManager({
 
                 {drawerMode === "edit" && currentEditingProduct && currentEditingProduct.variantCount > 0 ? (
                   <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                    {`Bu Stok Kartı'nın ${currentEditingProduct.variantCount} varyantı var. Buradaki stok/fiyat değerleri sadece kendi override'ı olmayan varyantlar için varsayılan olarak kullanılır — her varyantın kendi stoğunu ve fiyatını "Varyantlar & Özellikler" sekmesinden ayrı yönetebilirsiniz.`}
+                    {`Bu Stok Kartı'nın ${currentEditingProduct.variantCount} varyantı var. Stok alanı bu yüzden devre dışı -- her varyantın stoğu kendine ait, buradan girilen bir değerin varyantlara hiçbir etkisi olmaz. Fiyat/Alış Fiyatı/İndirimsiz Fiyat ise kendi override'ı olmayan varyantlar için varsayılan olarak kullanılmaya devam eder. Varyant stoklarını "Varyantlar & Özellikler" sekmesinden yönetin.`}
                   </p>
                 ) : null}
 
@@ -3642,8 +3643,8 @@ export function ProductManager({
                         step="1"
                         value={activeForm.stock}
                         onChange={(event) => patchActiveField("stock", event.target.value)}
-                        required={isStockManaged}
-                        disabled={!isStockManaged}
+                        required={isStockManaged && !hasVariantsForStockField}
+                        disabled={!isStockManaged || hasVariantsForStockField}
                       />
                     </div>
                   </div>

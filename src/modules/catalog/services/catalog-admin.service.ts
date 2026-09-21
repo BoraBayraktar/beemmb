@@ -1205,7 +1205,11 @@ export class CatalogAdminService {
       stockTrackingEnabled: normalizedStockTracking,
     });
 
-    if (parsed.stock !== undefined || parsed.sku !== undefined) {
+    // Varyantlı bir ürünün kendi InventoryItem'ı artık kullanılmıyor (bkz.
+    // resolveInventoryTarget) -- toplam stok varyantlardan hesaplanıyor, bu
+    // yüzden ürünün kendi stok kaydına yazmak anlamsız/görünmez bir işlem
+    // olurdu. updated.variants.length > 0 iken bu senkronu atla.
+    if ((parsed.stock !== undefined || parsed.sku !== undefined) && updated.variants.length === 0) {
       await inventoryService.syncProductInventoryState({
         productId: updated.id,
         sku: parsed.sku ?? updated.sku,
