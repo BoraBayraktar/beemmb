@@ -2292,6 +2292,7 @@ type InventoryDrawerOperationPanelProps = {
   locale: Locale;
   warehouses: AdminWarehouseItem[];
   suppliers: AdminSupplierItem[];
+  canManageSuppliers: boolean;
   drawerMode: DrawerMode;
   pendingRowKey: string | null;
   drawerTargetOnHand: string;
@@ -2304,6 +2305,7 @@ type InventoryDrawerOperationPanelProps = {
   drawerTransferNote: string;
   drawerPurchaseDocumentNumber: string;
   drawerPurchaseSupplierId: string;
+  drawerPurchaseSupplierName: string;
   drawerPurchaseDocumentDate: string;
   drawerPurchaseDocumentType: "PURCHASE_DOCUMENT" | "DELIVERY_NOTE" | "E_INVOICE" | "E_DISPATCH";
   drawerPurchaseReference: string;
@@ -2323,6 +2325,7 @@ type InventoryDrawerOperationPanelProps = {
   setDrawerTransferNote: (value: string) => void;
   setDrawerPurchaseDocumentNumber: (value: string) => void;
   setDrawerPurchaseSupplierId: (value: string) => void;
+  setDrawerPurchaseSupplierName: (value: string) => void;
   setDrawerPurchaseDocumentDate: (value: string) => void;
   setDrawerPurchaseDocumentType: (value: "PURCHASE_DOCUMENT" | "DELIVERY_NOTE" | "E_INVOICE" | "E_DISPATCH") => void;
   setDrawerPurchaseReference: (value: string) => void;
@@ -2340,6 +2343,7 @@ export function InventoryDrawerOperationPanel({
   locale,
   warehouses,
   suppliers,
+  canManageSuppliers,
   drawerMode,
   pendingRowKey,
   drawerTargetOnHand,
@@ -2352,6 +2356,7 @@ export function InventoryDrawerOperationPanel({
   drawerTransferNote,
   drawerPurchaseDocumentNumber,
   drawerPurchaseSupplierId,
+  drawerPurchaseSupplierName,
   drawerPurchaseDocumentDate,
   drawerPurchaseDocumentType,
   drawerPurchaseReference,
@@ -2371,6 +2376,7 @@ export function InventoryDrawerOperationPanel({
   setDrawerTransferNote,
   setDrawerPurchaseDocumentNumber,
   setDrawerPurchaseSupplierId,
+  setDrawerPurchaseSupplierName,
   setDrawerPurchaseDocumentDate,
   setDrawerPurchaseDocumentType,
   setDrawerPurchaseReference,
@@ -2529,20 +2535,28 @@ export function InventoryDrawerOperationPanel({
                 </div>
                 <div className="grid gap-2">
                   <label className="text-xs font-medium text-[color:var(--color-text-muted)]">Tedarikçi</label>
-                  <SearchableSelect
-                    value={drawerPurchaseSupplierId}
-                    onValueChange={setDrawerPurchaseSupplierId}
-                    options={suppliers
-                      .filter((supplier) => supplier.isActive)
-                      .map((supplier) => ({
-                        value: supplier.id,
-                        label: supplier.name,
-                        description: supplier.taxNumber || supplier.email || supplier.phone || undefined,
-                      }))}
-                    placeholder="Tedarikçi seç"
-                    searchPlaceholder="Tedarikçi ara"
-                    emptyLabel="Eşleşen tedarikçi bulunamadı."
-                  />
+                  {canManageSuppliers ? (
+                    <SearchableSelect
+                      value={drawerPurchaseSupplierId}
+                      onValueChange={setDrawerPurchaseSupplierId}
+                      options={suppliers
+                        .filter((supplier) => supplier.isActive)
+                        .map((supplier) => ({
+                          value: supplier.id,
+                          label: supplier.name,
+                          description: supplier.taxNumber || supplier.email || supplier.phone || undefined,
+                        }))}
+                      placeholder="Tedarikçi seç"
+                      searchPlaceholder="Tedarikçi ara"
+                      emptyLabel="Eşleşen tedarikçi bulunamadı."
+                    />
+                  ) : (
+                    <Input
+                      value={drawerPurchaseSupplierName}
+                      onChange={(event) => setDrawerPurchaseSupplierName(event.target.value)}
+                      placeholder="Tedarikçi adı"
+                    />
+                  )}
                 </div>
                 <div className="grid gap-2">
                   <label className="text-xs font-medium text-[color:var(--color-text-muted)]">Belge tarihi</label>

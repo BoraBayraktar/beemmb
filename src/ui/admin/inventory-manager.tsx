@@ -455,6 +455,7 @@ type Props = {
   transactionResult: AdminInventoryTransactionListResult;
   warehouses: AdminWarehouseItem[];
   suppliers: AdminSupplierItem[];
+  canManageSuppliers: boolean;
   alertResult: {
     items: Array<{
       id: string;
@@ -696,6 +697,7 @@ export function InventoryManager({
   transactionResult,
   warehouses,
   suppliers,
+  canManageSuppliers,
   alertResult,
   stockCounts,
   reports,
@@ -740,6 +742,7 @@ export function InventoryManager({
   const [drawerMovementQuantity, setDrawerMovementQuantity] = useState("1");
   const [drawerPurchaseDocumentNumber, setDrawerPurchaseDocumentNumber] = useState("");
   const [drawerPurchaseSupplierId, setDrawerPurchaseSupplierId] = useState("");
+  const [drawerPurchaseSupplierName, setDrawerPurchaseSupplierName] = useState("");
   const [drawerPurchaseDocumentDate, setDrawerPurchaseDocumentDate] = useState("");
   const [drawerPurchaseDocumentType, setDrawerPurchaseDocumentType] = useState<"PURCHASE_DOCUMENT" | "DELIVERY_NOTE" | "E_INVOICE" | "E_DISPATCH">("PURCHASE_DOCUMENT");
   const [drawerPurchaseReference, setDrawerPurchaseReference] = useState("");
@@ -2220,8 +2223,12 @@ export function InventoryManager({
             ? {
                 documentType: drawerPurchaseDocumentType,
                 sourceDocumentNumber: drawerPurchaseDocumentNumber.trim(),
-                sourceDocumentSupplierId: drawerPurchaseSupplierId || undefined,
-                sourceDocumentDate: drawerPurchaseDocumentDate ? new Date(drawerPurchaseDocumentDate).toISOString() : undefined,
+                ...(canManageSuppliers
+                  ? { sourceDocumentSupplierId: drawerPurchaseSupplierId || undefined }
+                  : { sourceDocumentSupplier: drawerPurchaseSupplierName.trim() || undefined }),
+                sourceDocumentDate: (drawerPurchaseDocumentDate || defaultDateTimeLocal)
+                  ? new Date(drawerPurchaseDocumentDate || defaultDateTimeLocal).toISOString()
+                  : undefined,
                 sourceDocumentReference: drawerPurchaseReference.trim() || undefined,
                 externalSystemStatus: drawerPurchaseExternalStatus,
                 unitCost: drawerPurchaseUnitCost.trim() ? Number(drawerPurchaseUnitCost) : null,
@@ -3525,6 +3532,7 @@ export function InventoryManager({
                 locale={locale}
                 warehouses={warehouses}
                 suppliers={suppliers}
+                canManageSuppliers={canManageSuppliers}
                 drawerMode={drawerMode}
                 pendingRowKey={pendingRowKey}
                 drawerTargetOnHand={drawerTargetOnHand}
@@ -3537,6 +3545,7 @@ export function InventoryManager({
                 drawerTransferNote={drawerTransferNote}
                 drawerPurchaseDocumentNumber={drawerPurchaseDocumentNumber}
                 drawerPurchaseSupplierId={drawerPurchaseSupplierId}
+                drawerPurchaseSupplierName={drawerPurchaseSupplierName}
                 drawerPurchaseDocumentDate={drawerPurchaseDocumentDate || defaultDateTimeLocal}
                 drawerPurchaseDocumentType={drawerPurchaseDocumentType}
                 drawerPurchaseReference={drawerPurchaseReference}
@@ -3556,6 +3565,7 @@ export function InventoryManager({
                 setDrawerTransferNote={setDrawerTransferNote}
                 setDrawerPurchaseDocumentNumber={setDrawerPurchaseDocumentNumber}
                 setDrawerPurchaseSupplierId={setDrawerPurchaseSupplierId}
+                setDrawerPurchaseSupplierName={setDrawerPurchaseSupplierName}
                 setDrawerPurchaseDocumentDate={setDrawerPurchaseDocumentDate}
                 setDrawerPurchaseDocumentType={setDrawerPurchaseDocumentType}
                 setDrawerPurchaseReference={setDrawerPurchaseReference}

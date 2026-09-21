@@ -8,6 +8,7 @@ import type { PermissionKey } from "@/modules/identity/contracts/rbac.contract";
 import { rbacService } from "@/modules/identity/services/rbac.service";
 import type { AdminInventoryIntegrationSummary } from "@/modules/inventory/contracts/inventory.contract";
 import { inventoryService } from "@/modules/inventory/services/inventory.service";
+import { platformService } from "@/modules/platform/services/platform.service";
 
 export type InventoryRouteSearchParams = {
   section?: string;
@@ -78,6 +79,9 @@ export async function loadInventoryRouteContext(
     notFound();
   }
 
+  const enabledModuleKeys = await platformService.getEnabledModuleKeys(user.tenantId);
+  const canManageSuppliers = enabledModuleKeys.has("finance");
+
   const {
     result,
     transactionResult,
@@ -111,6 +115,7 @@ export async function loadInventoryRouteContext(
     operationHistory,
     exportHistory,
     inventoryPreferences,
+    canManageSuppliers,
     query: {
       search: searchParams.search ?? "",
       stockStatusFilter: searchParams.stockStatusFilter ?? "all",

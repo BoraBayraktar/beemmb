@@ -20,6 +20,7 @@ export default async function AdminInventoryQuickActionsPage({
       transactionResult={context.transactionResult}
       warehouses={context.warehouses}
       suppliers={context.suppliers}
+      canManageSuppliers={context.canManageSuppliers}
       alertResult={context.alertResult}
       stockCounts={context.stockCounts}
       reports={context.reports}

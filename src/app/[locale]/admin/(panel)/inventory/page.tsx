@@ -31,6 +31,7 @@ export default async function AdminInventoryPage({
       transactionResult={context.transactionResult}
       warehouses={context.warehouses}
       suppliers={context.suppliers}
+      canManageSuppliers={context.canManageSuppliers}
       alertResult={context.alertResult}
       stockCounts={context.stockCounts}
       reports={context.reports}

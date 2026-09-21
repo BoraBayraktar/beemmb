@@ -1156,6 +1156,7 @@ export function ProductManager({
   const [opTransferNote, setOpTransferNote] = useState("");
   const [opPurchaseDocumentNumber, setOpPurchaseDocumentNumber] = useState("");
   const [opPurchaseSupplierId, setOpPurchaseSupplierId] = useState("");
+  const [opPurchaseSupplierName, setOpPurchaseSupplierName] = useState("");
   const [opPurchaseDocumentDate, setOpPurchaseDocumentDate] = useState("");
   const [opPurchaseDocumentType, setOpPurchaseDocumentType] = useState<"PURCHASE_DOCUMENT" | "DELIVERY_NOTE" | "E_INVOICE" | "E_DISPATCH">("PURCHASE_DOCUMENT");
   const [opPurchaseReference, setOpPurchaseReference] = useState("");
@@ -1553,8 +1554,12 @@ export function ProductManager({
             ? {
                 documentType: opPurchaseDocumentType,
                 sourceDocumentNumber: opPurchaseDocumentNumber.trim(),
-                sourceDocumentSupplierId: opPurchaseSupplierId || undefined,
-                sourceDocumentDate: opPurchaseDocumentDate ? new Date(opPurchaseDocumentDate).toISOString() : undefined,
+                ...(canManageSuppliers
+                  ? { sourceDocumentSupplierId: opPurchaseSupplierId || undefined }
+                  : { sourceDocumentSupplier: opPurchaseSupplierName.trim() || undefined }),
+                sourceDocumentDate: (opPurchaseDocumentDate || defaultDateTimeLocal)
+                  ? new Date(opPurchaseDocumentDate || defaultDateTimeLocal).toISOString()
+                  : undefined,
                 sourceDocumentReference: opPurchaseReference.trim() || undefined,
                 externalSystemStatus: opPurchaseExternalStatus,
                 unitCost: opPurchaseUnitCost.trim() ? Number(opPurchaseUnitCost) : null,
@@ -4170,6 +4175,7 @@ export function ProductManager({
                       locale={locale}
                       warehouses={warehouses}
                       suppliers={supplierOptions}
+                      canManageSuppliers={canManageSuppliers}
                       drawerMode={operationMode}
                       pendingRowKey={operationPendingRowKey}
                       drawerTargetOnHand={opTargetOnHand}
@@ -4182,6 +4188,7 @@ export function ProductManager({
                       drawerTransferNote={opTransferNote}
                       drawerPurchaseDocumentNumber={opPurchaseDocumentNumber}
                       drawerPurchaseSupplierId={opPurchaseSupplierId}
+                      drawerPurchaseSupplierName={opPurchaseSupplierName}
                       drawerPurchaseDocumentDate={opPurchaseDocumentDate || defaultDateTimeLocal}
                       drawerPurchaseDocumentType={opPurchaseDocumentType}
                       drawerPurchaseReference={opPurchaseReference}
@@ -4201,6 +4208,7 @@ export function ProductManager({
                       setDrawerTransferNote={setOpTransferNote}
                       setDrawerPurchaseDocumentNumber={setOpPurchaseDocumentNumber}
                       setDrawerPurchaseSupplierId={setOpPurchaseSupplierId}
+                      setDrawerPurchaseSupplierName={setOpPurchaseSupplierName}
                       setDrawerPurchaseDocumentDate={setOpPurchaseDocumentDate}
                       setDrawerPurchaseDocumentType={setOpPurchaseDocumentType}
                       setDrawerPurchaseReference={setOpPurchaseReference}
