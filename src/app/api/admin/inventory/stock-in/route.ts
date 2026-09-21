@@ -42,7 +42,7 @@ export async function POST(request: Request) {
         sourceDocumentSupplier: payload.sourceDocumentSupplier,
         sourceDocumentReference: payload.sourceDocumentReference,
         externalSystemStatus: payload.externalSystemStatus,
-        unitCost: payload.unitCost ?? null,
+        unitCost: payload.unitCost,
       });
 
       await auditLogService.recordFromRequest(request, {
