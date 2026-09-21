@@ -367,6 +367,7 @@ type Labels = {
   inventoryMovementLast30Days: string;
   inventoryMovementLast7Days: string;
   inventoryMovementQuantityLabel: string;
+  inventoryMovementNote: string;
   inventoryMovementReference: string;
   inventoryNoRecentMovements: string;
   inventoryOnHandStock: string;
@@ -1671,6 +1672,7 @@ export function ProductManager({
     movementLast30Days: labels.inventoryMovementLast30Days,
     movementLast7Days: labels.inventoryMovementLast7Days,
     movementQuantity: labels.inventoryMovementQuantityLabel,
+    movementNote: labels.inventoryMovementNote,
     movementReference: labels.inventoryMovementReference,
     next: labels.next,
     noRecentMovements: labels.inventoryNoRecentMovements,

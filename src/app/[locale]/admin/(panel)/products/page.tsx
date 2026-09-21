@@ -302,6 +302,7 @@ export default async function AdminProductsPage({
         inventoryMovementLast30Days: dictionary.admin.inventoryMovementLast30Days,
         inventoryMovementLast7Days: dictionary.admin.inventoryMovementLast7Days,
         inventoryMovementQuantityLabel: dictionary.admin.inventoryMovementQuantityLabel,
+        inventoryMovementNote: dictionary.admin.inventoryMovementNote,
         inventoryMovementReference: dictionary.admin.inventoryMovementReference,
         inventoryNoRecentMovements: dictionary.admin.inventoryNoRecentMovements,
         inventoryOnHandStock: dictionary.admin.inventoryOnHandStock,

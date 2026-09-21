@@ -72,6 +72,7 @@ export type Labels = {
   adjustmentSaved: string;
   adjustmentFailed: string;
   movementQuantity: string;
+  movementNote: string;
   stockInSaved: string;
   stockInFailed: string;
   stockOutSaved: string;

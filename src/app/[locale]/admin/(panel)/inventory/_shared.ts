@@ -397,6 +397,7 @@ function buildInventoryRouteLabels(dictionary: ReturnType<typeof getDictionary>)
       adjustmentSaved: dictionary.admin.inventoryAdjustmentSaved,
       adjustmentFailed: dictionary.admin.inventoryAdjustmentFailed,
       movementQuantity: dictionary.admin.inventoryMovementQuantityLabel,
+      movementNote: dictionary.admin.inventoryMovementNote,
       stockInSaved: dictionary.admin.inventoryStockInSaved,
       stockInFailed: dictionary.admin.inventoryStockInFailed,
       stockOutSaved: dictionary.admin.inventoryStockOutSaved,
