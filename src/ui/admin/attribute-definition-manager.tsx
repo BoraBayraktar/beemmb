@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Download, Pencil, Plus, Trash2, Upload, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Download, Pencil, Plus, Trash2, Upload, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,8 @@ type Labels = {
   trendyolValueSearchHint: string;
   trendyolSelected: string;
   variantAxisUsageCount: string;
-  page: string;
+  moveUp: string;
+  moveDown: string;
   create: string;
   save: string;
   edit: string;
@@ -93,7 +94,6 @@ type FormState = {
   name: string;
   displayType: AdminProductAttributeDefinitionItem["displayType"];
   trendyolAttributeId: string;
-  sortOrder: string;
   isActive: boolean;
 };
 
@@ -102,7 +102,6 @@ const EMPTY_FORM: FormState = {
   name: "",
   displayType: "TEXT",
   trendyolAttributeId: "",
-  sortOrder: "0",
   isActive: true,
 };
 
@@ -256,7 +255,6 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
       name: item.name,
       displayType: item.displayType,
       trendyolAttributeId: item.trendyolAttributeId ? String(item.trendyolAttributeId) : "",
-      sortOrder: String(item.sortOrder),
       isActive: item.isActive,
     });
     attributeCategorySearch.clear();
@@ -396,7 +394,7 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
         name: form.name.trim(),
         displayType: form.displayType,
         trendyolAttributeId: form.trendyolAttributeId.trim() ? Number(form.trendyolAttributeId) : null,
-        sortOrder: Number(form.sortOrder || "0"),
+        ...(drawerMode === "create" ? { sortOrder: items.length } : {}),
         isActive: form.isActive,
       };
 
@@ -453,6 +451,53 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
       router.refresh();
     } catch {
       setError("Ozellik tanimi silinemedi.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function moveItem(id: string, direction: "up" | "down") {
+    const index = items.findIndex((entry) => entry.id === id);
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+
+    if (index === -1 || targetIndex < 0 || targetIndex >= items.length) {
+      return;
+    }
+
+    const reordered = [...items];
+    const [moved] = reordered.splice(index, 1);
+    reordered.splice(targetIndex, 0, moved);
+
+    const updates = reordered
+      .map((entry, position) => ({ id: entry.id, sortOrder: position, changed: entry.sortOrder !== position }))
+      .filter((entry) => entry.changed);
+
+    if (updates.length === 0) {
+      return;
+    }
+
+    setPending(true);
+    resetMessages();
+
+    try {
+      const responses = await Promise.all(
+        updates.map((update) =>
+          fetch(`/api/admin/product-attributes/${update.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sortOrder: update.sortOrder }),
+          }),
+        ),
+      );
+
+      if (responses.some((response) => !response.ok)) {
+        setError("Siralama guncellenemedi.");
+        return;
+      }
+
+      router.refresh();
+    } catch {
+      setError("Siralama guncellenemedi.");
     } finally {
       setPending(false);
     }
@@ -629,10 +674,33 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
                       <p>{labels.slug}: {item.slug}</p>
                       <p>{labels.attributeDisplayType}: {item.displayType}</p>
                       <p>{labels.trendyolId}: {item.trendyolAttributeId ?? "-"}</p>
-                      <p>{labels.page}: {item.sortOrder}</p>
                       <p>{labels.variantAxisUsageCount}: {item.productCount}</p>
                     </div>
                     <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="secondary"
+                          disabled={pending || Boolean(searchQuery.trim()) || items.findIndex((entry) => entry.id === item.id) === 0}
+                          onClick={() => void moveItem(item.id, "up")}
+                          aria-label={labels.moveUp}
+                          title={labels.moveUp}
+                        >
+                          <ChevronUp className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="secondary"
+                          disabled={pending || Boolean(searchQuery.trim()) || items.findIndex((entry) => entry.id === item.id) === items.length - 1}
+                          onClick={() => void moveItem(item.id, "down")}
+                          aria-label={labels.moveDown}
+                          title={labels.moveDown}
+                        >
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </div>
                       <Button type="button" size="sm" variant="secondary" className="w-full sm:w-auto" onClick={() => openEditDrawer(item)}>
                         <Pencil className="h-4 w-4" />
                         {labels.edit}
@@ -655,13 +723,15 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
               <thead className="bg-[color:var(--color-bg-soft)] text-left text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)]">
                 <tr>
                   <th className="px-4 py-3">
+                    <span className="sr-only">{labels.moveUp}</span>
+                  </th>
+                  <th className="px-4 py-3">
                     <input type="checkbox" checked={allVisibleSelected} onChange={toggleSelectAllVisible} aria-label={labels.selectedCount} />
                   </th>
                   <th className="px-4 py-3">{labels.attributeName}</th>
                   <th className="px-4 py-3">{labels.slug}</th>
                   <th className="px-4 py-3">{labels.attributeDisplayType}</th>
                   <th className="px-4 py-3">{labels.trendyolId}</th>
-                  <th className="px-4 py-3">{labels.page}</th>
                   <th className="px-4 py-3">{labels.variantAxisUsageCount}</th>
                   <th className="px-4 py-3">{labels.status}</th>
                   <th className="px-4 py-3 text-right">{labels.save}</th>
@@ -678,6 +748,32 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
                   filteredItems.map((item) => (
                     <tr key={item.id} className="hover:bg-[color:var(--color-bg-soft)]/80">
                       <td className="px-4 py-3">
+                        <div className="flex flex-col gap-1">
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="secondary"
+                            disabled={pending || Boolean(searchQuery.trim()) || items.findIndex((entry) => entry.id === item.id) === 0}
+                            onClick={() => void moveItem(item.id, "up")}
+                            aria-label={labels.moveUp}
+                            title={labels.moveUp}
+                          >
+                            <ChevronUp className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="secondary"
+                            disabled={pending || Boolean(searchQuery.trim()) || items.findIndex((entry) => entry.id === item.id) === items.length - 1}
+                            onClick={() => void moveItem(item.id, "down")}
+                            aria-label={labels.moveDown}
+                            title={labels.moveDown}
+                          >
+                            <ChevronDown className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
                         <input
                           type="checkbox"
                           checked={selectedIds.includes(item.id)}
@@ -689,7 +785,6 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
                       <td className="px-4 py-3 text-[color:var(--color-text-muted)]">{item.slug}</td>
                       <td className="px-4 py-3 text-[color:var(--color-text-muted)]">{item.displayType}</td>
                       <td className="px-4 py-3 text-[color:var(--color-text-muted)]">{item.trendyolAttributeId ?? "-"}</td>
-                      <td className="px-4 py-3 text-[color:var(--color-text-muted)]">{item.sortOrder}</td>
                       <td className="px-4 py-3 text-[color:var(--color-text-muted)]">{item.productCount}</td>
                       <td className="px-4 py-3">
                         <span
@@ -938,24 +1033,18 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
                 <Label>{labels.slug}</Label>
                 <Input value={form.slug} onChange={(event) => updateForm("slug", event.target.value)} />
               </div>
-              <div className="grid gap-2 md:grid-cols-2">
-                <div className="grid gap-2">
-                  <Label>{labels.attributeDisplayType}</Label>
-                  <Select value={form.displayType} onValueChange={(value) => updateForm("displayType", value as FormState["displayType"])}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="TEXT">{labels.attributeDisplayText}</SelectItem>
-                      <SelectItem value="COLOR">{labels.attributeDisplayColor}</SelectItem>
-                      <SelectItem value="NUMBER">{labels.attributeDisplayNumber}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label>{labels.page}</Label>
-                  <Input type="number" min="0" step="1" value={form.sortOrder} onChange={(event) => updateForm("sortOrder", event.target.value)} />
-                </div>
+              <div className="grid gap-2">
+                <Label>{labels.attributeDisplayType}</Label>
+                <Select value={form.displayType} onValueChange={(value) => updateForm("displayType", value as FormState["displayType"])}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="TEXT">{labels.attributeDisplayText}</SelectItem>
+                    <SelectItem value="COLOR">{labels.attributeDisplayColor}</SelectItem>
+                    <SelectItem value="NUMBER">{labels.attributeDisplayNumber}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
                 <Label>{labels.trendyolId}</Label>

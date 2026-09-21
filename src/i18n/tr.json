@@ -646,6 +646,8 @@
     "attributeDisplayText": "Metin",
     "attributeDisplayColor": "Renk",
     "attributeDisplayNumber": "Sayı",
+    "attributeMoveUp": "Yukarı taşı",
+    "attributeMoveDown": "Aşağı taşı",
     "attributeValueMappingsTitle": "Pazaryeri değer eşlemeleri",
     "attributeValueMappingsDescription": "Varyantlarda kullanılan yerel özellik değerlerini seçilen pazaryeri kanalı için eşleyin.",
     "attributeValueMappingsChannel": "Pazaryeri kanalı",
