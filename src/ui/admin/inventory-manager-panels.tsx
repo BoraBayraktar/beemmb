@@ -2329,16 +2329,6 @@ type InventoryDrawerOperationPanelProps = {
   setDrawerPurchaseExternalStatus: (value: "NOT_SENT" | "QUEUED" | "SENT" | "FAILED") => void;
   setDrawerPurchaseUnitCost: (value: string) => void;
   setDrawerSelectedVariantId: (value: string) => void;
-  formatDate: (value: string | null, locale: Locale, fallback: string) => string;
-  formatInventoryNote: (note: string | null | undefined) => string | null | undefined;
-  formatSourceDocument: (source: {
-    type: string | null;
-    number: string | null;
-  }) => string | null;
-  movementTypeClass: (movementType: string | null) => string;
-  movementTypeLabel: (movementType: string | null, labels: InventoryDrawerLabels) => string;
-  onHistoryShortcut: (value: string) => void;
-  onViewAllHistory: () => void;
   onApplyAdjustment: () => Promise<void>;
   onApplyMovement: (mode: "stock_in" | "stock_out") => Promise<void>;
   onApplyTransfer: () => Promise<void>;
@@ -2387,343 +2377,98 @@ export function InventoryDrawerOperationPanel({
   setDrawerPurchaseExternalStatus,
   setDrawerPurchaseUnitCost,
   setDrawerSelectedVariantId,
-  formatDate,
-  formatInventoryNote,
-  formatSourceDocument,
-  movementTypeClass,
-  movementTypeLabel,
-  onHistoryShortcut,
-  onViewAllHistory,
   onApplyAdjustment,
   onApplyMovement,
   onApplyTransfer,
 }: InventoryDrawerOperationPanelProps) {
-  const [activeCenterTab, setActiveCenterTab] = useState<"summary" | "operation" | "history">(drawerMode === "view" ? "summary" : "operation");
   const operationCards = [
     {
       id: "stock_in" as const,
       title: labels.stockIn,
-      subtitle: "Satın alma, tedarik ve giriş kayıtlarını işle.",
       accent: "border-emerald-200 bg-emerald-50 text-emerald-900",
       disabled: !item.warehouseCode,
     },
     {
       id: "stock_out" as const,
       title: labels.stockOut,
-      subtitle: "Hasar, fire veya manuel çıkış işlemi başlat.",
       accent: "border-rose-200 bg-rose-50 text-rose-900",
       disabled: !item.warehouseCode,
     },
     {
       id: "edit" as const,
       title: labels.adjustStock,
-      subtitle: "Hedef stok, yeniden sipariş ve güvenlik stokunu düzelt.",
       accent: "border-sky-200 bg-sky-50 text-sky-900",
       disabled: false,
     },
     {
       id: "transfer" as const,
       title: labels.transferStock,
-      subtitle: "Depolar arası yönlendirme ve iç transfer oluştur.",
       accent: "border-amber-200 bg-amber-50 text-amber-900",
       disabled: !item.warehouseCode,
     },
   ];
 
-  const activeOperation = operationCards.find((card) => card.id === drawerMode) ?? null;
   const activeVariant = drawerProductVariants.find((variant) => variant.id === drawerSelectedVariantId) ?? null;
   const movementQuantity = Number(drawerMovementQuantity || 0);
   const parsedPurchaseUnitCost = drawerPurchaseUnitCost.trim() ? Number(drawerPurchaseUnitCost) : null;
   const estimatedPurchaseLineTotal = parsedPurchaseUnitCost !== null && movementQuantity > 0
     ? parsedPurchaseUnitCost * movementQuantity
     : null;
-  const flowSteps = [
-    {
-      id: "select",
-      label: "İşlem Seç",
-      description: "Operasyon tipini belirle",
-      state: activeOperation ? "done" : "active",
-    },
-    {
-      id: "fill",
-      label: "Formu Doldur",
-      description: "Alanları tamamla",
-      state: activeOperation ? "active" : "idle",
-    },
-    {
-      id: "apply",
-      label: "Uygula",
-      description: "Kaydı stoklara işle",
-      state: activeOperation ? "active" : "idle",
-    },
-  ] as const;
 
   return (
-    <section className="rounded-3xl border border-[color:var(--color-border)] bg-[linear-gradient(180deg,var(--color-surface),var(--color-bg-soft))] p-4 shadow-sm">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">İşlem Merkezi</p>
-          <h4 className="mt-1 text-base font-semibold text-[color:var(--color-text)]">Stok Operasyonu</h4>
-          <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">
-            Bu alandan tek ürün için stok girişi, çıkışı, transfer ve düzeltme işlemlerini güvenli biçimde yönetebilirsin.
-          </p>
-        </div>
-        {drawerMode !== "view" ? (
-          <button
-            type="button"
-            onClick={() => {
-              setDrawerMode("view");
-              setActiveCenterTab("summary");
-            }}
-            className="h-9 rounded-xl border border-[color:var(--color-border)] px-3 text-xs font-medium text-[color:var(--color-text)] transition hover:bg-[color:var(--color-bg-soft)]"
-          >
-            Özet Görünümü
-          </button>
-        ) : null}
-      </div>
+    <section className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 shadow-sm">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Stok Operasyonu</p>
 
-      <div className="mb-4 grid gap-3 rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)]/80 p-4 lg:grid-cols-3">
-        {flowSteps.map((step, index) => (
-          <article
-            key={step.id}
-            className={`rounded-2xl border px-4 py-3 ${
-              step.state === "done"
-                ? "border-emerald-200 bg-emerald-50"
-                : step.state === "active"
-                  ? "border-neutral-900 bg-[color:var(--color-surface)]"
-                  : "border-[color:var(--color-border)] bg-[color:var(--color-surface)]/70"
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        {operationCards.map((action) => (
+          <button
+            key={action.id}
+            type="button"
+            onClick={() => setDrawerMode(action.id as DrawerMode)}
+            disabled={action.disabled}
+            className={`rounded-2xl border px-4 py-3 text-left transition disabled:cursor-not-allowed disabled:opacity-50 ${
+              drawerMode === action.id ? `${action.accent} shadow-sm ring-1 ring-inset ring-current/10` : "border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)]"
             }`}
           >
-            <div className="flex items-center gap-3">
-              <span
-                className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold ${
-                  step.state === "done"
-                    ? "bg-emerald-600 text-white"
-                    : step.state === "active"
-                      ? "bg-neutral-900 text-white"
-                      : "bg-neutral-200 text-neutral-500"
-                }`}
-              >
-                {index + 1}
-              </span>
-              <div>
-                <p className="text-sm font-semibold text-[color:var(--color-text)]">{step.label}</p>
-                <p className="text-xs text-[color:var(--color-text-muted)]">{step.description}</p>
-              </div>
-            </div>
-          </article>
+            <span className="text-sm font-semibold">{action.title}</span>
+            {action.disabled ? (
+              <span className="mt-2 block text-[11px] font-medium opacity-70">Depo seçimi gerekli</span>
+            ) : null}
+          </button>
         ))}
       </div>
 
-      <div className="mt-4 rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]/90 p-4 shadow-sm">
-        <div className="flex flex-wrap gap-2">
-          {[
-            { id: "summary" as const, label: "Özet" },
-            { id: "operation" as const, label: "İşlem" },
-            { id: "history" as const, label: "Geçmiş" },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveCenterTab(tab.id)}
-              className={`inline-flex h-10 items-center justify-center rounded-2xl border px-4 text-sm font-medium transition ${
-                activeCenterTab === tab.id
-                  ? "border-neutral-900 bg-neutral-900 text-white"
-                  : "border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)]"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {activeCenterTab === "summary" ? (
-          <div className="mt-4 grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-            {activeOperation ? (
-              <div className={`rounded-2xl border px-4 py-4 ${activeOperation.accent}`}>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] opacity-70">Seçili Akış</p>
-                <div className="mt-2 flex flex-col gap-2">
-                  <p className="text-base font-semibold">{activeOperation.title}</p>
-                  <p className="text-sm opacity-80">{activeOperation.subtitle}</p>
-                  <div className="grid gap-2 text-xs opacity-80 sm:grid-cols-2">
-                    <p>Operasyon deposu: {item.warehouseCode ?? labels.notSpecified}</p>
-                    <p>Kullanılabilir stok: {item.availableStock}</p>
-                    {activeVariant ? <p>Varyant: {activeVariant.title}</p> : null}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-dashed border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4 text-sm text-[color:var(--color-text-muted)]">
-                Önce işlem sekmesine geçip uygun operasyon kartını seçebilirsin.
-              </div>
-            )}
-            <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-text-muted)]">Uygulama Özeti</p>
-              <div className="mt-3 space-y-2 text-sm text-[color:var(--color-text)]">
-                <p>Ürün: <span className="font-semibold text-[color:var(--color-text)]">{item.name}</span></p>
-                <p>SKU: <span className="font-semibold text-[color:var(--color-text)]">{activeVariant?.sku ?? item.sku}</span></p>
-                {activeVariant ? <p>Seçim: <span className="font-semibold text-[color:var(--color-text)]">{activeVariant.optionSummary || activeVariant.title}</span></p> : null}
-                <p>Mevcut stok: <span className="font-semibold text-[color:var(--color-text)]">{item.onHandStock}</span></p>
-                <p>Kullanılabilir stok: <span className="font-semibold text-[color:var(--color-text)]">{item.availableStock}</span></p>
-                <p>Rezerve stok: <span className="font-semibold text-[color:var(--color-text)]">{item.reservedStock}</span></p>
-              </div>
-            </div>
-          </div>
-        ) : null}
-
-        {activeCenterTab === "history" ? (
-          <div className="mt-4 space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3">
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { value: "all", label: "Tümü" },
-                  { value: "PURCHASE_RECEIPT", label: "Giriş" },
-                  { value: "TRANSFER_OUT", label: "Transfer" },
-                  { value: "MANUAL_ADJUSTMENT", label: "Düzeltme" },
-                ].map((shortcut) => (
-                  <button
-                    key={shortcut.value}
-                    type="button"
-                    onClick={() => onHistoryShortcut(shortcut.value)}
-                    className="inline-flex h-9 items-center justify-center rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 text-xs font-medium text-[color:var(--color-text)] transition hover:bg-[color:var(--color-bg-soft)]"
-                  >
-                    {shortcut.label}
-                  </button>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={onViewAllHistory}
-                className="inline-flex h-9 items-center justify-center rounded-xl border border-neutral-900 bg-neutral-900 px-3 text-xs font-medium text-white transition hover:bg-neutral-800"
-              >
-                Tümünü Gör
-              </button>
-            </div>
-            {item.recentMovements.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4 text-sm text-[color:var(--color-text-muted)]">
-                Bu ürün için yakın tarihli işlem geçmişi bulunmuyor.
-              </div>
-            ) : (
-              item.recentMovements.slice(0, 6).map((movement, index) => (
-                <article key={`${movement.createdAt}-${index}`} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className={`inline-flex rounded-full px-2 py-1 text-[11px] font-semibold ${movementTypeClass(movement.type)}`}>
-                          {movementTypeLabel(movement.type, labels)}
-                        </span>
-                        {movement.counterpartyWarehouseCode ? (
-                          <span className="inline-flex rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-2 py-1 text-[11px] text-[color:var(--color-text-muted)]">
-                            {labels.movementCounterpartyWarehouse}: {movement.counterpartyWarehouseCode}
-                          </span>
-                        ) : null}
-                      </div>
-                      <p className="mt-3 text-sm text-[color:var(--color-text)]">{formatInventoryNote(movement.note) ?? labels.notSpecified}</p>
-                      <div className="mt-2 space-y-1 text-xs text-[color:var(--color-text-muted)]">
-                        <p>{formatDate(movement.createdAt, locale, labels.notSpecified)}</p>
-                        {formatSourceDocument({
-                          type: movement.sourceDocumentType,
-                          number: movement.sourceDocumentNumber,
-                        }) ? (
-                          <p>
-                            Kaynak: {formatSourceDocument({
-                              type: movement.sourceDocumentType,
-                              number: movement.sourceDocumentNumber,
-                            })}
-                          </p>
-                        ) : null}
-                        {movement.reference ? <p>{labels.movementReference}: {movement.reference}</p> : null}
-                      </div>
-                    </div>
-                    <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2 text-right">
-                      <p className={`text-sm font-semibold ${movement.quantity >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
-                        {movement.quantity >= 0 ? `+${movement.quantity}` : movement.quantity}
-                      </p>
-                      <p className="mt-1 text-[11px] text-[color:var(--color-text-muted)]">Miktar</p>
-                    </div>
-                  </div>
-                </article>
-              ))
-            )}
-          </div>
-        ) : null}
-
-        {activeCenterTab === "operation" ? (
-          <>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {operationCards.map((action) => (
-                <button
-                  key={action.id}
-                  type="button"
-                  onClick={() => {
-                    setDrawerMode(action.id as DrawerMode);
-                    setActiveCenterTab("operation");
-                  }}
-                  disabled={action.disabled}
-                  className={`rounded-3xl border px-4 py-4 text-left transition disabled:cursor-not-allowed disabled:opacity-50 ${
-                    drawerMode === action.id ? `${action.accent} shadow-sm ring-1 ring-inset ring-current/10` : "border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)]"
-                  }`}
-                >
-                  <span className="block text-[11px] font-semibold uppercase tracking-[0.18em] opacity-70">İşlem</span>
-                  <span className="mt-2 block text-sm font-semibold">{action.title}</span>
-                  <span className="mt-1 block text-xs leading-5 opacity-80">{action.subtitle}</span>
-                  {!action.disabled ? null : (
-                    <span className="mt-3 inline-flex rounded-full border border-current/15 bg-[color:var(--color-surface)]/60 px-2 py-1 text-[11px] font-medium">
-                      Depo seçimi gerekli
-                    </span>
-                  )}
-                </button>
+      {drawerProductVariants.length > 0 ? (
+        <div className="mt-4 grid gap-2">
+          <label className="text-xs font-medium text-[color:var(--color-text-muted)]">Varyant</label>
+          <Select
+            value={drawerSelectedVariantId || "__empty__"}
+            onValueChange={(value) => setDrawerSelectedVariantId(value === "__empty__" ? "" : value)}
+            disabled={pendingDrawerVariants}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={pendingDrawerVariants ? "Varyantlar yükleniyor" : "Varyant seç"} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__empty__">{labels.notSpecified}</SelectItem>
+              {drawerProductVariants.map((variant) => (
+                <SelectItem key={variant.id} value={variant.id}>
+                  {variant.title} • {variant.sku}
+                </SelectItem>
               ))}
-            </div>
+            </SelectContent>
+          </Select>
+        </div>
+      ) : null}
 
-        {drawerProductVariants.length > 0 ? (
-          <div className="mt-4 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
-            <div className="mb-3">
-              <p className="text-sm font-semibold text-[color:var(--color-text)]">Operasyon varyantı</p>
-              <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">
-                Shop seçimini ve gerçek stok nesnesini aynı yerden yönetmek için işlemden önce varyant seç.
-              </p>
-            </div>
-            <div className="grid gap-2">
-              <label className="text-xs font-medium text-[color:var(--color-text-muted)]">Varyant</label>
-              <Select
-                value={drawerSelectedVariantId || "__empty__"}
-                onValueChange={(value) => setDrawerSelectedVariantId(value === "__empty__" ? "" : value)}
-                disabled={pendingDrawerVariants}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={pendingDrawerVariants ? "Varyantlar yükleniyor" : "Varyant seç"} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__empty__">{labels.notSpecified}</SelectItem>
-                  {drawerProductVariants.map((variant) => (
-                    <SelectItem key={variant.id} value={variant.id}>
-                      {variant.title} • {variant.sku}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {activeVariant ? (
-                <p className="text-xs text-[color:var(--color-text-muted)]">
-                  {activeVariant.optionSummary || activeVariant.title}
-                </p>
-              ) : null}
-            </div>
-          </div>
-        ) : null}
-
-        {drawerMode === "edit" ? (
-          <form
-            className="mt-4 grid gap-4"
+      {drawerMode === "edit" ? (
+        <form
+          className="mt-4 grid gap-4"
           onSubmit={(event) => {
             event.preventDefault();
             void onApplyAdjustment();
           }}
         >
-          <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4">
-            <p className="text-sm font-semibold text-sky-950">Hedef Stok Ayarı</p>
-            <p className="mt-1 text-xs text-sky-900/80">Sistem stok seviyesini, yeniden sipariş noktasını ve güvenlik stokunu birlikte günceller.</p>
-          </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="grid gap-2">
               <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.targetOnHandStock}</label>
@@ -2740,7 +2485,7 @@ export function InventoryDrawerOperationPanel({
           </div>
           <div className="grid gap-2">
             <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.adjustmentNote}</label>
-            <Textarea value={drawerNote} onChange={(event) => setDrawerNote(event.target.value)} placeholder={labels.adjustmentNote} rows={4} />
+            <Textarea value={drawerNote} onChange={(event) => setDrawerNote(event.target.value)} placeholder={labels.adjustmentNote} rows={3} />
           </div>
           <div className="flex justify-end">
             <Button type="submit" disabled={Boolean(pendingRowKey)}>
@@ -2756,26 +2501,13 @@ export function InventoryDrawerOperationPanel({
             void onApplyMovement(drawerMode);
           }}
         >
-          <div className={`rounded-2xl border p-4 ${drawerMode === "stock_in" ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50"}`}>
-            <p className={`text-sm font-semibold ${drawerMode === "stock_in" ? "text-emerald-950" : "text-rose-950"}`}>
-              {drawerMode === "stock_in" ? "Stok Giriş Akışı" : "Stok Çıkış Akışı"}
-            </p>
-            <p className={`mt-1 text-xs ${drawerMode === "stock_in" ? "text-emerald-900/80" : "text-rose-900/80"}`}>
-              {drawerMode === "stock_in"
-                ? "Miktarı ve belge bilgisini girerek giriş kaydını satın alma referansıyla işleyebilirsin."
-                : "Miktarı ve açıklamayı girerek kontrollü stok çıkışı oluşturabilirsin."}
-            </p>
-          </div>
           <div className="grid gap-2">
             <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.movementQuantity}</label>
             <Input type="number" min={1} step={1} value={drawerMovementQuantity} onChange={(event) => setDrawerMovementQuantity(event.target.value)} required />
           </div>
           {drawerMode === "stock_in" ? (
-            <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-4">
-              <div className="mb-3">
-                <p className="text-sm font-semibold text-emerald-950">Satın alma belgesi</p>
-                <p className="mt-1 text-xs text-emerald-800">Belge alanlarını doldurursan stok girişi satın alma kaydı olarak izlenir.</p>
-              </div>
+            <div className="rounded-2xl border border-[color:var(--color-border)] p-4">
+              <p className="mb-3 text-sm font-semibold text-[color:var(--color-text)]">Satın alma belgesi (opsiyonel)</p>
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="grid gap-2">
                   <label className="text-xs font-medium text-[color:var(--color-text-muted)]">Belge tipi</label>
@@ -2846,29 +2578,18 @@ export function InventoryDrawerOperationPanel({
                       Ürün varsayılan alış fiyatı: {formatCurrency(item.purchasePrice, locale)}
                     </p>
                   ) : null}
-                </div>
-                <div className="md:col-span-2">
-                  <div className="rounded-2xl border border-emerald-200 bg-[color:var(--color-surface)]/80 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Maliyet Özeti</p>
-                    <div className="mt-2 grid gap-2 sm:grid-cols-3">
-                      <p className="text-sm text-[color:var(--color-text)]">
-                        Stok nesnesi: <span className="font-semibold text-[color:var(--color-text)]">{activeVariant ? activeVariant.title : item.name}</span>
-                      </p>
-                      <p className="text-sm text-[color:var(--color-text)]">
-                        Miktar: <span className="font-semibold text-[color:var(--color-text)]">{movementQuantity > 0 ? movementQuantity : labels.notSpecified}</span>
-                      </p>
-                      <p className="text-sm text-[color:var(--color-text)]">
-                        Tahmini toplam: <span className="font-semibold text-[color:var(--color-text)]">{estimatedPurchaseLineTotal === null ? labels.notSpecified : formatCurrency(estimatedPurchaseLineTotal, locale)}</span>
-                      </p>
-                    </div>
-                  </div>
+                  {estimatedPurchaseLineTotal !== null ? (
+                    <p className="text-xs text-[color:var(--color-text-muted)]">
+                      Tahmini toplam: <span className="font-semibold text-[color:var(--color-text)]">{formatCurrency(estimatedPurchaseLineTotal, locale)}</span>
+                    </p>
+                  ) : null}
                 </div>
               </div>
             </div>
           ) : null}
           <div className="grid gap-2">
             <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.adjustmentNote}</label>
-            <Textarea value={drawerNote} onChange={(event) => setDrawerNote(event.target.value)} placeholder={labels.adjustmentNote} rows={4} />
+            <Textarea value={drawerNote} onChange={(event) => setDrawerNote(event.target.value)} placeholder={labels.adjustmentNote} rows={3} />
           </div>
           <div className="flex justify-end">
             <Button type="submit" disabled={Boolean(pendingRowKey)}>
@@ -2884,10 +2605,6 @@ export function InventoryDrawerOperationPanel({
             void onApplyTransfer();
           }}
         >
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-            <p className="text-sm font-semibold text-amber-950">Depo Transfer Akışı</p>
-            <p className="mt-1 text-xs text-amber-900/80">Kaynak depodan hedef depoya miktar taşıyarak kurum içi stok hareketi oluşturursun.</p>
-          </div>
           <div className="grid gap-2">
             <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.transferTargetWarehouse}</label>
             <Select
@@ -2915,7 +2632,7 @@ export function InventoryDrawerOperationPanel({
           </div>
           <div className="grid gap-2">
             <label className="text-xs font-medium text-[color:var(--color-text-muted)]">{labels.transferNote}</label>
-            <Textarea value={drawerTransferNote} onChange={(event) => setDrawerTransferNote(event.target.value)} placeholder={labels.transferNote} rows={4} />
+            <Textarea value={drawerTransferNote} onChange={(event) => setDrawerTransferNote(event.target.value)} placeholder={labels.transferNote} rows={3} />
           </div>
           <div className="flex justify-end">
             <Button type="submit" disabled={Boolean(pendingRowKey)}>
@@ -2923,21 +2640,7 @@ export function InventoryDrawerOperationPanel({
             </Button>
           </div>
         </form>
-      ) : (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <article className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-text-muted)]">Ne Yapılabilir</p>
-            <p className="mt-2 text-sm text-[color:var(--color-text)]">Stok girişi, stok çıkışı, manuel düzeltme ve depo transferi işlemlerini bu drawer içinden yönetebilirsin.</p>
-          </article>
-          <article className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-text-muted)]">Önerilen Başlangıç</p>
-            <p className="mt-2 text-sm text-[color:var(--color-text)]">Önce üstteki işlem kartından akışı seç, sonra ilgili form alanlarını doldurup kaydı uygula.</p>
-          </article>
-        </div>
-      )}
-          </>
-        ) : null}
-      </div>
+      ) : null}
     </section>
   );
 }

@@ -21,8 +21,6 @@ import {
 } from "@/ui/admin/inventory-manager-panels";
 import {
   formatDate as formatInventoryDrawerDate,
-  formatInventoryNote,
-  formatSourceDocument,
   getCurrentDateTimeLocalValue,
   movementTypeClass,
   subscribeNoop,
@@ -4209,13 +4207,6 @@ export function ProductManager({
                       setDrawerPurchaseExternalStatus={setOpPurchaseExternalStatus}
                       setDrawerPurchaseUnitCost={setOpPurchaseUnitCost}
                       setDrawerSelectedVariantId={setOpSelectedVariantId}
-                      formatDate={formatInventoryDrawerDate}
-                      formatInventoryNote={formatInventoryNote}
-                      formatSourceDocument={formatSourceDocument}
-                      movementTypeClass={movementTypeClass}
-                      movementTypeLabel={(type, drawerLabels) => movementTypeLabel(type, { ...labels, ...drawerLabels })}
-                      onHistoryShortcut={() => {}}
-                      onViewAllHistory={closeOperationDrawer}
                       onApplyAdjustment={applyOperationAdjustment}
                       onApplyMovement={applyOperationMovement}
                       onApplyTransfer={applyOperationTransfer}
@@ -4230,9 +4221,9 @@ export function ProductManager({
                 ) : (
                   inventoryOverviewStatus.items.map((item) => (
                     <div key={`${item.productId}-${item.variantId ?? "base"}-${item.warehouseCode ?? "none"}`} className="grid gap-3">
-                      {item.variantTitle ? (
+                      {item.variantOptionSummary || item.variantTitle ? (
                         <p className="text-sm font-semibold text-[color:var(--color-text)]">
-                          {item.variantTitle}{item.variantOptionSummary ? ` · ${item.variantOptionSummary}` : ""}
+                          {item.variantOptionSummary || item.variantTitle}
                         </p>
                       ) : null}
                       <InventoryDrawerDistributionPanel item={item} />

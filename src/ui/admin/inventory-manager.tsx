@@ -3562,17 +3562,6 @@ export function InventoryManager({
                 setDrawerPurchaseExternalStatus={setDrawerPurchaseExternalStatus}
                 setDrawerPurchaseUnitCost={setDrawerPurchaseUnitCost}
                 setDrawerSelectedVariantId={setDrawerSelectedVariantId}
-                formatDate={formatDate}
-                formatInventoryNote={formatInventoryNote}
-                formatSourceDocument={formatSourceDocument}
-                movementTypeClass={movementTypeClass}
-                movementTypeLabel={(movementType, inventoryLabels) => movementTypeLabel(movementType, inventoryLabels as Labels)}
-                onHistoryShortcut={(value) => {
-                  setDrawerMovementFilter(value);
-                  setDrawerMovementPage(1);
-                  viewAllHistoryInList();
-                }}
-                onViewAllHistory={viewAllHistoryInList}
                 onApplyAdjustment={applyAdjustmentFromDrawer}
                 onApplyMovement={applyMovementFromDrawer}
                 onApplyTransfer={applyTransferFromDrawer}
