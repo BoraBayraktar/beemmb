@@ -1071,6 +1071,19 @@ export class CatalogAdminRepository {
     });
   }
 
+  async findBrandNames(excludeId?: string) {
+    return prisma.brand.findMany({
+      where: {
+        deleted: false,
+        ...(excludeId ? { id: { not: excludeId } } : {}),
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+  }
+
   async createBrand(input: AdminCreateBrandInput) {
     return prisma.brand.create({
       data: {
@@ -1552,6 +1565,19 @@ export class CatalogAdminRepository {
               },
             }
           : {}),
+      },
+    });
+  }
+
+  async findCategoryNames(excludeId?: string) {
+    return prisma.category.findMany({
+      where: {
+        deleted: false,
+        ...(excludeId ? { id: { not: excludeId } } : {}),
+      },
+      select: {
+        id: true,
+        name: true,
       },
     });
   }

@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SlugField } from "@/components/ui/slug-field";
+import { slugify } from "@/lib/utils";
 import type { AdminBrandItem } from "@/modules/catalog/contracts/catalog-admin.contract";
 import { ConfirmDeleteButton } from "@/ui/admin/confirm-delete-button";
 import { useTrendyolCatalogSearch } from "@/ui/admin/use-trendyol-catalog-search";
@@ -45,6 +47,7 @@ type Labels = {
   edit: string;
   delete: string;
   save: string;
+  notSpecified: string;
   cancel: string;
   loading: string;
   empty: string;
@@ -187,12 +190,26 @@ export function BrandDirectoryManager({ items, labels, canDelete }: Props) {
   const activeSubmit = drawerMode === "edit" ? labels.save : labels.create;
 
   function patchActiveField(field: keyof BrandForm, value: string) {
+    function updater(prev: BrandForm): BrandForm {
+      if (field !== "name") {
+        return { ...prev, [field]: value };
+      }
+
+      // Slug, kullanıcı elle özelleştirmediği sürece isimden otomatik türetilir.
+      const slugWasAutoDerived = !prev.slug.trim() || prev.slug.trim() === slugify(prev.name);
+      return {
+        ...prev,
+        name: value,
+        slug: slugWasAutoDerived ? slugify(value) : prev.slug,
+      };
+    }
+
     if (drawerMode === "edit") {
-      setEditForm((prev) => ({ ...prev, [field]: value }));
+      setEditForm(updater);
       return;
     }
 
-    setCreateForm((prev) => ({ ...prev, [field]: value }));
+    setCreateForm(updater);
   }
 
   function openCreateDrawer() {
@@ -496,9 +513,8 @@ export function BrandDirectoryManager({ items, labels, canDelete }: Props) {
         </div>
 
         <div className="overflow-hidden rounded-xl border border-[color:var(--color-border)]">
-          <div className="hidden grid-cols-[1fr_1fr_120px_120px_120px_190px] gap-4 border-b border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)] lg:grid">
+          <div className="hidden grid-cols-[1fr_120px_120px_120px_190px] gap-4 border-b border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)] lg:grid">
             <span>{labels.name}</span>
-            <span>{labels.slug}</span>
             <span>{labels.trendyolId}</span>
             <span>{labels.pazaramaId}</span>
             <span>{labels.productCount}</span>
@@ -510,11 +526,10 @@ export function BrandDirectoryManager({ items, labels, canDelete }: Props) {
           ) : (
             <div className="divide-y divide-[color:var(--color-border)]">
               {filteredItems.map((item) => (
-                <article key={item.id} className="grid gap-4 p-4 lg:grid-cols-[1fr_1fr_120px_120px_120px_190px] lg:items-center">
+                <article key={item.id} className="grid gap-4 p-4 lg:grid-cols-[1fr_120px_120px_120px_190px] lg:items-center">
                   <div>
                     <h3 className="font-medium text-[color:var(--color-text)]">{item.name}</h3>
                   </div>
-                  <p className="text-sm text-[color:var(--color-text-muted)]">{item.slug}</p>
                   <p className="text-sm text-[color:var(--color-text-muted)]">{item.trendyolBrandId ?? "-"}</p>
                   <p className="text-sm text-[color:var(--color-text-muted)]">{item.pazaramaBrandId ?? "-"}</p>
                   <p className="text-sm font-semibold text-[color:var(--color-text)]">{item.productCount}</p>
@@ -559,8 +574,13 @@ export function BrandDirectoryManager({ items, labels, canDelete }: Props) {
 
             <form className="grid gap-4 p-5" onSubmit={submitBrand}>
               <div className="grid gap-2">
-                <Label>{labels.slug}</Label>
-                <Input value={activeForm.slug} onChange={(event) => patchActiveField("slug", event.target.value)} required />
+                <SlugField
+                  value={activeForm.slug}
+                  onChange={(value) => patchActiveField("slug", value)}
+                  label={labels.slug}
+                  editLabel={labels.edit}
+                  notSpecifiedLabel={labels.notSpecified}
+                />
               </div>
               <div className="grid gap-2">
                 <Label>{labels.name}</Label>

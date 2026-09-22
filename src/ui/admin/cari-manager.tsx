@@ -8,11 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SlugField } from "@/components/ui/slug-field";
 import { Textarea } from "@/components/ui/textarea";
 import { ConfirmDeleteButton } from "@/ui/admin/confirm-delete-button";
 import type { AdminCariItem, CariRole } from "@/modules/cari/contracts/cari.contract";
 import { resolveTaxIdentifier } from "@/lib/tax-identifier";
 import { formatIbanInput, isValidIban } from "@/lib/iban";
+import { slugify } from "@/lib/utils";
 
 type Labels = {
   title: string;
@@ -72,6 +74,7 @@ type Labels = {
   edit: string;
   delete: string;
   saving: string;
+  notSpecified: string;
   cancel: string;
   empty: string;
   createFailed: string;
@@ -566,9 +569,8 @@ export function CariManager({ items, labels, canDelete }: Props) {
         </div>
 
         <div className="overflow-hidden rounded-xl border border-[color:var(--color-border)]">
-          <div className="hidden grid-cols-[1fr_1fr_1fr_1fr_1fr_120px_170px] gap-4 border-b border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)] lg:grid">
+          <div className="hidden grid-cols-[1fr_1fr_1fr_1fr_120px_170px] gap-4 border-b border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)] lg:grid">
             <span>{labels.name}</span>
-            <span>{labels.slug}</span>
             <span>{labels.roleLabel}</span>
             <span>{labels.email}</span>
             <span>{labels.taxIdentifierLabel}</span>
@@ -581,12 +583,11 @@ export function CariManager({ items, labels, canDelete }: Props) {
           ) : (
             <div className="divide-y divide-[color:var(--color-border)]">
               {filteredItems.map((item) => (
-                <article key={item.id} className="grid gap-4 p-4 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_120px_170px] lg:items-start">
+                <article key={item.id} className="grid gap-4 p-4 lg:grid-cols-[1fr_1fr_1fr_1fr_120px_170px] lg:items-start">
                   <div>
                     <h3 className="font-medium text-[color:var(--color-text)]">{item.name}</h3>
                     {item.address ? <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{item.address}</p> : null}
                   </div>
-                  <p className="text-sm text-[color:var(--color-text-muted)]">{item.slug}</p>
                   <p className="text-sm text-[color:var(--color-text-muted)]">{roleBadges(item)}</p>
                   <p className="text-sm text-[color:var(--color-text-muted)]">{item.email ?? "-"}</p>
                   <p className="flex items-center gap-1.5 text-sm text-[color:var(--color-text-muted)]">
@@ -675,12 +676,28 @@ export function CariManager({ items, labels, canDelete }: Props) {
                 </div>
               </div>
               <div className="grid gap-2">
-                <Label>{labels.slug}</Label>
-                <Input value={form.slug} onChange={(event) => setForm((prev) => ({ ...prev, slug: event.target.value }))} required />
+                <SlugField
+                  value={form.slug}
+                  onChange={(value) => setForm((prev) => ({ ...prev, slug: value }))}
+                  label={labels.slug}
+                  editLabel={labels.edit}
+                  notSpecifiedLabel={labels.notSpecified}
+                />
               </div>
               <div className="grid gap-2">
                 <Label>{labels.name}</Label>
-                <Input value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} required />
+                <Input
+                  value={form.name}
+                  onChange={(event) => {
+                    const nextName = event.target.value;
+                    setForm((prev) => {
+                      // Slug, kullanıcı elle özelleştirmediği sürece isimden otomatik türetilir.
+                      const slugWasAutoDerived = !prev.slug.trim() || prev.slug.trim() === slugify(prev.name);
+                      return { ...prev, name: nextName, slug: slugWasAutoDerived ? slugify(nextName) : prev.slug };
+                    });
+                  }}
+                  required
+                />
               </div>
               <div className="grid gap-2">
                 <Label>{labels.photo}</Label>

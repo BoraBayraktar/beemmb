@@ -93,6 +93,7 @@ export default async function AdminCariPage({
         create: dictionary.admin.create,
         save: dictionary.admin.save,
         edit: dictionary.admin.edit,
+        notSpecified: dictionary.admin.notSpecified,
         delete: dictionary.admin.delete,
         saving: dictionary.common.loading,
         cancel: dictionary.admin.cancel,

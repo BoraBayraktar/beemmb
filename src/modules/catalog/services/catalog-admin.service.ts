@@ -832,6 +832,55 @@ export class CatalogAdminService {
     return slug.trim().toLocaleLowerCase("tr-TR");
   }
 
+  /**
+   * Kategori/marka adı karşılaştırması için: baş/son boşluk kırpılır, iç
+   * boşluklar teke indirilir, büyük/küçük harf farkı (Türkçe kurallarıyla)
+   * yok sayılır -- "Elektronik", "elektronik " ve "Elektronik  " ayni kabul
+   * edilir, ama "Elektronik Ürünler" farklı bir isimdir.
+   *
+   * I/İ/ı/i özel durumu: "I".toLocaleLowerCase("tr-TR") -> "ı" (noktasız)
+   * doner, ama coğu metin (ozellikle .toUpperCase() gibi locale-siz
+   * donusumlerden gelen) ASCII "I" harfini kavramsal olarak "i" (noktali)
+   * niyetiyle kullanir -- bu yuzden I/İ/ı hepsi once "i"ye indirgenip
+   * SONRA tr-TR ile kucultuluyor; aksi halde "KATEGORI" ile "Kategori"
+   * farkli isim sayilirdi (canli testte tam bu senaryo yakalandi).
+   */
+  private normalizeReferenceName(name: string) {
+    return name
+      .trim()
+      .replace(/\s+/g, " ")
+      .replace(/[İIı]/g, "i")
+      .toLocaleLowerCase("tr-TR");
+  }
+
+  private async assertUniqueCategoryName(name: string, excludeId?: string) {
+    const normalized = this.normalizeReferenceName(name);
+    const existing = await this.repository.findCategoryNames(excludeId);
+    const duplicate = existing.find((item) => this.normalizeReferenceName(item.name) === normalized);
+
+    if (duplicate) {
+      throw new z.ZodError([{
+        code: "custom",
+        path: ["name"],
+        message: `Bu isimde bir kategori zaten var: ${duplicate.name}`,
+      }]);
+    }
+  }
+
+  private async assertUniqueBrandName(name: string, excludeId?: string) {
+    const normalized = this.normalizeReferenceName(name);
+    const existing = await this.repository.findBrandNames(excludeId);
+    const duplicate = existing.find((item) => this.normalizeReferenceName(item.name) === normalized);
+
+    if (duplicate) {
+      throw new z.ZodError([{
+        code: "custom",
+        path: ["name"],
+        message: `Bu isimde bir marka zaten var: ${duplicate.name}`,
+      }]);
+    }
+  }
+
   private async assertUniqueSkuPool(args: {
     productId?: string;
     productSku?: string;
@@ -1319,6 +1368,7 @@ export class CatalogAdminService {
 
   async createBrand(input: AdminCreateBrandInput): Promise<AdminBrandItem> {
     const parsed = createBrandSchema.parse(input);
+    await this.assertUniqueBrandName(parsed.name);
     const created = await this.repository.createBrand(parsed);
     await invalidateCatalogCache();
     return mapBrand(created);
@@ -1330,6 +1380,10 @@ export class CatalogAdminService {
 
     if (!existing) {
       throw new Error("Brand not found");
+    }
+
+    if (parsed.name !== undefined) {
+      await this.assertUniqueBrandName(parsed.name, parsed.id);
     }
 
     const updated = await this.repository.updateBrand(parsed);
@@ -1493,6 +1547,7 @@ export class CatalogAdminService {
   async createCategory(input: AdminCreateCategoryInput): Promise<AdminCategoryListItem> {
     const parsed = createCategorySchema.parse(input);
     await this.assertValidParentAssignment(null, parsed.parentId);
+    await this.assertUniqueCategoryName(parsed.name);
     const created = await this.repository.createCategory(parsed);
     await invalidateCatalogCache();
     const parent = created.parentId
@@ -1505,6 +1560,10 @@ export class CatalogAdminService {
     const parsed = updateCategorySchema.parse(input);
 
     await this.assertValidParentAssignment(parsed.id, parsed.parentId);
+
+    if (parsed.name !== undefined) {
+      await this.assertUniqueCategoryName(parsed.name, parsed.id);
+    }
 
     const updated = await this.repository.updateCategory(parsed);
     await invalidateCatalogCache();

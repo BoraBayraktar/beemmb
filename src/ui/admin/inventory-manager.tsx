@@ -136,6 +136,7 @@ type Labels = {
   adjustmentFailed: string;
   movementNote: string;
   movementQuantity: string;
+  movementNote: string;
   stockInSaved: string;
   stockInFailed: string;
   stockOutSaved: string;
@@ -1716,7 +1717,14 @@ export function InventoryManager({
       return;
     }
 
+    // drawerSelectedVariantId degisir degismez birim maliyeti o varyantin (ya da
+    // urunun) varsayilan alis fiyatina eslemek gerekiyor; bu deger acilis anindaki
+    // openDrawer'dan, asenkron varsayilan-varyant-yukleme effect'inden VE
+    // kullanicinin dropdown'dan yaptigi secimden bagimsiz olarak degisebiliyor --
+    // tek bir reaktif effect, bu uc kaynagi da tekrarsiz kapsiyor (bkz.
+    // panel-shell.tsx:893'teki ayni desen).
     if (selectedDrawerVariant) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDrawerPurchaseUnitCost(
         selectedDrawerVariant.purchasePriceOverride !== null && selectedDrawerVariant.purchasePriceOverride !== undefined
           ? String(selectedDrawerVariant.purchasePriceOverride)

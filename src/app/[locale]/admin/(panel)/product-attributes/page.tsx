@@ -63,6 +63,7 @@ export default async function AdminProductAttributesPage({
         create: dictionary.admin.create,
         save: dictionary.admin.save,
         edit: dictionary.admin.edit,
+        notSpecified: dictionary.admin.notSpecified,
         delete: dictionary.admin.delete,
         cancel: dictionary.admin.cancel,
         saving: dictionary.common.loading,

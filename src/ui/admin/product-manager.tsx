@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { ChevronDown, ChevronUp, Maximize2, Minimize2, MoreHorizontal, Plus, X } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronUp, Maximize2, Minimize2, MoreHorizontal, Plus, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -10,8 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SlugField } from "@/components/ui/slug-field";
 import { Textarea } from "@/components/ui/textarea";
 import type { Locale } from "@/lib/i18n";
+import { slugify } from "@/lib/utils";
 import type { AdminSupplierItem } from "@/modules/catalog/contracts/catalog-admin.contract";
 import type { ProductFeature } from "@/modules/catalog/contracts/catalog.contract";
 import type { AdminInventoryItem, AdminWarehouseItem } from "@/modules/inventory/contracts/inventory.contract";
@@ -311,6 +313,7 @@ type Labels = {
   stockStatus: string;
   inStock: string;
   outOfStock: string;
+  lowStock: string;
   save: string;
   create: string;
   edit: string;
@@ -367,6 +370,7 @@ type Labels = {
   inventoryMovementLast30Days: string;
   inventoryMovementLast7Days: string;
   inventoryMovementQuantityLabel: string;
+  inventoryMovementNote: string;
   inventoryMovementReference: string;
   inventoryNoRecentMovements: string;
   inventoryOnHandStock: string;
@@ -430,6 +434,8 @@ type ProductManagerProps = {
   canDelete: boolean;
   canManageIntegrations: boolean;
   canManageSuppliers: boolean;
+  canManageCategories: boolean;
+  canManageBrands: boolean;
 };
 
 type ProductForm = {
@@ -828,6 +834,30 @@ function normalizeSku(sku: string) {
   return sku.trim().toLocaleUpperCase("tr-TR");
 }
 
+function stockStatusBadgeClass(status: AdminInventoryItem["stockStatus"]) {
+  if (status === "OUT_OF_STOCK") {
+    return "bg-rose-100 text-rose-700";
+  }
+
+  if (status === "LOW_STOCK") {
+    return "bg-amber-100 text-amber-700";
+  }
+
+  return "bg-emerald-100 text-emerald-700";
+}
+
+function stockStatusBadgeLabel(status: AdminInventoryItem["stockStatus"], labels: Labels) {
+  if (status === "OUT_OF_STOCK") {
+    return labels.outOfStock;
+  }
+
+  if (status === "LOW_STOCK") {
+    return labels.lowStock;
+  }
+
+  return labels.inStock;
+}
+
 function toPayload(form: ProductForm, options: { includeVariants?: boolean } = {}) {
   const stockTrackingEnabled = form.productType === "SERVICE" ? false : form.stockTrackingEnabled;
   const compareAtPrice = form.compareAtPrice.trim() ? Number(form.compareAtPrice) : null;
@@ -1133,6 +1163,8 @@ export function ProductManager({
   canDelete,
   canManageIntegrations,
   canManageSuppliers,
+  canManageCategories,
+  canManageBrands,
 }: ProductManagerProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -1143,6 +1175,7 @@ export function ProductManager({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [activeEditTab, setActiveEditTab] = useState<EditDrawerTab>("general");
   const [inventoryOverviewStatus, setInventoryOverviewStatus] = useState<InventoryOverviewStatus>(null);
+  const [selectedInventoryItemKey, setSelectedInventoryItemKey] = useState<string | null>(null);
   const [operationTargetItem, setOperationTargetItem] = useState<AdminInventoryItem | null>(null);
   const [operationMode, setOperationMode] = useState<InventoryOperationDrawerMode>("view");
   const [operationPendingRowKey, setOperationPendingRowKey] = useState<string | null>(null);
@@ -1202,6 +1235,7 @@ export function ProductManager({
   const [hepsiburadaPreflightResult, setHepsiburadaPreflightResult] = useState<HepsiburadaPreflightResult | null>(null);
   const [hepsiburadaProductSyncBusyId, setHepsiburadaProductSyncBusyId] = useState<string | null>(null);
   const [hepsiburadaProductSyncTracking, setHepsiburadaProductSyncTracking] = useState<HepsiburadaProductSyncTracking | null>(null);
+  const [categoryOptions, setCategoryOptions] = useState<Category[]>(categories);
   const [brandOptions, setBrandOptions] = useState<Brand[]>(brands);
   const [supplierOptions, setSupplierOptions] = useState<AdminSupplierItem[]>(suppliers);
   const [attributeDefinitionOptions, setAttributeDefinitionOptions] = useState<AttributeDefinition[]>(attributeDefinitions);
@@ -1393,6 +1427,14 @@ export function ProductManager({
   function operationRowKey(item: AdminInventoryItem) {
     return `${item.productId}:${item.variantId ?? "base"}:${item.warehouseCode ?? "none"}`;
   }
+
+  const inventoryOverviewItems = inventoryOverviewStatus && "items" in inventoryOverviewStatus ? inventoryOverviewStatus.items : [];
+  // Tek varyantlı/varyantsız ürünlerde liste-detay gezinmesine gerek yok --
+  // doğrudan tek kaydın detayı gösterilir. Birden fazla varyant varsa
+  // kullanıcının seçtiği (ya da henüz seçmediği => null => master liste) kayıt.
+  const selectedInventoryItem = inventoryOverviewItems.length === 1
+    ? inventoryOverviewItems[0]
+    : inventoryOverviewItems.find((item) => operationRowKey(item) === selectedInventoryItemKey) ?? null;
 
   function openOperationDrawer(item: AdminInventoryItem, mode: InventoryOperationDrawerMode) {
     setOperationTargetItem(item);
@@ -1639,6 +1681,7 @@ export function ProductManager({
     movementLast30Days: labels.inventoryMovementLast30Days,
     movementLast7Days: labels.inventoryMovementLast7Days,
     movementQuantity: labels.inventoryMovementQuantityLabel,
+    movementNote: labels.inventoryMovementNote,
     movementReference: labels.inventoryMovementReference,
     next: labels.next,
     noRecentMovements: labels.inventoryNoRecentMovements,
@@ -1799,29 +1842,75 @@ export function ProductManager({
       }
 
       const nextName = field === "name" ? value : prev.name;
-      const nextSlugBase = field === "slug" ? value : prev.slug;
+      // Ürünün kendi slug'ı, kullanıcı elle özelleştirmediği sürece isimden
+      // otomatik türetilir -- varyantlara zaten uygulanan "değer hâlâ eski
+      // otomatik türetilmiş haliyle aynıysa yeni türetilmişle değiştir,
+      // özelleştirilmişse dokunma" deseniyle birebir aynı mantık.
+      const slugWasAutoDerived = !prev.slug.trim() || prev.slug.trim() === slugify(prev.name);
+      const nextSlug = field === "slug"
+        ? value
+        : field === "name" && slugWasAutoDerived
+          ? slugify(nextName)
+          : prev.slug;
       const nextSkuBase = field === "sku" ? value : prev.sku;
 
       return {
         ...prev,
         [field]: value,
+        slug: nextSlug,
         variants: prev.variants.map((variant) => {
           const previousTitle = buildVariantTitle(prev.name, variant.attributes, prev.attributeLinks, attributeDefinitionOptions);
           const nextTitle = buildVariantTitle(nextName, variant.attributes, prev.attributeLinks, attributeDefinitionOptions);
           const previousSlug = buildVariantSlug(prev.slug, variant.attributes, prev.attributeLinks);
-          const nextSlug = buildVariantSlug(nextSlugBase, variant.attributes, prev.attributeLinks);
+          const nextVariantSlug = buildVariantSlug(nextSlug, variant.attributes, prev.attributeLinks);
           const previousSku = buildVariantSku(prev.sku, variant.attributes, prev.attributeLinks);
           const nextSku = buildVariantSku(nextSkuBase, variant.attributes, prev.attributeLinks);
 
           return {
             ...variant,
             title: !variant.title.trim() || variant.title.trim() === previousTitle ? nextTitle : variant.title,
-            slug: !variant.slug.trim() || variant.slug.trim() === previousSlug ? nextSlug : variant.slug,
+            slug: !variant.slug.trim() || variant.slug.trim() === previousSlug ? nextVariantSlug : variant.slug,
             sku: !variant.sku.trim() || variant.sku.trim() === previousSku ? nextSku : variant.sku,
           };
         }),
       };
     });
+  }
+
+  async function createCategoryInline(name: string) {
+    const response = await fetch("/api/admin/categories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, slug: slugify(name) }),
+    });
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+      setError(payload?.message ?? labels.opFailed);
+      return;
+    }
+
+    const payload = (await response.json()) as { item: Category };
+    setCategoryOptions((prev) => [...prev, payload.item]);
+    patchActiveField("categoryId", payload.item.id);
+  }
+
+  async function createBrandInline(name: string) {
+    const response = await fetch("/api/admin/brands", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, slug: slugify(name) }),
+    });
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+      setError(payload?.message ?? labels.opFailed);
+      return;
+    }
+
+    const payload = (await response.json()) as { item: Brand };
+    setBrandOptions((prev) => [...prev, payload.item]);
+    patchActiveField("brandId", payload.item.id);
   }
 
   function openCreateDrawer() {
@@ -1907,6 +1996,7 @@ export function ProductManager({
     setDrawerFullscreen(false);
     setActiveEditTab(initialTab);
     setInventoryOverviewStatus(null);
+    setSelectedInventoryItemKey(null);
     setDrawerMode("edit");
   }
 
@@ -3103,7 +3193,7 @@ export function ProductManager({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={NONE_VALUE}>{labels.allCategories}</SelectItem>
-              {categories.map((category) => (
+              {categoryOptions.map((category) => (
                 <SelectItem key={category.id} value={category.id}>
                   {category.name}
                 </SelectItem>
@@ -3177,7 +3267,7 @@ export function ProductManager({
                   </div>
                   <div>
                     <h3 className="font-medium text-[color:var(--color-text)]">{product.name}</h3>
-                    <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{product.slug} • {product.sku}</p>
+                    <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{product.sku}</p>
                     <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{labels.barcode}: {product.barcode ?? labels.notSpecified}</p>
                     <p className="mt-2 line-clamp-2 text-sm text-[color:var(--color-text-muted)] lg:hidden">{product.description}</p>
                   </div>
@@ -3396,9 +3486,7 @@ export function ProductManager({
             <form className="grid gap-5 p-5" onSubmit={submitProduct}>
               <section className="grid gap-4 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-text-muted)]">Ürün Kartı</p>
-                  <h4 className="mt-1 text-base font-semibold text-[color:var(--color-text)]">Temel ürün bilgileri</h4>
-                  <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">Ürünün kimlik, tür ve vitrin bilgisini bu alandan yönetin.</p>
+                  <h4 className="text-base font-semibold text-[color:var(--color-text)]">Temel ürün bilgileri</h4>
                 </div>
 
                 <div className="grid gap-2">
@@ -3407,8 +3495,13 @@ export function ProductManager({
                 </div>
                 <div className="grid gap-2 md:grid-cols-3">
                   <div className="grid gap-2">
-                    <Label>{labels.slug}</Label>
-                    <Input value={activeForm.slug} onChange={(event) => patchActiveField("slug", event.target.value)} required />
+                    <SlugField
+                      value={activeForm.slug}
+                      onChange={(value) => patchActiveField("slug", value)}
+                      label={labels.slug}
+                      editLabel={labels.edit}
+                      notSpecifiedLabel={labels.notSpecified}
+                    />
                   </div>
                   <div className="grid gap-2">
                     <Label>{labels.sku}</Label>
@@ -3475,11 +3568,13 @@ export function ProductManager({
                         onValueChange={(value) => patchActiveField("categoryId", value === NONE_VALUE ? "" : value)}
                         options={[
                           { value: NONE_VALUE, label: labels.notSpecified },
-                          ...categories.map((category) => ({ value: category.id, label: category.name })),
+                          ...categoryOptions.map((category) => ({ value: category.id, label: category.name })),
                         ]}
                         placeholder={labels.notSpecified}
                         searchPlaceholder={labels.searchCategory}
                         emptyLabel={labels.noCategoryResults}
+                        onCreateOption={canManageCategories ? createCategoryInline : undefined}
+                        createOptionLabel={(query) => `+ "${query}" kategorisini oluştur`}
                       />
                       <Link href={`/${locale}/admin/categories`} className="text-xs font-medium text-[color:var(--color-text-muted)] underline underline-offset-4">
                         {labels.manageCategories}
@@ -3501,6 +3596,8 @@ export function ProductManager({
                         placeholder={labels.notSpecified}
                         searchPlaceholder={labels.searchBrand}
                         emptyLabel={labels.noBrandResults}
+                        onCreateOption={canManageBrands ? createBrandInline : undefined}
+                        createOptionLabel={(query) => `+ "${query}" markasını oluştur`}
                       />
                       <Link href={`/${locale}/admin/brands`} className="text-xs font-medium text-[color:var(--color-text-muted)] underline underline-offset-4">
                         {labels.manageBrands}
@@ -3522,9 +3619,7 @@ export function ProductManager({
               <section className="grid gap-4 rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-cyan-50 p-4">
                 <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Stok Kartı</p>
-                    <h4 className="mt-1 text-base font-semibold text-[color:var(--color-text)]">Stok ve satın alma ayarları</h4>
-                    <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">Paraşüt benzeri stok takibi, depo tercihi ve maliyet alanlarını birlikte yönetin.</p>
+                    <h4 className="text-base font-semibold text-[color:var(--color-text)]">Stok ve satın alma ayarları</h4>
                   </div>
                   <div className="rounded-xl border border-emerald-200 bg-[color:var(--color-surface)]/80 px-3 py-2 text-xs text-[color:var(--color-text-muted)] shadow-sm">
                     <p className="font-semibold text-[color:var(--color-text)]">Stok durumu</p>
@@ -3640,8 +3735,7 @@ export function ProductManager({
                 <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                   {!hasVariantsForStockField ? (
                     <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
-                      <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.stock}</p>
-                      <div className="mt-2 grid gap-2">
+                      <div className="grid gap-2">
                         <Label>{labels.stock}</Label>
                         <Input
                           type="number"
@@ -3656,22 +3750,19 @@ export function ProductManager({
                     </div>
                   ) : null}
                   <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.purchasePrice}</p>
-                    <div className="mt-2 grid gap-2">
+                    <div className="grid gap-2">
                       <Label>{labels.purchasePrice}</Label>
                       <Input type="number" min="0" step="0.01" value={activeForm.purchasePrice} onChange={(event) => patchActiveField("purchasePrice", event.target.value)} />
                     </div>
                   </div>
                   <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.vatRate}</p>
-                    <div className="mt-2 grid gap-2">
+                    <div className="grid gap-2">
                       <Label>{labels.vatRate}</Label>
                       <Input type="number" min="0" max="100" step="1" value={activeForm.vatRate} onChange={(event) => patchActiveField("vatRate", event.target.value)} required />
                     </div>
                   </div>
                   <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.compareAtPrice}</p>
-                    <div className="mt-2 grid gap-2">
+                    <div className="grid gap-2">
                       <Label>{labels.compareAtPrice}</Label>
                       <Input type="number" min="0" step="0.01" value={activeForm.compareAtPrice} onChange={(event) => patchActiveField("compareAtPrice", event.target.value)} />
                     </div>
@@ -3681,8 +3772,7 @@ export function ProductManager({
                 <div className="grid gap-3 md:grid-cols-2">
                   {canManageSuppliers ? (
                     <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
-                      <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.supplier}</p>
-                      <div className="mt-2 grid gap-2">
+                      <div className="grid gap-2">
                         <Label>{labels.supplier}</Label>
                         <div className="grid gap-2">
                           <SearchableSelect
@@ -3710,8 +3800,7 @@ export function ProductManager({
                     </div>
                   ) : null}
                   <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">Satın alma deposu</p>
-                    <div className="mt-2 grid gap-2">
+                    <div className="grid gap-2">
                       <Label>{labels.preferredPurchaseWarehouse}</Label>
                       <Select
                         value={activeForm.preferredPurchaseWarehouseId || NONE_VALUE}
@@ -3735,8 +3824,7 @@ export function ProductManager({
 
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">Satış deposu</p>
-                    <div className="mt-2 grid gap-2">
+                    <div className="grid gap-2">
                       <Label>{labels.preferredSalesWarehouse}</Label>
                       <Select
                         value={activeForm.preferredSalesWarehouseId || NONE_VALUE}
@@ -3758,8 +3846,7 @@ export function ProductManager({
                     </div>
                   </div>
                   <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.internalNote}</p>
-                    <div className="mt-2 grid gap-2">
+                    <div className="grid gap-2">
                       <Label>{labels.internalNote}</Label>
                       <Textarea value={activeForm.internalNote} onChange={(event) => patchActiveField("internalNote", event.target.value)} />
                     </div>
@@ -3833,7 +3920,6 @@ export function ProductManager({
                     </Button>
                   </div>
                 </div>
-                <p className="text-xs text-[color:var(--color-text-muted)]">{labels.featuresHint}</p>
               </div>
               <div className="grid gap-2 md:grid-cols-2">
                 <div className="grid gap-2">
@@ -3986,7 +4072,6 @@ export function ProductManager({
                                   />
                                   <span className="min-w-0">
                                     <span className="block font-medium">{definition.name}</span>
-                                    <span className="block text-xs text-[color:var(--color-text-muted)]">{definition.slug}</span>
                                   </span>
                                 </label>
                               );
@@ -4075,7 +4160,6 @@ export function ProductManager({
                                 </td>
                                 <td className="px-3 py-3 text-[color:var(--color-text-muted)]">
                                   <div className={duplicateVariantSkuSet.has(normalizeSku(variant.sku)) ? "font-medium text-red-600" : undefined}>{variant.sku || labels.sku}</div>
-                                  <div className="text-xs text-[color:var(--color-text-muted)]">{variant.slug || labels.slug}</div>
                                   {duplicateVariantSkuSet.has(normalizeSku(variant.sku)) ? (
                                     <div className="mt-1 text-xs font-medium text-red-600">{labels.variantDuplicateSkuWarning}</div>
                                   ) : null}
@@ -4226,80 +4310,110 @@ export function ProductManager({
                   <p className="text-sm text-[color:var(--color-text-muted)]">{labels.loading}</p>
                 ) : "error" in inventoryOverviewStatus ? (
                   <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{inventoryOverviewStatus.error}</p>
-                ) : inventoryOverviewStatus.items.length === 0 ? (
+                ) : inventoryOverviewItems.length === 0 ? (
                   <p className="text-sm text-[color:var(--color-text-muted)]">Bu ürün için depo stok kaydı bulunamadı.</p>
-                ) : (
-                  inventoryOverviewStatus.items.map((item) => (
-                    <div key={`${item.productId}-${item.variantId ?? "base"}-${item.warehouseCode ?? "none"}`} className="grid gap-3">
-                      {item.variantOptionSummary || item.variantTitle ? (
-                        <p className="text-sm font-semibold text-[color:var(--color-text)]">
-                          {item.variantOptionSummary || item.variantTitle}
-                        </p>
-                      ) : null}
-                      <InventoryDrawerDistributionPanel item={item} />
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="secondary"
-                          disabled={!item.warehouseCode}
-                          onClick={() => openOperationDrawer(item, "edit")}
-                        >
-                          Stok düzelt
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="secondary"
-                          disabled={!item.warehouseCode}
-                          onClick={() => openOperationDrawer(item, "transfer")}
-                        >
-                          Transfer
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="secondary"
-                          disabled={!item.warehouseCode}
-                          onClick={() => openOperationDrawer(item, "stock_in")}
-                        >
-                          Stok girişi
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="secondary"
-                          disabled={!item.warehouseCode}
-                          onClick={() => openOperationDrawer(item, "stock_out")}
-                        >
-                          Stok çıkışı
-                        </Button>
-                      </div>
-                      <section className="rounded-2xl border border-[color:var(--color-border)] p-4">
-                        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Son Hareketler</p>
-                        {item.recentMovements.length === 0 ? (
-                          <p className="text-xs text-[color:var(--color-text-muted)]">Henüz hareket kaydı yok.</p>
-                        ) : (
-                          <ul className="grid gap-2">
-                            {item.recentMovements.slice(0, 5).map((movement, index) => (
-                              <li
-                                key={`${item.productId}-movement-${index}`}
-                                className="flex items-center justify-between gap-3 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-2 text-xs"
-                              >
-                                <span className={`rounded-full px-2 py-0.5 font-medium ${movementTypeClass(movement.type)}`}>
-                                  {movementTypeLabel(movement.type, labels)}
-                                </span>
-                                <span className={movement.quantity < 0 ? "text-red-600" : "text-emerald-600"}>
-                                  {movement.quantity > 0 ? `+${movement.quantity}` : movement.quantity}
-                                </span>
-                                <span className="text-[color:var(--color-text-muted)]">{formatInventoryDrawerDate(movement.createdAt, locale, "-")}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </section>
+                ) : selectedInventoryItem ? (
+                  <div className="grid gap-3">
+                    {inventoryOverviewItems.length > 1 ? (
+                      <Button type="button" variant="secondary" onClick={() => setSelectedInventoryItemKey(null)}>
+                        ← Varyant listesine dön
+                      </Button>
+                    ) : null}
+                    {selectedInventoryItem.variantOptionSummary || selectedInventoryItem.variantTitle ? (
+                      <p className="text-sm font-semibold text-[color:var(--color-text)]">
+                        {selectedInventoryItem.variantOptionSummary || selectedInventoryItem.variantTitle}
+                      </p>
+                    ) : null}
+                    <InventoryDrawerDistributionPanel item={selectedInventoryItem} />
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        disabled={!selectedInventoryItem.warehouseCode}
+                        onClick={() => openOperationDrawer(selectedInventoryItem, "edit")}
+                      >
+                        Stok düzelt
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        disabled={!selectedInventoryItem.warehouseCode}
+                        onClick={() => openOperationDrawer(selectedInventoryItem, "transfer")}
+                      >
+                        Transfer
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        disabled={!selectedInventoryItem.warehouseCode}
+                        onClick={() => openOperationDrawer(selectedInventoryItem, "stock_in")}
+                      >
+                        Stok girişi
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        disabled={!selectedInventoryItem.warehouseCode}
+                        onClick={() => openOperationDrawer(selectedInventoryItem, "stock_out")}
+                      >
+                        Stok çıkışı
+                      </Button>
                     </div>
-                  ))
+                    <section className="rounded-2xl border border-[color:var(--color-border)] p-4">
+                      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">Son Hareketler</p>
+                      {selectedInventoryItem.recentMovements.length === 0 ? (
+                        <p className="text-xs text-[color:var(--color-text-muted)]">Henüz hareket kaydı yok.</p>
+                      ) : (
+                        <ul className="grid gap-2">
+                          {selectedInventoryItem.recentMovements.slice(0, 5).map((movement, index) => (
+                            <li
+                              key={`${selectedInventoryItem.productId}-movement-${index}`}
+                              className="flex items-center justify-between gap-3 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-2 text-xs"
+                            >
+                              <span className={`rounded-full px-2 py-0.5 font-medium ${movementTypeClass(movement.type)}`}>
+                                {movementTypeLabel(movement.type, labels)}
+                              </span>
+                              <span className={movement.quantity < 0 ? "text-red-600" : "text-emerald-600"}>
+                                {movement.quantity > 0 ? `+${movement.quantity}` : movement.quantity}
+                              </span>
+                              <span className="text-[color:var(--color-text-muted)]">{formatInventoryDrawerDate(movement.createdAt, locale, "-")}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </section>
+                  </div>
+                ) : (
+                  <div className="grid gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">
+                      {inventoryOverviewItems.length} varyant
+                    </p>
+                    {inventoryOverviewItems.map((item) => (
+                      <button
+                        key={operationRowKey(item)}
+                        type="button"
+                        onClick={() => setSelectedInventoryItemKey(operationRowKey(item))}
+                        className="flex items-center justify-between gap-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 text-left transition hover:bg-[color:var(--color-bg-soft)]"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-[color:var(--color-text)]">
+                            {item.variantOptionSummary || item.variantTitle || item.name}
+                          </p>
+                          <p className="mt-0.5 truncate text-xs text-[color:var(--color-text-muted)]">{item.sku}</p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <span className={`inline-flex whitespace-nowrap rounded-full px-2 py-1 text-[11px] font-semibold ${stockStatusBadgeClass(item.stockStatus)}`}>
+                            {stockStatusBadgeLabel(item.stockStatus, labels)} ({item.availableStock})
+                          </span>
+                          <ChevronRight className="h-4 w-4 shrink-0 text-[color:var(--color-text-muted)]" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 )}
                 {!operationTargetItem && currentEditingProduct ? (
                   <Link
@@ -4399,8 +4513,13 @@ export function ProductManager({
                       <Input value={activeVariantEditor.title} onChange={(event) => patchVariant(variantEditorIndex as number, { title: event.target.value })} />
                     </div>
                     <div className="grid gap-2">
-                      <Label>{labels.slug}</Label>
-                      <Input value={activeVariantEditor.slug} onChange={(event) => patchVariant(variantEditorIndex as number, { slug: event.target.value })} />
+                      <SlugField
+                        value={activeVariantEditor.slug}
+                        onChange={(value) => patchVariant(variantEditorIndex as number, { slug: value })}
+                        label={labels.slug}
+                        editLabel={labels.edit}
+                        notSpecifiedLabel={labels.notSpecified}
+                      />
                     </div>
                     <div className="grid gap-2">
                       <Label>{labels.sku}</Label>

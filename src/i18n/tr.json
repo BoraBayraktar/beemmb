@@ -1939,6 +1939,7 @@
     "inventoryAdjustmentSaved": "Stok düzeltmesi kaydedildi.",
     "inventoryAdjustmentFailed": "Stok düzeltmesi başarısız oldu.",
     "inventoryMovementQuantityLabel": "İşlem miktarı",
+    "inventoryMovementNote": "Stok hareketi notu",
     "inventoryStockInSaved": "Stok girişi kaydedildi.",
     "inventoryStockInFailed": "Stok girişi başarısız oldu.",
     "inventoryStockOutSaved": "Stok çıkışı kaydedildi.",

@@ -83,6 +83,8 @@ export default async function AdminProductsPage({
       canDelete={await rbacService.hasPermission(user, "products.manage")}
       canManageIntegrations={await rbacService.hasPermission(user, "integrations.manage")}
       canManageSuppliers={enabledModuleKeys.has("finance")}
+      canManageCategories={await rbacService.hasPermission(user, "categories.manage")}
+      canManageBrands={await rbacService.hasPermission(user, "brands.manage")}
       labels={{
         title: dictionary.admin.productManager,
         createTitle: dictionary.admin.createProduct,
@@ -253,6 +255,7 @@ export default async function AdminProductsPage({
         stockStatus: dictionary.admin.stockStatus,
         inStock: dictionary.admin.inStock,
         outOfStock: dictionary.admin.outOfStock,
+        lowStock: dictionary.admin.lowStockOnly,
         save: dictionary.admin.save,
         create: dictionary.admin.create,
         edit: dictionary.admin.edit,
@@ -302,6 +305,7 @@ export default async function AdminProductsPage({
         inventoryMovementLast30Days: dictionary.admin.inventoryMovementLast30Days,
         inventoryMovementLast7Days: dictionary.admin.inventoryMovementLast7Days,
         inventoryMovementQuantityLabel: dictionary.admin.inventoryMovementQuantityLabel,
+        inventoryMovementNote: dictionary.admin.inventoryMovementNote,
         inventoryMovementReference: dictionary.admin.inventoryMovementReference,
         inventoryNoRecentMovements: dictionary.admin.inventoryNoRecentMovements,
         inventoryOnHandStock: dictionary.admin.inventoryOnHandStock,

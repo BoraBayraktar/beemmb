@@ -101,6 +101,7 @@ export default async function AdminCategoriesPage({
         save: dictionary.admin.save,
         create: dictionary.admin.create,
         edit: dictionary.admin.edit,
+        notSpecified: dictionary.admin.notSpecified,
         delete: dictionary.admin.delete,
         cancel: dictionary.admin.cancel,
         empty: dictionary.admin.emptyCategories,
