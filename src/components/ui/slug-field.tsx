@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Link2, Pencil } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,24 +38,30 @@ export function SlugField({
 
   if (!expanded) {
     return (
-      <button
-        type="button"
-        onClick={() => setExpanded(true)}
-        className="flex items-center gap-2 text-xs text-[color:var(--color-text-muted)] transition hover:text-[color:var(--color-text)]"
-      >
-        <span className="truncate">
-          {label}: {urlPrefix ?? ""}
-          {value.trim() || notSpecifiedLabel}
-        </span>
-        <span className="shrink-0 font-medium underline underline-offset-4">{editLabel}</span>
-      </button>
+      <div className="grid min-w-0 gap-2">
+        <Label>{label}</Label>
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          title={editLabel}
+          aria-label={editLabel}
+          className="flex h-11 w-full min-w-0 items-center gap-2 rounded-[var(--radius-md)] border border-dashed border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 text-left transition hover:border-[color:var(--color-brand)] hover:bg-[color:var(--color-surface)]"
+        >
+          <Link2 className="h-3.5 w-3.5 shrink-0 text-[color:var(--color-text-muted)]" />
+          <span className="min-w-0 flex-1 truncate font-mono text-xs text-[color:var(--color-text-muted)]">
+            {urlPrefix ?? ""}
+            {value.trim() || notSpecifiedLabel}
+          </span>
+          <Pencil className="h-3.5 w-3.5 shrink-0 text-[color:var(--color-brand)]" />
+        </button>
+      </div>
     );
   }
 
   return (
     <div className="grid gap-2">
       <Label>{label}</Label>
-      <Input value={value} onChange={(event) => onChange(event.target.value)} />
+      <Input value={value} onChange={(event) => onChange(event.target.value)} autoFocus />
     </div>
   );
 }
