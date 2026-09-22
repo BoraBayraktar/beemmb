@@ -18,6 +18,7 @@ type Category = {
   name: string;
   trendyolCategoryId: number | null;
   pazaramaCategoryId: string | null;
+  featureTemplate: string[];
   parentId: string | null;
   parentName: string | null;
   productCount: number;
@@ -49,6 +50,11 @@ type Labels = {
   pazaramaSearchHint: string;
   pazaramaSelected: string;
   parentCategory: string;
+  featureTemplateTitle: string;
+  featureTemplateHint: string;
+  featureTemplateAdd: string;
+  featureTemplatePlaceholder: string;
+  featureTemplateEmpty: string;
   filterProducts: string;
   filterAllProducts: string;
   filterWithProducts: string;
@@ -100,6 +106,7 @@ type CategoryForm = {
   name: string;
   trendyolCategoryId: string;
   pazaramaCategoryId: string;
+  featureTemplate: string[];
   parentId: string;
 };
 
@@ -122,6 +129,7 @@ const emptyForm: CategoryForm = {
   name: "",
   trendyolCategoryId: "",
   pazaramaCategoryId: "",
+  featureTemplate: [],
   parentId: "",
 };
 
@@ -131,6 +139,7 @@ function mapPayload(form: CategoryForm) {
     name: form.name,
     trendyolCategoryId: form.trendyolCategoryId.trim() ? Number(form.trendyolCategoryId) : null,
     pazaramaCategoryId: form.pazaramaCategoryId.trim() || null,
+    featureTemplate: form.featureTemplate.map((item) => item.trim()).filter(Boolean),
     parentId: form.parentId.trim() ? form.parentId : null,
   };
 }
@@ -280,6 +289,29 @@ export function CategoryManager({ initialResult, parentCandidates, labels, canDe
     setCreateForm(updater);
   }
 
+  function patchActiveFeatureTemplate(updater: (current: string[]) => string[]) {
+    const formUpdater = (prev: CategoryForm): CategoryForm => ({ ...prev, featureTemplate: updater(prev.featureTemplate) });
+
+    if (drawerMode === "edit") {
+      setEditForm(formUpdater);
+      return;
+    }
+
+    setCreateForm(formUpdater);
+  }
+
+  function addFeatureTemplateRow() {
+    patchActiveFeatureTemplate((current) => [...current, ""]);
+  }
+
+  function updateFeatureTemplateRow(index: number, value: string) {
+    patchActiveFeatureTemplate((current) => current.map((item, itemIndex) => (itemIndex === index ? value : item)));
+  }
+
+  function removeFeatureTemplateRow(index: number) {
+    patchActiveFeatureTemplate((current) => current.filter((_, itemIndex) => itemIndex !== index));
+  }
+
   function validateForm(form: CategoryForm) {
     if (!form.slug.trim() || !form.name.trim()) {
       return labels.validationRequired;
@@ -338,6 +370,7 @@ export function CategoryManager({ initialResult, parentCandidates, labels, canDe
       name: category.name,
       trendyolCategoryId: category.trendyolCategoryId ? String(category.trendyolCategoryId) : "",
       pazaramaCategoryId: category.pazaramaCategoryId ?? "",
+      featureTemplate: category.featureTemplate ?? [],
       parentId: category.parentId ?? "",
     });
     trendyolCategorySearch.setQuery(category.name);
@@ -841,6 +874,36 @@ export function CategoryManager({ initialResult, parentCandidates, labels, canDe
                       ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label>{labels.featureTemplateTitle}</Label>
+                <p className="text-xs text-[color:var(--color-text-muted)]">{labels.featureTemplateHint}</p>
+                <div className="grid gap-2 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-3">
+                  {activeForm.featureTemplate.length === 0 ? (
+                    <p className="text-xs text-[color:var(--color-text-muted)]">{labels.featureTemplateEmpty}</p>
+                  ) : (
+                    <div className="grid gap-2">
+                      {activeForm.featureTemplate.map((item, index) => (
+                        <div key={`feature-template-${index}`} className="flex items-center gap-2">
+                          <Input
+                            value={item}
+                            onChange={(event) => updateFeatureTemplateRow(index, event.target.value)}
+                            placeholder={labels.featureTemplatePlaceholder}
+                          />
+                          <Button type="button" size="sm" variant="outline" onClick={() => removeFeatureTemplateRow(index)}>
+                            {labels.delete}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div>
+                    <Button type="button" size="sm" variant="secondary" onClick={addFeatureTemplateRow}>
+                      {labels.featureTemplateAdd}
+                    </Button>
+                  </div>
+                </div>
               </div>
 
               <div className="mt-2 flex justify-end gap-2 border-t border-[color:var(--color-border)] pt-5">

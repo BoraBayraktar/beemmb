@@ -397,11 +397,14 @@ function mapAttributeValueMarketplaceMapping(item: {
   };
 }
 
+const categoryFeatureTemplateSchema = z.array(z.string().trim().min(1).max(120)).max(60).optional();
+
 const createCategorySchema = z.object({
   slug: z.string().trim().min(2),
   name: z.string().trim().min(2),
   trendyolCategoryId: z.coerce.number().int().positive().optional().nullable(),
   pazaramaCategoryId: z.string().trim().min(1).max(120).optional().nullable(),
+  featureTemplate: categoryFeatureTemplateSchema,
   parentId: z.string().trim().min(1).optional().nullable(),
 });
 
@@ -412,9 +415,10 @@ const updateCategorySchema = z
     name: z.string().trim().min(2).optional(),
     trendyolCategoryId: z.coerce.number().int().positive().optional().nullable(),
     pazaramaCategoryId: z.string().trim().min(1).max(120).optional().nullable(),
+    featureTemplate: categoryFeatureTemplateSchema,
     parentId: z.string().trim().min(1).optional().nullable(),
   })
-  .refine((value) => value.slug !== undefined || value.name !== undefined || value.parentId !== undefined || value.trendyolCategoryId !== undefined || value.pazaramaCategoryId !== undefined, {
+  .refine((value) => value.slug !== undefined || value.name !== undefined || value.parentId !== undefined || value.trendyolCategoryId !== undefined || value.pazaramaCategoryId !== undefined || value.featureTemplate !== undefined, {
     message: "At least one category field must be provided",
   });
 
@@ -604,12 +608,21 @@ function mapProduct(product: {
   };
 }
 
+function normalizeFeatureTemplate(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+}
+
 function mapCategory(category: {
   id: string;
   slug: string;
   name: string;
   trendyolCategoryId: number | null;
   pazaramaCategoryId?: string | null;
+  featureTemplate?: unknown;
   parentId: string | null;
   _count?: {
     products: number;
@@ -621,6 +634,7 @@ function mapCategory(category: {
     name: category.name,
     trendyolCategoryId: category.trendyolCategoryId,
     pazaramaCategoryId: category.pazaramaCategoryId ?? null,
+    featureTemplate: normalizeFeatureTemplate(category.featureTemplate),
     parentId: category.parentId,
     parentName,
     productCount: category._count?.products ?? 0,
@@ -1513,6 +1527,24 @@ export class CatalogAdminService {
       code: warehouse.code,
       name: warehouse.name,
       isActive: warehouse.isActive,
+    }));
+  }
+
+  /**
+   * Ürün formundaki Kategori seçici gibi tam/sayfalanmamış listeler icin.
+   * `catalogService.listCategories()` (storefront) kasıtlı olarak her zaman
+   * PLATFORM_TENANT_ID'ye sabit -- burada onun yerine aktif admin'in kendi
+   * tenant'ına gore (ambient tenant context) tam liste dönüyor, aksi halde
+   * seçilen kategori başka tenant'a ait olur ve kayıt sırasında "Category
+   * not found" hatası alınır.
+   */
+  async listAllCategories(): Promise<Array<{ id: string; slug: string; name: string; featureTemplate: string[] }>> {
+    const categories = await this.repository.listAllCategories();
+    return categories.map((category) => ({
+      id: category.id,
+      slug: category.slug,
+      name: category.name,
+      featureTemplate: normalizeFeatureTemplate(category.featureTemplate),
     }));
   }
 

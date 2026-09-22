@@ -331,6 +331,7 @@ export type AdminCategoryListItem = {
   name: string;
   trendyolCategoryId: number | null;
   pazaramaCategoryId: string | null;
+  featureTemplate: string[];
   parentId: string | null;
   parentName: string | null;
   productCount: number;
@@ -359,6 +360,7 @@ export type AdminCreateCategoryInput = {
   name: string;
   trendyolCategoryId?: number | null;
   pazaramaCategoryId?: string | null;
+  featureTemplate?: string[];
   parentId?: string | null;
 };
 
@@ -368,6 +370,7 @@ export type AdminUpdateCategoryInput = {
   name?: string;
   trendyolCategoryId?: number | null;
   pazaramaCategoryId?: string | null;
+  featureTemplate?: string[];
   parentId?: string | null;
 };
 

@@ -35,6 +35,7 @@ type Category = {
   id: string;
   slug: string;
   name: string;
+  featureTemplate: string[];
 };
 
 type Brand = {
@@ -346,6 +347,7 @@ type Labels = {
   highlightFeature: string;
   addFeature: string;
   removeFeature: string;
+  applyFeatureTemplate: string;
   importCsv: string;
   importTemplate: string;
   exportExcel: string;
@@ -1909,6 +1911,89 @@ export function ProductManager({
     const payload = (await response.json()) as { item: Brand };
     setBrandOptions((prev) => [...prev, payload.item]);
     patchActiveField("brandId", payload.item.id);
+  }
+
+  async function createSupplierInline(name: string) {
+    const response = await fetch("/api/admin/cari", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, slug: slugify(name), isSupplier: true, isActive: true }),
+    });
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+      setError(payload?.message ?? labels.opFailed);
+      return;
+    }
+
+    const payload = (await response.json()) as {
+      item: {
+        id: string;
+        slug: string;
+        name: string;
+        taxNumber: string | null;
+        email: string | null;
+        phone: string | null;
+        defaultPaymentTermDays: number | null;
+        creditLimit: number | null;
+        isActive: boolean;
+      };
+    };
+    const createdSupplier: AdminSupplierItem = {
+      id: payload.item.id,
+      slug: payload.item.slug,
+      name: payload.item.name,
+      taxNumber: payload.item.taxNumber,
+      email: payload.item.email,
+      phone: payload.item.phone,
+      defaultPaymentTermDays: payload.item.defaultPaymentTermDays,
+      creditLimit: payload.item.creditLimit,
+      isActive: payload.item.isActive,
+      productCount: 0,
+    };
+    setSupplierOptions((prev) => [...prev, createdSupplier]);
+    patchActiveField("primarySupplierId", createdSupplier.id);
+  }
+
+  function normalizeFeatureKey(key: string) {
+    return key.trim().replace(/[İIı]/g, "i").toLocaleLowerCase("tr-TR");
+  }
+
+  function handleCategoryChange(value: string) {
+    const categoryId = value === NONE_VALUE ? "" : value;
+    const template = categoryOptions.find((category) => category.id === categoryId)?.featureTemplate ?? [];
+
+    patchActiveForm((prev) => {
+      if (prev.features.length > 0 || template.length === 0) {
+        return { ...prev, categoryId };
+      }
+
+      return {
+        ...prev,
+        categoryId,
+        features: template.map((key) => ({ key, value: "", highlighted: false })),
+      };
+    });
+  }
+
+  function applyFeatureTemplate() {
+    const template = categoryOptions.find((category) => category.id === activeForm.categoryId)?.featureTemplate ?? [];
+    if (template.length === 0) {
+      return;
+    }
+
+    patchActiveForm((prev) => {
+      const existingKeys = new Set(prev.features.map((feature) => normalizeFeatureKey(feature.key)));
+      const missingRows = template
+        .filter((key) => !existingKeys.has(normalizeFeatureKey(key)))
+        .map((key) => ({ key, value: "", highlighted: false }));
+
+      if (missingRows.length === 0) {
+        return prev;
+      }
+
+      return { ...prev, features: [...prev.features, ...missingRows] };
+    });
   }
 
   function openCreateDrawer() {
@@ -3563,7 +3648,7 @@ export function ProductManager({
                     <div className="grid gap-2">
                       <SearchableSelect
                         value={activeForm.categoryId || NONE_VALUE}
-                        onValueChange={(value) => patchActiveField("categoryId", value === NONE_VALUE ? "" : value)}
+                        onValueChange={handleCategoryChange}
                         options={[
                           { value: NONE_VALUE, label: labels.notSpecified },
                           ...categoryOptions.map((category) => ({ value: category.id, label: category.name })),
@@ -3789,6 +3874,8 @@ export function ProductManager({
                             placeholder={labels.notSpecified}
                             searchPlaceholder={labels.searchSupplier}
                             emptyLabel={labels.noSupplierResults}
+                            onCreateOption={createSupplierInline}
+                            createOptionLabel={(query) => `+ "${query}" tedarikçisini oluştur`}
                           />
                           <Link href={`/${locale}/admin/cari`} className="text-xs font-medium text-[color:var(--color-text-muted)] underline underline-offset-4">
                             {labels.manageSuppliers}
@@ -3912,10 +3999,15 @@ export function ProductManager({
                     </div>
                   ) : null}
 
-                  <div>
+                  <div className="flex flex-wrap gap-2">
                     <Button type="button" size="sm" variant="secondary" onClick={addFeatureRow}>
                       {labels.addFeature}
                     </Button>
+                    {categoryOptions.find((category) => category.id === activeForm.categoryId)?.featureTemplate.length ? (
+                      <Button type="button" size="sm" variant="outline" onClick={applyFeatureTemplate}>
+                        {labels.applyFeatureTemplate}
+                      </Button>
+                    ) : null}
                   </div>
                 </div>
               </div>

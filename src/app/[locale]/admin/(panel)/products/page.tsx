@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { runWithTenantContext } from "@/lib/tenant-context";
-import { catalogService } from "@/modules/catalog/services/catalog.service";
 import { catalogAdminService } from "@/modules/catalog/services/catalog-admin.service";
 import { getCurrentUserFromContext } from "@/modules/identity/services/auth-context.service";
 import { rbacService } from "@/modules/identity/services/rbac.service";
@@ -55,7 +54,7 @@ export default async function AdminProductsPage({
         page: query.page ? Number(query.page) : 1,
         pageSize: 10,
       }),
-      catalogService.listCategories(),
+      catalogAdminService.listAllCategories(),
       inventoryService.listWarehouses(),
       catalogAdminService.listBrands(),
       catalogAdminService.listSuppliers(),
@@ -288,6 +287,7 @@ export default async function AdminProductsPage({
         highlightFeature: dictionary.admin.highlightFeature,
         addFeature: dictionary.admin.addFeature,
         removeFeature: dictionary.admin.removeFeature,
+        applyFeatureTemplate: dictionary.admin.applyFeatureTemplate,
         createEntity: dictionary.admin.create,
         loading: dictionary.common.loading,
         notSpecified: dictionary.common.notSpecified,

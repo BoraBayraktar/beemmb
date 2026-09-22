@@ -14,6 +14,7 @@ model Category {
   name               String
   trendyolCategoryId Int?
   pazaramaCategoryId String?
+  featureTemplate    Json?
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
   deleted            Boolean          @default(false)

@@ -1462,6 +1462,23 @@ export class CatalogAdminRepository {
     });
   }
 
+  async listAllCategories() {
+    return prisma.category.findMany({
+      where: {
+        deleted: false,
+      },
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        featureTemplate: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+  }
+
   async listCategories(args: AdminCategoryListQuery) {
     const where = {
       deleted: false,
@@ -1506,6 +1523,7 @@ export class CatalogAdminRepository {
         name: true,
         trendyolCategoryId: true,
         pazaramaCategoryId: true,
+        featureTemplate: true,
         parentId: true,
         _count: {
           select: {
@@ -1582,7 +1600,7 @@ export class CatalogAdminRepository {
     });
   }
 
-  async createCategory(input: { slug: string; name: string; trendyolCategoryId?: number | null; pazaramaCategoryId?: string | null; parentId?: string | null }) {
+  async createCategory(input: { slug: string; name: string; trendyolCategoryId?: number | null; pazaramaCategoryId?: string | null; featureTemplate?: string[]; parentId?: string | null }) {
     return prisma.category.create({
       data: {
         tenantId: requireTenantId(),
@@ -1590,6 +1608,7 @@ export class CatalogAdminRepository {
         name: input.name,
         trendyolCategoryId: input.trendyolCategoryId ?? null,
         pazaramaCategoryId: input.pazaramaCategoryId ?? null,
+        featureTemplate: input.featureTemplate ?? [],
         parentId: input.parentId ?? null,
       },
       select: {
@@ -1598,6 +1617,7 @@ export class CatalogAdminRepository {
         name: true,
         trendyolCategoryId: true,
         pazaramaCategoryId: true,
+        featureTemplate: true,
         parentId: true,
         _count: {
           select: {
@@ -1622,6 +1642,7 @@ export class CatalogAdminRepository {
         ...(input.name !== undefined ? { name: input.name } : {}),
         ...(input.trendyolCategoryId !== undefined ? { trendyolCategoryId: input.trendyolCategoryId } : {}),
         ...(input.pazaramaCategoryId !== undefined ? { pazaramaCategoryId: input.pazaramaCategoryId } : {}),
+        ...(input.featureTemplate !== undefined ? { featureTemplate: input.featureTemplate } : {}),
         ...(input.parentId !== undefined ? { parentId: input.parentId } : {}),
       },
       select: {
@@ -1630,6 +1651,7 @@ export class CatalogAdminRepository {
         name: true,
         trendyolCategoryId: true,
         pazaramaCategoryId: true,
+        featureTemplate: true,
         parentId: true,
         _count: {
           select: {
