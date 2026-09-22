@@ -1,20 +1,3 @@
-function escapeCsvCell(value: string) {
-  if (value.includes(",") || value.includes("\"") || value.includes("\n") || value.includes("\r")) {
-    return `"${value.replace(/"/g, "\"\"")}"`;
-  }
-
-  return value;
-}
-
-export function stringifyCsv(headers: string[], rows: string[][]) {
-  const lines = [
-    headers.map(escapeCsvCell).join(","),
-    ...rows.map((row) => row.map((cell) => escapeCsvCell(cell)).join(",")),
-  ];
-
-  return lines.join("\n");
-}
-
 export function parseCsv(text: string) {
   const rows: string[][] = [];
   let currentRow: string[] = [];

@@ -755,6 +755,7 @@
     "importCsv": "Excel'den içe aktar",
     "productImportTemplate": "Şablon indir",
     "exportCsv": "CSV dışa aktar",
+    "productExportExcel": "Excel'e aktar",
     "allParentCategories": "Tüm üst kategoriler",
     "filterProducts": "Ürün filtresi",
     "filterAllProducts": "Tüm kategoriler",

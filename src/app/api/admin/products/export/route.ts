@@ -28,10 +28,10 @@ export async function GET(request: Request) {
         },
       });
 
-      return new NextResponse(exported.content, {
+      return new NextResponse(new Uint8Array(exported.buffer), {
         status: 200,
         headers: {
-          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "Content-Disposition": `attachment; filename="${exported.filename}"`,
         },
       });

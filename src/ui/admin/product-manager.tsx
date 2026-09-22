@@ -348,7 +348,7 @@ type Labels = {
   removeFeature: string;
   importCsv: string;
   importTemplate: string;
-  exportCsv: string;
+  exportExcel: string;
   importHint: string;
   importSuccess: string;
   importFailed: string;
@@ -2468,7 +2468,7 @@ export function ProductManager({
       const downloadUrl = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = downloadUrl;
-      anchor.download = "products-export.csv";
+      anchor.download = "stok-kartlari-export.xlsx";
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
@@ -3101,7 +3101,7 @@ export function ProductManager({
             {labels.importCsv}
           </Button>
           <Button type="button" variant="secondary" disabled={loading} onClick={exportProducts}>
-            {labels.exportCsv}
+            {labels.exportExcel}
           </Button>
           <Button type="button" onClick={openCreateDrawer}>
             {labels.createTitle}
