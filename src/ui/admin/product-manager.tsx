@@ -358,7 +358,6 @@ type Labels = {
   notSpecified: string;
   inventoryAdjustStock: string;
   inventoryAdjustmentNote: string;
-  inventoryMovementNote: string;
   inventoryApplyAdjustment: string;
   inventoryApplyTransfer: string;
   inventoryAvailableStock: string;
@@ -1669,7 +1668,6 @@ export function ProductManager({
   const inventoryDrawerLabels = useMemo(() => ({
     adjustStock: labels.inventoryAdjustStock,
     adjustmentNote: labels.inventoryAdjustmentNote,
-    movementNote: labels.inventoryMovementNote,
     applyAdjustment: labels.inventoryApplyAdjustment,
     applyTransfer: labels.inventoryApplyTransfer,
     availableStock: labels.inventoryAvailableStock,

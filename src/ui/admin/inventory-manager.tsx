@@ -136,7 +136,6 @@ type Labels = {
   adjustmentFailed: string;
   movementNote: string;
   movementQuantity: string;
-  movementNote: string;
   stockInSaved: string;
   stockInFailed: string;
   stockOutSaved: string;
