@@ -83,6 +83,35 @@ export class DuplicateCariSlugError extends Error {
   }
 }
 
+/**
+ * I/İ/ı/i özel durumu: "I".toLocaleLowerCase("tr-TR") -> "ı" (noktasız)
+ * doner, ama coğu metin (ozellikle .toUpperCase() gibi locale-siz
+ * donusumlerden gelen) ASCII "I" harfini kavramsal olarak "i" (noktali)
+ * niyetiyle kullanir -- bu yuzden I/İ/ı hepsi once "i"ye indirgenip
+ * SONRA tr-TR ile kucultuluyor.
+ */
+function normalizeReferenceName(name: string) {
+  return name
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/[İIı]/g, "i")
+    .toLocaleLowerCase("tr-TR");
+}
+
+async function assertUniqueCariName(name: string, excludeId?: string) {
+  const normalized = normalizeReferenceName(name);
+  const existing = await cariRepository.findCariNames(excludeId);
+  const duplicate = existing.find((item) => normalizeReferenceName(item.name) === normalized);
+
+  if (duplicate) {
+    throw new z.ZodError([{
+      code: "custom",
+      path: ["name"],
+      message: `Bu isimde bir cari kartı zaten var: ${duplicate.name}`,
+    }]);
+  }
+}
+
 function toNumber(value: unknown): number | null {
   if (value == null) {
     return null;
@@ -146,6 +175,8 @@ export class CariService {
       throw new DuplicateCariSlugError();
     }
 
+    await assertUniqueCariName(parsed.name);
+
     const created = await cariRepository.createCari(parsed);
     await redisCache.delByPrefix(buildTenantCacheKey(requireTenantId(), "cari", "lookup"));
     return mapCari(created);
@@ -158,6 +189,8 @@ export class CariService {
     if (existing) {
       throw new DuplicateCariSlugError();
     }
+
+    await assertUniqueCariName(parsed.name, parsed.id);
 
     const updated = await cariRepository.updateCari(parsed);
     await redisCache.delByPrefix(buildTenantCacheKey(requireTenantId(), "cari", "lookup"));

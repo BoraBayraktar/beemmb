@@ -198,16 +198,16 @@ export class CariRepository {
     });
   }
 
-  async findCariByName(name: string) {
-    return prisma.cari.findFirst({
+  async findCariNames(excludeId?: string) {
+    return prisma.cari.findMany({
       where: {
         deleted: false,
-        name: {
-          equals: name,
-          mode: "insensitive",
-        },
+        ...(excludeId ? { id: { not: excludeId } } : {}),
       },
-      include: cariInclude,
+      select: {
+        id: true,
+        name: true,
+      },
     });
   }
 }
