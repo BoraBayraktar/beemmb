@@ -229,14 +229,29 @@ function hasRequiredDelegates(client: TenantScopedPrismaClient | undefined): cli
   );
 }
 
+/**
+ * Dev'de global.prismaClient stale bir client ile degistirilirken eski
+ * instance'in acik DB baglantilarini serbest birakmasi icin. Ateşle-unut:
+ * cagiran yer (Proxy get trap, modul yuklenmesi) senkron kalmali, o yuzden
+ * $disconnect() await edilmez -- sadece hata yutulur ki unhandled rejection
+ * dev surecini dusurmesin.
+ */
+function disconnectStaleClient(client: TenantScopedPrismaClient | undefined) {
+  if (client) {
+    client.$disconnect().catch(() => {});
+  }
+}
+
 function resolvePrismaClient() {
   if (hasRequiredDelegates(global.prismaClient)) {
     return global.prismaClient;
   }
 
+  const staleClient = global.prismaClient;
   const nextClient = createPrismaClient();
   if (process.env.NODE_ENV !== "production") {
     global.prismaClient = nextClient;
+    disconnectStaleClient(staleClient);
   }
 
   return nextClient;
@@ -255,9 +270,11 @@ export const prisma = new Proxy(prismaClient, {
       return value;
     }
 
+    const staleClient = global.prismaClient;
     const refreshedClient = createPrismaClient();
     if (process.env.NODE_ENV !== "production") {
       global.prismaClient = refreshedClient;
+      disconnectStaleClient(staleClient);
     }
 
     return Reflect.get(refreshedClient, prop, refreshedClient);
