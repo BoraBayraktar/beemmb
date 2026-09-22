@@ -3484,9 +3484,7 @@ export function ProductManager({
             <form className="grid gap-5 p-5" onSubmit={submitProduct}>
               <section className="grid gap-4 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-text-muted)]">Ürün Kartı</p>
-                  <h4 className="mt-1 text-base font-semibold text-[color:var(--color-text)]">Temel ürün bilgileri</h4>
-                  <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">Ürünün kimlik, tür ve vitrin bilgisini bu alandan yönetin.</p>
+                  <h4 className="text-base font-semibold text-[color:var(--color-text)]">Temel ürün bilgileri</h4>
                 </div>
 
                 <div className="grid gap-2">
@@ -3619,9 +3617,7 @@ export function ProductManager({
               <section className="grid gap-4 rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-cyan-50 p-4">
                 <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Stok Kartı</p>
-                    <h4 className="mt-1 text-base font-semibold text-[color:var(--color-text)]">Stok ve satın alma ayarları</h4>
-                    <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">Paraşüt benzeri stok takibi, depo tercihi ve maliyet alanlarını birlikte yönetin.</p>
+                    <h4 className="text-base font-semibold text-[color:var(--color-text)]">Stok ve satın alma ayarları</h4>
                   </div>
                   <div className="rounded-xl border border-emerald-200 bg-[color:var(--color-surface)]/80 px-3 py-2 text-xs text-[color:var(--color-text-muted)] shadow-sm">
                     <p className="font-semibold text-[color:var(--color-text)]">Stok durumu</p>
@@ -3737,8 +3733,7 @@ export function ProductManager({
                 <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                   {!hasVariantsForStockField ? (
                     <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
-                      <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.stock}</p>
-                      <div className="mt-2 grid gap-2">
+                      <div className="grid gap-2">
                         <Label>{labels.stock}</Label>
                         <Input
                           type="number"
@@ -3753,22 +3748,19 @@ export function ProductManager({
                     </div>
                   ) : null}
                   <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.purchasePrice}</p>
-                    <div className="mt-2 grid gap-2">
+                    <div className="grid gap-2">
                       <Label>{labels.purchasePrice}</Label>
                       <Input type="number" min="0" step="0.01" value={activeForm.purchasePrice} onChange={(event) => patchActiveField("purchasePrice", event.target.value)} />
                     </div>
                   </div>
                   <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.vatRate}</p>
-                    <div className="mt-2 grid gap-2">
+                    <div className="grid gap-2">
                       <Label>{labels.vatRate}</Label>
                       <Input type="number" min="0" max="100" step="1" value={activeForm.vatRate} onChange={(event) => patchActiveField("vatRate", event.target.value)} required />
                     </div>
                   </div>
                   <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.compareAtPrice}</p>
-                    <div className="mt-2 grid gap-2">
+                    <div className="grid gap-2">
                       <Label>{labels.compareAtPrice}</Label>
                       <Input type="number" min="0" step="0.01" value={activeForm.compareAtPrice} onChange={(event) => patchActiveField("compareAtPrice", event.target.value)} />
                     </div>
@@ -3778,8 +3770,7 @@ export function ProductManager({
                 <div className="grid gap-3 md:grid-cols-2">
                   {canManageSuppliers ? (
                     <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
-                      <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.supplier}</p>
-                      <div className="mt-2 grid gap-2">
+                      <div className="grid gap-2">
                         <Label>{labels.supplier}</Label>
                         <div className="grid gap-2">
                           <SearchableSelect
@@ -3807,8 +3798,7 @@ export function ProductManager({
                     </div>
                   ) : null}
                   <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">Satın alma deposu</p>
-                    <div className="mt-2 grid gap-2">
+                    <div className="grid gap-2">
                       <Label>{labels.preferredPurchaseWarehouse}</Label>
                       <Select
                         value={activeForm.preferredPurchaseWarehouseId || NONE_VALUE}
@@ -3832,8 +3822,7 @@ export function ProductManager({
 
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">Satış deposu</p>
-                    <div className="mt-2 grid gap-2">
+                    <div className="grid gap-2">
                       <Label>{labels.preferredSalesWarehouse}</Label>
                       <Select
                         value={activeForm.preferredSalesWarehouseId || NONE_VALUE}
@@ -3855,8 +3844,7 @@ export function ProductManager({
                     </div>
                   </div>
                   <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--color-text-muted)]">{labels.internalNote}</p>
-                    <div className="mt-2 grid gap-2">
+                    <div className="grid gap-2">
                       <Label>{labels.internalNote}</Label>
                       <Textarea value={activeForm.internalNote} onChange={(event) => patchActiveField("internalNote", event.target.value)} />
                     </div>
@@ -3930,7 +3918,6 @@ export function ProductManager({
                     </Button>
                   </div>
                 </div>
-                <p className="text-xs text-[color:var(--color-text-muted)]">{labels.featuresHint}</p>
               </div>
               <div className="grid gap-2 md:grid-cols-2">
                 <div className="grid gap-2">
