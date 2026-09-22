@@ -431,6 +431,8 @@ type ProductManagerProps = {
   canDelete: boolean;
   canManageIntegrations: boolean;
   canManageSuppliers: boolean;
+  canManageCategories: boolean;
+  canManageBrands: boolean;
 };
 
 type ProductForm = {
@@ -829,6 +831,30 @@ function normalizeSku(sku: string) {
   return sku.trim().toLocaleUpperCase("tr-TR");
 }
 
+const TURKISH_SLUG_REPLACEMENTS: Record<string, string> = {
+  ç: "c", Ç: "c",
+  ğ: "g", Ğ: "g",
+  ı: "i", I: "i",
+  İ: "i",
+  ö: "o", Ö: "o",
+  ş: "s", Ş: "s",
+  ü: "u", Ü: "u",
+};
+
+function slugify(value: string) {
+  const withoutTurkishChars = value
+    .trim()
+    .split("")
+    .map((char) => TURKISH_SLUG_REPLACEMENTS[char] ?? char)
+    .join("");
+
+  return withoutTurkishChars
+    .toLocaleLowerCase("en-US")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
 function stockStatusBadgeClass(status: AdminInventoryItem["stockStatus"]) {
   if (status === "OUT_OF_STOCK") {
     return "bg-rose-100 text-rose-700";
@@ -1158,6 +1184,8 @@ export function ProductManager({
   canDelete,
   canManageIntegrations,
   canManageSuppliers,
+  canManageCategories,
+  canManageBrands,
 }: ProductManagerProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -1228,6 +1256,7 @@ export function ProductManager({
   const [hepsiburadaPreflightResult, setHepsiburadaPreflightResult] = useState<HepsiburadaPreflightResult | null>(null);
   const [hepsiburadaProductSyncBusyId, setHepsiburadaProductSyncBusyId] = useState<string | null>(null);
   const [hepsiburadaProductSyncTracking, setHepsiburadaProductSyncTracking] = useState<HepsiburadaProductSyncTracking | null>(null);
+  const [categoryOptions, setCategoryOptions] = useState<Category[]>(categories);
   const [brandOptions, setBrandOptions] = useState<Brand[]>(brands);
   const [supplierOptions, setSupplierOptions] = useState<AdminSupplierItem[]>(suppliers);
   const [attributeDefinitionOptions, setAttributeDefinitionOptions] = useState<AttributeDefinition[]>(attributeDefinitions);
@@ -1856,6 +1885,42 @@ export function ProductManager({
         }),
       };
     });
+  }
+
+  async function createCategoryInline(name: string) {
+    const response = await fetch("/api/admin/categories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, slug: slugify(name) }),
+    });
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+      setError(payload?.message ?? labels.opFailed);
+      return;
+    }
+
+    const payload = (await response.json()) as { item: Category };
+    setCategoryOptions((prev) => [...prev, payload.item]);
+    patchActiveField("categoryId", payload.item.id);
+  }
+
+  async function createBrandInline(name: string) {
+    const response = await fetch("/api/admin/brands", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, slug: slugify(name) }),
+    });
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+      setError(payload?.message ?? labels.opFailed);
+      return;
+    }
+
+    const payload = (await response.json()) as { item: Brand };
+    setBrandOptions((prev) => [...prev, payload.item]);
+    patchActiveField("brandId", payload.item.id);
   }
 
   function openCreateDrawer() {
@@ -3138,7 +3203,7 @@ export function ProductManager({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={NONE_VALUE}>{labels.allCategories}</SelectItem>
-              {categories.map((category) => (
+              {categoryOptions.map((category) => (
                 <SelectItem key={category.id} value={category.id}>
                   {category.name}
                 </SelectItem>
@@ -3510,11 +3575,13 @@ export function ProductManager({
                         onValueChange={(value) => patchActiveField("categoryId", value === NONE_VALUE ? "" : value)}
                         options={[
                           { value: NONE_VALUE, label: labels.notSpecified },
-                          ...categories.map((category) => ({ value: category.id, label: category.name })),
+                          ...categoryOptions.map((category) => ({ value: category.id, label: category.name })),
                         ]}
                         placeholder={labels.notSpecified}
                         searchPlaceholder={labels.searchCategory}
                         emptyLabel={labels.noCategoryResults}
+                        onCreateOption={canManageCategories ? createCategoryInline : undefined}
+                        createOptionLabel={(query) => `+ "${query}" kategorisini oluştur`}
                       />
                       <Link href={`/${locale}/admin/categories`} className="text-xs font-medium text-[color:var(--color-text-muted)] underline underline-offset-4">
                         {labels.manageCategories}
@@ -3536,6 +3603,8 @@ export function ProductManager({
                         placeholder={labels.notSpecified}
                         searchPlaceholder={labels.searchBrand}
                         emptyLabel={labels.noBrandResults}
+                        onCreateOption={canManageBrands ? createBrandInline : undefined}
+                        createOptionLabel={(query) => `+ "${query}" markasını oluştur`}
                       />
                       <Link href={`/${locale}/admin/brands`} className="text-xs font-medium text-[color:var(--color-text-muted)] underline underline-offset-4">
                         {labels.manageBrands}

@@ -83,6 +83,8 @@ export default async function AdminProductsPage({
       canDelete={await rbacService.hasPermission(user, "products.manage")}
       canManageIntegrations={await rbacService.hasPermission(user, "integrations.manage")}
       canManageSuppliers={enabledModuleKeys.has("finance")}
+      canManageCategories={await rbacService.hasPermission(user, "categories.manage")}
+      canManageBrands={await rbacService.hasPermission(user, "brands.manage")}
       labels={{
         title: dictionary.admin.productManager,
         createTitle: dictionary.admin.createProduct,
