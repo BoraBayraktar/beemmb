@@ -69,6 +69,7 @@ export default async function AdminBrandsPage({
         pazaramaSelected: dictionary.admin.pazaramaSelected,
         create: dictionary.admin.create,
         edit: dictionary.admin.edit,
+        notSpecified: dictionary.admin.notSpecified,
         delete: dictionary.admin.delete,
         save: dictionary.admin.save,
         cancel: dictionary.admin.cancel,

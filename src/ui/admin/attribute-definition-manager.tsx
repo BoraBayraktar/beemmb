@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SlugField } from "@/components/ui/slug-field";
+import { slugify } from "@/lib/utils";
 import type {
   AdminProductAttributeDefinitionItem,
   AdminProductAttributeValueMarketplaceMappingItem,
@@ -39,6 +41,7 @@ type Labels = {
   edit: string;
   delete: string;
   cancel: string;
+  notSpecified: string;
   saving: string;
   search: string;
   importCsv: string;
@@ -671,7 +674,6 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
                       </span>
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-[color:var(--color-text-muted)]">
-                      <p>{labels.slug}: {item.slug}</p>
                       <p>{labels.attributeDisplayType}: {item.displayType}</p>
                       <p>{labels.trendyolId}: {item.trendyolAttributeId ?? "-"}</p>
                       <p>{labels.variantAxisUsageCount}: {item.productCount}</p>
@@ -729,7 +731,6 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
                     <input type="checkbox" checked={allVisibleSelected} onChange={toggleSelectAllVisible} aria-label={labels.selectedCount} />
                   </th>
                   <th className="px-4 py-3">{labels.attributeName}</th>
-                  <th className="px-4 py-3">{labels.slug}</th>
                   <th className="px-4 py-3">{labels.attributeDisplayType}</th>
                   <th className="px-4 py-3">{labels.trendyolId}</th>
                   <th className="px-4 py-3">{labels.variantAxisUsageCount}</th>
@@ -740,7 +741,7 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
               <tbody className="divide-y divide-[color:var(--color-border)] bg-[color:var(--color-surface)]">
                 {filteredItems.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-4 py-10 text-center text-sm text-[color:var(--color-text-muted)]">
+                    <td colSpan={8} className="px-4 py-10 text-center text-sm text-[color:var(--color-text-muted)]">
                       {labels.empty}
                     </td>
                   </tr>
@@ -782,7 +783,6 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
                         />
                       </td>
                       <td className="px-4 py-3 font-medium text-[color:var(--color-text)]">{item.name}</td>
-                      <td className="px-4 py-3 text-[color:var(--color-text-muted)]">{item.slug}</td>
                       <td className="px-4 py-3 text-[color:var(--color-text-muted)]">{item.displayType}</td>
                       <td className="px-4 py-3 text-[color:var(--color-text-muted)]">{item.trendyolAttributeId ?? "-"}</td>
                       <td className="px-4 py-3 text-[color:var(--color-text-muted)]">{item.productCount}</td>
@@ -1027,11 +1027,26 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
             <div className="grid gap-4 px-4 py-5 sm:px-5">
               <div className="grid gap-2">
                 <Label>{labels.attributeName}</Label>
-                <Input value={form.name} onChange={(event) => updateForm("name", event.target.value)} />
+                <Input
+                  value={form.name}
+                  onChange={(event) => {
+                    const nextName = event.target.value;
+                    setForm((prev) => {
+                      // Slug, kullanıcı elle özelleştirmediği sürece isimden otomatik türetilir.
+                      const slugWasAutoDerived = !prev.slug.trim() || prev.slug.trim() === slugify(prev.name);
+                      return { ...prev, name: nextName, slug: slugWasAutoDerived ? slugify(nextName) : prev.slug };
+                    });
+                  }}
+                />
               </div>
               <div className="grid gap-2">
-                <Label>{labels.slug}</Label>
-                <Input value={form.slug} onChange={(event) => updateForm("slug", event.target.value)} />
+                <SlugField
+                  value={form.slug}
+                  onChange={(value) => updateForm("slug", value)}
+                  label={labels.slug}
+                  editLabel={labels.edit}
+                  notSpecifiedLabel={labels.notSpecified}
+                />
               </div>
               <div className="grid gap-2">
                 <Label>{labels.attributeDisplayType}</Label>

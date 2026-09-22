@@ -10,8 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SlugField } from "@/components/ui/slug-field";
 import { Textarea } from "@/components/ui/textarea";
 import type { Locale } from "@/lib/i18n";
+import { slugify } from "@/lib/utils";
 import type { AdminSupplierItem } from "@/modules/catalog/contracts/catalog-admin.contract";
 import type { ProductFeature } from "@/modules/catalog/contracts/catalog.contract";
 import type { AdminInventoryItem, AdminWarehouseItem } from "@/modules/inventory/contracts/inventory.contract";
@@ -829,30 +831,6 @@ function isVariantRowEmpty(variant: ProductVariant) {
 
 function normalizeSku(sku: string) {
   return sku.trim().toLocaleUpperCase("tr-TR");
-}
-
-const TURKISH_SLUG_REPLACEMENTS: Record<string, string> = {
-  ç: "c", Ç: "c",
-  ğ: "g", Ğ: "g",
-  ı: "i", I: "i",
-  İ: "i",
-  ö: "o", Ö: "o",
-  ş: "s", Ş: "s",
-  ü: "u", Ü: "u",
-};
-
-function slugify(value: string) {
-  const withoutTurkishChars = value
-    .trim()
-    .split("")
-    .map((char) => TURKISH_SLUG_REPLACEMENTS[char] ?? char)
-    .join("");
-
-  return withoutTurkishChars
-    .toLocaleLowerCase("en-US")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80);
 }
 
 function stockStatusBadgeClass(status: AdminInventoryItem["stockStatus"]) {
@@ -1862,24 +1840,34 @@ export function ProductManager({
       }
 
       const nextName = field === "name" ? value : prev.name;
-      const nextSlugBase = field === "slug" ? value : prev.slug;
+      // Ürünün kendi slug'ı, kullanıcı elle özelleştirmediği sürece isimden
+      // otomatik türetilir -- varyantlara zaten uygulanan "değer hâlâ eski
+      // otomatik türetilmiş haliyle aynıysa yeni türetilmişle değiştir,
+      // özelleştirilmişse dokunma" deseniyle birebir aynı mantık.
+      const slugWasAutoDerived = !prev.slug.trim() || prev.slug.trim() === slugify(prev.name);
+      const nextSlug = field === "slug"
+        ? value
+        : field === "name" && slugWasAutoDerived
+          ? slugify(nextName)
+          : prev.slug;
       const nextSkuBase = field === "sku" ? value : prev.sku;
 
       return {
         ...prev,
         [field]: value,
+        slug: nextSlug,
         variants: prev.variants.map((variant) => {
           const previousTitle = buildVariantTitle(prev.name, variant.attributes, prev.attributeLinks, attributeDefinitionOptions);
           const nextTitle = buildVariantTitle(nextName, variant.attributes, prev.attributeLinks, attributeDefinitionOptions);
           const previousSlug = buildVariantSlug(prev.slug, variant.attributes, prev.attributeLinks);
-          const nextSlug = buildVariantSlug(nextSlugBase, variant.attributes, prev.attributeLinks);
+          const nextVariantSlug = buildVariantSlug(nextSlug, variant.attributes, prev.attributeLinks);
           const previousSku = buildVariantSku(prev.sku, variant.attributes, prev.attributeLinks);
           const nextSku = buildVariantSku(nextSkuBase, variant.attributes, prev.attributeLinks);
 
           return {
             ...variant,
             title: !variant.title.trim() || variant.title.trim() === previousTitle ? nextTitle : variant.title,
-            slug: !variant.slug.trim() || variant.slug.trim() === previousSlug ? nextSlug : variant.slug,
+            slug: !variant.slug.trim() || variant.slug.trim() === previousSlug ? nextVariantSlug : variant.slug,
             sku: !variant.sku.trim() || variant.sku.trim() === previousSku ? nextSku : variant.sku,
           };
         }),
@@ -3277,7 +3265,7 @@ export function ProductManager({
                   </div>
                   <div>
                     <h3 className="font-medium text-[color:var(--color-text)]">{product.name}</h3>
-                    <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{product.slug} • {product.sku}</p>
+                    <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{product.sku}</p>
                     <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">{labels.barcode}: {product.barcode ?? labels.notSpecified}</p>
                     <p className="mt-2 line-clamp-2 text-sm text-[color:var(--color-text-muted)] lg:hidden">{product.description}</p>
                   </div>
@@ -3507,8 +3495,13 @@ export function ProductManager({
                 </div>
                 <div className="grid gap-2 md:grid-cols-3">
                   <div className="grid gap-2">
-                    <Label>{labels.slug}</Label>
-                    <Input value={activeForm.slug} onChange={(event) => patchActiveField("slug", event.target.value)} required />
+                    <SlugField
+                      value={activeForm.slug}
+                      onChange={(value) => patchActiveField("slug", value)}
+                      label={labels.slug}
+                      editLabel={labels.edit}
+                      notSpecifiedLabel={labels.notSpecified}
+                    />
                   </div>
                   <div className="grid gap-2">
                     <Label>{labels.sku}</Label>
@@ -4090,7 +4083,6 @@ export function ProductManager({
                                   />
                                   <span className="min-w-0">
                                     <span className="block font-medium">{definition.name}</span>
-                                    <span className="block text-xs text-[color:var(--color-text-muted)]">{definition.slug}</span>
                                   </span>
                                 </label>
                               );
@@ -4179,7 +4171,6 @@ export function ProductManager({
                                 </td>
                                 <td className="px-3 py-3 text-[color:var(--color-text-muted)]">
                                   <div className={duplicateVariantSkuSet.has(normalizeSku(variant.sku)) ? "font-medium text-red-600" : undefined}>{variant.sku || labels.sku}</div>
-                                  <div className="text-xs text-[color:var(--color-text-muted)]">{variant.slug || labels.slug}</div>
                                   {duplicateVariantSkuSet.has(normalizeSku(variant.sku)) ? (
                                     <div className="mt-1 text-xs font-medium text-red-600">{labels.variantDuplicateSkuWarning}</div>
                                   ) : null}
@@ -4533,8 +4524,13 @@ export function ProductManager({
                       <Input value={activeVariantEditor.title} onChange={(event) => patchVariant(variantEditorIndex as number, { title: event.target.value })} />
                     </div>
                     <div className="grid gap-2">
-                      <Label>{labels.slug}</Label>
-                      <Input value={activeVariantEditor.slug} onChange={(event) => patchVariant(variantEditorIndex as number, { slug: event.target.value })} />
+                      <SlugField
+                        value={activeVariantEditor.slug}
+                        onChange={(value) => patchVariant(variantEditorIndex as number, { slug: value })}
+                        label={labels.slug}
+                        editLabel={labels.edit}
+                        notSpecifiedLabel={labels.notSpecified}
+                      />
                     </div>
                     <div className="grid gap-2">
                       <Label>{labels.sku}</Label>
