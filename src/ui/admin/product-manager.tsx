@@ -4340,7 +4340,7 @@ export function ProductManager({
                   </div>
                 </section>
 
-                <div className="mt-2 flex justify-end gap-2 border-t border-[color:var(--color-border)] pt-5">
+                <div className="sticky bottom-0 z-10 -mx-5 -mb-5 mt-2 flex justify-end gap-2 border-t border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-5 py-4 shadow-[0_-4px_10px_-6px_rgba(0,0,0,0.15)]">
                   <Button type="button" variant="secondary" onClick={closeDrawer} disabled={loading || variantSaveSuccess}>
                     {labels.cancel}
                   </Button>
