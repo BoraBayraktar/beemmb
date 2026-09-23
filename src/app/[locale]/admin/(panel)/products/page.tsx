@@ -256,6 +256,7 @@ export default async function AdminProductsPage({
         outOfStock: dictionary.admin.outOfStock,
         lowStock: dictionary.admin.lowStockOnly,
         save: dictionary.admin.save,
+        variantsSaved: dictionary.admin.variantsSaved,
         create: dictionary.admin.create,
         edit: dictionary.admin.edit,
         delete: dictionary.admin.delete,

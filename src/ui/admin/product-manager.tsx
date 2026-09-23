@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { ChevronDown, ChevronRight, ChevronUp, Maximize2, Minimize2, MoreHorizontal, Plus, X } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, ChevronUp, Maximize2, Minimize2, MoreHorizontal, Plus, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -316,6 +316,7 @@ type Labels = {
   outOfStock: string;
   lowStock: string;
   save: string;
+  variantsSaved: string;
   create: string;
   edit: string;
   delete: string;
@@ -1172,6 +1173,8 @@ export function ProductManager({
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [variantSaveSuccess, setVariantSaveSuccess] = useState(false);
+  const variantSaveSuccessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [drawerMode, setDrawerMode] = useState<DrawerMode | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [activeEditTab, setActiveEditTab] = useState<EditDrawerTab>("general");
@@ -1181,6 +1184,14 @@ export function ProductManager({
   const [operationMode, setOperationMode] = useState<InventoryOperationDrawerMode>("view");
   const [operationPendingRowKey, setOperationPendingRowKey] = useState<string | null>(null);
   const [operationFeedback, setOperationFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (variantSaveSuccessTimeoutRef.current) {
+        clearTimeout(variantSaveSuccessTimeoutRef.current);
+      }
+    };
+  }, []);
   const [opTargetOnHand, setOpTargetOnHand] = useState("");
   const [opReorderPoint, setOpReorderPoint] = useState("");
   const [opSafetyStock, setOpSafetyStock] = useState("");
@@ -2084,7 +2095,7 @@ export function ProductManager({
   }
 
   function closeDrawer() {
-    if (loading) {
+    if (loading || variantSaveSuccess) {
       return;
     }
 
@@ -2712,13 +2723,20 @@ export function ProductManager({
         return;
       }
 
-      setDrawerMode(null);
-      setEditingId(null);
-      setVariantEditorIndex(null);
-      setVariantGenerationOpen(false);
-      setVariantAxisPickerOpen(false);
-      setOpenVariantActionMenuIndex(null);
-      router.refresh();
+      setVariantSaveSuccess(true);
+      if (variantSaveSuccessTimeoutRef.current) {
+        clearTimeout(variantSaveSuccessTimeoutRef.current);
+      }
+      variantSaveSuccessTimeoutRef.current = setTimeout(() => {
+        setVariantSaveSuccess(false);
+        setDrawerMode(null);
+        setEditingId(null);
+        setVariantEditorIndex(null);
+        setVariantGenerationOpen(false);
+        setVariantAxisPickerOpen(false);
+        setOpenVariantActionMenuIndex(null);
+        router.refresh();
+      }, 700);
     } catch {
       setError(labels.opFailed);
     } finally {
@@ -4323,11 +4341,24 @@ export function ProductManager({
                 </section>
 
                 <div className="mt-2 flex justify-end gap-2 border-t border-[color:var(--color-border)] pt-5">
-                  <Button type="button" variant="secondary" onClick={closeDrawer} disabled={loading}>
+                  <Button type="button" variant="secondary" onClick={closeDrawer} disabled={loading || variantSaveSuccess}>
                     {labels.cancel}
                   </Button>
-                  <Button type="submit" disabled={loading}>
-                    {loading ? labels.loading : labels.save}
+                  <Button
+                    type="submit"
+                    disabled={loading || variantSaveSuccess}
+                    className={variantSaveSuccess ? "bg-emerald-600 hover:bg-emerald-600 disabled:opacity-100" : undefined}
+                  >
+                    {variantSaveSuccess ? (
+                      <span className="flex items-center justify-center gap-1.5">
+                        <Check className="h-4 w-4" />
+                        {labels.variantsSaved}
+                      </span>
+                    ) : loading ? (
+                      labels.loading
+                    ) : (
+                      labels.save
+                    )}
                   </Button>
                 </div>
               </form>
