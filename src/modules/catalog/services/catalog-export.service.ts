@@ -9,6 +9,7 @@ const VARIANT_ATTRIBUTE_SHEET_NAME = "Varyant Özellikleri";
 const PRODUCT_FEATURE_SHEET_NAME = "Ürün Özellikleri";
 
 const PRODUCT_COLUMNS: Array<{ key: string; label: string; width: number }> = [
+  { key: "recordType", label: "Kayıt tipi", width: 12 },
   { key: "slug", label: "Slug", width: 22 },
   { key: "sku", label: "SKU", width: 18 },
   { key: "barcode", label: "Barkod", width: 18 },
@@ -102,6 +103,123 @@ function boolLabel(value: boolean) {
   return value ? "Evet" : "Hayır";
 }
 
+function resolveDiscountRate(price: number, compareAtPrice: number | null) {
+  return compareAtPrice && compareAtPrice > price
+    ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
+    : null;
+}
+
+function buildProductRow(
+  item: AdminProductListItem,
+  categoryNameById: Map<string, string>,
+  warehouseCodeById: Map<string, string>,
+) {
+  return {
+    recordType: "Ürün",
+    slug: item.slug,
+    sku: item.sku,
+    barcode: item.barcode ?? "",
+    name: item.name,
+    description: item.description,
+    productType: item.productType,
+    status: item.status,
+    unitType: item.unitType,
+    price: item.price,
+    purchasePrice: item.purchasePrice ?? "",
+    compareAtPrice: item.compareAtPrice ?? "",
+    discountRate: item.discountRate ?? "",
+    stock: item.stock,
+    inStock: boolLabel(item.inStock),
+    currency: item.currency,
+    vatRate: item.vatRate,
+    stockTrackingEnabled: boolLabel(item.stockTrackingEnabled),
+    salesEnabled: boolLabel(item.salesEnabled),
+    purchaseEnabled: boolLabel(item.purchaseEnabled),
+    brandName: item.brandName ?? "",
+    supplierName: item.primarySupplierName ?? "",
+    categoryName: item.categoryId ? (categoryNameById.get(item.categoryId) ?? "") : "",
+    preferredSalesWarehouseCode: item.preferredSalesWarehouseId ? (warehouseCodeById.get(item.preferredSalesWarehouseId) ?? "") : "",
+    preferredPurchaseWarehouseCode: item.preferredPurchaseWarehouseId ? (warehouseCodeById.get(item.preferredPurchaseWarehouseId) ?? "") : "",
+    searchKeywords: item.searchKeywords.join(", "),
+    internalNote: item.internalNote ?? "",
+    imageUrl: item.imageUrl,
+    imageUrls: item.imageUrls.join(", "),
+    variantCount: item.variantCount,
+    orderCount: item.orderCount,
+    soldQuantity: item.soldQuantity,
+    grossRevenue: item.grossRevenue,
+    averageUnitCost: item.averageUnitCost ?? "",
+    lastPurchaseUnitCost: item.lastPurchaseUnitCost ?? "",
+    stockValue: item.stockValue,
+    grossProfit: item.grossProfit,
+    grossMarginRate: item.grossMarginRate ?? "",
+    lastOrderedAt: item.lastOrderedAt ? new Date(item.lastOrderedAt).toLocaleString("tr-TR") : "",
+  };
+}
+
+// Varyantlı bir üründe stok, varyant bazlı InventoryItem'larda tutulur ve ürünün
+// kendi "stock"u bu varyantların toplamıdır (bkz. catalog-admin.service.ts
+// mapProduct). Ana Stok Kartları sekmesinde hem ürün satırını hem varyant
+// satırlarını birlikte tutmak "Stok" gibi kolonlarda toplama alındığında
+// çifte sayıma yol açar; bu yüzden varyantlı ürünlerde ürün satırı yerine
+// -- her biri kendi gerçek stok kodu/barkod/stoğuna sahip -- birer varyant
+// satırı yazılır. Sipariş/ciro/kâr gibi metrikler bu üründe varyant bazında
+// hesaplanmadığından (satış özeti ürün seviyesinde) varyant satırlarında
+// boş bırakılır; ürün toplamını tekrar yazmak, toplandığında yanıltıcı olurdu.
+function buildVariantAsProductRow(
+  item: AdminProductListItem,
+  variant: AdminProductListItem["variants"][number],
+  categoryNameById: Map<string, string>,
+  warehouseCodeById: Map<string, string>,
+) {
+  const price = variant.priceOverride ?? item.price;
+  const compareAtPrice = variant.compareAtPriceOverride ?? item.compareAtPrice;
+  const stock = variant.stockOverride ?? 0;
+  const name = variant.optionSummary ? `${item.name} — ${variant.optionSummary}` : `${item.name} — ${variant.title}`;
+
+  return {
+    recordType: "Varyant",
+    slug: variant.slug,
+    sku: variant.sku,
+    barcode: variant.barcode ?? "",
+    name,
+    description: item.description,
+    productType: item.productType,
+    status: item.status,
+    unitType: item.unitType,
+    price,
+    purchasePrice: variant.purchasePriceOverride ?? item.purchasePrice ?? "",
+    compareAtPrice: compareAtPrice ?? "",
+    discountRate: resolveDiscountRate(price, compareAtPrice) ?? "",
+    stock,
+    inStock: boolLabel(stock > 0),
+    currency: item.currency,
+    vatRate: item.vatRate,
+    stockTrackingEnabled: boolLabel(item.stockTrackingEnabled),
+    salesEnabled: boolLabel(variant.salesEnabled ?? true),
+    purchaseEnabled: boolLabel(item.purchaseEnabled),
+    brandName: item.brandName ?? "",
+    supplierName: item.primarySupplierName ?? "",
+    categoryName: item.categoryId ? (categoryNameById.get(item.categoryId) ?? "") : "",
+    preferredSalesWarehouseCode: item.preferredSalesWarehouseId ? (warehouseCodeById.get(item.preferredSalesWarehouseId) ?? "") : "",
+    preferredPurchaseWarehouseCode: item.preferredPurchaseWarehouseId ? (warehouseCodeById.get(item.preferredPurchaseWarehouseId) ?? "") : "",
+    searchKeywords: item.searchKeywords.join(", "),
+    internalNote: item.internalNote ?? "",
+    imageUrl: variant.imageUrl || item.imageUrl,
+    imageUrls: (variant.imageUrls?.length ? variant.imageUrls : item.imageUrls).join(", "),
+    variantCount: "",
+    orderCount: "",
+    soldQuantity: "",
+    grossRevenue: "",
+    averageUnitCost: "",
+    lastPurchaseUnitCost: "",
+    stockValue: "",
+    grossProfit: "",
+    grossMarginRate: "",
+    lastOrderedAt: "",
+  };
+}
+
 async function fetchAllProducts(query: AdminProductListQuery): Promise<AdminProductListItem[]> {
   const pageSize = 50;
   const items: AdminProductListItem[] = [];
@@ -145,46 +263,14 @@ export class CatalogExportService {
     productSheet.columns = PRODUCT_COLUMNS.map((column) => ({ header: column.label, key: column.key, width: column.width }));
 
     for (const item of products) {
-      productSheet.addRow({
-        slug: item.slug,
-        sku: item.sku,
-        barcode: item.barcode ?? "",
-        name: item.name,
-        description: item.description,
-        productType: item.productType,
-        status: item.status,
-        unitType: item.unitType,
-        price: item.price,
-        purchasePrice: item.purchasePrice ?? "",
-        compareAtPrice: item.compareAtPrice ?? "",
-        discountRate: item.discountRate ?? "",
-        stock: item.stock,
-        inStock: boolLabel(item.inStock),
-        currency: item.currency,
-        vatRate: item.vatRate,
-        stockTrackingEnabled: boolLabel(item.stockTrackingEnabled),
-        salesEnabled: boolLabel(item.salesEnabled),
-        purchaseEnabled: boolLabel(item.purchaseEnabled),
-        brandName: item.brandName ?? "",
-        supplierName: item.primarySupplierName ?? "",
-        categoryName: item.categoryId ? (categoryNameById.get(item.categoryId) ?? "") : "",
-        preferredSalesWarehouseCode: item.preferredSalesWarehouseId ? (warehouseCodeById.get(item.preferredSalesWarehouseId) ?? "") : "",
-        preferredPurchaseWarehouseCode: item.preferredPurchaseWarehouseId ? (warehouseCodeById.get(item.preferredPurchaseWarehouseId) ?? "") : "",
-        searchKeywords: item.searchKeywords.join(", "),
-        internalNote: item.internalNote ?? "",
-        imageUrl: item.imageUrl,
-        imageUrls: item.imageUrls.join(", "),
-        variantCount: item.variantCount,
-        orderCount: item.orderCount,
-        soldQuantity: item.soldQuantity,
-        grossRevenue: item.grossRevenue,
-        averageUnitCost: item.averageUnitCost ?? "",
-        lastPurchaseUnitCost: item.lastPurchaseUnitCost ?? "",
-        stockValue: item.stockValue,
-        grossProfit: item.grossProfit,
-        grossMarginRate: item.grossMarginRate ?? "",
-        lastOrderedAt: item.lastOrderedAt ? new Date(item.lastOrderedAt).toLocaleString("tr-TR") : "",
-      });
+      if (item.variants.length === 0) {
+        productSheet.addRow(buildProductRow(item, categoryNameById, warehouseCodeById));
+        continue;
+      }
+
+      for (const variant of item.variants) {
+        productSheet.addRow(buildVariantAsProductRow(item, variant, categoryNameById, warehouseCodeById));
+      }
     }
     addHeaderStyle(productSheet);
 
