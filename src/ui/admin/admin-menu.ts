@@ -139,16 +139,31 @@ export function findFirstAccessibleHref(
       continue;
     }
 
-    const canSeeItem = !item.permissionKey || permissionKeys.includes(item.permissionKey);
-    if (canSeeItem) {
-      return item.href;
-    }
-
+    // Once cocuklara bak: bir grup node'u (ör. "Stok Yönetimi") kendi
+    // moduleKey'ini bilerek tasimiyorsa (karma entitlement'li cocuklari
+    // oldugu icin, bkz. buildAdminMenuTree), yukaridaki hasEntitlement bu
+    // node icin GERCEK bir kontrol degildir (moduleKey olmadigi icin
+    // otomatik true). Cocuklar kendi moduleKey'lerini tasidigi icin dogru
+    // sekilde entitlement kontrolunden gecer.
     if (item.children) {
       const childHref = findFirstAccessibleHref(item.children, permissionKeys, enabledModuleKeys, moduleKey);
       if (childHref) {
         return childHref;
       }
+
+      // Hicbir cocuk erisilebilir degilse: bu node'un kendi moduleKey'i
+      // yoksa (yukaridaki entitlement kontrolu gercek degildi), kendi
+      // href'ine de guvenilmez -- aksi halde entitlement'i olmayan bir
+      // tenant yanlislikla buraya yonlendirilir. moduleKey varsa (gercekten
+      // kontrol edilmisse) asagidaki self-fallback guvenlidir.
+      if (!moduleKey) {
+        continue;
+      }
+    }
+
+    const canSeeItem = !item.permissionKey || permissionKeys.includes(item.permissionKey);
+    if (canSeeItem) {
+      return item.href;
     }
   }
 
@@ -158,24 +173,15 @@ export function findFirstAccessibleHref(
 export function buildAdminMenuTree(dictionary: Dictionary, locale: Locale): AdminMenuItem[] {
   return [
     {
-      href: `/${locale}/admin/categories`,
-      label: dictionary.admin.catalogManager,
-      permissionKey: "categories.manage",
-      moduleKey: "products",
-      children: [
-        { href: `/${locale}/admin/categories`, label: dictionary.admin.categoryManager, permissionKey: "categories.manage" },
-        { href: `/${locale}/admin/brands`, label: dictionary.admin.brandsTitle, permissionKey: "brands.manage" },
-        { href: `/${locale}/admin/product-attributes`, label: dictionary.admin.productAttributesTitle, permissionKey: "productAttributes.manage" },
-        { href: `/${locale}/admin/storefront`, label: dictionary.admin.storefrontManager, permissionKey: "storefront.manage" },
-        { href: `/${locale}/admin/product-questions`, label: dictionary.admin.questionManager, permissionKey: "productQuestions.read" },
-      ],
-    },
-    {
       // NOT: bu grup "products" (Stok Kartları) ve "inventory" (depo araçları)
       // moduleKey'lerini bir arada barındırıyor. Üst node bilerek moduleKey
       // TAŞIMIYOR (miras almasın diye) -- her çocuk kendi moduleKey'ini
       // açıkça taşır, aksi halde bir tenant'ta yanlış modül entitlement'ı
       // miras alınıp Stok Kartları veya depo araçları hatalı gizlenir/gösterilir.
+      // Menüde ve "/admin" ilk açılış yönlendirmesinde EN BAŞTA yer alır --
+      // yönlendirme findFirstAccessibleHref üzerinden yine "products"
+      // entitlement'ı kontrol edilerek "Stok Kartları" cocuguna gider
+      // (bkz. o fonksiyondaki self-fallback notu).
       href: `/${locale}/admin/products`,
       label: dictionary.admin.inventoryManager,
       permissionKey: "products.read",
@@ -187,6 +193,19 @@ export function buildAdminMenuTree(dictionary: Dictionary, locale: Locale): Admi
         { href: `/${locale}/admin/inventory/counts`, label: dictionary.admin.inventoryStockCountTitle, permissionKey: "inventoryCounts.manage", moduleKey: "inventory" },
         { href: `/${locale}/admin/inventory/warehouses`, label: dictionary.admin.inventoryWarehousesTitle, permissionKey: "warehouses.manage", moduleKey: "inventory" },
         { href: `/${locale}/admin/inventory/exports`, label: "Dışa Aktarım Geçmişi", permissionKey: "inventoryExports.read", moduleKey: "inventory" },
+      ],
+    },
+    {
+      href: `/${locale}/admin/categories`,
+      label: dictionary.admin.catalogManager,
+      permissionKey: "categories.manage",
+      moduleKey: "products",
+      children: [
+        { href: `/${locale}/admin/categories`, label: dictionary.admin.categoryManager, permissionKey: "categories.manage" },
+        { href: `/${locale}/admin/brands`, label: dictionary.admin.brandsTitle, permissionKey: "brands.manage" },
+        { href: `/${locale}/admin/product-attributes`, label: dictionary.admin.productAttributesTitle, permissionKey: "productAttributes.manage" },
+        { href: `/${locale}/admin/storefront`, label: dictionary.admin.storefrontManager, permissionKey: "storefront.manage" },
+        { href: `/${locale}/admin/product-questions`, label: dictionary.admin.questionManager, permissionKey: "productQuestions.read" },
       ],
     },
     {
