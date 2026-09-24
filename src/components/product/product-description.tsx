@@ -6,7 +6,20 @@ import { Price } from "@/components/price";
 import { AddToCartControls } from "@/components/product/add-to-cart-controls";
 import { Button } from "@/components/ui/button";
 import type { Locale } from "@/lib/i18n";
-import type { ProductDetail } from "@/modules/catalog/contracts/catalog.contract";
+import type { ProductDetail, ProductVariantOption } from "@/modules/catalog/contracts/catalog.contract";
+
+function variantAttributeMap(variant: ProductVariantOption): Record<string, string> {
+	return Object.fromEntries(variant.attributes.map((attribute) => [attribute.attributeDefinitionId, attribute.value]));
+}
+
+function findMatchingVariant(variants: ProductVariantOption[], values: Record<string, string>): ProductVariantOption | null {
+	return (
+		variants.find((variant) => {
+			const attributes = variantAttributeMap(variant);
+			return Object.entries(values).every(([attributeDefinitionId, value]) => attributes[attributeDefinitionId] === value);
+		}) ?? null
+	);
+}
 
 type ProductDescriptionProps = {
 	locale: Locale;
@@ -28,12 +41,28 @@ type ProductDescriptionProps = {
 };
 
 export function ProductDescription({ locale, product, labels }: ProductDescriptionProps) {
-	const initialVariantId = product.defaultVariantId ?? product.variants[0]?.id ?? null;
-	const [selectedVariantId, setSelectedVariantId] = useState<string | null>(initialVariantId);
-	const selectedVariant = useMemo(
-		() => product.variants.find((variant) => variant.id === selectedVariantId) ?? null,
-		[product.variants, selectedVariantId],
+	const initialVariant = useMemo(() => {
+		const initialVariantId = product.defaultVariantId ?? product.variants[0]?.id ?? null;
+		return product.variants.find((variant) => variant.id === initialVariantId) ?? null;
+	}, [product.variants, product.defaultVariantId]);
+
+	const [selectedValues, setSelectedValues] = useState<Record<string, string>>(() =>
+		initialVariant ? variantAttributeMap(initialVariant) : {},
 	);
+
+	const selectedVariant = useMemo(
+		() => findMatchingVariant(product.variants, selectedValues) ?? initialVariant,
+		[product.variants, selectedValues, initialVariant],
+	);
+
+	function selectAxisValue(attributeDefinitionId: string, value: string) {
+		setSelectedValues((prev) => ({ ...prev, [attributeDefinitionId]: value }));
+	}
+
+	function isValueAvailable(attributeDefinitionId: string, value: string) {
+		return findMatchingVariant(product.variants, { ...selectedValues, [attributeDefinitionId]: value }) !== null;
+	}
+
 	const effectivePrice = selectedVariant?.price ?? product.price;
 	const effectiveCompareAtPrice = selectedVariant?.compareAtPrice ?? product.compareAtPrice;
 	const effectiveDiscountRate = selectedVariant?.discountRate ?? product.discountRate;
@@ -64,22 +93,35 @@ export function ProductDescription({ locale, product, labels }: ProductDescripti
 				{labels.stockStatus}: {effectiveInStock ? labels.inStock : labels.outOfStock} ({effectiveStock})
 			</div>
 
-			{product.variants.length > 0 ? (
+			{product.variants.length > 0 && product.variantAxes.length > 0 ? (
+				<div className="mb-6 space-y-4 rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+					{product.variantAxes.map((axis) => (
+						<div key={axis.attributeDefinitionId} className="space-y-2">
+							<p className="text-sm font-medium text-neutral-900">{axis.name}</p>
+							<div className="flex flex-wrap gap-2">
+								{axis.values.map((value) => {
+									const active = selectedValues[axis.attributeDefinitionId] === value;
+									const available = isValueAvailable(axis.attributeDefinitionId, value);
+									return (
+										<Button
+											key={value}
+											type="button"
+											variant={active ? "default" : "secondary"}
+											disabled={!available}
+											onClick={() => selectAxisValue(axis.attributeDefinitionId, value)}
+											className="rounded-full"
+										>
+											{value}
+										</Button>
+									);
+								})}
+							</div>
+						</div>
+					))}
+				</div>
+			) : product.variants.length > 0 ? (
 				<div className="mb-6 space-y-3 rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
 					<p className="text-sm font-medium text-neutral-900">{labels.variants}</p>
-					{product.variantAxes.length > 0 ? (
-						<div className="space-y-2">
-							{product.variantAxes.map((axis) => {
-								const selectedValue = selectedVariant?.attributes.find((attribute) => attribute.attributeDefinitionId === axis.attributeDefinitionId)?.value ?? null;
-								return (
-									<div key={axis.attributeDefinitionId} className="text-sm text-neutral-700">
-										<span className="font-medium text-neutral-900">{axis.name}:</span>{" "}
-										<span>{selectedValue ?? axis.values.join(", ")}</span>
-									</div>
-								);
-							})}
-						</div>
-					) : null}
 					<div className="flex flex-wrap gap-2">
 						{product.variants.map((variant) => {
 							const active = variant.id === selectedVariant?.id;
@@ -88,7 +130,7 @@ export function ProductDescription({ locale, product, labels }: ProductDescripti
 									key={variant.id}
 									type="button"
 									variant={active ? "default" : "secondary"}
-									onClick={() => setSelectedVariantId(variant.id)}
+									onClick={() => setSelectedValues(variantAttributeMap(variant))}
 									className="rounded-full"
 								>
 									{variant.optionSummary}
