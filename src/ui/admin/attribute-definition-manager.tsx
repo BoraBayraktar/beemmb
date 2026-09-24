@@ -62,6 +62,7 @@ type Labels = {
   channelN11: string;
   channelPazarama: string;
   channelHepsiburada: string;
+  unsavedChangesConfirm: string;
 };
 
 type TrendyolCategoryOption = {
@@ -159,6 +160,7 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
   const [drawerMode, setDrawerMode] = useState<DrawerMode | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const draftSnapshotRef = useRef<string>("");
   const [selectedMappingChannel, setSelectedMappingChannel] = useState<MarketplaceChannel>("TRENDYOL");
   const [mappingRows, setMappingRows] = useState(valueMappings);
   const [mappingDrafts, setMappingDrafts] = useState<Record<string, {
@@ -247,27 +249,38 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
     attributeCategorySearch.clear();
     setAttributeCategoryId("");
     setTrendyolAttributeOptions([]);
+    draftSnapshotRef.current = JSON.stringify(EMPTY_FORM);
     setDrawerMode("create");
   }
 
   function openEditDrawer(item: AdminProductAttributeDefinitionItem) {
     resetMessages();
     setEditingId(item.id);
-    setForm({
+    const initialForm: FormState = {
       slug: item.slug,
       name: item.name,
       displayType: item.displayType,
       trendyolAttributeId: item.trendyolAttributeId ? String(item.trendyolAttributeId) : "",
       isActive: item.isActive,
-    });
+    };
+    setForm(initialForm);
     attributeCategorySearch.clear();
     setAttributeCategoryId("");
     setTrendyolAttributeOptions([]);
+    draftSnapshotRef.current = JSON.stringify(initialForm);
     setDrawerMode("edit");
+  }
+
+  function hasUnsavedDraftChanges() {
+    return draftSnapshotRef.current !== JSON.stringify(form);
   }
 
   function closeDrawer() {
     if (pending) {
+      return;
+    }
+
+    if (hasUnsavedDraftChanges() && !window.confirm(labels.unsavedChangesConfirm)) {
       return;
     }
 
@@ -416,7 +429,9 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
         return;
       }
 
-      closeDrawer();
+      setDrawerMode(null);
+      setEditingId(null);
+      setForm(EMPTY_FORM);
       router.refresh();
     } catch {
       setError("Ozellik tanimi kaydedilemedi.");
@@ -449,7 +464,9 @@ export function AttributeDefinitionManager({ items, valueMappings, labels }: Pro
 
       setSelectedIds((prev) => prev.filter((id) => !ids.includes(id)));
       if (editingId && ids.includes(editingId)) {
-        closeDrawer();
+        setDrawerMode(null);
+        setEditingId(null);
+        setForm(EMPTY_FORM);
       }
       router.refresh();
     } catch {

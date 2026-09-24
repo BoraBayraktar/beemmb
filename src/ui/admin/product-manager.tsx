@@ -224,6 +224,7 @@ type Labels = {
   variantSalesEnabled: string;
   variantAttributeValue: string;
   variantDetails: string;
+  variantDetailDone: string;
   moveVariantUp: string;
   moveVariantDown: string;
   variantEmptyState: string;
@@ -317,6 +318,7 @@ type Labels = {
   lowStock: string;
   save: string;
   variantsSaved: string;
+  unsavedChangesConfirm: string;
   create: string;
   edit: string;
   delete: string;
@@ -1293,6 +1295,7 @@ export function ProductManager({
 
   const [createForm, setCreateForm] = useState<ProductForm>(emptyForm);
   const [editForm, setEditForm] = useState<ProductForm>(emptyForm);
+  const draftSnapshotRef = useRef<string>("");
 
   const activeForm = drawerMode === "edit" ? editForm : createForm;
   const activeTitle = drawerMode === "edit" ? labels.edit : labels.createTitle;
@@ -2017,6 +2020,7 @@ export function ProductManager({
       imageFileInputRef.current.value = "";
     }
     setDrawerFullscreen(false);
+    draftSnapshotRef.current = JSON.stringify(emptyForm);
     setDrawerMode("create");
   }
 
@@ -2078,7 +2082,8 @@ export function ProductManager({
     setError(null);
     setImportSummary(null);
     setEditingId(product.id);
-    setEditForm(buildProductForm(product));
+    const initialForm = buildProductForm(product);
+    setEditForm(initialForm);
     setImageFiles([]);
     if (imageFileInputRef.current) {
       imageFileInputRef.current.value = "";
@@ -2091,11 +2096,20 @@ export function ProductManager({
     setActiveEditTab(initialTab);
     setInventoryOverviewStatus(null);
     setSelectedInventoryItemKey(null);
+    draftSnapshotRef.current = JSON.stringify(initialForm);
     setDrawerMode("edit");
+  }
+
+  function hasUnsavedDraftChanges() {
+    return draftSnapshotRef.current !== JSON.stringify(activeForm);
   }
 
   function closeDrawer() {
     if (loading || variantSaveSuccess) {
+      return;
+    }
+
+    if (hasUnsavedDraftChanges() && !window.confirm(labels.unsavedChangesConfirm)) {
       return;
     }
 
@@ -4601,9 +4615,14 @@ export function ProductManager({
                     <h3 className="mt-1 text-xl font-semibold tracking-tight">{activeVariantEditor.title || labels.variantTitle}</h3>
                     <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{activeVariantEditor.optionSummary || labels.variantsHint}</p>
                   </div>
-                  <Button type="button" size="icon" variant="ghost" onClick={closeVariantEditor} disabled={loading}>
-                    <X className="h-5 w-5" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button type="button" onClick={closeVariantEditor} disabled={loading}>
+                      {labels.variantDetailDone}
+                    </Button>
+                    <Button type="button" size="icon" variant="ghost" onClick={closeVariantEditor} disabled={loading}>
+                      <X className="h-5 w-5" />
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="grid gap-4 p-5">

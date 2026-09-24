@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,7 @@ type Labels = {
   emptyHint: string;
   cancel: string;
   action: string;
+  unsavedChangesConfirm: string;
 };
 
 type Props = {
@@ -78,20 +79,31 @@ export function FinancialAccountsManager({ locale, result, initialSearch, initia
     openingBalance: "0",
     note: "",
   });
+  const draftSnapshotRef = useRef<string>("");
 
   function openCreateDrawer() {
     setMessage(null);
-    setForm({
+    const initialForm = {
       name: "",
-      type: "CASH",
+      type: "CASH" as AdminFinancialAccountType,
       openingBalance: "0",
       note: "",
-    });
+    };
+    setForm(initialForm);
+    draftSnapshotRef.current = JSON.stringify(initialForm);
     setDrawerOpen(true);
+  }
+
+  function hasUnsavedDraftChanges() {
+    return draftSnapshotRef.current !== JSON.stringify(form);
   }
 
   function closeDrawer() {
     if (isPending) {
+      return;
+    }
+
+    if (hasUnsavedDraftChanges() && !window.confirm(labels.unsavedChangesConfirm)) {
       return;
     }
 

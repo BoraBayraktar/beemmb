@@ -86,6 +86,7 @@ export default async function AdminProductAttributesPage({
         channelN11: dictionary.admin.integrationChannelN11,
         channelPazarama: dictionary.admin.integrationChannelPazarama,
         channelHepsiburada: dictionary.admin.integrationChannelHepsiburada,
+        unsavedChangesConfirm: dictionary.admin.unsavedChangesConfirm,
       }}
     />
   );

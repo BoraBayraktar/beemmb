@@ -77,6 +77,7 @@ export default async function AdminFinancialAccountsPage({
         emptyHint: dictionary.admin.financeFinancialAccountsEmptyHint,
         cancel: dictionary.admin.cancel,
         action: dictionary.admin.action,
+        unsavedChangesConfirm: dictionary.admin.unsavedChangesConfirm,
       }}
     />
   );

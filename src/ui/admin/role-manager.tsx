@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -73,6 +73,7 @@ type Props = {
     permissionModules: Record<string, string>;
     deleteConfirmTitle: string;
     deleteConfirmDescription: string;
+    unsavedChangesConfirm: string;
   };
 };
 
@@ -92,6 +93,7 @@ export function RoleManager({ initialRoles, permissions, menuTree, labels }: Pro
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const draftSnapshotRef = useRef<string>("");
 
   const isEditingSuperAdmin = form.key === "super-admin";
   const menuPermissionKeys = collectMenuPermissionKeys(menuTree);
@@ -109,11 +111,20 @@ export function RoleManager({ initialRoles, permissions, menuTree, labels }: Pro
 
   function openCreateDrawer() {
     resetForm();
+    draftSnapshotRef.current = JSON.stringify(emptyForm);
     setDrawerOpen(true);
+  }
+
+  function hasUnsavedDraftChanges() {
+    return draftSnapshotRef.current !== JSON.stringify(form);
   }
 
   function closeDrawer() {
     if (loading) {
+      return;
+    }
+
+    if (hasUnsavedDraftChanges() && !window.confirm(labels.unsavedChangesConfirm)) {
       return;
     }
 
@@ -123,14 +134,16 @@ export function RoleManager({ initialRoles, permissions, menuTree, labels }: Pro
 
   function editRole(role: Role) {
     setEditingId(role.id);
-    setForm({
+    const initialForm = {
       id: role.id,
       key: role.key,
       name: role.name,
       description: role.description ?? "",
       isActive: role.isActive,
       permissionKeys: role.permissionKeys,
-    });
+    };
+    setForm(initialForm);
+    draftSnapshotRef.current = JSON.stringify(initialForm);
     setError(null);
     setDrawerOpen(true);
   }

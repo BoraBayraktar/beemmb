@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -77,6 +77,7 @@ export function PlatformTenantsManager({ initialTenants, modules, initialEntitle
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingEntitlement, setPendingEntitlement] = useState<string | null>(null);
+  const draftSnapshotRef = useRef<string>("");
 
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
   const [adminUserLoading, setAdminUserLoading] = useState(false);
@@ -97,6 +98,7 @@ export function PlatformTenantsManager({ initialTenants, modules, initialEntitle
     setDrawerMode("create");
     setEditingTenantId(null);
     setForm(emptyForm);
+    draftSnapshotRef.current = JSON.stringify(emptyForm);
     setError(null);
     setDrawerOpen(true);
   }
@@ -104,7 +106,7 @@ export function PlatformTenantsManager({ initialTenants, modules, initialEntitle
   function openEditDrawer(tenant: Tenant) {
     setDrawerMode("edit");
     setEditingTenantId(tenant.id);
-    setForm({
+    const initialForm = {
       ...emptyForm,
       slug: tenant.slug,
       name: tenant.name,
@@ -113,7 +115,9 @@ export function PlatformTenantsManager({ initialTenants, modules, initialEntitle
       contactEmail: tenant.contactEmail,
       contactPhone: tenant.contactPhone ?? "",
       status: tenant.status,
-    });
+    };
+    setForm(initialForm);
+    draftSnapshotRef.current = JSON.stringify(initialForm);
     setError(null);
     setDrawerOpen(true);
 
@@ -155,8 +159,16 @@ export function PlatformTenantsManager({ initialTenants, modules, initialEntitle
     }
   }
 
+  function hasUnsavedDraftChanges() {
+    return draftSnapshotRef.current !== JSON.stringify(form);
+  }
+
   function closeDrawer() {
     if (loading) {
+      return;
+    }
+
+    if (hasUnsavedDraftChanges() && !window.confirm("Kaydedilmemiş değişiklikler var. Çıkmak istediğinize emin misiniz?")) {
       return;
     }
 

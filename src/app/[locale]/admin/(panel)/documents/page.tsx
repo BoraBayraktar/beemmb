@@ -191,6 +191,7 @@ export default async function AdminDocumentsPage({
         exportCsv: dictionary.admin.exportCsv,
         close: dictionary.admin.documentsDrawerClose,
         financeDocumentMovementPreviewOpen: dictionary.admin.financeDocumentMovementPreviewOpen,
+        unsavedChangesConfirm: dictionary.admin.unsavedChangesConfirm,
       }}
     />
   );

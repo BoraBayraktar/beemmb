@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -58,6 +58,7 @@ type Labels = {
   loading: string;
   deleteConfirmTitle: string;
   deleteConfirmDescription: string;
+  unsavedChangesConfirm: string;
 };
 
 type Props = {
@@ -122,6 +123,7 @@ export function UserManager({ initialResult, labels, availableRoles = [], fixedR
   const [passwordChangeOpen, setPasswordChangeOpen] = useState(false);
   const [createForm, setCreateForm] = useState<UserForm>(emptyForm);
   const [editForm, setEditForm] = useState<UserForm>(emptyForm);
+  const draftSnapshotRef = useRef<string>("");
 
   const activeForm = drawerMode === "edit" ? editForm : createForm;
   const activeTitle = drawerMode === "edit" ? labels.edit : labels.createTitle;
@@ -187,6 +189,7 @@ export function UserManager({ initialResult, labels, availableRoles = [], fixedR
     setEditingId(null);
     setPasswordChangeOpen(false);
     setCreateForm(emptyForm);
+    draftSnapshotRef.current = JSON.stringify(emptyForm);
     setDrawerMode("create");
   }
 
@@ -194,17 +197,27 @@ export function UserManager({ initialResult, labels, availableRoles = [], fixedR
     setError(null);
     setEditingId(user.id);
     setPasswordChangeOpen(false);
-    setEditForm({
+    const initialForm: UserForm = {
       email: user.email,
       name: user.name,
       roleIds: user.roleIds,
       password: "",
-    });
+    };
+    setEditForm(initialForm);
+    draftSnapshotRef.current = JSON.stringify(initialForm);
     setDrawerMode("edit");
+  }
+
+  function hasUnsavedDraftChanges() {
+    return draftSnapshotRef.current !== JSON.stringify(activeForm);
   }
 
   function closeDrawer() {
     if (loading) {
+      return;
+    }
+
+    if (hasUnsavedDraftChanges() && !window.confirm(labels.unsavedChangesConfirm)) {
       return;
     }
 

@@ -85,6 +85,7 @@ type Labels = {
   roleRequired: string;
   deleteConfirmTitle: string;
   deleteConfirmDescription: string;
+  unsavedChangesConfirm: string;
 };
 
 type Props = {
@@ -230,6 +231,7 @@ export function CariManager({ items, labels, canDelete }: Props) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<CariForm>(emptyForm);
+  const draftSnapshotRef = useRef<string>("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [photoPreviewOpen, setPhotoPreviewOpen] = useState(false);
@@ -314,6 +316,7 @@ export function CariManager({ items, labels, canDelete }: Props) {
     setEditingId(null);
     setForm(emptyForm);
     setPhotoFile(null);
+    draftSnapshotRef.current = JSON.stringify(emptyForm);
     setDrawerMode("create");
   }
 
@@ -321,7 +324,7 @@ export function CariManager({ items, labels, canDelete }: Props) {
     setError(null);
     setEditingId(item.id);
     setPhotoFile(null);
-    setForm({
+    const initialForm: CariForm = {
       slug: item.slug,
       name: item.name,
       photoUrl: item.photoUrl ?? "",
@@ -347,12 +350,22 @@ export function CariManager({ items, labels, canDelete }: Props) {
       externalCodeTrendyol: item.carrierProfile?.externalCodeTrendyol ? String(item.carrierProfile.externalCodeTrendyol) : "",
       externalCodePazarama: item.carrierProfile?.externalCodePazarama ?? "",
       externalCodeHepsiburada: item.carrierProfile?.externalCodeHepsiburada ?? "",
-    });
+    };
+    setForm(initialForm);
+    draftSnapshotRef.current = JSON.stringify(initialForm);
     setDrawerMode("edit");
+  }
+
+  function hasUnsavedDraftChanges() {
+    return draftSnapshotRef.current !== JSON.stringify(form);
   }
 
   function closeDrawer() {
     if (pending) {
+      return;
+    }
+
+    if (hasUnsavedDraftChanges() && !window.confirm(labels.unsavedChangesConfirm)) {
       return;
     }
 

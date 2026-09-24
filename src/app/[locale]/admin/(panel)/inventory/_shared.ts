@@ -606,5 +606,6 @@ function buildInventoryRouteLabels(dictionary: ReturnType<typeof getDictionary>)
       transactionFilterStartDate: dictionary.admin.inventoryTransactionStartDate,
       transactionFilterEndDate: dictionary.admin.inventoryTransactionEndDate,
       notSpecified: dictionary.common.notSpecified,
+      unsavedChangesConfirm: dictionary.admin.unsavedChangesConfirm,
   };
 }

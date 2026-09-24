@@ -58,6 +58,7 @@ type Labels = {
   deleteConfirmDescription: string;
   importCsv: string;
   exportCsv: string;
+  unsavedChangesConfirm: string;
 };
 
 type Props = {
@@ -106,6 +107,7 @@ export function BrandDirectoryManager({ items, labels, canDelete }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [createForm, setCreateForm] = useState<BrandForm>(emptyForm);
   const [editForm, setEditForm] = useState<BrandForm>(emptyForm);
+  const draftSnapshotRef = useRef<string>("");
   const trendyolBrandSearch = useTrendyolCatalogSearch<TrendyolBrandOption>({
     endpoint: "/api/admin/integrations/marketplaces/trendyol/catalog/brands",
     enabled: Boolean(drawerMode),
@@ -218,27 +220,38 @@ export function BrandDirectoryManager({ items, labels, canDelete }: Props) {
     setCreateForm(emptyForm);
     trendyolBrandSearch.clear();
     pazaramaBrandSearch.clear();
+    draftSnapshotRef.current = JSON.stringify(emptyForm);
     setDrawerMode("create");
   }
 
   function openEditDrawer(item: AdminBrandItem) {
     setError(null);
     setEditingId(item.id);
-    setEditForm({
+    const initialForm: BrandForm = {
       slug: item.slug,
       name: item.name,
       trendyolBrandId: item.trendyolBrandId ? String(item.trendyolBrandId) : "",
       pazaramaBrandId: item.pazaramaBrandId ?? "",
-    });
+    };
+    setEditForm(initialForm);
     trendyolBrandSearch.setQuery(item.name);
     trendyolBrandSearch.setItems([]);
     pazaramaBrandSearch.setQuery(item.name);
     pazaramaBrandSearch.setItems([]);
+    draftSnapshotRef.current = JSON.stringify(initialForm);
     setDrawerMode("edit");
+  }
+
+  function hasUnsavedDraftChanges() {
+    return draftSnapshotRef.current !== JSON.stringify(activeForm);
   }
 
   function closeDrawer() {
     if (loading) {
+      return;
+    }
+
+    if (hasUnsavedDraftChanges() && !window.confirm(labels.unsavedChangesConfirm)) {
       return;
     }
 

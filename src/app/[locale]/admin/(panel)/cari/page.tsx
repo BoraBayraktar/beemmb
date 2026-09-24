@@ -106,6 +106,7 @@ export default async function AdminCariPage({
         roleRequired: dictionary.admin.cariRoleRequired,
         deleteConfirmTitle: dictionary.admin.deleteConfirmTitle,
         deleteConfirmDescription: dictionary.admin.deleteConfirmDescription,
+        unsavedChangesConfirm: dictionary.admin.unsavedChangesConfirm,
       }}
     />
   );

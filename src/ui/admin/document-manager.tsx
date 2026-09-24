@@ -130,6 +130,7 @@ type Labels = {
   exportCsv: string;
   close: string;
   financeDocumentMovementPreviewOpen: string;
+  unsavedChangesConfirm: string;
 };
 
 type Props = {
@@ -337,6 +338,7 @@ export function DocumentManager({
   const [configReadinessReport, setConfigReadinessReport] = useState<EDocumentConfigReadinessReport | null>(null);
   const [createForm, setCreateForm] = useState<DocumentForm>(() => buildEmptyForm(defaultDateTimeLocal, defaultProviderConfigId));
   const [editForm, setEditForm] = useState<DocumentForm>(() => buildEmptyForm(defaultDateTimeLocal, defaultProviderConfigId));
+  const draftSnapshotRef = useRef<string>("");
 
   const filteredItems = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("tr-TR");
@@ -408,8 +410,16 @@ export function DocumentManager({
     setCreateForm(buildEmptyForm(defaultDateTimeLocal, defaultProviderConfigId));
   }
 
+  function hasUnsavedDraftChanges() {
+    return draftSnapshotRef.current !== JSON.stringify(activeForm);
+  }
+
   function closeDrawer() {
     if (pending) {
+      return;
+    }
+
+    if (hasUnsavedDraftChanges() && !window.confirm(labels.unsavedChangesConfirm)) {
       return;
     }
 
@@ -422,11 +432,12 @@ export function DocumentManager({
     resetCreateForm();
     setEditingId(null);
     setError(null);
+    draftSnapshotRef.current = JSON.stringify(buildEmptyForm(defaultDateTimeLocal, defaultProviderConfigId));
     setDrawerMode("create");
   }
 
   function openEditDrawer(item: AdminBusinessDocumentListItem) {
-    setEditForm({
+    const initialForm: DocumentForm = {
       documentNumber: item.documentNumber,
       documentType: item.documentType,
       status: item.status,
@@ -439,9 +450,11 @@ export function DocumentManager({
       orderNumber: item.orderNumber ?? "",
       inventoryTransactionNumber: item.inventoryTransactionNumber ?? "",
       note: "",
-    });
+    };
+    setEditForm(initialForm);
     setEditingId(item.id);
     setError(null);
+    draftSnapshotRef.current = JSON.stringify(initialForm);
     setDrawerMode("edit");
   }
 

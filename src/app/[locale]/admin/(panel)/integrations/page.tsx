@@ -185,6 +185,7 @@ export default async function AdminIntegrationsPage({
         all: dictionary.admin.statusAll,
         validationEntityIds: dictionary.admin.integrationValidationEntityIds,
         validationQueueLimit: dictionary.admin.integrationValidationQueueLimit,
+        unsavedChangesConfirm: dictionary.admin.unsavedChangesConfirm,
       }}
     />
   );

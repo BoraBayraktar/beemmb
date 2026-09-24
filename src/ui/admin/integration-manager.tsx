@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Maximize2, Minimize2, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -194,6 +194,7 @@ type Labels = {
   all: string;
   validationEntityIds: string;
   validationQueueLimit: string;
+  unsavedChangesConfirm: string;
 };
 
 const JOB_TYPE_TRIGGER_PRESETS: Record<JobType, string[]> = {
@@ -767,6 +768,7 @@ export function IntegrationManager({
   const [statusFilter, setStatusFilter] = useState<"all" | JobStatus>("all");
   const [channelFilter, setChannelFilter] = useState<"all" | Channel>("all");
   const [jobTypeFilter, setJobTypeFilter] = useState<"all" | JobType>("all");
+  const draftSnapshotRef = useRef<string>("");
 
   const summary = useMemo(() => ({
     pending: jobs.filter((item) => item.status === "PENDING").length,
@@ -835,21 +837,58 @@ export function IntegrationManager({
     setError(null);
 
     if (mode === "create") {
+      const initialTrigger = defaultTriggerForJobType("STOCK_SYNC");
       setChannel("TRENDYOL");
       setJobType("STOCK_SYNC");
       setEntityIds("");
       setMaxAttempts("3");
       setIdempotencySuffix("");
       setReference("");
-      setTrigger(defaultTriggerForJobType("STOCK_SYNC"));
+      setTrigger(initialTrigger);
       setForceFail(false);
+      draftSnapshotRef.current = JSON.stringify({
+        channel: "TRENDYOL",
+        jobType: "STOCK_SYNC",
+        entityIds: "",
+        maxAttempts: "3",
+        idempotencySuffix: "",
+        reference: "",
+        trigger: initialTrigger,
+        forceFail: false,
+      });
     } else {
       setQueueLimit("20");
+      draftSnapshotRef.current = JSON.stringify({ queueLimit: "20" });
     }
+  }
+
+  function hasUnsavedDraftChanges() {
+    if (drawerMode === "create") {
+      return draftSnapshotRef.current !== JSON.stringify({
+        channel,
+        jobType,
+        entityIds,
+        maxAttempts,
+        idempotencySuffix,
+        reference,
+        trigger,
+        forceFail,
+      });
+    }
+
+    if (drawerMode === "process") {
+      return draftSnapshotRef.current !== JSON.stringify({ queueLimit });
+    }
+
+    return false;
   }
 
   function closeDrawer() {
     if (busy) {
+      return;
+    }
+
+    if (hasUnsavedDraftChanges() && !window.confirm(labels.unsavedChangesConfirm)) {
       return;
     }
 
@@ -901,7 +940,8 @@ export function IntegrationManager({
       }
 
       await refresh();
-      closeDrawer();
+      setDrawerMode(null);
+      setDrawerFullscreen(false);
     } catch {
       setError(labels.operationFailed);
     } finally {
@@ -935,7 +975,8 @@ export function IntegrationManager({
       }
 
       await refresh();
-      closeDrawer();
+      setDrawerMode(null);
+      setDrawerFullscreen(false);
     } catch {
       setError(labels.operationFailed);
     } finally {

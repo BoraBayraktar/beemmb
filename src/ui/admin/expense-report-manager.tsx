@@ -282,6 +282,17 @@ export function ExpenseReportManager({
     }
   }
 
+  // detail.items sunucudan gelen guncel haliyle tutulur -- her "Ekle"/"Sil"
+  // aninda kendi API cagrisini yapar ve detail o cevapla degistirilir, yani
+  // detail icin ayrica "kaydedilmemis degisiklik" kontrolu gerekmez. Ancak
+  // yeni kalem formu (itemForm + eklenmis fis fotografi) yalnizca "Ekle"
+  // tiklaninca kaydedilir; kullanici formu doldurup/fis yukleyip Ekle'ye
+  // basmadan kapatirsa bu veriler sessizce kaybolur -- kapatirken bu kontrol
+  // edilir.
+  function hasUnsavedItemFormChanges() {
+    return JSON.stringify(itemForm) !== JSON.stringify(emptyItemForm) || receipt !== null;
+  }
+
   async function refreshList() {
     const response = await fetch("/api/admin/expense-reports?pageSize=50");
     if (response.ok) {
@@ -453,6 +464,10 @@ export function ExpenseReportManager({
   }
 
   function closeDrawer() {
+    if (hasUnsavedItemFormChanges() && !window.confirm("Kaydedilmemiş değişiklikler var. Çıkmak istediğinize emin misiniz?")) {
+      return;
+    }
+
     const current = detail;
     setDetail(null);
 

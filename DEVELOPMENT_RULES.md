@@ -56,6 +56,8 @@ Tum yeni gelistirmeler ve refactor islemleri bu kurallara uygun yapilmalidir.
   - Bu bilgi ilk bakista gercekten gerekli mi?
   - Degilse varsayilan yuzey yerine detay katmanina alinmalidir.
 - Modul tasariminda “kucuk isletme / buyuk isletme” gibi kullaniciya acik etiketlemeler yapilmaz; sade deneyim varsayilan olur, derinlik ihtiyac halinde acilir.
+- DB'ye yalnizca acik bir Kaydet aksiyonuyla yazan (local draft state ile calisan) her form/drawer/modal, kaydedilmemis degisiklik varken kapatilmak istendiginde (X, Iptal, backdrop tiklama, sekme/route degisimi vb.) kullaniciya onay sormalidir; sessizce veri kaybina izin verilmez. Bu kural tum modullerde ve tum benzer form/drawer yapilarinda gecerlidir, tek bir sayfaya ozgu degildir.
+- Bir formun/aksiyonun DB'ye yazip yazmadigi (anlik kaydediyor mu, yoksa yalnizca local draft mi tutuyor) kullanici arayuzunde acikca belli olmalidir; basari/kayit geri bildirimi (ör. buton uzerinde "Kaydedildi" durumu) yalnizca gercekten bir API cagrisi basariyla tamamlandiginda gosterilir.
 
 ## 7) Multi-Tenant ve Veri Izolasyonu Kurallari
 

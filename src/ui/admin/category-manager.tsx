@@ -84,6 +84,7 @@ type Labels = {
   loading: string;
   importCsv: string;
   exportCsv: string;
+  unsavedChangesConfirm: string;
 };
 
 type Props = {
@@ -159,6 +160,7 @@ export function CategoryManager({ initialResult, parentCandidates, labels, canDe
   const [editingId, setEditingId] = useState<string | null>(null);
   const [createForm, setCreateForm] = useState<CategoryForm>(emptyForm);
   const [editForm, setEditForm] = useState<CategoryForm>(emptyForm);
+  const draftSnapshotRef = useRef<string>("");
   const trendyolCategorySearch = useTrendyolCatalogSearch<TrendyolCategoryOption>({
     endpoint: "/api/admin/integrations/marketplaces/trendyol/catalog/categories",
     enabled: Boolean(drawerMode),
@@ -359,29 +361,40 @@ export function CategoryManager({ initialResult, parentCandidates, labels, canDe
     setCreateForm(emptyForm);
     trendyolCategorySearch.clear();
     pazaramaCategorySearch.clear();
+    draftSnapshotRef.current = JSON.stringify(emptyForm);
     setDrawerMode("create");
   }
 
   function openEditDrawer(category: Category) {
     setError(null);
     setEditingId(category.id);
-    setEditForm({
+    const initialForm: CategoryForm = {
       slug: category.slug,
       name: category.name,
       trendyolCategoryId: category.trendyolCategoryId ? String(category.trendyolCategoryId) : "",
       pazaramaCategoryId: category.pazaramaCategoryId ?? "",
       featureTemplate: category.featureTemplate ?? [],
       parentId: category.parentId ?? "",
-    });
+    };
+    setEditForm(initialForm);
     trendyolCategorySearch.setQuery(category.name);
     trendyolCategorySearch.setItems([]);
     pazaramaCategorySearch.setQuery(category.name);
     pazaramaCategorySearch.setItems([]);
+    draftSnapshotRef.current = JSON.stringify(initialForm);
     setDrawerMode("edit");
+  }
+
+  function hasUnsavedDraftChanges() {
+    return draftSnapshotRef.current !== JSON.stringify(activeForm);
   }
 
   function closeDrawer() {
     if (loading) {
+      return;
+    }
+
+    if (hasUnsavedDraftChanges() && !window.confirm(labels.unsavedChangesConfirm)) {
       return;
     }
 

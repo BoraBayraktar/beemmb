@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -66,6 +66,7 @@ type Labels = {
   createFailed: string;
   empty: string;
   cancel: string;
+  unsavedChangesConfirm: string;
 };
 
 type Props = {
@@ -173,6 +174,7 @@ export function CashTransactionsManager({
   const [counterpartySearch, setCounterpartySearch] = useState("");
   const [counterpartyOptions, setCounterpartyOptions] = useState<AdminFinanceCounterpartyOption[]>([]);
   const [counterpartyLoading, setCounterpartyLoading] = useState(false);
+  const draftSnapshotRef = useRef<string>("");
 
   useEffect(() => {
     if (!drawerOpen || form.direction === "TRANSFER" || form.useUnregisteredCounterparty) {
@@ -198,32 +200,42 @@ export function CashTransactionsManager({
   }, [counterpartySearch, drawerOpen, form.direction, form.useUnregisteredCounterparty]);
 
   function resetForm() {
-    setForm((current) => ({
-      ...current,
+    const initialForm = {
       accountId: initialAccountId || accountOptions[0]?.id || "",
       targetAccountId: "",
-      direction: "IN",
-      sourceType: "MANUAL",
-      category: "GENERAL_INCOME",
+      direction: "IN" as AdminCashTransactionDirection,
+      sourceType: "MANUAL" as AdminCashTransactionSourceType,
+      category: "GENERAL_INCOME" as AdminCashTransactionCategory,
       amount: "",
       title: "",
       note: "",
       cariId: "",
       counterpartyName: "",
       useUnregisteredCounterparty: false,
-    }));
+    };
+    setForm(initialForm);
     setCounterpartySearch("");
     setCounterpartyOptions([]);
+    return initialForm;
   }
 
   function openCreateDrawer() {
     setMessage(null);
-    resetForm();
+    const initialForm = resetForm();
+    draftSnapshotRef.current = JSON.stringify(initialForm);
     setDrawerOpen(true);
+  }
+
+  function hasUnsavedDraftChanges() {
+    return draftSnapshotRef.current !== JSON.stringify(form);
   }
 
   function closeDrawer() {
     if (isPending) {
+      return;
+    }
+
+    if (hasUnsavedDraftChanges() && !window.confirm(labels.unsavedChangesConfirm)) {
       return;
     }
 

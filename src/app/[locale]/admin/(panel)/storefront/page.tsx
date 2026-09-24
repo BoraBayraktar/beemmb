@@ -90,6 +90,7 @@ export default async function AdminStorefrontPage({
         variantDefault: dictionary.admin.variantDefault,
         deleteConfirmTitle: dictionary.admin.deleteConfirmTitle,
         deleteConfirmDescription: dictionary.admin.deleteConfirmDescription,
+        unsavedChangesConfirm: dictionary.admin.unsavedChangesConfirm,
       }}
     />
   );

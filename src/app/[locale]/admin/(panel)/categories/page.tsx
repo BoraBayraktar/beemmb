@@ -118,6 +118,7 @@ export default async function AdminCategoriesPage({
         loading: dictionary.common.loading,
         importCsv: dictionary.admin.importCsv,
         exportCsv: dictionary.admin.exportCsv,
+        unsavedChangesConfirm: dictionary.admin.unsavedChangesConfirm,
       }}
     />
   );

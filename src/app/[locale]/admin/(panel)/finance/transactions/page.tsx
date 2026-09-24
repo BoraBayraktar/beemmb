@@ -97,6 +97,7 @@ export default async function AdminCashTransactionsPage({
         createFailed: dictionary.admin.financeCashTransactionsCreateFailed,
         empty: dictionary.admin.financeCashTransactionsEmpty,
         cancel: dictionary.admin.cancel,
+        unsavedChangesConfirm: dictionary.admin.unsavedChangesConfirm,
       }}
     />
   );

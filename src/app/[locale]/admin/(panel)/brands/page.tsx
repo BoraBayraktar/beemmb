@@ -82,6 +82,7 @@ export default async function AdminBrandsPage({
         deleteConfirmDescription: dictionary.admin.deleteConfirmDescription,
         importCsv: dictionary.admin.importCsv,
         exportCsv: dictionary.admin.exportCsv,
+        unsavedChangesConfirm: dictionary.admin.unsavedChangesConfirm,
       }}
     />
   );

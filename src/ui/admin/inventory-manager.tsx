@@ -344,6 +344,7 @@ type Labels = {
   transactionFilterStartDate: string;
   transactionFilterEndDate: string;
   notSpecified: string;
+  unsavedChangesConfirm: string;
 };
 
 function statusLabel(status: AdminInventoryListResult["items"][number]["stockStatus"], labels: Labels) {
@@ -732,6 +733,7 @@ export function InventoryManager({
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [drawerItem, setDrawerItem] = useState<AdminInventoryListResult["items"][number] | null>(null);
   const [drawerMode, setDrawerMode] = useState<DrawerMode>("view");
+  const drawerDraftSnapshotRef = useRef<string>("");
   const [drawerFullscreen, setDrawerFullscreen] = useState(false);
   const [drawerMovementFilter, setDrawerMovementFilter] = useState("all");
   const [drawerDateRange, setDrawerDateRange] = useState("all");
@@ -1587,6 +1589,11 @@ export function InventoryManager({
   }
 
   function openDrawer(item: AdminInventoryListResult["items"][number], mode: DrawerMode, openedAt: number) {
+    const initialTargetOnHand = String(item.onHandStock);
+    const initialReorderPoint = String(item.reorderPoint);
+    const initialSafetyStock = String(item.safetyStock);
+    const initialPurchaseUnitCost = item.purchasePrice !== null ? String(item.purchasePrice) : "";
+
     setDrawerItem(item);
     setDrawerMode(mode);
     setDrawerFullscreen(false);
@@ -1594,9 +1601,9 @@ export function InventoryManager({
     setDrawerDateRange("all");
     setDrawerRangeNow(openedAt);
     setDrawerMovementPage(1);
-    setDrawerTargetOnHand(String(item.onHandStock));
-    setDrawerReorderPoint(String(item.reorderPoint));
-    setDrawerSafetyStock(String(item.safetyStock));
+    setDrawerTargetOnHand(initialTargetOnHand);
+    setDrawerReorderPoint(initialReorderPoint);
+    setDrawerSafetyStock(initialSafetyStock);
     setDrawerNote("");
     setDrawerMovementQuantity("1");
     setDrawerPurchaseDocumentNumber("");
@@ -1605,7 +1612,7 @@ export function InventoryManager({
     setDrawerPurchaseDocumentType("PURCHASE_DOCUMENT");
     setDrawerPurchaseReference("");
     setDrawerPurchaseExternalStatus("NOT_SENT");
-    setDrawerPurchaseUnitCost(item.purchasePrice !== null ? String(item.purchasePrice) : "");
+    setDrawerPurchaseUnitCost(initialPurchaseUnitCost);
     setDrawerTransferWarehouseCode("");
     setDrawerTransferQuantity("1");
     setDrawerTransferNote("");
@@ -1613,13 +1620,53 @@ export function InventoryManager({
     setDrawerSelectedVariantId(item.variantId ?? "");
     setPendingDrawerVariants(false);
     setFeedback(null);
+
+    drawerDraftSnapshotRef.current = JSON.stringify({
+      drawerTargetOnHand: initialTargetOnHand,
+      drawerReorderPoint: initialReorderPoint,
+      drawerSafetyStock: initialSafetyStock,
+      drawerNote: "",
+      drawerMovementQuantity: "1",
+      drawerPurchaseDocumentNumber: "",
+      drawerPurchaseSupplierId: "",
+      drawerPurchaseSupplierName,
+      drawerPurchaseDocumentDate: "",
+      drawerPurchaseDocumentType: "PURCHASE_DOCUMENT",
+      drawerPurchaseReference: "",
+      drawerPurchaseExternalStatus: "NOT_SENT",
+      drawerPurchaseUnitCost: initialPurchaseUnitCost,
+      drawerTransferWarehouseCode: "",
+      drawerTransferQuantity: "1",
+      drawerTransferNote: "",
+    });
   }
 
-  function closeDrawer() {
-    if (pendingRowKey) {
-      return;
+  function hasUnsavedDrawerDraftChanges() {
+    if (drawerMode === "view") {
+      return false;
     }
 
+    return drawerDraftSnapshotRef.current !== JSON.stringify({
+      drawerTargetOnHand,
+      drawerReorderPoint,
+      drawerSafetyStock,
+      drawerNote,
+      drawerMovementQuantity,
+      drawerPurchaseDocumentNumber,
+      drawerPurchaseSupplierId,
+      drawerPurchaseSupplierName,
+      drawerPurchaseDocumentDate,
+      drawerPurchaseDocumentType,
+      drawerPurchaseReference,
+      drawerPurchaseExternalStatus,
+      drawerPurchaseUnitCost,
+      drawerTransferWarehouseCode,
+      drawerTransferQuantity,
+      drawerTransferNote,
+    });
+  }
+
+  function resetDrawerState() {
     setDrawerItem(null);
     setDrawerMode("view");
     setDrawerFullscreen(false);
@@ -1645,6 +1692,18 @@ export function InventoryManager({
     setDrawerProductVariants([]);
     setDrawerSelectedVariantId("");
     setPendingDrawerVariants(false);
+  }
+
+  function closeDrawer() {
+    if (pendingRowKey) {
+      return;
+    }
+
+    if (hasUnsavedDrawerDraftChanges() && !window.confirm(labels.unsavedChangesConfirm)) {
+      return;
+    }
+
+    resetDrawerState();
   }
 
   useEffect(() => {
@@ -2139,7 +2198,7 @@ export function InventoryManager({
       }
 
       setFeedback({ type: "success", message: labels.adjustmentSaved });
-      closeDrawer();
+      resetDrawerState();
       router.refresh();
     } catch {
       setFeedback({ type: "error", message: labels.adjustmentFailed });
@@ -2188,7 +2247,7 @@ export function InventoryManager({
       }
 
       setFeedback({ type: "success", message: labels.transferSaved });
-      closeDrawer();
+      resetDrawerState();
       router.refresh();
     } catch {
       setFeedback({ type: "error", message: labels.transferFailed });
@@ -2252,7 +2311,7 @@ export function InventoryManager({
       }
 
       setFeedback({ type: "success", message: mode === "stock_in" ? labels.stockInSaved : labels.stockOutSaved });
-      closeDrawer();
+      resetDrawerState();
       router.refresh();
     } catch {
       setFeedback({ type: "error", message: mode === "stock_in" ? labels.stockInFailed : labels.stockOutFailed });

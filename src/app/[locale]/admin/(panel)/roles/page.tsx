@@ -66,6 +66,7 @@ export default async function AdminRolesPage({ params }: { params: Promise<{ loc
         deleteConfirmTitle: dictionary.admin.deleteConfirmTitle,
         deleteConfirmDescription: dictionary.admin.deleteConfirmDescription,
         permissionModules: dictionary.admin.permissionModules,
+        unsavedChangesConfirm: dictionary.admin.unsavedChangesConfirm,
       }}
     />
   );

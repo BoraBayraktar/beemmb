@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -82,6 +82,7 @@ type Labels = {
   variantDefault: string;
   deleteConfirmTitle: string;
   deleteConfirmDescription: string;
+  unsavedChangesConfirm: string;
 };
 
 type Props = {
@@ -186,6 +187,7 @@ export function StorefrontManager({ items, productOptions, categoryOptions, labe
   const [editingId, setEditingId] = useState<string | null>(null);
   const [createForm, setCreateForm] = useState<FormState>(emptyForm);
   const [editForm, setEditForm] = useState<FormState>(emptyForm);
+  const draftSnapshotRef = useRef<string>("");
 
   const activeForm = drawerMode === "edit" ? editForm : createForm;
   const activeTitle = drawerMode === "edit" ? labels.edit : labels.createTitle;
@@ -246,13 +248,14 @@ export function StorefrontManager({ items, productOptions, categoryOptions, labe
     setError(null);
     setEditingId(null);
     setCreateForm(emptyForm);
+    draftSnapshotRef.current = JSON.stringify(emptyForm);
     setDrawerMode("create");
   }
 
   function openEditDrawer(item: StorefrontItem) {
     setError(null);
     setEditingId(item.id);
-    setEditForm({
+    const initialForm: FormState = {
       section: item.section,
       variant: item.variant,
       targetType: item.targetType ?? "PRODUCT",
@@ -265,12 +268,21 @@ export function StorefrontManager({ items, productOptions, categoryOptions, labe
       sortOrder: String(item.sortOrder),
       startsAt: toDateTimeLocalInput(item.startsAt),
       endsAt: toDateTimeLocalInput(item.endsAt),
-    });
+    };
+    setEditForm(initialForm);
+    draftSnapshotRef.current = JSON.stringify(initialForm);
     setDrawerMode("edit");
+  }
+
+  function hasUnsavedDraftChanges() {
+    return draftSnapshotRef.current !== JSON.stringify(activeForm);
   }
 
   function closeDrawer() {
     if (loading) return;
+    if (hasUnsavedDraftChanges() && !window.confirm(labels.unsavedChangesConfirm)) {
+      return;
+    }
     setDrawerMode(null);
     setEditingId(null);
     setError(null);
