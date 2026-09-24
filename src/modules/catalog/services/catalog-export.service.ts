@@ -9,11 +9,11 @@ const VARIANT_ATTRIBUTE_SHEET_NAME = "Varyant Özellikleri";
 const PRODUCT_FEATURE_SHEET_NAME = "Ürün Özellikleri";
 
 const PRODUCT_COLUMNS: Array<{ key: string; label: string; width: number }> = [
+  { key: "name", label: "Ürün adı", width: 32 },
+  { key: "sku", label: "Stok Kodu", width: 18 },
   { key: "recordType", label: "Kayıt tipi", width: 12 },
   { key: "slug", label: "Slug", width: 22 },
-  { key: "sku", label: "SKU", width: 18 },
   { key: "barcode", label: "Barkod", width: 18 },
-  { key: "name", label: "Ürün adı", width: 32 },
   { key: "description", label: "Açıklama", width: 42 },
   { key: "productType", label: "Ürün tipi", width: 16 },
   { key: "status", label: "Durum", width: 12 },
