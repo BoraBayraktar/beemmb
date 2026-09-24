@@ -56,11 +56,22 @@ export function ProductDescription({ locale, product, labels }: ProductDescripti
 	);
 
 	function selectAxisValue(attributeDefinitionId: string, value: string) {
-		setSelectedValues((prev) => ({ ...prev, [attributeDefinitionId]: value }));
+		setSelectedValues((prev) => {
+			const next = { ...prev, [attributeDefinitionId]: value };
+			// Varyant seti tam bir kartezyen kapsam degilse (ör. her renk tek bir
+			// kapasitede uretilmisse) mevcut diger eksen secimleriyle birebir
+			// eslesen bir varyant olmayabilir. Once tam eslesmeyi dene; yoksa bu
+			// eksende tiklanan degere sahip herhangi bir varyanta dus -- diger
+			// eksenlerin gosterimi de o gercek varyantin degerlerine gunceller,
+			// boylece kullanici hicbir zaman "hicbir sey secilemiyor" durumuna
+			// kilitlenmez.
+			const matched = findMatchingVariant(product.variants, next) ?? product.variants.find((variant) => variantAttributeMap(variant)[attributeDefinitionId] === value) ?? null;
+			return matched ? variantAttributeMap(matched) : next;
+		});
 	}
 
 	function isValueAvailable(attributeDefinitionId: string, value: string) {
-		return findMatchingVariant(product.variants, { ...selectedValues, [attributeDefinitionId]: value }) !== null;
+		return product.variants.some((variant) => variantAttributeMap(variant)[attributeDefinitionId] === value);
 	}
 
 	const effectivePrice = selectedVariant?.price ?? product.price;
