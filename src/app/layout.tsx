@@ -12,8 +12,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr">
-      <body>{children}</body>
+    // Tarayici eklentileri (ceviri, Grammarly, dark mode vb.) React yuklenmeden once
+    // html/body'ye attribute ekleyip hydration uyarisi uretiyor. suppressHydrationWarning
+    // yalnizca bu iki etiketin kendi attribute farkini yok sayar; alt agactaki gercek
+    // hydration hatalari raporlanmaya devam eder.
+    <html lang="tr" suppressHydrationWarning>
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 }
