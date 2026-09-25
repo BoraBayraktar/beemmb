@@ -6,6 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -17,6 +19,15 @@ import { slugify } from "@/lib/utils";
 import type { AdminSupplierItem } from "@/modules/catalog/contracts/catalog-admin.contract";
 import type { ProductFeature } from "@/modules/catalog/contracts/catalog.contract";
 import type { AdminInventoryItem, AdminWarehouseItem } from "@/modules/inventory/contracts/inventory.contract";
+import {
+  applyVariantBulkPrice,
+  applyVariantBulkSales,
+  applyVariantBulkStock,
+  removeVariantsBulk,
+  type VariantBulkPriceField,
+  type VariantBulkPriceMode,
+} from "@/ui/admin/product-variant-bulk";
+import { ProductVariantBulkDialog, type VariantBulkDialogLabels, type VariantBulkDialogMode } from "@/ui/admin/product-variant-bulk-dialog";
 import {
   InventoryDrawerDistributionPanel,
   InventoryDrawerOperationPanel,
@@ -151,7 +162,7 @@ type Product = {
   }>;
 };
 
-type Labels = {
+type Labels = VariantBulkDialogLabels & {
   title: string;
   createTitle: string;
   listTitle: string;
@@ -228,6 +239,26 @@ type Labels = {
   moveVariantUp: string;
   moveVariantDown: string;
   variantEmptyState: string;
+  variantFilterSearchPlaceholder: string;
+  variantFilterAll: string;
+  variantFilterShown: string;
+  variantFilterClear: string;
+  variantFilterNoResults: string;
+  variantFilterReorderDisabled: string;
+  variantRowActions: string;
+  variantBulkSelectAll: string;
+  variantBulkSelectRow: string;
+  variantBulkClearSelection: string;
+  variantBulkPrice: string;
+  variantBulkStock: string;
+  variantBulkSales: string;
+  variantBulkSalesEnable: string;
+  variantBulkSalesDisable: string;
+  variantBulkDelete: string;
+  variantBulkAppliedNotice: string;
+  variantBulkDeletedNotice: string;
+  variantBulkSkippedNotice: string;
+  validationVariantCompareAtPrice: string;
   variantAxisDeleteConfirm: string;
   variantAxisDeleteBlocked: string;
   variantAxisUsageCount: string;
@@ -649,6 +680,8 @@ type VariantGenerationState = Record<string, string>;
 
 const NONE_VALUE = "__none__";
 const MAX_PRODUCT_IMAGES = 6;
+// Az varyantli urunlerde filtre alani gurultu olur; yalnizca liste uzadiginda gosterilir.
+const VARIANT_FILTER_MIN_COUNT = 6;
 
 const PRODUCT_TYPE_OPTIONS = [
   { value: "PHYSICAL", tr: "Fiziksel", en: "Physical" },
@@ -1225,7 +1258,12 @@ export function ProductManager({
   const [imageUploading, setImageUploading] = useState(false);
   const [drawerFullscreen, setDrawerFullscreen] = useState(false);
   const [variantEditorIndex, setVariantEditorIndex] = useState<number | null>(null);
-  const [openVariantActionMenuIndex, setOpenVariantActionMenuIndex] = useState<number | null>(null);
+  const [selectedVariantIndexes, setSelectedVariantIndexes] = useState<number[]>([]);
+  const [variantBulkDialogMode, setVariantBulkDialogMode] = useState<VariantBulkDialogMode | null>(null);
+  const [variantBulkDialogKey, setVariantBulkDialogKey] = useState(0);
+  const [variantBulkNotice, setVariantBulkNotice] = useState<string | null>(null);
+  const [variantFilterSearch, setVariantFilterSearch] = useState("");
+  const [variantFilterValues, setVariantFilterValues] = useState<Record<string, string[]>>({});
   const [variantAxisPickerOpen, setVariantAxisPickerOpen] = useState(false);
   const [variantAxisQuery, setVariantAxisQuery] = useState("");
   const [variantGenerationValues, setVariantGenerationValues] = useState<VariantGenerationState>({});
@@ -1256,7 +1294,6 @@ export function ProductManager({
   const imageFileInputRef = useRef<HTMLInputElement | null>(null);
   const importFileInputRef = useRef<HTMLInputElement | null>(null);
   const productActionMenuRef = useRef<HTMLDivElement | null>(null);
-  const variantActionMenuRef = useRef<HTMLDivElement | null>(null);
   const variantAxisPickerRef = useRef<HTMLDivElement | null>(null);
 
   const emptyForm = useMemo<ProductForm>(
@@ -1316,6 +1353,63 @@ export function ProductManager({
   const activeVariantEditorHasDuplicateSku = activeVariantEditor
     ? duplicateVariantSkuSet.has(normalizeSku(activeVariantEditor.sku))
     : false;
+  const showVariantFilters = activeForm.variants.length >= VARIANT_FILTER_MIN_COUNT;
+  const variantFilterAxes = useMemo(
+    () => activeForm.attributeLinks
+      .filter((link) => link.attributeDefinitionId && link.isVariantAxis)
+      .map((link) => {
+        const definition = attributeDefinitionOptions.find((item) => item.id === link.attributeDefinitionId);
+        const values: string[] = [];
+        for (const variant of activeForm.variants) {
+          const value = variant.attributes.find((attribute) => attribute.attributeDefinitionId === link.attributeDefinitionId)?.value.trim() ?? "";
+          if (value && !values.includes(value)) {
+            values.push(value);
+          }
+        }
+        return { attributeDefinitionId: link.attributeDefinitionId, name: definition?.name ?? "", values };
+      })
+      .filter((axis) => axis.name && axis.values.length > 1),
+    [activeForm.attributeLinks, activeForm.variants, attributeDefinitionOptions],
+  );
+  // Secili ama artik hicbir varyantta bulunmayan degerler (orn. varyant duzenlendi) filtreyi bosa dusurmesin.
+  const effectiveVariantFilterValues = useMemo(
+    () => variantFilterAxes
+      .map((axis) => ({
+        attributeDefinitionId: axis.attributeDefinitionId,
+        values: (variantFilterValues[axis.attributeDefinitionId] ?? []).filter((value) => axis.values.includes(value)),
+      }))
+      .filter((axis) => axis.values.length > 0),
+    [variantFilterAxes, variantFilterValues],
+  );
+  const normalizedVariantFilterSearch = variantFilterSearch.trim().toLocaleLowerCase("tr-TR");
+  const isVariantFilterActive = showVariantFilters && (effectiveVariantFilterValues.length > 0 || normalizedVariantFilterSearch.length > 0);
+  // Satirlar orijinal indeksleriyle tutulur; duzenle/sil/tasi aksiyonlari bu indeksle calisir.
+  const visibleVariantRows = useMemo(() => {
+    const rows = activeForm.variants.map((variant, index) => ({ variant, index }));
+    if (!isVariantFilterActive) {
+      return rows;
+    }
+
+    return rows.filter(({ variant }) => {
+      const matchesAxes = effectiveVariantFilterValues.every((axis) => {
+        const value = variant.attributes.find((attribute) => attribute.attributeDefinitionId === axis.attributeDefinitionId)?.value.trim() ?? "";
+        return axis.values.includes(value);
+      });
+      if (!matchesAxes) {
+        return false;
+      }
+
+      if (!normalizedVariantFilterSearch) {
+        return true;
+      }
+
+      return [variant.title, variant.sku, variant.barcode, variant.optionSummary]
+        .some((field) => field.toLocaleLowerCase("tr-TR").includes(normalizedVariantFilterSearch));
+    });
+  }, [activeForm.variants, effectiveVariantFilterValues, isVariantFilterActive, normalizedVariantFilterSearch]);
+  const isVariantSelectionEnabled = activeForm.variants.length >= 2;
+  const selectedVariantIndexSet = useMemo(() => new Set(selectedVariantIndexes), [selectedVariantIndexes]);
+  const allVisibleVariantsSelected = visibleVariantRows.length > 0 && visibleVariantRows.every(({ index }) => selectedVariantIndexSet.has(index));
   const selectedVariantAxisDefinitions = useMemo(
     () => activeForm.attributeLinks
       .map((link) => attributeDefinitionOptions.find((item) => item.id === link.attributeDefinitionId))
@@ -1372,23 +1466,6 @@ export function ProductManager({
       document.removeEventListener("mousedown", handlePointerDown);
     };
   }, [openProductActionMenuId]);
-
-  useEffect(() => {
-    if (openVariantActionMenuIndex === null) {
-      return;
-    }
-
-    function handlePointerDown(event: MouseEvent) {
-      if (!variantActionMenuRef.current?.contains(event.target as Node)) {
-        setOpenVariantActionMenuIndex(null);
-      }
-    }
-
-    document.addEventListener("mousedown", handlePointerDown);
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-    };
-  }, [openVariantActionMenuIndex]);
 
   useEffect(() => {
     if (!variantAxisPickerOpen) {
@@ -1809,23 +1886,33 @@ export function ProductManager({
       .map((link) => link.attributeDefinitionId);
     const seenSkus = new Set<string>();
 
-    for (const variant of form.variants) {
+    for (const [index, variant] of form.variants.entries()) {
       if (isVariantRowEmpty(variant)) {
         continue;
       }
 
+      // Cok varyantli urunde hangi satirin hatali oldugu mesajdan anlasilsin.
+      const fail = (message: string) => `${variant.title.trim() || `${labels.variantTitle} ${index + 1}`}: ${message}`;
+
       if (!variant.slug.trim() || !variant.sku.trim() || !variant.title.trim() || !variant.optionSummary.trim()) {
-        return labels.validationVariantRequired;
+        return fail(labels.validationVariantRequired);
       }
 
       const normalizedSku = normalizeSku(variant.sku);
       if (seenSkus.has(normalizedSku)) {
-        return labels.validationVariantDuplicateSku;
+        return fail(labels.validationVariantDuplicateSku);
       }
       seenSkus.add(normalizedSku);
 
       if (variant.imageUrl.trim() && !isValidHttpUrl(variant.imageUrl)) {
-        return labels.validationVariantImageUrl;
+        return fail(labels.validationVariantImageUrl);
+      }
+
+      if (variant.compareAtPriceOverride.trim()) {
+        const effectivePrice = variant.priceOverride.trim() ? Number(variant.priceOverride) : Number(form.price);
+        if (Number(variant.compareAtPriceOverride) <= effectivePrice) {
+          return fail(labels.validationVariantCompareAtPrice);
+        }
       }
 
       const filledAttributeCount = variant.attributes.filter(
@@ -1833,7 +1920,7 @@ export function ProductManager({
       ).length;
 
       if (filledAttributeCount !== activeVariantAxisIds.length) {
-        return labels.validationVariantAttributes;
+        return fail(labels.validationVariantAttributes);
       }
     }
 
@@ -2015,6 +2102,8 @@ export function ProductManager({
     setImportSummary(null);
     setEditingId(null);
     setCreateForm(emptyForm);
+    resetVariantFilters();
+    setVariantBulkNotice(null);
     setImageFiles([]);
     if (imageFileInputRef.current) {
       imageFileInputRef.current.value = "";
@@ -2091,7 +2180,8 @@ export function ProductManager({
     setVariantEditorIndex(null);
     setVariantGenerationOpen(false);
     setVariantAxisPickerOpen(false);
-    setOpenVariantActionMenuIndex(null);
+    resetVariantFilters();
+    setVariantBulkNotice(null);
     setDrawerFullscreen(false);
     setActiveEditTab(initialTab);
     setInventoryOverviewStatus(null);
@@ -2397,7 +2487,93 @@ export function ProductManager({
     }));
   }
 
+  function resetVariantFilters() {
+    setVariantFilterSearch("");
+    setVariantFilterValues({});
+    clearVariantSelection();
+  }
+
+  // Secim satir indeksiyle tutulur; liste yapisi veya filtre degisince indeksler
+  // anlamini kaybedecegi icin secim temizlenir.
+  function clearVariantSelection() {
+    setSelectedVariantIndexes([]);
+  }
+
+  function toggleVariantSelection(index: number, checked: boolean) {
+    setSelectedVariantIndexes((prev) => {
+      if (!checked) {
+        return prev.filter((item) => item !== index);
+      }
+      return prev.includes(index) ? prev : [...prev, index];
+    });
+  }
+
+  function toggleAllVisibleVariants(checked: boolean) {
+    setSelectedVariantIndexes(checked ? visibleVariantRows.map(({ index }) => index) : []);
+  }
+
+  function openVariantBulkDialog(mode: VariantBulkDialogMode) {
+    setVariantBulkDialogKey((prev) => prev + 1);
+    setVariantBulkDialogMode(mode);
+  }
+
+  function finishVariantBulkAction(notice: string, skippedCount: number) {
+    setVariantBulkDialogMode(null);
+    setVariantBulkNotice(
+      skippedCount > 0
+        ? `${notice} ${labels.variantBulkSkippedNotice.replace("{count}", String(skippedCount))}`
+        : notice,
+    );
+  }
+
+  function applyVariantBulkPriceAction(args: { field: VariantBulkPriceField; mode: VariantBulkPriceMode; value: number }) {
+    const productFallbackPrice = args.field === "priceOverride"
+      ? activeForm.price
+      : args.field === "purchasePriceOverride"
+        ? activeForm.purchasePrice
+        : activeForm.compareAtPrice;
+    const result = applyVariantBulkPrice({
+      variants: activeForm.variants,
+      selectedIndexes: selectedVariantIndexSet,
+      productFallbackPrice,
+      ...args,
+    });
+    patchActiveForm((prev) => ({ ...prev, variants: result.variants }));
+    finishVariantBulkAction(labels.variantBulkAppliedNotice.replace("{count}", String(result.updatedCount)), result.skippedCount);
+  }
+
+  function applyVariantBulkStockAction(stock: number) {
+    const result = applyVariantBulkStock(activeForm.variants, selectedVariantIndexSet, stock);
+    patchActiveForm((prev) => ({ ...prev, variants: result.variants }));
+    finishVariantBulkAction(labels.variantBulkAppliedNotice.replace("{count}", String(result.updatedCount)), 0);
+  }
+
+  function applyVariantBulkSalesAction(salesEnabled: boolean) {
+    const result = applyVariantBulkSales(activeForm.variants, selectedVariantIndexSet, salesEnabled);
+    patchActiveForm((prev) => ({ ...prev, variants: result.variants }));
+    finishVariantBulkAction(labels.variantBulkAppliedNotice.replace("{count}", String(result.updatedCount)), 0);
+  }
+
+  function removeSelectedVariants() {
+    const result = removeVariantsBulk(activeForm.variants, selectedVariantIndexSet);
+    setVariantEditorIndex(null);
+    patchActiveForm((prev) => ({ ...prev, variants: result.variants }));
+    clearVariantSelection();
+    finishVariantBulkAction(labels.variantBulkDeletedNotice.replace("{count}", String(result.updatedCount)), 0);
+  }
+
+  function toggleVariantFilterValue(attributeDefinitionId: string, value: string) {
+    clearVariantSelection();
+    setVariantFilterValues((prev) => {
+      const current = prev[attributeDefinitionId] ?? [];
+      const next = current.includes(value) ? current.filter((item) => item !== value) : [...current, value];
+      return { ...prev, [attributeDefinitionId]: next };
+    });
+  }
+
   function addVariantRow() {
+    // Yeni satir henuz ozellik degeri tasimadigi icin aktif filtrede gizli kalirdi.
+    resetVariantFilters();
     patchActiveForm((prev) => ({
       ...prev,
       variants: [...prev.variants, createEmptyVariant()],
@@ -2457,10 +2633,12 @@ export function ProductManager({
       };
     });
 
+    resetVariantFilters();
     setVariantGenerationOpen(false);
   }
 
   function removeVariantRow(index: number) {
+    clearVariantSelection();
     if (variantEditorIndex !== null) {
       if (variantEditorIndex === index) {
         setVariantEditorIndex(null);
@@ -2483,6 +2661,7 @@ export function ProductManager({
       return;
     }
 
+    clearVariantSelection();
     patchActiveForm((prev) => {
       const nextVariants = [...prev.variants];
       const [moved] = nextVariants.splice(index, 1);
@@ -2748,7 +2927,8 @@ export function ProductManager({
         setVariantEditorIndex(null);
         setVariantGenerationOpen(false);
         setVariantAxisPickerOpen(false);
-        setOpenVariantActionMenuIndex(null);
+        clearVariantSelection();
+        setVariantBulkNotice(null);
         router.refresh();
       }, 700);
     } catch {
@@ -3193,6 +3373,63 @@ export function ProductManager({
     });
   }
 
+  function renderVariantPrice(variant: ProductVariant) {
+    return variant.priceOverride.trim()
+      ? formatPrice(Number(variant.priceOverride), activeCurrency, locale)
+      : labels.notSpecified;
+  }
+
+  function renderVariantStatusBadges(variant: ProductVariant) {
+    return (
+      <>
+        {variant.isDefault ? (
+          <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-900">{labels.variantDefault}</span>
+        ) : null}
+        {variant.stockOverride.trim() ? (
+          <span className="rounded-full bg-sky-50 px-2 py-1 text-xs font-medium text-sky-700">
+            {labels.stock}: {variant.stockOverride.trim()}
+          </span>
+        ) : null}
+        {!variant.salesEnabled ? (
+          <span className="rounded-full bg-neutral-200 px-2 py-1 text-xs font-medium text-neutral-900">{labels.outOfStock}</span>
+        ) : null}
+        {variant.salesEnabled && !variant.isDefault ? (
+          <span className="rounded-full bg-[color:var(--color-bg-soft)] px-2 py-1 text-xs font-medium text-[color:var(--color-text)]">{labels.variantActiveBadge}</span>
+        ) : null}
+      </>
+    );
+  }
+
+  // Mobil kartta ayri siralama oklarina yer olmadigi icin tasima aksiyonlari menuye girer.
+  function renderVariantRowMenu(index: number, includeMoveActions: boolean) {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button type="button" size="icon" variant="secondary" aria-label={labels.variantRowActions} className="shrink-0">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onSelect={() => openVariantEditor(index)}>{labels.variantDetails}</DropdownMenuItem>
+          {includeMoveActions ? (
+            <>
+              <DropdownMenuItem disabled={isVariantFilterActive || index === 0} onSelect={() => moveVariantRow(index, "up")}>
+                {labels.moveVariantUp}
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled={isVariantFilterActive || index === activeForm.variants.length - 1} onSelect={() => moveVariantRow(index, "down")}>
+                {labels.moveVariantDown}
+              </DropdownMenuItem>
+            </>
+          ) : null}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="text-rose-600 hover:bg-rose-50 focus:bg-rose-50" onSelect={() => removeVariantRow(index)}>
+            {labels.delete}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
+
   return (
     <section className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
       <div className="flex flex-col gap-4 border-b border-[color:var(--color-border)] p-5 lg:flex-row lg:items-center lg:justify-between">
@@ -3225,7 +3462,7 @@ export function ProductManager({
       </div>
 
       <div className="p-5">
-        {error ? <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{error}</p> : null}
+        {error && !drawerMode ? <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{error}</p> : null}
         {importSummary ? <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">{importSummary}</p> : null}
         {trendyolProductSyncTracking ? renderSyncTrackingCard({
           tone: "cyan",
@@ -4105,6 +4342,9 @@ export function ProductManager({
                 ) : null}
               </div>
 
+              {error ? (
+                <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{error}</p>
+              ) : null}
               <div className="mt-2 flex justify-end gap-2 border-t border-[color:var(--color-border)] pt-5">
                 <Button type="button" variant="secondary" onClick={closeDrawer} disabled={loading}>
                   {labels.cancel}
@@ -4224,11 +4464,170 @@ export function ProductManager({
                       <p className="rounded-xl border border-dashed border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-4 text-sm text-[color:var(--color-text-muted)]">{labels.variantEmptyState}</p>
                     ) : null}
 
-                    {activeForm.variants.length > 0 ? (
-                      <div className={`rounded-2xl border border-[color:var(--color-border)] ${openVariantActionMenuIndex === null ? "overflow-x-auto" : "overflow-visible"}`}>
+                    {showVariantFilters ? (
+                      <div className="grid gap-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] p-3">
+                        <Input
+                          type="search"
+                          value={variantFilterSearch}
+                          onChange={(event) => {
+                            clearVariantSelection();
+                            setVariantFilterSearch(event.target.value);
+                          }}
+                          placeholder={labels.variantFilterSearchPlaceholder}
+                          className="bg-[color:var(--color-surface)]"
+                        />
+                        {variantFilterAxes.map((axis) => {
+                          const selectedValues = variantFilterValues[axis.attributeDefinitionId] ?? [];
+                          const hasSelection = selectedValues.some((value) => axis.values.includes(value));
+                          return (
+                            <div key={axis.attributeDefinitionId} className="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:gap-3">
+                              <span className="shrink-0 pt-1 text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-muted)] sm:w-28">{axis.name}</span>
+                              <div className="flex flex-wrap gap-1.5">
+                                <button
+                                  type="button"
+                                  aria-pressed={!hasSelection}
+                                  onClick={() => {
+                                    clearVariantSelection();
+                                    setVariantFilterValues((prev) => ({ ...prev, [axis.attributeDefinitionId]: [] }));
+                                  }}
+                                  className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${!hasSelection ? "border-[color:var(--color-text)] bg-[color:var(--color-text)] text-[color:var(--color-surface)]" : "border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)]"}`}
+                                >
+                                  {labels.variantFilterAll}
+                                </button>
+                                {axis.values.map((value) => {
+                                  const selected = selectedValues.includes(value);
+                                  return (
+                                    <button
+                                      key={value}
+                                      type="button"
+                                      aria-pressed={selected}
+                                      onClick={() => toggleVariantFilterValue(axis.attributeDefinitionId, value)}
+                                      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${selected ? "border-[color:var(--color-text)] bg-[color:var(--color-text)] text-[color:var(--color-surface)]" : "border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)]"}`}
+                                    >
+                                      {value}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {isVariantFilterActive ? (
+                          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[color:var(--color-text-muted)]">
+                            <span>{visibleVariantRows.length} / {activeForm.variants.length} {labels.variantFilterShown}</span>
+                            <Button type="button" size="sm" variant="secondary" onClick={resetVariantFilters}>
+                              {labels.variantFilterClear}
+                            </Button>
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
+
+                    {activeForm.variants.length > 0 && visibleVariantRows.length === 0 ? (
+                      <p className="rounded-xl border border-dashed border-[color:var(--color-border)] bg-[color:var(--color-bg-soft)] px-3 py-4 text-sm text-[color:var(--color-text-muted)]">{labels.variantFilterNoResults}</p>
+                    ) : null}
+
+                    {variantBulkNotice ? (
+                      <p role="status" className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-800">{variantBulkNotice}</p>
+                    ) : null}
+
+                    {isVariantSelectionEnabled && visibleVariantRows.length > 0 ? (
+                      <div className="flex flex-col gap-2 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2 md:flex-row md:items-center md:justify-between">
+                        <label className="flex min-h-10 cursor-pointer items-center gap-3 text-sm font-medium text-[color:var(--color-text)]">
+                          <Checkbox
+                            checked={allVisibleVariantsSelected}
+                            onCheckedChange={(checked) => toggleAllVisibleVariants(checked === true)}
+                            aria-label={labels.variantBulkSelectAll}
+                          />
+                          <span>
+                            {selectedVariantIndexes.length > 0
+                              ? `${selectedVariantIndexes.length} ${labels.variantBulkSelectedCount}`
+                              : labels.variantBulkSelectAll}
+                          </span>
+                        </label>
+                        {selectedVariantIndexes.length > 0 ? (
+                          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+                            <Button type="button" size="sm" variant="secondary" className="h-10 md:h-8" onClick={() => openVariantBulkDialog("price")}>
+                              {labels.variantBulkPrice}
+                            </Button>
+                            <Button type="button" size="sm" variant="secondary" className="h-10 md:h-8" onClick={() => openVariantBulkDialog("stock")}>
+                              {labels.variantBulkStock}
+                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button type="button" size="sm" variant="secondary" className="h-10 gap-1 md:h-8">
+                                  {labels.variantBulkSales}
+                                  <ChevronDown className="h-3.5 w-3.5" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onSelect={() => applyVariantBulkSalesAction(true)}>{labels.variantBulkSalesEnable}</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => applyVariantBulkSalesAction(false)}>{labels.variantBulkSalesDisable}</DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                            <Button type="button" size="sm" variant="secondary" className="h-10 text-rose-600 md:h-8" onClick={() => openVariantBulkDialog("delete")}>
+                              {labels.variantBulkDelete}
+                            </Button>
+                            <Button type="button" size="sm" variant="ghost" className="col-span-2 h-10 md:h-8" onClick={clearVariantSelection}>
+                              {labels.variantBulkClearSelection}
+                            </Button>
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
+
+                    {visibleVariantRows.length > 0 ? (
+                      <ul className="grid gap-2 md:hidden">
+                        {visibleVariantRows.map(({ variant, index }) => {
+                          const selected = selectedVariantIndexSet.has(index);
+                          const hasDuplicateSku = duplicateVariantSkuSet.has(normalizeSku(variant.sku));
+                          return (
+                            <li
+                              key={`variant-card-${index}`}
+                              className={`rounded-2xl border bg-[color:var(--color-surface)] p-3 ${selected ? "border-[color:var(--color-brand)]" : "border-[color:var(--color-border)]"}`}
+                            >
+                              <div className="flex items-start gap-3">
+                                {isVariantSelectionEnabled ? (
+                                  <label className="-m-2 flex cursor-pointer p-2 pt-2.5">
+                                    <Checkbox
+                                      checked={selected}
+                                      onCheckedChange={(checked) => toggleVariantSelection(index, checked === true)}
+                                      aria-label={labels.variantBulkSelectRow}
+                                    />
+                                  </label>
+                                ) : null}
+                                <button type="button" onClick={() => openVariantEditor(index)} className="min-w-0 flex-1 space-y-1 text-left">
+                                  <span className="block break-words font-medium text-[color:var(--color-text)]">
+                                    {variant.title || `${labels.variantTitle} ${index + 1}`}
+                                  </span>
+                                  {variant.optionSummary ? (
+                                    <span className="block break-words text-xs text-[color:var(--color-text-muted)]">{variant.optionSummary}</span>
+                                  ) : null}
+                                  <span className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-[color:var(--color-text-muted)]">
+                                    <span className={hasDuplicateSku ? "font-medium text-red-600" : undefined}>{variant.sku || labels.sku}</span>
+                                    <span>{renderVariantPrice(variant)}</span>
+                                  </span>
+                                  {hasDuplicateSku ? <span className="block text-xs font-medium text-red-600">{labels.variantDuplicateSkuWarning}</span> : null}
+                                  <span className="flex flex-wrap gap-2 pt-1">{renderVariantStatusBadges(variant)}</span>
+                                </button>
+                                {renderVariantRowMenu(index, true)}
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : null}
+
+                    {visibleVariantRows.length > 0 ? (
+                      <div className="hidden overflow-x-auto rounded-2xl border border-[color:var(--color-border)] md:block">
                         <table className="min-w-full divide-y divide-[color:var(--color-border)] bg-[color:var(--color-surface)] text-sm">
                           <thead className="bg-[color:var(--color-bg-soft)] text-left text-xs uppercase tracking-wide text-[color:var(--color-text-muted)]">
                             <tr>
+                              {isVariantSelectionEnabled ? (
+                                <th className="w-10 px-3 py-2 font-medium">
+                                  <span className="sr-only">{labels.variantBulkSelectRow}</span>
+                                </th>
+                              ) : null}
                               <th className="px-3 py-2 font-medium">
                                 <span className="sr-only">{labels.sort}</span>
                               </th>
@@ -4237,143 +4636,121 @@ export function ProductManager({
                               <th className="px-3 py-2 font-medium">{labels.price}</th>
                               <th className="px-3 py-2 font-medium">{labels.statusLabel}</th>
                               <th className="px-3 py-2 text-right font-medium">
-                                <span className="sr-only">{labels.variantDetails}</span>
+                                <span className="sr-only">{labels.variantRowActions}</span>
                               </th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-[color:var(--color-border)]">
-                            {activeForm.variants.map((variant, index) => (
-                              <tr key={`variant-${index}`} className="align-top">
-                                <td className="px-3 py-3">
-                                  <div className="flex flex-col gap-1">
-                                    <Button
-                                      type="button"
-                                      size="icon"
-                                      variant="secondary"
-                                      disabled={index === 0}
-                                      onClick={() => moveVariantRow(index, "up")}
-                                      aria-label={labels.moveVariantUp}
-                                      title={labels.moveVariantUp}
-                                    >
-                                      <ChevronUp className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      size="icon"
-                                      variant="secondary"
-                                      disabled={index === activeForm.variants.length - 1}
-                                      onClick={() => moveVariantRow(index, "down")}
-                                      aria-label={labels.moveVariantDown}
-                                      title={labels.moveVariantDown}
-                                    >
-                                      <ChevronDown className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                </td>
-                                <td className="px-3 py-3">
-                                  <div className="space-y-1">
-                                    <p className="font-medium text-[color:var(--color-text)]">
-                                      {variant.title || `${labels.variantTitle} ${index + 1}`}
-                                    </p>
-                                    <p className="text-xs text-[color:var(--color-text-muted)]">
-                                      {variant.optionSummary || labels.variantsHint}
-                                    </p>
-                                  </div>
-                                </td>
-                                <td className="px-3 py-3 text-[color:var(--color-text-muted)]">
-                                  <div className={duplicateVariantSkuSet.has(normalizeSku(variant.sku)) ? "font-medium text-red-600" : undefined}>{variant.sku || labels.sku}</div>
-                                  {duplicateVariantSkuSet.has(normalizeSku(variant.sku)) ? (
-                                    <div className="mt-1 text-xs font-medium text-red-600">{labels.variantDuplicateSkuWarning}</div>
+                            {visibleVariantRows.map(({ variant, index }) => {
+                              const selected = selectedVariantIndexSet.has(index);
+                              const hasDuplicateSku = duplicateVariantSkuSet.has(normalizeSku(variant.sku));
+                              return (
+                                <tr key={`variant-${index}`} className={`align-top ${selected ? "bg-[color:var(--color-bg-soft)]" : ""}`}>
+                                  {isVariantSelectionEnabled ? (
+                                    <td className="px-3 py-3">
+                                      <Checkbox
+                                        className="mt-1"
+                                        checked={selected}
+                                        onCheckedChange={(checked) => toggleVariantSelection(index, checked === true)}
+                                        aria-label={labels.variantBulkSelectRow}
+                                      />
+                                    </td>
                                   ) : null}
-                                </td>
-                                <td className="px-3 py-3 text-[color:var(--color-text-muted)]">
-                                  {variant.priceOverride.trim()
-                                    ? formatPrice(Number(variant.priceOverride), activeCurrency, locale)
-                                    : labels.notSpecified}
-                                </td>
-                                <td className="px-3 py-3">
-                                  <div className="flex flex-wrap gap-2">
-                                    {variant.isDefault ? (
-                                      <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-900">{labels.variantDefault}</span>
+                                  <td className="px-3 py-3">
+                                    <div className="flex flex-col gap-1">
+                                      <Button
+                                        type="button"
+                                        size="icon"
+                                        variant="secondary"
+                                        disabled={isVariantFilterActive || index === 0}
+                                        onClick={() => moveVariantRow(index, "up")}
+                                        aria-label={labels.moveVariantUp}
+                                        title={isVariantFilterActive ? labels.variantFilterReorderDisabled : labels.moveVariantUp}
+                                      >
+                                        <ChevronUp className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        type="button"
+                                        size="icon"
+                                        variant="secondary"
+                                        disabled={isVariantFilterActive || index === activeForm.variants.length - 1}
+                                        onClick={() => moveVariantRow(index, "down")}
+                                        aria-label={labels.moveVariantDown}
+                                        title={isVariantFilterActive ? labels.variantFilterReorderDisabled : labels.moveVariantDown}
+                                      >
+                                        <ChevronDown className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </td>
+                                  <td className="px-3 py-3">
+                                    <div className="space-y-1">
+                                      <p className="font-medium text-[color:var(--color-text)]">
+                                        {variant.title || `${labels.variantTitle} ${index + 1}`}
+                                      </p>
+                                      <p className="text-xs text-[color:var(--color-text-muted)]">
+                                        {variant.optionSummary || labels.variantsHint}
+                                      </p>
+                                    </div>
+                                  </td>
+                                  <td className="px-3 py-3 text-[color:var(--color-text-muted)]">
+                                    <div className={hasDuplicateSku ? "font-medium text-red-600" : undefined}>{variant.sku || labels.sku}</div>
+                                    {hasDuplicateSku ? (
+                                      <div className="mt-1 text-xs font-medium text-red-600">{labels.variantDuplicateSkuWarning}</div>
                                     ) : null}
-                                    {variant.stockOverride.trim() ? (
-                                      <span className="rounded-full bg-sky-50 px-2 py-1 text-xs font-medium text-sky-700">
-                                        {labels.stock}: {variant.stockOverride.trim()}
-                                      </span>
-                                    ) : null}
-                                    {!variant.salesEnabled ? (
-                                      <span className="rounded-full bg-neutral-200 px-2 py-1 text-xs font-medium text-neutral-900">{labels.outOfStock}</span>
-                                    ) : null}
-                                    {variant.salesEnabled && !variant.isDefault ? (
-                                      <span className="rounded-full bg-[color:var(--color-bg-soft)] px-2 py-1 text-xs font-medium text-[color:var(--color-text)]">{labels.variantActiveBadge}</span>
-                                    ) : null}
-                                  </div>
-                                </td>
-                                <td className="px-3 py-3">
-                                  <div ref={openVariantActionMenuIndex === index ? variantActionMenuRef : null} className="relative flex justify-end">
-                                    <Button
-                                      type="button"
-                                      size="icon"
-                                      variant="secondary"
-                                      onClick={() => setOpenVariantActionMenuIndex((current) => current === index ? null : index)}
-                                    >
-                                      <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                    {openVariantActionMenuIndex === index ? (
-                                      <div className="absolute right-0 top-11 z-50 min-w-40 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-2 shadow-xl">
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            openVariantEditor(index);
-                                            setOpenVariantActionMenuIndex(null);
-                                          }}
-                                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-soft)]"
-                                        >
-                                          {labels.variantDetails}
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            removeVariantRow(index);
-                                            setOpenVariantActionMenuIndex(null);
-                                          }}
-                                          className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-rose-600 hover:bg-rose-50"
-                                        >
-                                          {labels.delete}
-                                        </button>
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
+                                  </td>
+                                  <td className="px-3 py-3 text-[color:var(--color-text-muted)]">{renderVariantPrice(variant)}</td>
+                                  <td className="px-3 py-3">
+                                    <div className="flex flex-wrap gap-2">{renderVariantStatusBadges(variant)}</div>
+                                  </td>
+                                  <td className="px-3 py-3">
+                                    <div className="flex justify-end">{renderVariantRowMenu(index, false)}</div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
                     ) : null}
+
+                    <ProductVariantBulkDialog
+                      key={variantBulkDialogKey}
+                      mode={variantBulkDialogMode}
+                      selectedCount={selectedVariantIndexes.length}
+                      labels={labels}
+                      onClose={() => setVariantBulkDialogMode(null)}
+                      onApplyPrice={applyVariantBulkPriceAction}
+                      onApplyStock={applyVariantBulkStockAction}
+                      onConfirmDelete={removeSelectedVariants}
+                    />
                   </div>
                 </section>
 
-                <div className="sticky bottom-0 z-10 -mx-5 -mb-5 mt-2 flex justify-end gap-2 border-t border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-5 py-4 shadow-[0_-4px_10px_-6px_rgba(0,0,0,0.15)]">
-                  <Button type="button" variant="secondary" onClick={closeDrawer} disabled={loading || variantSaveSuccess}>
-                    {labels.cancel}
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={loading || variantSaveSuccess}
-                    className={variantSaveSuccess ? "bg-emerald-600 hover:bg-emerald-600 disabled:opacity-100" : undefined}
-                  >
-                    {variantSaveSuccess ? (
-                      <span className="flex items-center justify-center gap-1.5">
-                        <Check className="h-4 w-4" />
-                        {labels.variantsSaved}
-                      </span>
-                    ) : loading ? (
-                      labels.loading
-                    ) : (
-                      labels.save
-                    )}
-                  </Button>
+                <div className="sticky bottom-0 z-10 -mx-5 -mb-5 mt-2 grid gap-3 border-t border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-5 py-4 shadow-[0_-4px_10px_-6px_rgba(0,0,0,0.15)]">
+                  {error ? (
+                    <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{error}</p>
+                  ) : null}
+                  <div className="flex justify-end gap-2">
+                    <Button type="button" variant="secondary" onClick={closeDrawer} disabled={loading || variantSaveSuccess}>
+                      {labels.cancel}
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={loading || variantSaveSuccess}
+                      className={variantSaveSuccess ? "bg-emerald-600 hover:bg-emerald-600 disabled:opacity-100" : undefined}
+                    >
+                      {variantSaveSuccess ? (
+                        <span className="flex items-center justify-center gap-1.5">
+                          <Check className="h-4 w-4" />
+                          {labels.variantsSaved}
+                        </span>
+                      ) : loading ? (
+                        labels.loading
+                      ) : (
+                        labels.save
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </form>
             ) : null}
